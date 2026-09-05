@@ -7,8 +7,8 @@ import { projectRoot } from './patch-path'
 
 const artifacts = {
   core: {
-    file: 'dsh-kimi-ppt-0.1.1-rc.2-desktop-kimi-overflow-20260905.tgz',
-    sha256: 'dc33194b7ab015aa37504271d646cb28719cdd11d86aa5f14551ec10f8613894'
+    file: 'dsh-kimi-ppt-0.1.1-rc.2-desktop-templates-20260906.tgz',
+    sha256: 'bd07c7dfd72f4cb3b41b3927215724c39d988fe91e1e36033ee89f8f3589e6a6'
   },
   adapter: {
     file: 'deepseek-ai-dsh-experimental-kimi-ppt-standard-adapter-0.1.1-rc.2-desktop-kimi-20260904.tgz',
@@ -107,7 +107,7 @@ describe('Kimi PPT built-in plugin', () => {
     expect(renderText).not.toContain('fit: "shrink"')
   })
 
-  it('ships three core templates in each category plus the 58-page Vitality Blue pack', async () => {
+  it('ships the reviewed 26-template catalog and only the four approved additions', async () => {
     const entries = tarEntries(await artifact('core'))
     const designs = [...entries.keys()]
       .filter(name => /^package\/skills\/kimi-ppt\/references\/[^/]+\/[^/]+\/design\.md$/u.test(name))
@@ -117,15 +117,15 @@ describe('Kimi PPT built-in plugin', () => {
       return counts
     }, {})
 
-    expect(designs).toHaveLength(22)
+    expect(designs).toHaveLength(26)
     expect(categories).toEqual({
       academic: 3,
       business: 4,
-      consulting: 3,
+      consulting: 4,
       finance: 3,
       promotion: 3,
       strategy: 3,
-      work: 3
+      work: 6
     })
 
     const vitalityRoot = 'package/skills/kimi-ppt/references/business/curated-vitality-blue'
@@ -137,6 +137,48 @@ describe('Kimi PPT built-in plugin', () => {
     expect(design).toContain('shared slide layout 7')
     expect(design).toContain('29729fab2132fc120eba39371e4093a51beefa099ac978965d92dc9965b3c68e')
     expect(design).toContain('logo-free')
+
+    const approvedTemplates = [
+      {
+        root: 'package/skills/kimi-ppt/references/work/curated-cobalt-work-atlas',
+        pageCount: 128,
+        sourcePageCount: 0
+      },
+      {
+        root: 'package/skills/kimi-ppt/references/work/curated-modular-logistics-system',
+        pageCount: 10,
+        sourcePageCount: 10
+      },
+      {
+        root: 'package/skills/kimi-ppt/references/consulting/curated-swiss-signal-grid',
+        pageCount: 10,
+        sourcePageCount: 10
+      },
+      {
+        root: 'package/skills/kimi-ppt/references/work/curated-nordic-operating-report',
+        pageCount: 10,
+        sourcePageCount: 10
+      }
+    ] as const
+
+    for (const template of approvedTemplates) {
+      expect(designs).toContain(`${template.root}/design.md`)
+      const pages = [...entries.keys()].filter(name =>
+        new RegExp(`^${template.root}/pages/\\d{2,3}\\.jpg$`, 'u').test(name)
+      )
+      expect(pages).toHaveLength(template.pageCount)
+
+      if (template.sourcePageCount > 0) {
+        expect(entries.has(`${template.root}/source/deck.pptd`)).toBe(true)
+        const sourcePages = [...entries.keys()].filter(name =>
+          name.startsWith(`${template.root}/source/pages/`) && name.endsWith('.page')
+        )
+        expect(sourcePages).toHaveLength(template.sourcePageCount)
+      }
+    }
+
+    const excludedExperiments = /research-project|culture-census|monochrome/iu
+    expect([...entries.keys()].some(name => excludedExperiments.test(name))).toBe(false)
   })
 
   it('places the PPT action beside the agent preset and the catalog below the input', async () => {
