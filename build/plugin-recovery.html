@@ -41,7 +41,10 @@
 
       button { font: inherit; }
       .shell {
+        display: flex;
+        flex-direction: column;
         width: min(700px, 100%);
+        max-height: calc(100vh - 80px);
         border: 1px solid var(--line);
         border-radius: 20px;
         overflow: hidden;
@@ -49,6 +52,7 @@
         box-shadow: var(--shadow);
       }
       .header {
+        flex-shrink: 0;
         display: flex;
         align-items: center;
         gap: 12px;
@@ -69,7 +73,7 @@
         font-size: 11px;
         font-weight: 600;
       }
-      .content { padding: 30px 32px 22px; }
+      .content { min-height: 0; overflow: auto; padding: 30px 32px 22px; }
       .progress, .notice {
         display: none;
         margin: 0 0 18px;
@@ -330,8 +334,10 @@
       .text-button.danger:hover { color: var(--danger); background: rgba(195, 59, 56, 0.08); }
       .footer {
         display: flex;
+        flex-shrink: 0;
+        flex-wrap: wrap;
         align-items: center;
-        justify-content: flex-end;
+        justify-content: flex-start;
         gap: 16px;
         padding: 11px 26px;
         border-top: 1px solid var(--line);
@@ -339,9 +345,23 @@
         background: var(--surface);
         font-size: 11px;
       }
+      .community { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+      .community-links { display: flex; align-items: center; gap: 6px; }
+      .community a, .community button { display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 4px 9px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); text-decoration: none; white-space: nowrap; background: transparent; cursor: pointer; font: inherit; }
+      .community a:hover, .community button:hover { color: var(--ink); border-color: var(--muted); }
+      .community a:focus-visible, .community button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+      .community svg { width: 15px; height: 15px; flex-shrink: 0; }
+      .community button { background: var(--soft, var(--surface-soft)); }
+      .community a { padding-inline: 4px; border-color: transparent; border-radius: 4px; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line); }
+      .community a:hover { border-color: transparent; text-decoration-color: currentColor; }
+      .community .external-icon { width: 12px; height: 12px; }
+      .wechat-popover { position: fixed; inset: auto; margin: 0; width: 226px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; color: var(--ink); background: var(--surface); box-shadow: 0 8px 28px rgba(0,0,0,.16); font-size: 12px; text-align: center; }
+      .wechat-popover img { display: block; width: 200px; height: 200px; background: #fff; border-radius: 6px; }
+      .wechat-popover p { margin: 10px 0 0; line-height: 1.5; }
+      .footer > #quit { margin-left: auto; flex-shrink: 0; }
       @media (max-width: 620px) {
         body { display: block; padding: 46px 0 0; background: var(--surface); }
-        .shell { width: 100%; min-height: calc(100vh - 46px); border: 0; border-radius: 0; box-shadow: none; }
+        .shell { width: 100%; min-height: calc(100vh - 46px); max-height: none; border: 0; border-radius: 0; box-shadow: none; }
         .header { padding-inline: 20px; }
         .content { padding: 24px 20px 16px; }
         .decision-row { align-items: stretch; }
@@ -440,9 +460,33 @@
       </section>
 
       <footer class="footer">
+        <aside class="community" aria-labelledby="community-label">
+          <span id="community-label"></span>
+          <span class="community-links">
+            <button id="community-wechat" type="button" aria-expanded="false" aria-controls="wechat-popover">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="6" height="6" rx="1" />
+                <rect x="15" y="3" width="6" height="6" rx="1" />
+                <rect x="3" y="15" width="6" height="6" rx="1" />
+                <path d="M15 15h3v3h3v3h-6v-3m6-6v3M3 12h3m6-9v3m0 6v3m0 6v-3" />
+              </svg>
+              <span id="community-wechat-label"></span>
+            </button>
+            <a id="community-discord" href="https://discord.gg/he2gAKCpj" target="_blank" rel="noopener noreferrer">
+              <span>Discord</span>
+              <svg class="external-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 12 12 4M5 4h7v7" />
+              </svg>
+            </a>
+          </span>
+        </aside>
         <button class="text-button" id="quit" type="button"></button>
       </footer>
     </main>
+    <div id="wechat-popover" class="wechat-popover" popover="auto" role="region" aria-labelledby="wechat-caption">
+      <img id="wechat-qr" src="community-wechat-qr.png" width="200" height="200" alt="" />
+      <p id="wechat-caption"></p>
+    </div>
 
     <script>
       const params = new URLSearchParams(location.search)
@@ -471,6 +515,49 @@
       setText('technical', model.rawError)
       setText('show-log', model.logLabel)
       setText('quit', model.quitLabel)
+      setText('community-label', model.locale === 'zh' ? '遇到问题？来社区交流' : 'Need help? Join our community')
+      setText('community-wechat-label', model.locale === 'zh' ? '微信群' : 'WeChat')
+      setText('wechat-caption', model.locale === 'zh' ? '扫码加入 DSH 用户群' : 'Scan to join the DSH community')
+      const wechat = document.getElementById('community-wechat')
+      const wechatPopover = document.getElementById('wechat-popover')
+      document.getElementById('wechat-qr').alt = model.locale === 'zh' ? 'DSH 用户群二维码' : 'DSH community WeChat QR code'
+      let wechatCloseTimer
+      const positionWechat = () => {
+        const anchor = wechat.getBoundingClientRect()
+        const popup = wechatPopover.getBoundingClientRect()
+        const left = Math.max(12, Math.min(anchor.left, innerWidth - popup.width - 12))
+        const top = Math.max(12, Math.min(anchor.top - popup.height - 8, innerHeight - popup.height - 12))
+        wechatPopover.style.left = `${left}px`
+        wechatPopover.style.top = `${top}px`
+      }
+      const openWechat = () => {
+        clearTimeout(wechatCloseTimer)
+        if (!wechatPopover.matches(':popover-open')) wechatPopover.showPopover()
+        positionWechat()
+      }
+      const closeWechat = () => {
+        clearTimeout(wechatCloseTimer)
+        if (wechatPopover.matches(':popover-open')) wechatPopover.hidePopover()
+      }
+      const scheduleWechatClose = () => {
+        clearTimeout(wechatCloseTimer)
+        wechatCloseTimer = setTimeout(() => {
+          if (!wechat.matches(':hover') && !wechatPopover.matches(':hover') && document.activeElement !== wechat) closeWechat()
+        }, 150)
+      }
+      wechat.addEventListener('pointerenter', openWechat)
+      wechat.addEventListener('pointerleave', scheduleWechatClose)
+      wechat.addEventListener('focus', openWechat)
+      wechat.addEventListener('blur', scheduleWechatClose)
+      wechat.addEventListener('click', openWechat)
+      wechatPopover.addEventListener('pointerenter', () => clearTimeout(wechatCloseTimer))
+      wechatPopover.addEventListener('pointerleave', scheduleWechatClose)
+      wechatPopover.addEventListener('toggle', () => wechat.setAttribute('aria-expanded', String(wechatPopover.matches(':popover-open'))))
+      window.addEventListener('resize', closeWechat)
+      document.addEventListener('scroll', closeWechat, true)
+      document.getElementById('community-discord').title = model.locale === 'zh'
+        ? '在浏览器中打开 Discord 社区'
+        : 'Open our Discord community in your browser'
       const safeModeBtn = document.getElementById('safe-mode')
       if (safeModeBtn) {
         safeModeBtn.textContent = model.safeModeLabel || (model.locale === 'zh' ? '进入安全模式' : 'Enter Safe Mode')

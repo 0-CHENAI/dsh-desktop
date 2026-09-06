@@ -1,0 +1,434 @@
+pageType: content
+background:
+  type: solid
+  color: '#F5F4EF'
+notes: DSH-authored roadmap composition. All new example statements and figures are illustrative, not reported facts. Replace them with user evidence. Four timed workstreams and a decision gate
+elements:
+  - elementId: s1
+    elementType: shape
+    bounds:
+      - 868
+      - 24
+      - 10
+      - 10
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#E6FF3D'
+    border:
+      width: 0
+      color: '#E6FF3D'
+  - elementId: s2
+    elementType: shape
+    bounds:
+      - 888
+      - 24
+      - 10
+      - 10
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#E6FF3D'
+    border:
+      width: 0
+      color: '#E6FF3D'
+  - elementId: s3
+    elementType: shape
+    bounds:
+      - 878
+      - 34
+      - 10
+      - 10
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#E6FF3D'
+    border:
+      width: 0
+      color: '#E6FF3D'
+  - elementId: s4
+    elementType: shape
+    bounds:
+      - 868
+      - 44
+      - 10
+      - 10
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#E6FF3D'
+    border:
+      width: 0
+      color: '#E6FF3D'
+  - elementId: s5
+    elementType: shape
+    bounds:
+      - 888
+      - 44
+      - 10
+      - 10
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#E6FF3D'
+    border:
+      width: 0
+      color: '#E6FF3D'
+  - elementId: t6
+    elementType: text
+    bounds:
+      - 48
+      - 27
+      - 665
+      - 20
+    content:
+      text: NEO-GRID BOLD
+      fontFamily: &ref_0
+        latin: Arial
+        mac: PingFang SC
+        win: Microsoft YaHei
+        ea: Noto Sans CJK SC
+      fontSize: 10
+      lineHeight: 1.1
+      color: '#0A0A0A'
+      bold: false
+  - elementId: l7
+    elementType: line
+    bounds:
+      - 48
+      - 59
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#afaeaa'
+  - elementId: t8
+    elementType: text
+    bounds:
+      - 48
+      - 78
+      - 864
+      - 63
+    content:
+      text: 围绕决策门槛安排执行顺序
+      fontFamily: &ref_1
+        latin: Arial Black
+        mac: PingFang SC
+        win: Microsoft YaHei
+        ea: Noto Sans CJK SC
+      fontSize: 34
+      lineHeight: 1.1
+      color: '#0A0A0A'
+      bold: true
+  - elementId: t9
+    elementType: text
+    bounds:
+      - 319
+      - 164
+      - 130
+      - 25
+    content:
+      text: W1–2
+      fontFamily: *ref_0
+      fontSize: 13
+      lineHeight: 1.1
+      color: '#0A0A0A'
+      bold: false
+  - elementId: t10
+    elementType: text
+    bounds:
+      - 463
+      - 164
+      - 130
+      - 25
+    content:
+      text: W3–4
+      fontFamily: *ref_0
+      fontSize: 13
+      lineHeight: 1.1
+      color: '#0A0A0A'
+      bold: false
+  - elementId: t11
+    elementType: text
+    bounds:
+      - 607
+      - 164
+      - 130
+      - 25
+    content:
+      text: W5–6
+      fontFamily: *ref_0
+      fontSize: 13
+      lineHeight: 1.1
+      color: '#0A0A0A'
+      bold: false
+  - elementId: t12
+    elementType: text
+    bounds:
+      - 751
+      - 164
+      - 130
+      - 25
+    content:
+      text: W7–8
+      fontFamily: *ref_0
+      fontSize: 13
+      lineHeight: 1.1
+      color: '#0A0A0A'
+      bold: false
+  - elementId: l13
+    elementType: line
+    bounds:
+      - 302
+      - 199
+      - 1
+      - 243
+    viewBox:
+      - 1
+      - 243
+    points: 0,0 0,243
+    border:
+      width: 0.6
+      color: '#cbcac6'
+  - elementId: l14
+    elementType: line
+    bounds:
+      - 446
+      - 199
+      - 1
+      - 243
+    viewBox:
+      - 1
+      - 243
+    points: 0,0 0,243
+    border:
+      width: 0.6
+      color: '#cbcac6'
+  - elementId: l15
+    elementType: line
+    bounds:
+      - 590
+      - 199
+      - 1
+      - 243
+    viewBox:
+      - 1
+      - 243
+    points: 0,0 0,243
+    border:
+      width: 0.6
+      color: '#cbcac6'
+  - elementId: l16
+    elementType: line
+    bounds:
+      - 734
+      - 199
+      - 1
+      - 243
+    viewBox:
+      - 1
+      - 243
+    points: 0,0 0,243
+    border:
+      width: 0.6
+      color: '#cbcac6'
+  - elementId: l17
+    elementType: line
+    bounds:
+      - 878
+      - 199
+      - 1
+      - 243
+    viewBox:
+      - 1
+      - 243
+    points: 0,0 0,243
+    border:
+      width: 0.6
+      color: '#cbcac6'
+  - elementId: t18
+    elementType: text
+    bounds:
+      - 48
+      - 206
+      - 239
+      - 32
+    content:
+      text: 基线与范围
+      fontFamily: *ref_1
+      fontSize: 19
+      lineHeight: 1.1
+      color: '#0A0A0A'
+      bold: true
+  - elementId: s19
+    elementType: shape
+    bounds:
+      - 303
+      - 211
+      - 129.6
+      - 26
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#afaeaa'
+    border:
+      width: 0
+      color: '#afaeaa'
+  - elementId: t20
+    elementType: text
+    bounds:
+      - 48
+      - 265
+      - 239
+      - 32
+    content:
+      text: 小规模试点
+      fontFamily: *ref_1
+      fontSize: 19
+      lineHeight: 1.1
+      color: '#0A0A0A'
+      bold: true
+  - elementId: s21
+    elementType: shape
+    bounds:
+      - 403.8
+      - 270
+      - 187.20000000000002
+      - 26
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#afaeaa'
+    border:
+      width: 0
+      color: '#afaeaa'
+  - elementId: t22
+    elementType: text
+    bounds:
+      - 48
+      - 324
+      - 239
+      - 32
+    content:
+      text: 评估证据
+      fontFamily: *ref_1
+      fontSize: 19
+      lineHeight: 1.1
+      color: '#0A0A0A'
+      bold: true
+  - elementId: s23
+    elementType: shape
+    bounds:
+      - 562.2
+      - 329
+      - 158.4
+      - 26
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#E6FF3D'
+    border:
+      width: 0
+      color: '#E6FF3D'
+  - elementId: t24
+    elementType: text
+    bounds:
+      - 48
+      - 383
+      - 239
+      - 32
+    content:
+      text: 确定下一步
+      fontFamily: *ref_1
+      fontSize: 19
+      lineHeight: 1.1
+      color: '#0A0A0A'
+      bold: true
+  - elementId: s25
+    elementType: shape
+    bounds:
+      - 706.2
+      - 388
+      - 172.79999999999998
+      - 26
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#afaeaa'
+    border:
+      width: 0
+      color: '#afaeaa'
+  - elementId: l26
+    elementType: line
+    bounds:
+      - 705
+      - 198
+      - 1
+      - 251
+    viewBox:
+      - 1
+      - 251
+    points: 0,0 0,251
+    border:
+      width: 1.4
+      color: '#626c1e'
+  - elementId: s27
+    elementType: shape
+    bounds:
+      - 700
+      - 444
+      - 10
+      - 10
+    shapeName: ellipse
+    fill:
+      type: solid
+      color: '#E6FF3D'
+    border:
+      width: 0
+      color: '#E6FF3D'
+  - elementId: t28
+    elementType: text
+    bounds:
+      - 48
+      - 469
+      - 864
+      - 28
+    content:
+      text: 决策门槛：证据达到约定标准后，再进入下一阶段。
+      fontFamily: *ref_0
+      fontSize: 14
+      lineHeight: 1.1
+      color: '#0A0A0A'
+      bold: false
+  - elementId: t29
+    elementType: text
+    bounds:
+      - 48
+      - 507
+      - 783
+      - 16
+    content:
+      text: 版式示例 / 数据为模拟值
+      fontFamily: *ref_0
+      fontSize: 9
+      lineHeight: 1.1
+      color: '#0A0A0A'
+      bold: false
+  - elementId: t30
+    elementType: text
+    bounds:
+      - 871
+      - 504
+      - 41
+      - 22
+    content:
+      text: '11'
+      fontFamily: *ref_0
+      fontSize: 11
+      lineHeight: 1.1
+      color: '#0A0A0A'
+      bold: false

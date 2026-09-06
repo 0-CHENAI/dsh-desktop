@@ -1,0 +1,1341 @@
+pageType: content
+background:
+  type: solid
+  color: '#F0EAE0'
+notes: DSH-authored trend composition. All new example statements and figures are illustrative, not reported facts. Replace them with user evidence. Labeled six-point trend with common scale and a separate interpretation
+elements:
+  - elementId: l1
+    elementType: line
+    bounds:
+      - 48
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l2
+    elementType: line
+    bounds:
+      - 72
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l3
+    elementType: line
+    bounds:
+      - 96
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l4
+    elementType: line
+    bounds:
+      - 120
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l5
+    elementType: line
+    bounds:
+      - 144
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l6
+    elementType: line
+    bounds:
+      - 168
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l7
+    elementType: line
+    bounds:
+      - 192
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l8
+    elementType: line
+    bounds:
+      - 216
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l9
+    elementType: line
+    bounds:
+      - 240
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l10
+    elementType: line
+    bounds:
+      - 264
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l11
+    elementType: line
+    bounds:
+      - 288
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l12
+    elementType: line
+    bounds:
+      - 312
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l13
+    elementType: line
+    bounds:
+      - 336
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l14
+    elementType: line
+    bounds:
+      - 360
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l15
+    elementType: line
+    bounds:
+      - 384
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l16
+    elementType: line
+    bounds:
+      - 408
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l17
+    elementType: line
+    bounds:
+      - 432
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l18
+    elementType: line
+    bounds:
+      - 456
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l19
+    elementType: line
+    bounds:
+      - 480
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l20
+    elementType: line
+    bounds:
+      - 504
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l21
+    elementType: line
+    bounds:
+      - 528
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l22
+    elementType: line
+    bounds:
+      - 552
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l23
+    elementType: line
+    bounds:
+      - 576
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l24
+    elementType: line
+    bounds:
+      - 600
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l25
+    elementType: line
+    bounds:
+      - 624
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l26
+    elementType: line
+    bounds:
+      - 648
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l27
+    elementType: line
+    bounds:
+      - 672
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l28
+    elementType: line
+    bounds:
+      - 696
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l29
+    elementType: line
+    bounds:
+      - 720
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l30
+    elementType: line
+    bounds:
+      - 744
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l31
+    elementType: line
+    bounds:
+      - 768
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l32
+    elementType: line
+    bounds:
+      - 792
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l33
+    elementType: line
+    bounds:
+      - 816
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l34
+    elementType: line
+    bounds:
+      - 840
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l35
+    elementType: line
+    bounds:
+      - 864
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l36
+    elementType: line
+    bounds:
+      - 888
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l37
+    elementType: line
+    bounds:
+      - 912
+      - 150
+      - 1
+      - 308
+    viewBox:
+      - 1
+      - 308
+    points: 0,0 0,308
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l38
+    elementType: line
+    bounds:
+      - 48
+      - 150
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l39
+    elementType: line
+    bounds:
+      - 48
+      - 174
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l40
+    elementType: line
+    bounds:
+      - 48
+      - 198
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l41
+    elementType: line
+    bounds:
+      - 48
+      - 222
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l42
+    elementType: line
+    bounds:
+      - 48
+      - 246
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l43
+    elementType: line
+    bounds:
+      - 48
+      - 270
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l44
+    elementType: line
+    bounds:
+      - 48
+      - 294
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l45
+    elementType: line
+    bounds:
+      - 48
+      - 318
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l46
+    elementType: line
+    bounds:
+      - 48
+      - 342
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l47
+    elementType: line
+    bounds:
+      - 48
+      - 366
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l48
+    elementType: line
+    bounds:
+      - 48
+      - 390
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l49
+    elementType: line
+    bounds:
+      - 48
+      - 414
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: l50
+    elementType: line
+    bounds:
+      - 48
+      - 438
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.35
+      color: '#e3ddd4'
+  - elementId: t51
+    elementType: text
+    bounds:
+      - 48
+      - 27
+      - 665
+      - 20
+    content:
+      text: ENGINEERING BLUEPRINT
+      fontFamily: &ref_0
+        latin: Arial
+        mac: PingFang SC
+        win: Microsoft YaHei
+        ea: Noto Sans CJK SC
+      fontSize: 10
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: l52
+    elementType: line
+    bounds:
+      - 48
+      - 59
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#b3b0a8'
+  - elementId: t53
+    elementType: text
+    bounds:
+      - 48
+      - 78
+      - 864
+      - 63
+    content:
+      text: Read the trend and investigate the pause
+      fontFamily: &ref_1
+        latin: Arial
+        mac: PingFang SC
+        win: Microsoft YaHei
+        ea: Noto Sans CJK SC
+      fontSize: 34
+      lineHeight: 1.1
+      color: '#252824'
+      bold: true
+  - elementId: t54
+    elementType: text
+    bounds:
+      - 48
+      - 152
+      - 850
+      - 25
+    content:
+      text: INDEX / BASELINE = 100
+      fontFamily: *ref_0
+      fontSize: 13
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: l55
+    elementType: line
+    bounds:
+      - 90
+      - 430
+      - 536
+      - 1
+    viewBox:
+      - 536
+      - 1
+    points: 0,0 536,0
+    border:
+      width: 0.6
+      color: '#cbc7be'
+  - elementId: t56
+    elementType: text
+    bounds:
+      - 48
+      - 420
+      - 33
+      - 22
+    content:
+      text: '0'
+      fontFamily: *ref_0
+      fontSize: 12
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+      align: right
+  - elementId: l57
+    elementType: line
+    bounds:
+      - 90
+      - 371
+      - 536
+      - 1
+    viewBox:
+      - 536
+      - 1
+    points: 0,0 536,0
+    border:
+      width: 0.6
+      color: '#cbc7be'
+  - elementId: t58
+    elementType: text
+    bounds:
+      - 48
+      - 361
+      - 33
+      - 22
+    content:
+      text: '40'
+      fontFamily: *ref_0
+      fontSize: 12
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+      align: right
+  - elementId: l59
+    elementType: line
+    bounds:
+      - 90
+      - 312
+      - 536
+      - 1
+    viewBox:
+      - 536
+      - 1
+    points: 0,0 536,0
+    border:
+      width: 0.6
+      color: '#cbc7be'
+  - elementId: t60
+    elementType: text
+    bounds:
+      - 48
+      - 302
+      - 33
+      - 22
+    content:
+      text: '80'
+      fontFamily: *ref_0
+      fontSize: 12
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+      align: right
+  - elementId: l61
+    elementType: line
+    bounds:
+      - 90
+      - 253
+      - 536
+      - 1
+    viewBox:
+      - 536
+      - 1
+    points: 0,0 536,0
+    border:
+      width: 0.6
+      color: '#cbc7be'
+  - elementId: t62
+    elementType: text
+    bounds:
+      - 48
+      - 243
+      - 33
+      - 22
+    content:
+      text: '120'
+      fontFamily: *ref_0
+      fontSize: 12
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+      align: right
+  - elementId: l63
+    elementType: line
+    bounds:
+      - 90
+      - 194
+      - 536
+      - 1
+    viewBox:
+      - 536
+      - 1
+    points: 0,0 536,0
+    border:
+      width: 0.6
+      color: '#cbc7be'
+  - elementId: t64
+    elementType: text
+    bounds:
+      - 48
+      - 184
+      - 33
+      - 22
+    content:
+      text: '160'
+      fontFamily: *ref_0
+      fontSize: 12
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+      align: right
+  - elementId: s65
+    elementType: shape
+    bounds:
+      - 104
+      - 278.5
+      - 8
+      - 8
+    shapeName: ellipse
+    fill:
+      type: solid
+      color: '#B5392A'
+    border:
+      width: 0
+      color: '#B5392A'
+  - elementId: t66
+    elementType: text
+    bounds:
+      - 87
+      - 251.5
+      - 49
+      - 26
+    content:
+      text: '100'
+      fontFamily: *ref_0
+      fontSize: 16
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+      align: center
+  - elementId: t67
+    elementType: text
+    bounds:
+      - 90
+      - 440
+      - 55
+      - 24
+    content:
+      text: W1
+      fontFamily: *ref_0
+      fontSize: 13
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: l68
+    elementType: line
+    bounds:
+      - 108
+      - 270.7
+      - 96
+      - 11.800000000000011
+    viewBox:
+      - 96
+      - 11.800000000000011
+    points: 0,11.800000000000011 96,0
+    border:
+      width: 2.2
+      color: '#B5392A'
+  - elementId: s69
+    elementType: shape
+    bounds:
+      - 200
+      - 266.7
+      - 8
+      - 8
+    shapeName: ellipse
+    fill:
+      type: solid
+      color: '#B5392A'
+    border:
+      width: 0
+      color: '#B5392A'
+  - elementId: t70
+    elementType: text
+    bounds:
+      - 183
+      - 239.7
+      - 49
+      - 26
+    content:
+      text: '108'
+      fontFamily: *ref_0
+      fontSize: 16
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+      align: center
+  - elementId: t71
+    elementType: text
+    bounds:
+      - 186
+      - 440
+      - 55
+      - 24
+    content:
+      text: W2
+      fontFamily: *ref_0
+      fontSize: 13
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: l72
+    elementType: line
+    bounds:
+      - 204
+      - 261.85
+      - 96
+      - 8.849999999999966
+    viewBox:
+      - 96
+      - 8.849999999999966
+    points: 0,8.849999999999966 96,0
+    border:
+      width: 2.2
+      color: '#B5392A'
+  - elementId: s73
+    elementType: shape
+    bounds:
+      - 296
+      - 257.85
+      - 8
+      - 8
+    shapeName: ellipse
+    fill:
+      type: solid
+      color: '#B5392A'
+    border:
+      width: 0
+      color: '#B5392A'
+  - elementId: t74
+    elementType: text
+    bounds:
+      - 279
+      - 230.85000000000002
+      - 49
+      - 26
+    content:
+      text: '114'
+      fontFamily: *ref_0
+      fontSize: 16
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+      align: center
+  - elementId: t75
+    elementType: text
+    bounds:
+      - 282
+      - 440
+      - 55
+      - 24
+    content:
+      text: W3
+      fontFamily: *ref_0
+      fontSize: 13
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: l76
+    elementType: line
+    bounds:
+      - 300
+      - 261.85
+      - 96
+      - 2.9499999999999886
+    viewBox:
+      - 96
+      - 2.9499999999999886
+    points: 0,0 96,2.9499999999999886
+    border:
+      width: 2.2
+      color: '#B5392A'
+  - elementId: s77
+    elementType: shape
+    bounds:
+      - 392
+      - 260.8
+      - 8
+      - 8
+    shapeName: ellipse
+    fill:
+      type: solid
+      color: '#B5392A'
+    border:
+      width: 0
+      color: '#B5392A'
+  - elementId: t78
+    elementType: text
+    bounds:
+      - 375
+      - 233.8
+      - 49
+      - 26
+    content:
+      text: '112'
+      fontFamily: *ref_0
+      fontSize: 16
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+      align: center
+  - elementId: t79
+    elementType: text
+    bounds:
+      - 378
+      - 440
+      - 55
+      - 24
+    content:
+      text: W4
+      fontFamily: *ref_0
+      fontSize: 13
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: l80
+    elementType: line
+    bounds:
+      - 396
+      - 241.2
+      - 96
+      - 23.600000000000023
+    viewBox:
+      - 96
+      - 23.600000000000023
+    points: 0,23.600000000000023 96,0
+    border:
+      width: 2.2
+      color: '#B5392A'
+  - elementId: s81
+    elementType: shape
+    bounds:
+      - 488
+      - 237.2
+      - 8
+      - 8
+    shapeName: ellipse
+    fill:
+      type: solid
+      color: '#B5392A'
+    border:
+      width: 0
+      color: '#B5392A'
+  - elementId: t82
+    elementType: text
+    bounds:
+      - 471
+      - 210.2
+      - 49
+      - 26
+    content:
+      text: '128'
+      fontFamily: *ref_0
+      fontSize: 16
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+      align: center
+  - elementId: t83
+    elementType: text
+    bounds:
+      - 474
+      - 440
+      - 55
+      - 24
+    content:
+      text: W5
+      fontFamily: *ref_0
+      fontSize: 13
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: l84
+    elementType: line
+    bounds:
+      - 492
+      - 220.55
+      - 96
+      - 20.649999999999977
+    viewBox:
+      - 96
+      - 20.649999999999977
+    points: 0,20.649999999999977 96,0
+    border:
+      width: 2.2
+      color: '#B5392A'
+  - elementId: s85
+    elementType: shape
+    bounds:
+      - 584
+      - 216.55
+      - 8
+      - 8
+    shapeName: ellipse
+    fill:
+      type: solid
+      color: '#B5392A'
+    border:
+      width: 0
+      color: '#B5392A'
+  - elementId: t86
+    elementType: text
+    bounds:
+      - 567
+      - 189.55
+      - 49
+      - 26
+    content:
+      text: '142'
+      fontFamily: *ref_0
+      fontSize: 16
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+      align: center
+  - elementId: t87
+    elementType: text
+    bounds:
+      - 570
+      - 440
+      - 55
+      - 24
+    content:
+      text: W6
+      fontFamily: *ref_0
+      fontSize: 13
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: l88
+    elementType: line
+    bounds:
+      - 656
+      - 178
+      - 1
+      - 278
+    viewBox:
+      - 1
+      - 278
+    points: 0,0 0,278
+    border:
+      width: 0.6
+      color: '#b3b0a8'
+  - elementId: t89
+    elementType: text
+    bounds:
+      - 687
+      - 190
+      - 219
+      - 83
+    content:
+      text: +42%
+      fontFamily: *ref_1
+      fontSize: 57
+      lineHeight: 1.1
+      color: '#252824'
+      bold: true
+  - elementId: t90
+    elementType: text
+    bounds:
+      - 687
+      - 282
+      - 218
+      - 36
+    content:
+      text: Index growth
+      fontFamily: *ref_1
+      fontSize: 20
+      lineHeight: 1.1
+      color: '#252824'
+      bold: true
+  - elementId: t91
+    elementType: text
+    bounds:
+      - 687
+      - 349
+      - 218
+      - 105
+    content:
+      text: A pause in week four deserves a closer look.
+      fontFamily: *ref_0
+      fontSize: 20
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: t92
+    elementType: text
+    bounds:
+      - 48
+      - 469
+      - 864
+      - 28
+    content:
+      text: Six simulated weekly observations; the trend alone does not prove a cause.
+      fontFamily: *ref_0
+      fontSize: 14
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: t93
+    elementType: text
+    bounds:
+      - 48
+      - 507
+      - 783
+      - 16
+    content:
+      text: ILLUSTRATIVE DATA / LAYOUT STUDY
+      fontFamily: *ref_0
+      fontSize: 9
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: t94
+    elementType: text
+    bounds:
+      - 871
+      - 504
+      - 41
+      - 22
+    content:
+      text: '06'
+      fontFamily: *ref_0
+      fontSize: 11
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false

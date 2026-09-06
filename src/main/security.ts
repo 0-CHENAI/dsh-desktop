@@ -1,7 +1,7 @@
 import { shell, type BrowserWindow } from 'electron'
 import { canGrantWindowPermission, isTrustedAppUrl } from './security-policy'
 
-export function secureWindow(window: BrowserWindow): void {
+export function secureWindow(window: Pick<BrowserWindow, 'webContents'>): void {
   window.webContents.setWindowOpenHandler(({ url }) => {
     if (isTrustedAppUrl(url)) return { action: 'allow' }
     if (url.startsWith('https://') || url.startsWith('http://')) void shell.openExternal(url)

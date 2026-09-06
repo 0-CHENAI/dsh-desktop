@@ -20,3 +20,6 @@ build/icon-1024.png
 # Python bytecode from release-note scripts / tests
 __pycache__/
 *.pyc
+
+# Native recovery UI smoke-test output
+/artifacts/recovery-ui/
