@@ -21,10 +21,10 @@
     - id: dsh-desktop-market-installer
       name: dsh-desktop-market-installer
 
-    # Kimi PPT owns one direct PPTD workflow and one standard Composer client.
+    # DSH PPT owns one direct PPTD workflow and one standard Composer client.
     # The package contains no Tencent editor runtime or SlideP route.
-    - id: experimental-kimi-ppt-standard-adapter
-      name: '@deepseek-ai/dsh-experimental-kimi-ppt-standard-adapter'
+    - id: dsh-ppt-composer
+      name: 'dsh-ppt-composer'
       config:
         root: !!js dshHomePath('kimi-ppt')
 

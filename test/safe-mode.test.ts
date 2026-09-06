@@ -265,7 +265,9 @@ describe('Safe Mode', () => {
     expect(html).toContain("model.noticeTone === 'success'")
     expect(html).toContain("default-src 'none'")
     expect(html).not.toContain('http://')
-    expect(html).not.toContain('https://')
+    // Community links may open externally; the recovery UI still loads entirely offline.
+    expect(html).not.toMatch(/(?:src|srcset)=["']https?:/)
+    expect(html).toContain("img-src 'self' file:")
   })
 
   it('wires Safe Mode into startup, IPC, and the packaged resources', async () => {
@@ -302,9 +304,9 @@ describe('Safe Mode', () => {
     expect(main).toContain("ipcMain.handle('safe-mode:manage'")
     expect(main).toContain("ipcMain.handle('safe-mode:exit', async")
     expect(main).toContain("return { ok: false, blocked: true }")
-    expect(main).toContain('safeModeManagerWindow')
+    expect(main).toContain('safeModeManager')
     expect(main).toContain('safeModeSuspectedPlugins = [...new Set(detection.plugins)]')
-    expect(main).toContain('modal: true')
+    expect(main).toContain('new SafeModeOverlay(parent,')
     expect(main).toContain('assertTrustedSafeModeManagerEvent(event)')
     expect(main).toContain('`处理完成：修复 ${repaired} 项，卸载 ${selectedPlugins.length} 个插件。`')
     expect(main).toContain("label: isChinese ? '以安全模式重启…' : 'Restart as Safe Mode…'")

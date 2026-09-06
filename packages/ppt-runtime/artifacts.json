@@ -1,0 +1,12 @@
+{
+  "core": {
+    "file": "dsh-ppt-0.1.1-rc.2-desktop-20260906.tgz",
+    "sha256": "b1dcb1aa9785538995a9b09df75eda77b83dc8039b1b011f0b4d0ee1772c48f5",
+    "integrity": "sha512-KZM7f4AjjU0GmhwdykaVRpu3SKWJdD5y7manFLLd2utMNDlWl1ovK2iz3Qbpvbr2r6BTRpvSuCm3TEhdyqagPQ=="
+  },
+  "adapter": {
+    "file": "dsh-ppt-composer-0.1.1-rc.2-desktop-20260906.tgz",
+    "sha256": "3d76e7dc1748be789c23552da8765a0b3d8e763e7eb7c4153d548d06067bffd4",
+    "integrity": "sha512-Mtnc1ODdBA4TfHMpxSIQUMagwJE5w8BBr8uXAIGGeSHhOL7CHNtRlZBIlT/jVjrRNdPUn9SJvHLeaJfY+4lxNA=="
+  }
+}

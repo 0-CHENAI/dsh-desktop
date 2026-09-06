@@ -1,0 +1,500 @@
+pageType: content
+background:
+  type: solid
+  color: '#151611'
+notes: DSH-authored bridge composition. All new example statements and figures are illustrative, not reported facts. Replace them with user evidence. Sequential contribution waterfall with an explicitly reconciled net change
+elements:
+  - elementId: s1
+    elementType: shape
+    bounds:
+      - 868
+      - 24
+      - 10
+      - 10
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#E6FF3D'
+    border:
+      width: 0
+      color: '#E6FF3D'
+  - elementId: s2
+    elementType: shape
+    bounds:
+      - 888
+      - 24
+      - 10
+      - 10
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#E6FF3D'
+    border:
+      width: 0
+      color: '#E6FF3D'
+  - elementId: s3
+    elementType: shape
+    bounds:
+      - 878
+      - 34
+      - 10
+      - 10
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#E6FF3D'
+    border:
+      width: 0
+      color: '#E6FF3D'
+  - elementId: s4
+    elementType: shape
+    bounds:
+      - 868
+      - 44
+      - 10
+      - 10
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#E6FF3D'
+    border:
+      width: 0
+      color: '#E6FF3D'
+  - elementId: s5
+    elementType: shape
+    bounds:
+      - 888
+      - 44
+      - 10
+      - 10
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#E6FF3D'
+    border:
+      width: 0
+      color: '#E6FF3D'
+  - elementId: t6
+    elementType: text
+    bounds:
+      - 48
+      - 27
+      - 665
+      - 20
+    content:
+      text: NEO-GRID BOLD
+      fontFamily: &ref_0
+        latin: Arial
+        mac: PingFang SC
+        win: Microsoft YaHei
+        ea: Noto Sans CJK SC
+      fontSize: 10
+      lineHeight: 1.1
+      color: '#F5F4EF'
+      bold: false
+  - elementId: l7
+    elementType: line
+    bounds:
+      - 48
+      - 59
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#585954'
+  - elementId: t8
+    elementType: text
+    bounds:
+      - 48
+      - 78
+      - 864
+      - 63
+    content:
+      text: 把收益与成本放在同一条桥上
+      fontFamily: &ref_1
+        latin: Arial Black
+        mac: PingFang SC
+        win: Microsoft YaHei
+        ea: Noto Sans CJK SC
+      fontSize: 34
+      lineHeight: 1.1
+      color: '#F5F4EF'
+      bold: true
+  - elementId: t9
+    elementType: text
+    bounds:
+      - 48
+      - 152
+      - 850
+      - 25
+    content:
+      text: 贡献桥 / 指数点
+      fontFamily: *ref_0
+      fontSize: 13
+      lineHeight: 1.1
+      color: '#F5F4EF'
+      bold: false
+  - elementId: s10
+    elementType: shape
+    bounds:
+      - 75
+      - 275
+      - 64
+      - 150
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#E6FF3D'
+    border:
+      width: 0
+      color: '#E6FF3D'
+  - elementId: t11
+    elementType: text
+    bounds:
+      - 66
+      - 241
+      - 82
+      - 30
+    content:
+      text: '100'
+      fontFamily: *ref_0
+      fontSize: 21
+      lineHeight: 1.1
+      color: '#F5F4EF'
+      bold: false
+      align: center
+  - elementId: t12
+    elementType: text
+    bounds:
+      - 57
+      - 439
+      - 103
+      - 27
+    content:
+      text: 基期
+      fontFamily: *ref_0
+      fontSize: 14
+      lineHeight: 1.1
+      color: '#F5F4EF'
+      bold: false
+      align: center
+  - elementId: l13
+    elementType: line
+    bounds:
+      - 139
+      - 275
+      - 44
+      - 1
+    viewBox:
+      - 44
+      - 1
+    points: 0,0 44,0
+    border:
+      width: 0.6
+      color: '#6f6f6a'
+  - elementId: s14
+    elementType: shape
+    bounds:
+      - 183
+      - 227
+      - 64
+      - 48
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#63645f'
+    border:
+      width: 0
+      color: '#63645f'
+  - elementId: t15
+    elementType: text
+    bounds:
+      - 174
+      - 193
+      - 82
+      - 30
+    content:
+      text: '+32'
+      fontFamily: *ref_0
+      fontSize: 21
+      lineHeight: 1.1
+      color: '#F5F4EF'
+      bold: false
+      align: center
+  - elementId: t16
+    elementType: text
+    bounds:
+      - 165
+      - 439
+      - 103
+      - 27
+    content:
+      text: 规模
+      fontFamily: *ref_0
+      fontSize: 14
+      lineHeight: 1.1
+      color: '#F5F4EF'
+      bold: false
+      align: center
+  - elementId: l17
+    elementType: line
+    bounds:
+      - 247
+      - 227
+      - 44
+      - 1
+    viewBox:
+      - 44
+      - 1
+    points: 0,0 44,0
+    border:
+      width: 0.6
+      color: '#6f6f6a'
+  - elementId: s18
+    elementType: shape
+    bounds:
+      - 291
+      - 227
+      - 64
+      - 19.5
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#63645f'
+    border:
+      width: 0
+      color: '#63645f'
+  - elementId: t19
+    elementType: text
+    bounds:
+      - 282
+      - 193
+      - 82
+      - 30
+    content:
+      text: −13
+      fontFamily: *ref_0
+      fontSize: 21
+      lineHeight: 1.1
+      color: '#F5F4EF'
+      bold: false
+      align: center
+  - elementId: t20
+    elementType: text
+    bounds:
+      - 273
+      - 439
+      - 103
+      - 27
+    content:
+      text: 服务
+      fontFamily: *ref_0
+      fontSize: 14
+      lineHeight: 1.1
+      color: '#F5F4EF'
+      bold: false
+      align: center
+  - elementId: l21
+    elementType: line
+    bounds:
+      - 355
+      - 246.5
+      - 44
+      - 1
+    viewBox:
+      - 44
+      - 1
+    points: 0,0 44,0
+    border:
+      width: 0.6
+      color: '#6f6f6a'
+  - elementId: s22
+    elementType: shape
+    bounds:
+      - 399
+      - 246.5
+      - 64
+      - 10.5
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#63645f'
+    border:
+      width: 0
+      color: '#63645f'
+  - elementId: t23
+    elementType: text
+    bounds:
+      - 390
+      - 212.5
+      - 82
+      - 30
+    content:
+      text: −7
+      fontFamily: *ref_0
+      fontSize: 21
+      lineHeight: 1.1
+      color: '#F5F4EF'
+      bold: false
+      align: center
+  - elementId: t24
+    elementType: text
+    bounds:
+      - 381
+      - 439
+      - 103
+      - 27
+    content:
+      text: 启动
+      fontFamily: *ref_0
+      fontSize: 14
+      lineHeight: 1.1
+      color: '#F5F4EF'
+      bold: false
+      align: center
+  - elementId: l25
+    elementType: line
+    bounds:
+      - 463
+      - 257
+      - 44
+      - 1
+    viewBox:
+      - 44
+      - 1
+    points: 0,0 44,0
+    border:
+      width: 0.6
+      color: '#6f6f6a'
+  - elementId: s26
+    elementType: shape
+    bounds:
+      - 507
+      - 257
+      - 64
+      - 168
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#E6FF3D'
+    border:
+      width: 0
+      color: '#E6FF3D'
+  - elementId: t27
+    elementType: text
+    bounds:
+      - 498
+      - 223
+      - 82
+      - 30
+    content:
+      text: '112'
+      fontFamily: *ref_0
+      fontSize: 21
+      lineHeight: 1.1
+      color: '#F5F4EF'
+      bold: false
+      align: center
+  - elementId: t28
+    elementType: text
+    bounds:
+      - 489
+      - 439
+      - 103
+      - 27
+    content:
+      text: 结果
+      fontFamily: *ref_0
+      fontSize: 14
+      lineHeight: 1.1
+      color: '#F5F4EF'
+      bold: false
+      align: center
+  - elementId: l29
+    elementType: line
+    bounds:
+      - 64
+      - 425
+      - 574
+      - 1
+    viewBox:
+      - 574
+      - 1
+    points: 0,0 574,0
+    border:
+      width: 0.8
+      color: '#F5F4EF'
+  - elementId: t30
+    elementType: text
+    bounds:
+      - 682
+      - 184
+      - 226
+      - 85
+    content:
+      text: +12%
+      fontFamily: *ref_1
+      fontSize: 58
+      lineHeight: 1.1
+      color: '#F5F4EF'
+      bold: true
+  - elementId: t31
+    elementType: text
+    bounds:
+      - 682
+      - 286
+      - 226
+      - 37
+    content:
+      text: 净改善
+      fontFamily: *ref_1
+      fontSize: 23
+      lineHeight: 1.1
+      color: '#F5F4EF'
+      bold: true
+  - elementId: t32
+    elementType: text
+    bounds:
+      - 682
+      - 350
+      - 226
+      - 98
+    content:
+      text: 收益增加 32 点，成本消耗 20 点。
+      fontFamily: *ref_0
+      fontSize: 20
+      lineHeight: 1.1
+      color: '#F5F4EF'
+      bold: false
+  - elementId: t33
+    elementType: text
+    bounds:
+      - 48
+      - 507
+      - 783
+      - 16
+    content:
+      text: 版式示例 / 数据为模拟值
+      fontFamily: *ref_0
+      fontSize: 9
+      lineHeight: 1.1
+      color: '#F5F4EF'
+      bold: false
+  - elementId: t34
+    elementType: text
+    bounds:
+      - 871
+      - 504
+      - 41
+      - 22
+    content:
+      text: '08'
+      fontFamily: *ref_0
+      fontSize: 11
+      lineHeight: 1.1
+      color: '#F5F4EF'
+      bold: false
