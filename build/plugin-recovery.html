@@ -560,6 +560,8 @@
         : 'Open our Discord community in your browser'
       const safeModeBtn = document.getElementById('safe-mode')
       if (safeModeBtn) {
+        // The primary action already enters Safe Mode when no repair is available.
+        safeModeBtn.hidden = !model.canUninstall && !model.upgradeCandidate
         safeModeBtn.textContent = model.safeModeLabel || (model.locale === 'zh' ? '进入安全模式' : 'Enter Safe Mode')
         safeModeBtn.addEventListener('click', () => {
           safeModeBtn.disabled = true

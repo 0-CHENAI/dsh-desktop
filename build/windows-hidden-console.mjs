@@ -1,4 +1,4 @@
-import koffi from 'koffi'
+import { createRequire } from 'node:module'
 
 /** SW_HIDE: hide the window (and activate another window). */
 const SW_HIDE = 0
@@ -24,10 +24,16 @@ const SW_HIDE = 0
  * @param load - library loader, injectable for tests (defaults to `koffi.load`).
  * @returns true when a console was attached and hidden.
  */
-export function createHiddenConsole({ load = koffi.load } = {}) {
+export function createHiddenConsole({ load } = {}) {
   try {
-    const kernel32 = load('kernel32.dll')
-    const user32 = load('user32.dll')
+    // This helper lives in resources/, while packaged dependencies live in
+    // resources/app/node_modules. In development the same resolver walks up
+    // from build/app/ to the repository's node_modules.
+    // Load inside the guard: missing packages/native bindings must not prevent
+    // either normal startup or Safe Mode from reaching the Harness entry.
+    const loadLibrary = load ?? createRequire(new URL('./app/package.json', import.meta.url))('koffi').load
+    const kernel32 = loadLibrary('kernel32.dll')
+    const user32 = loadLibrary('user32.dll')
     const allocConsole = kernel32.func('AllocConsole', 'bool', [])
     const getConsoleWindow = kernel32.func('GetConsoleWindow', 'void *', [])
     const showWindow = user32.func('ShowWindow', 'bool', ['void *', 'int'])
