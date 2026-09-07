@@ -111,7 +111,7 @@ describe('PPT validation authoring loop', () => {
     await expect(f.run('pptd_write_file', { ...args, file_path: 'pages/2.page', expected_sha256: 'a'.repeat(64) })).rejects.toThrow('only when replacing')
   })
 
-  it('groups misplaced text styles, skips cascading overflow, and supplies directly usable read arguments', async () => {
+  it('groups misplaced text styles, skips cascading overflow, and supplies directly usable read arguments', { timeout: 15_000 }, async () => {
     const f = await fixture()
     const file = path.join(f.project, 'pages/1.page')
     const page = { elements: [{ elementId: 'shared-caption', elementType: 'text', bounds: [48, 80, 800, 16],
@@ -180,5 +180,5 @@ describe('PPT validation authoring loop', () => {
     const imported = spawnSync(process.execPath, ['--input-type=module', '-e', `await import(${JSON.stringify(pathToFileURL(cli).href)})`], { encoding: 'utf8', timeout: 10_000 })
     expect(imported.status).toBe(0)
     expect(imported.stdout).toBe('')
-  }, 30_000) // Several cold CLI starts can exceed 5s on the native Windows runner.
+  }, 80_000) // Up to seven cold CLI starts on macOS, each independently limited to 10s.
 })
