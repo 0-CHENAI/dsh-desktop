@@ -87,7 +87,7 @@
       11,
       12
     ],
-    "designSha256": "7dd3917a77d539d93893f0b3476ec059b0696b9a8727d38ce34fc8c056870ae3"
+    "designSha256": "6a3cd54d80ab1993aacd53d43299ee68ec744fd70ecfe63e22833ffbe2802476"
   },
   "semantics": {
     "palette": {
@@ -100,13 +100,13 @@
     },
     "source": {
       "fileName": "blue-professional-reference.jpg",
-      "sha256": "7dd3917a77d539d93893f0b3476ec059b0696b9a8727d38ce34fc8c056870ae3",
+      "sha256": "6a3cd54d80ab1993aacd53d43299ee68ec744fd70ecfe63e22833ffbe2802476",
       "slideCount": 12,
-      "averageTextBlocks": 17,
-      "averageCharacters": 255,
+      "averageTextBlocks": 18,
+      "averageCharacters": 275,
       "visualGrammar": "blue-professional",
       "recommendedDensity": "medium",
-      "designSummary": "# Blue Professional / 蓝色商务\n\nAdapted from Zara Zhang's Blue Professional, commit e5e204fb1f3b06290846e7dcd7aceddabeceec8c. MIT. This native edition rebuilds 12 editable layouts; it is not an HTML import or an exact copy of every upstream slide.\n\n## Typography\n\nEnglish display: Arial; English body: Arial. These portable Office substitutions replace the upstream display face Space Grotesk. Chinese display: PingFang SC; body: PingFang SC. On Windows use Microsoft YaHei / Microsoft YaHei; on Linux use Noto Sans CJK SC / Noto Sans CJK SC. No font binary is distributed. Keep the serif/sans distinction.\n\nEnglish previews use source/. Chinese examples use source-zh/. Preview language does not select the language of the user's output. Choose the matching fonts for the actual content; reflow longer translations instead of shrinking titles.\n\n## Layout grammar\n\n A restrained, consulting-grade presentation system on a warm cream canvas (#fdfae7) with a single saturated cobalt blue (#1e2bfa) as the only accent color. Display type runs Space Grotesk for headlines and numerical callouts; Inter handles body and chrome. Cards are soft-tinted cobalt at 4% opacity with 1.5px translucent borders and 10-14px rounded corners — quiet, never bordered in solid color. The aesthetic borrows from investment-research reports, McKinsey-grade quarterly briefings, and contemporary financial dashboards — measured, data-dense without feeling crowded, and unmistakably professional. The system is built for executive readability at distance, with strong typographic hierarchy and a single accent color carrying every emphasis moment.\n\n1. Cover (cover)\n2. Executive synthesis (insights)\n3. Market segmentation (data)\n4. Stacked trend and interpretation (data)\n5. Opportunity matrix (comparison)\n6. Profit bridge (data)\n7. Customer journey (process)\n8. Service architecture (process)\n9. Annotated case comparison (comparison)\n10. Dependency roadmap (process)\n11. Decision table (comparison)\n12. Closing (closing)\n\n## Expanded composition rules\n\nThis pack has twelve layouts. Start with the information relationship, then choose a reference page. Do not default to three equal cards or one chart per slide.\n\nUse evidence-led report compositions: an executive thesis beside supporting evidence, stacked trends with annotations, a contribution bridge, a portfolio matrix, a customer journey, a capability architecture, a case comparison, a dependency roadmap, and a decision table. Keep cream as the field and use cobalt to identify the decision or most important series.\n\nFor a deck of six or more content pages, use at least four distinct structural families when the material supports them. Avoid repeating the same family on adjacent slides. A detailed page should have one dominant argument, a supporting chart/diagram/table, and one concise interpretation. Alternate detailed evidence pages with simpler synthesis pages.\n\nAdapt the reference geometry to the real content. Add annotations, units, direct labels, baselines, owners and dependencies where they carry meaning. These examples use invented, explicitly marked sample data: replace every value and conclusion with user evidence; never fabricate data to make a page look fuller. Preserve native editable text and geometry. Do not turn all content into images. Keep body text around 18–22 pt and chart labels around 13–16 pt; reflow or split before shrinking.\n\nReference families: 2 executive synthesis; 3 market segmentation; 4 stacked trend; 5 opportunity matrix; 6 profit bridge; 7 customer journey; 8 service architecture; 9 case study; 10 delivery roadmap; 11 decision table.\n\nAll charts and diagrams are native editable vectors. Example figures are illustrative, not reported facts. Retain a 48 pt outer margin and use 16:9, 960 × 540 pt.\n\nCopyright (c) 2026 Zara Zhang. DSH adaptation 2026-09-06. See licenses/zara/LICENSE and the pinned source design specification.\n",
+      "designSummary": "# Blue Professional / 蓝色商务\n\nAdapted from Zara Zhang's Blue Professional, commit e5e204fb1f3b06290846e7dcd7aceddabeceec8c. MIT. This native edition rebuilds 12 editable layouts; it is not an HTML import or an exact copy of every upstream slide.\n\n## Typography\n\nEnglish display: Arial; English body: Arial. These portable Office substitutions replace the upstream display face Space Grotesk. Chinese display: PingFang SC; body: PingFang SC. On Windows use Microsoft YaHei / Microsoft YaHei; on Linux use Noto Sans CJK SC / Noto Sans CJK SC. No font binary is distributed. Keep the serif/sans distinction.\n\nEnglish previews use source/. Chinese examples use source-zh/. Preview language does not select the language of the user's output. Choose the matching fonts for the actual content; reflow longer translations instead of shrinking titles.\n\n## Layout grammar\n\n A restrained, consulting-grade presentation system on a warm cream canvas (#fdfae7) with a single saturated cobalt blue (#1e2bfa) as the only accent color. Display type runs Space Grotesk for headlines and numerical callouts; Inter handles body and chrome. Cards are soft-tinted cobalt at 4% opacity with 1.5px translucent borders and 10-14px rounded corners — quiet, never bordered in solid color. The aesthetic borrows from investment-research reports, McKinsey-grade quarterly briefings, and contemporary financial dashboards — measured, data-dense without feeling crowded, and unmistakably professional. The system is built for executive readability at distance, with strong typographic hierarchy and a single accent color carrying every emphasis moment.\n\n1. Cover (cover)\n2. Executive synthesis (insights)\n3. Market segmentation (data)\n4. Stacked trend and interpretation (data)\n5. Opportunity matrix (comparison)\n6. Profit bridge (data)\n7. Customer journey (process)\n8. Service architecture (process)\n9. Annotated case comparison (comparison)\n10. Dependency roadmap (process)\n11. Decision table (comparison)\n12. Closing (closing)\n\n## Expanded composition rules\n\nThis pack has twelve layouts. Start with the information relationship, then choose a reference page. Do not default to three equal cards or one chart per slide.\n\nUse evidence-led report compositions: an executive thesis beside supporting evidence, stacked trends with annotations, a contribution bridge, a portfolio matrix, a customer journey, a capability architecture, a case comparison, a dependency roadmap, and a decision table. Keep cream as the field and use cobalt to identify the decision or most important series.\n\nFor a deck of six or more content pages, use at least four distinct structural families when the material supports them. Avoid repeating the same family on adjacent slides. A detailed page should have one dominant argument, a supporting chart/diagram/table, and one concise interpretation. Alternate detailed evidence pages with simpler synthesis pages.\n\nAdapt the reference geometry to the real content. Add annotations, units, direct labels, baselines, owners and dependencies where they carry meaning. These examples use invented, explicitly marked sample data: replace every value and conclusion with user evidence; never fabricate data to make a page look fuller. Preserve native editable text and geometry. Do not turn all content into images. Keep body text around 18–22 pt and chart labels around 13–16 pt; reflow or split before shrinking.\n\nReference families: 2 executive synthesis; 3 market segmentation; 4 stacked trend; 5 opportunity matrix; 6 profit bridge; 7 customer journey; 8 service architecture; 9 case study; 10 delivery roadmap; 11 decision table.\n\n## Composition finish\n\nTreat an analytical slide as a small argument: a claim at the top, a dominant exhibit, and a concise readout or next decision. A second exhibit must add evidence (a reconciled breakdown, a comparison table, an exception or a test), not repeat the same headline. Do not fill every page with equally sized cards. Keep a quiet synthesis or section break between dense runs.\n\nUse a shared baseline for chart labels, aligned numeric columns and a limited set of type sizes. Distinguish a section label, headline, exhibit label, evidence text and source note by size and spacing before adding color. Keep body text readable; short exhibit labels may be smaller. Avoid single-word last lines, detached punctuation and arbitrary line breaks. Reflow Chinese and English separately.\n\nPut units, population and measurement window beside the relevant exhibit. Directly label the meaningful exception or inflection; use a subtle highlight or a short leader without crossing another label. For paired exhibits with different denominators, state both explicitly. Reconcile subtotals and deltas. Use a common quantitative scale; decorative bars must never imply a different value.\n\nEnd an evidence page with a concise interpretation, bounded recommendation or open question. A roadmap names owners and a gate; a scorecard distinguishes exceptions from measures that pass. Highlight the one decision or exception, not every cell. Adapt these devices to the parent pack: quiet serif pages, engineering schematics and bold posters should not converge on one visual style.\n\nInspect a rendered page, not just its bounding boxes: check the reading order, line endings, label collisions, chart contrast and the gap above the footer. Keep labels clear of rules and markers. Use native editable text and geometry. Fictional reference data must be replaced by verified user material or visibly marked as an example.\nAll charts and diagrams are native editable vectors. Example figures are illustrative, not reported facts. Retain a 48 pt outer margin and use 16:9, 960 × 540 pt.\n\nCopyright (c) 2026 Zara Zhang. DSH adaptation 2026-09-06. See licenses/zara/LICENSE and the pinned source design specification.\n",
       "layoutPatterns": [
         {
           "family": "cover",
@@ -153,7 +153,7 @@
           "titlePosition": "left",
           "bodyColumns": 2,
           "density": "high",
-          "averageTextFrames": 26,
+          "averageTextFrames": 35,
           "averageMediaFrames": 0
         },
         {
@@ -177,7 +177,7 @@
           "titlePosition": "left",
           "bodyColumns": 2,
           "density": "high",
-          "averageTextFrames": 18,
+          "averageTextFrames": 30,
           "averageMediaFrames": 0
         },
         {
@@ -711,12 +711,12 @@
             {
               "kind": "text",
               "x": 64,
-              "y": 626.6666666666666,
+              "y": 633.3333333333334,
               "width": 1152,
-              "height": 37.333333333333336,
+              "height": 33.333333333333336,
               "textRole": "body",
-              "fontSize": 14,
-              "textCapacity": 61
+              "fontSize": 13,
+              "textCapacity": 66
             },
             {
               "kind": "text",
@@ -779,94 +779,218 @@
             {
               "kind": "text",
               "x": 64,
-              "y": 553.3333333333334,
-              "width": 46.666666666666664,
-              "height": 29.333333333333332,
+              "y": 204,
+              "width": 688,
+              "height": 32,
               "textRole": "body",
-              "fontSize": 12,
-              "textCapacity": 2
+              "fontSize": 11,
+              "textCapacity": 46
+            },
+            {
+              "kind": "shape",
+              "x": 144,
+              "y": 236,
+              "width": 12,
+              "height": 12,
+              "shape": "rect",
+              "fill": "1E2BFA"
+            },
+            {
+              "kind": "text",
+              "x": 165.33333333333334,
+              "y": 229.33333333333334,
+              "width": 209.33333333333334,
+              "height": 30.666666666666668,
+              "textRole": "body",
+              "fontSize": 11,
+              "textCapacity": 14
+            },
+            {
+              "kind": "shape",
+              "x": 400,
+              "y": 236,
+              "width": 12,
+              "height": 12,
+              "shape": "rect",
+              "fill": "A1A7FA"
+            },
+            {
+              "kind": "text",
+              "x": 421.3333333333333,
+              "y": 229.33333333333334,
+              "width": 280,
+              "height": 30.666666666666668,
+              "textRole": "body",
+              "fontSize": 11,
+              "textCapacity": 19
             },
             {
               "kind": "text",
               "x": 64,
-              "y": 452,
+              "y": 529.3333333333334,
               "width": 46.666666666666664,
               "height": 29.333333333333332,
               "textRole": "body",
-              "fontSize": 12,
-              "textCapacity": 2
+              "fontSize": 11,
+              "textCapacity": 3
             },
             {
               "kind": "text",
               "x": 64,
-              "y": 350.6666666666667,
+              "y": 448.26666666666665,
               "width": 46.666666666666664,
               "height": 29.333333333333332,
               "textRole": "body",
-              "fontSize": 12,
-              "textCapacity": 2
+              "fontSize": 11,
+              "textCapacity": 3
             },
             {
               "kind": "text",
               "x": 64,
-              "y": 249.33333333333334,
+              "y": 367.2,
               "width": 46.666666666666664,
               "height": 29.333333333333332,
               "textRole": "body",
-              "fontSize": 12,
-              "textCapacity": 2
+              "fontSize": 11,
+              "textCapacity": 3
+            },
+            {
+              "kind": "text",
+              "x": 64,
+              "y": 286.1333333333333,
+              "width": 46.666666666666664,
+              "height": 29.333333333333332,
+              "textRole": "body",
+              "fontSize": 11,
+              "textCapacity": 3
             },
             {
               "kind": "shape",
               "x": 148,
-              "y": 460.26666666666665,
+              "y": 457.5466666666666,
               "width": 57.333333333333336,
-              "height": 106.39999999999999,
+              "height": 85.12,
               "shape": "rect",
               "fill": "1E2BFA"
             },
             {
               "kind": "shape",
               "x": 148,
-              "y": 414.6666666666667,
+              "y": 421.06666666666666,
               "width": 57.333333333333336,
-              "height": 45.599999999999994,
+              "height": 36.48,
               "shape": "rect",
               "fill": "A1A7FA"
             },
             {
               "kind": "text",
               "x": 141.33333333333334,
-              "y": 369.3333333333333,
+              "y": 383.73333333333335,
               "width": 80,
-              "height": 33.333333333333336,
-              "textRole": "body",
-              "fontSize": 16,
-              "textCapacity": 3
-            },
-            {
-              "kind": "text",
-              "x": 145.33333333333334,
-              "y": 585.3333333333334,
-              "width": 74.66666666666667,
               "height": 33.333333333333336,
               "textRole": "body",
               "fontSize": 14,
               "textCapacity": 4
             },
             {
+              "kind": "text",
+              "x": 145.33333333333334,
+              "y": 556,
+              "width": 74.66666666666667,
+              "height": 33.333333333333336,
+              "textRole": "body",
+              "fontSize": 12,
+              "textCapacity": 4
+            },
+            {
               "kind": "shape",
               "x": 257.3333333333333,
-              "y": 445.06666666666666,
+              "y": 445.3866666666666,
               "width": 57.333333333333336,
-              "height": 121.59999999999998,
+              "height": 97.28000000000002,
               "shape": "rect",
               "fill": "1E2BFA"
             },
             {
               "kind": "shape",
               "x": 257.3333333333333,
-              "y": 394.40000000000003,
+              "y": 404.8533333333333,
+              "width": 57.333333333333336,
+              "height": 40.53333333333333,
+              "shape": "rect",
+              "fill": "A1A7FA"
+            },
+            {
+              "kind": "text",
+              "x": 250.66666666666666,
+              "y": 367.52,
+              "width": 80,
+              "height": 33.333333333333336,
+              "textRole": "body",
+              "fontSize": 14,
+              "textCapacity": 4
+            },
+            {
+              "kind": "text",
+              "x": 254.66666666666666,
+              "y": 556,
+              "width": 74.66666666666667,
+              "height": 33.333333333333336,
+              "textRole": "body",
+              "fontSize": 12,
+              "textCapacity": 4
+            },
+            {
+              "kind": "shape",
+              "x": 366.6666666666667,
+              "y": 435.25333333333333,
+              "width": 57.333333333333336,
+              "height": 107.41333333333334,
+              "shape": "rect",
+              "fill": "1E2BFA"
+            },
+            {
+              "kind": "shape",
+              "x": 366.6666666666667,
+              "y": 388.64000000000004,
+              "width": 57.333333333333336,
+              "height": 46.61333333333334,
+              "shape": "rect",
+              "fill": "A1A7FA"
+            },
+            {
+              "kind": "text",
+              "x": 360,
+              "y": 351.3066666666667,
+              "width": 80,
+              "height": 33.333333333333336,
+              "textRole": "body",
+              "fontSize": 14,
+              "textCapacity": 4
+            },
+            {
+              "kind": "text",
+              "x": 364,
+              "y": 556,
+              "width": 74.66666666666667,
+              "height": 33.333333333333336,
+              "textRole": "body",
+              "fontSize": 12,
+              "textCapacity": 4
+            },
+            {
+              "kind": "shape",
+              "x": 476,
+              "y": 419.03999999999996,
+              "width": 57.333333333333336,
+              "height": 123.62666666666667,
+              "shape": "rect",
+              "fill": "1E2BFA"
+            },
+            {
+              "kind": "shape",
+              "x": 476,
+              "y": 368.3733333333333,
               "width": 57.333333333333336,
               "height": 50.666666666666664,
               "shape": "rect",
@@ -874,171 +998,85 @@
             },
             {
               "kind": "text",
-              "x": 250.66666666666666,
-              "y": 349.06666666666666,
-              "width": 80,
-              "height": 33.333333333333336,
-              "textRole": "body",
-              "fontSize": 16,
-              "textCapacity": 3
-            },
-            {
-              "kind": "text",
-              "x": 254.66666666666666,
-              "y": 585.3333333333334,
-              "width": 74.66666666666667,
-              "height": 33.333333333333336,
-              "textRole": "body",
-              "fontSize": 14,
-              "textCapacity": 4
-            },
-            {
-              "kind": "shape",
-              "x": 366.6666666666667,
-              "y": 432.40000000000003,
-              "width": 57.333333333333336,
-              "height": 134.26666666666665,
-              "shape": "rect",
-              "fill": "1E2BFA"
-            },
-            {
-              "kind": "shape",
-              "x": 366.6666666666667,
-              "y": 374.1333333333334,
-              "width": 57.333333333333336,
-              "height": 58.26666666666666,
-              "shape": "rect",
-              "fill": "A1A7FA"
-            },
-            {
-              "kind": "text",
-              "x": 360,
-              "y": 328.8,
-              "width": 80,
-              "height": 33.333333333333336,
-              "textRole": "body",
-              "fontSize": 16,
-              "textCapacity": 3
-            },
-            {
-              "kind": "text",
-              "x": 364,
-              "y": 585.3333333333334,
-              "width": 74.66666666666667,
-              "height": 33.333333333333336,
-              "textRole": "body",
-              "fontSize": 14,
-              "textCapacity": 4
-            },
-            {
-              "kind": "shape",
-              "x": 476,
-              "y": 412.1333333333334,
-              "width": 57.333333333333336,
-              "height": 154.53333333333333,
-              "shape": "rect",
-              "fill": "1E2BFA"
-            },
-            {
-              "kind": "shape",
-              "x": 476,
-              "y": 348.8,
-              "width": 57.333333333333336,
-              "height": 63.333333333333336,
-              "shape": "rect",
-              "fill": "A1A7FA"
-            },
-            {
-              "kind": "text",
               "x": 469.3333333333333,
-              "y": 303.46666666666664,
+              "y": 331.04,
               "width": 80,
               "height": 33.333333333333336,
               "textRole": "body",
-              "fontSize": 16,
-              "textCapacity": 3
+              "fontSize": 14,
+              "textCapacity": 4
             },
             {
               "kind": "text",
               "x": 473.3333333333333,
-              "y": 585.3333333333334,
+              "y": 556,
               "width": 74.66666666666667,
               "height": 33.333333333333336,
               "textRole": "body",
-              "fontSize": 14,
+              "fontSize": 12,
               "textCapacity": 4
             },
             {
               "kind": "shape",
               "x": 585.3333333333334,
-              "y": 402,
+              "y": 410.93333333333334,
               "width": 57.333333333333336,
-              "height": 164.66666666666666,
+              "height": 131.73333333333332,
               "shape": "rect",
               "fill": "1E2BFA"
             },
             {
               "kind": "shape",
               "x": 585.3333333333334,
-              "y": 328.53333333333336,
+              "y": 352.16,
               "width": 57.333333333333336,
-              "height": 73.46666666666665,
+              "height": 58.77333333333333,
               "shape": "rect",
               "fill": "A1A7FA"
             },
             {
               "kind": "text",
               "x": 578.6666666666666,
-              "y": 283.2,
+              "y": 314.82666666666665,
               "width": 80,
-              "height": 33.333333333333336,
-              "textRole": "body",
-              "fontSize": 16,
-              "textCapacity": 3
-            },
-            {
-              "kind": "text",
-              "x": 582.6666666666666,
-              "y": 585.3333333333334,
-              "width": 74.66666666666667,
               "height": 33.333333333333336,
               "textRole": "body",
               "fontSize": 14,
               "textCapacity": 4
             },
             {
+              "kind": "text",
+              "x": 582.6666666666666,
+              "y": 556,
+              "width": 74.66666666666667,
+              "height": 33.333333333333336,
+              "textRole": "body",
+              "fontSize": 12,
+              "textCapacity": 4
+            },
+            {
               "kind": "shape",
               "x": 694.6666666666666,
-              "y": 384.2666666666667,
+              "y": 396.74666666666667,
               "width": 57.333333333333336,
-              "height": 182.39999999999998,
+              "height": 145.92,
               "shape": "rect",
               "fill": "1E2BFA"
             },
             {
               "kind": "shape",
               "x": 694.6666666666666,
-              "y": 300.6666666666667,
+              "y": 329.8666666666667,
               "width": 57.333333333333336,
-              "height": 83.6,
+              "height": 66.88000000000001,
               "shape": "rect",
               "fill": "A1A7FA"
             },
             {
               "kind": "text",
               "x": 688,
-              "y": 255.33333333333334,
+              "y": 292.53333333333336,
               "width": 80,
-              "height": 33.333333333333336,
-              "textRole": "body",
-              "fontSize": 16,
-              "textCapacity": 3
-            },
-            {
-              "kind": "text",
-              "x": 692,
-              "y": 585.3333333333334,
-              "width": 74.66666666666667,
               "height": 33.333333333333336,
               "textRole": "body",
               "fontSize": 14,
@@ -1046,58 +1084,50 @@
             },
             {
               "kind": "text",
-              "x": 122.66666666666667,
-              "y": 216,
-              "width": 560,
-              "height": 32,
-              "textRole": "body",
-              "fontSize": 13,
-              "textCapacity": 32
-            },
-            {
-              "kind": "shape",
-              "x": 898.6666666666666,
-              "y": 225.33333333333334,
-              "width": 20,
-              "height": 20,
-              "shape": "rect",
-              "fill": "1E2BFA"
-            },
-            {
-              "kind": "text",
-              "x": 933.3333333333334,
-              "y": 218.66666666666666,
-              "width": 253.33333333333334,
+              "x": 692,
+              "y": 556,
+              "width": 74.66666666666667,
               "height": 33.333333333333336,
               "textRole": "body",
-              "fontSize": 15,
-              "textCapacity": 12
-            },
-            {
-              "kind": "shape",
-              "x": 898.6666666666666,
-              "y": 276,
-              "width": 20,
-              "height": 20,
-              "shape": "rect",
-              "fill": "A1A7FA"
+              "fontSize": 12,
+              "textCapacity": 4
             },
             {
               "kind": "text",
-              "x": 933.3333333333334,
-              "y": 268,
-              "width": 253.33333333333334,
+              "x": 124,
+              "y": 597.3333333333334,
+              "width": 201.33333333333334,
               "height": 36,
               "textRole": "body",
-              "fontSize": 15,
-              "textCapacity": 12
+              "fontSize": 17,
+              "textCapacity": 8
+            },
+            {
+              "kind": "text",
+              "x": 328,
+              "y": 597.3333333333334,
+              "width": 486.6666666666667,
+              "height": 36,
+              "textRole": "body",
+              "fontSize": 14,
+              "textCapacity": 26
+            },
+            {
+              "kind": "text",
+              "x": 898.6666666666666,
+              "y": 206.66666666666666,
+              "width": 317.3333333333333,
+              "height": 37.333333333333336,
+              "textRole": "body",
+              "fontSize": 11,
+              "textCapacity": 42
             },
             {
               "kind": "title",
               "x": 898.6666666666666,
-              "y": 350.6666666666667,
+              "y": 272,
               "width": 317.3333333333333,
-              "height": 104,
+              "height": 98.66666666666667,
               "textRole": "title",
               "fontSize": 57,
               "textCapacity": 4
@@ -1105,22 +1135,82 @@
             {
               "kind": "text",
               "x": 898.6666666666666,
-              "y": 468,
+              "y": 380,
               "width": 317.3333333333333,
-              "height": 133.33333333333334,
+              "height": 68,
               "textRole": "body",
               "fontSize": 20,
-              "textCapacity": 44
+              "textCapacity": 22
+            },
+            {
+              "kind": "text",
+              "x": 898.6666666666666,
+              "y": 458.6666666666667,
+              "width": 220,
+              "height": 37.333333333333336,
+              "textRole": "body",
+              "fontSize": 14,
+              "textCapacity": 11
+            },
+            {
+              "kind": "text",
+              "x": 1118.6666666666667,
+              "y": 457.3333333333333,
+              "width": 97.33333333333333,
+              "height": 38.666666666666664,
+              "textRole": "body",
+              "fontSize": 19,
+              "textCapacity": 3
+            },
+            {
+              "kind": "text",
+              "x": 898.6666666666666,
+              "y": 506.6666666666667,
+              "width": 220,
+              "height": 37.333333333333336,
+              "textRole": "body",
+              "fontSize": 14,
+              "textCapacity": 11
+            },
+            {
+              "kind": "text",
+              "x": 1118.6666666666667,
+              "y": 505.3333333333333,
+              "width": 97.33333333333333,
+              "height": 38.666666666666664,
+              "textRole": "body",
+              "fontSize": 19,
+              "textCapacity": 3
+            },
+            {
+              "kind": "text",
+              "x": 898.6666666666666,
+              "y": 554.6666666666666,
+              "width": 220,
+              "height": 37.333333333333336,
+              "textRole": "body",
+              "fontSize": 14,
+              "textCapacity": 11
+            },
+            {
+              "kind": "text",
+              "x": 1118.6666666666667,
+              "y": 553.3333333333334,
+              "width": 97.33333333333333,
+              "height": 38.666666666666664,
+              "textRole": "body",
+              "fontSize": 19,
+              "textCapacity": 3
             },
             {
               "kind": "text",
               "x": 64,
-              "y": 626.6666666666666,
+              "y": 633.3333333333334,
               "width": 1152,
-              "height": 37.333333333333336,
+              "height": 33.333333333333336,
               "textRole": "body",
-              "fontSize": 14,
-              "textCapacity": 61
+              "fontSize": 13,
+              "textCapacity": 66
             },
             {
               "kind": "text",
@@ -1462,189 +1552,309 @@
               "textCapacity": 25
             },
             {
+              "kind": "text",
+              "x": 64,
+              "y": 204,
+              "width": 772,
+              "height": 30.666666666666668,
+              "textRole": "body",
+              "fontSize": 11,
+              "textCapacity": 52
+            },
+            {
+              "kind": "text",
+              "x": 64,
+              "y": 557.3333333333334,
+              "width": 41.333333333333336,
+              "height": 30.666666666666668,
+              "textRole": "body",
+              "fontSize": 11,
+              "textCapacity": 2
+            },
+            {
+              "kind": "text",
+              "x": 64,
+              "y": 490.6666666666667,
+              "width": 41.333333333333336,
+              "height": 30.666666666666668,
+              "textRole": "body",
+              "fontSize": 11,
+              "textCapacity": 2
+            },
+            {
+              "kind": "text",
+              "x": 64,
+              "y": 424,
+              "width": 41.333333333333336,
+              "height": 30.666666666666668,
+              "textRole": "body",
+              "fontSize": 11,
+              "textCapacity": 2
+            },
+            {
+              "kind": "text",
+              "x": 64,
+              "y": 357.3333333333333,
+              "width": 41.333333333333336,
+              "height": 30.666666666666668,
+              "textRole": "body",
+              "fontSize": 11,
+              "textCapacity": 2
+            },
+            {
+              "kind": "text",
+              "x": 64,
+              "y": 290.6666666666667,
+              "width": 41.333333333333336,
+              "height": 30.666666666666668,
+              "textRole": "body",
+              "fontSize": 11,
+              "textCapacity": 2
+            },
+            {
               "kind": "shape",
-              "x": 101.33333333333333,
-              "y": 389.3333333333333,
-              "width": 86.66666666666667,
-              "height": 176,
+              "x": 133.33333333333334,
+              "y": 409.3333333333333,
+              "width": 81.33333333333333,
+              "height": 160,
               "shape": "rect",
               "fill": "1E2BFA"
             },
             {
               "kind": "text",
-              "x": 98.66666666666667,
-              "y": 342.6666666666667,
-              "width": 92,
-              "height": 40,
+              "x": 126.66666666666667,
+              "y": 368,
+              "width": 94.66666666666667,
+              "height": 37.333333333333336,
               "textRole": "body",
-              "fontSize": 22,
+              "fontSize": 20,
               "textCapacity": 3
             },
             {
               "kind": "text",
-              "x": 78.66666666666667,
-              "y": 588,
-              "width": 133.33333333333334,
-              "height": 37.333333333333336,
-              "textRole": "body",
-              "fontSize": 14,
-              "textCapacity": 7
-            },
-            {
-              "kind": "shape",
-              "x": 249.33333333333334,
-              "y": 301.3333333333333,
-              "width": 86.66666666666667,
-              "height": 88,
-              "shape": "rect",
-              "fill": "929AFF"
-            },
-            {
-              "kind": "text",
-              "x": 246.66666666666666,
-              "y": 254.66666666666666,
-              "width": 92,
-              "height": 40,
-              "textRole": "body",
-              "fontSize": 22,
-              "textCapacity": 3
-            },
-            {
-              "kind": "text",
-              "x": 226.66666666666666,
-              "y": 588,
-              "width": 133.33333333333334,
-              "height": 37.333333333333336,
-              "textRole": "body",
-              "fontSize": 14,
-              "textCapacity": 7
-            },
-            {
-              "kind": "shape",
-              "x": 397.3333333333333,
-              "y": 301.3333333333333,
-              "width": 86.66666666666667,
-              "height": 44,
-              "shape": "rect",
-              "fill": "929AFF"
-            },
-            {
-              "kind": "text",
-              "x": 394.6666666666667,
-              "y": 254.66666666666666,
-              "width": 92,
-              "height": 40,
-              "textRole": "body",
-              "fontSize": 22,
-              "textCapacity": 3
-            },
-            {
-              "kind": "text",
-              "x": 374.6666666666667,
-              "y": 588,
-              "width": 133.33333333333334,
-              "height": 37.333333333333336,
-              "textRole": "body",
-              "fontSize": 14,
-              "textCapacity": 7
-            },
-            {
-              "kind": "shape",
-              "x": 545.3333333333334,
-              "y": 345.3333333333333,
-              "width": 86.66666666666667,
-              "height": 29.333333333333332,
-              "shape": "rect",
-              "fill": "929AFF"
-            },
-            {
-              "kind": "text",
-              "x": 542.6666666666666,
-              "y": 298.6666666666667,
-              "width": 92,
-              "height": 40,
-              "textRole": "body",
-              "fontSize": 22,
-              "textCapacity": 3
-            },
-            {
-              "kind": "text",
-              "x": 522.6666666666666,
-              "y": 588,
-              "width": 133.33333333333334,
-              "height": 37.333333333333336,
-              "textRole": "body",
-              "fontSize": 14,
-              "textCapacity": 7
-            },
-            {
-              "kind": "shape",
-              "x": 693.3333333333334,
-              "y": 374.6666666666667,
-              "width": 86.66666666666667,
-              "height": 190.66666666666666,
-              "shape": "rect",
-              "fill": "1E2BFA"
-            },
-            {
-              "kind": "text",
-              "x": 690.6666666666666,
-              "y": 328,
-              "width": 92,
-              "height": 40,
-              "textRole": "body",
-              "fontSize": 22,
-              "textCapacity": 3
-            },
-            {
-              "kind": "text",
-              "x": 670.6666666666666,
-              "y": 588,
-              "width": 133.33333333333334,
-              "height": 37.333333333333336,
-              "textRole": "body",
-              "fontSize": 14,
-              "textCapacity": 7
-            },
-            {
-              "kind": "text",
-              "x": 89.33333333333333,
-              "y": 206.66666666666666,
-              "width": 705.3333333333334,
-              "height": 29.333333333333332,
+              "x": 110.66666666666667,
+              "y": 585.3333333333334,
+              "width": 126.66666666666667,
+              "height": 36,
               "textRole": "body",
               "fontSize": 13,
-              "textCapacity": 40
+              "textCapacity": 7
+            },
+            {
+              "kind": "shape",
+              "x": 274.6666666666667,
+              "y": 329.3333333333333,
+              "width": 81.33333333333333,
+              "height": 80,
+              "shape": "rect",
+              "fill": "929AFF"
+            },
+            {
+              "kind": "text",
+              "x": 268,
+              "y": 288,
+              "width": 94.66666666666667,
+              "height": 37.333333333333336,
+              "textRole": "body",
+              "fontSize": 20,
+              "textCapacity": 3
+            },
+            {
+              "kind": "text",
+              "x": 252,
+              "y": 585.3333333333334,
+              "width": 126.66666666666667,
+              "height": 36,
+              "textRole": "body",
+              "fontSize": 13,
+              "textCapacity": 7
+            },
+            {
+              "kind": "shape",
+              "x": 416,
+              "y": 329.3333333333333,
+              "width": 81.33333333333333,
+              "height": 40,
+              "shape": "rect",
+              "fill": "BCBEB9"
+            },
+            {
+              "kind": "text",
+              "x": 409.3333333333333,
+              "y": 288,
+              "width": 94.66666666666667,
+              "height": 37.333333333333336,
+              "textRole": "body",
+              "fontSize": 20,
+              "textCapacity": 3
+            },
+            {
+              "kind": "text",
+              "x": 393.3333333333333,
+              "y": 585.3333333333334,
+              "width": 126.66666666666667,
+              "height": 36,
+              "textRole": "body",
+              "fontSize": 13,
+              "textCapacity": 7
+            },
+            {
+              "kind": "shape",
+              "x": 557.3333333333334,
+              "y": 369.3333333333333,
+              "width": 81.33333333333333,
+              "height": 26.666666666666668,
+              "shape": "rect",
+              "fill": "BCBEB9"
+            },
+            {
+              "kind": "text",
+              "x": 550.6666666666666,
+              "y": 328,
+              "width": 94.66666666666667,
+              "height": 37.333333333333336,
+              "textRole": "body",
+              "fontSize": 20,
+              "textCapacity": 3
+            },
+            {
+              "kind": "text",
+              "x": 534.6666666666666,
+              "y": 585.3333333333334,
+              "width": 126.66666666666667,
+              "height": 36,
+              "textRole": "body",
+              "fontSize": 13,
+              "textCapacity": 7
+            },
+            {
+              "kind": "shape",
+              "x": 698.6666666666666,
+              "y": 396,
+              "width": 81.33333333333333,
+              "height": 173.33333333333334,
+              "shape": "rect",
+              "fill": "1E2BFA"
+            },
+            {
+              "kind": "text",
+              "x": 692,
+              "y": 354.6666666666667,
+              "width": 94.66666666666667,
+              "height": 37.333333333333336,
+              "textRole": "body",
+              "fontSize": 20,
+              "textCapacity": 3
+            },
+            {
+              "kind": "text",
+              "x": 676,
+              "y": 585.3333333333334,
+              "width": 126.66666666666667,
+              "height": 36,
+              "textRole": "body",
+              "fontSize": 13,
+              "textCapacity": 7
+            },
+            {
+              "kind": "text",
+              "x": 905.3333333333334,
+              "y": 213.33333333333334,
+              "width": 310.6666666666667,
+              "height": 33.333333333333336,
+              "textRole": "body",
+              "fontSize": 11,
+              "textCapacity": 42
             },
             {
               "kind": "title",
-              "x": 900,
-              "y": 260,
-              "width": 316,
-              "height": 117.33333333333333,
+              "x": 905.3333333333334,
+              "y": 273.3333333333333,
+              "width": 310.6666666666667,
+              "height": 113.33333333333333,
               "textRole": "title",
-              "fontSize": 56,
+              "fontSize": 54,
               "textCapacity": 4
             },
             {
               "kind": "text",
-              "x": 900,
-              "y": 386.6666666666667,
-              "width": 316,
-              "height": 46.666666666666664,
+              "x": 905.3333333333334,
+              "y": 392,
+              "width": 310.6666666666667,
+              "height": 65.33333333333333,
               "textRole": "body",
-              "fontSize": 22,
-              "textCapacity": 10
+              "fontSize": 19,
+              "textCapacity": 24
             },
             {
               "kind": "text",
-              "x": 900,
-              "y": 480,
-              "width": 316,
-              "height": 122.66666666666667,
+              "x": 905.3333333333334,
+              "y": 468,
+              "width": 228,
+              "height": 36,
               "textRole": "body",
-              "fontSize": 20,
-              "textCapacity": 44
+              "fontSize": 14,
+              "textCapacity": 12
+            },
+            {
+              "kind": "text",
+              "x": 1133.3333333333333,
+              "y": 465.3333333333333,
+              "width": 82.66666666666667,
+              "height": 40,
+              "textRole": "body",
+              "fontSize": 19,
+              "textCapacity": 3
+            },
+            {
+              "kind": "text",
+              "x": 905.3333333333334,
+              "y": 514.6666666666666,
+              "width": 228,
+              "height": 36,
+              "textRole": "body",
+              "fontSize": 14,
+              "textCapacity": 12
+            },
+            {
+              "kind": "text",
+              "x": 1133.3333333333333,
+              "y": 512,
+              "width": 82.66666666666667,
+              "height": 40,
+              "textRole": "body",
+              "fontSize": 19,
+              "textCapacity": 3
+            },
+            {
+              "kind": "text",
+              "x": 905.3333333333334,
+              "y": 561.3333333333334,
+              "width": 228,
+              "height": 36,
+              "textRole": "body",
+              "fontSize": 14,
+              "textCapacity": 12
+            },
+            {
+              "kind": "text",
+              "x": 1133.3333333333333,
+              "y": 558.6666666666666,
+              "width": 82.66666666666667,
+              "height": 40,
+              "textRole": "body",
+              "fontSize": 19,
+              "textCapacity": 3
+            },
+            {
+              "kind": "text",
+              "x": 64,
+              "y": 633.3333333333334,
+              "width": 1152,
+              "height": 33.333333333333336,
+              "textRole": "body",
+              "fontSize": 13,
+              "textCapacity": 66
             },
             {
               "kind": "text",
@@ -2369,12 +2579,12 @@
             {
               "kind": "text",
               "x": 64,
-              "y": 626.6666666666666,
+              "y": 633.3333333333334,
               "width": 1152,
-              "height": 37.333333333333336,
+              "height": 33.333333333333336,
               "textRole": "body",
-              "fontSize": 14,
-              "textCapacity": 61
+              "fontSize": 13,
+              "textCapacity": 66
             },
             {
               "kind": "text",
@@ -2840,12 +3050,12 @@
             {
               "kind": "text",
               "x": 64,
-              "y": 626.6666666666666,
+              "y": 633.3333333333334,
               "width": 1152,
-              "height": 37.333333333333336,
+              "height": 33.333333333333336,
               "textRole": "body",
-              "fontSize": 14,
-              "textCapacity": 61
+              "fontSize": 13,
+              "textCapacity": 66
             },
             {
               "kind": "text",

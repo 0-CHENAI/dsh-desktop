@@ -40,9 +40,9 @@ elements:
     elementType: text
     bounds:
       - 48
-      - 78
+      - 76
       - 864
-      - 63
+      - 64
     content:
       text: Define what independent work looks like
       fontFamily:
@@ -50,11 +50,26 @@ elements:
         mac: PingFang SC
         win: Microsoft YaHei
         ea: Noto Sans CJK SC
-      fontSize: 34
+      fontSize: 32
       lineHeight: 1.1
       color: '#243F35'
       bold: true
-  - elementId: s4
+  - elementId: t4
+    elementType: text
+    bounds:
+      - 754
+      - 46
+      - 158
+      - 13
+    content:
+      text: EXHIBIT 04
+      fontFamily: *ref_0
+      fontSize: 9
+      lineHeight: 1.1
+      color: '#63756c'
+      bold: false
+      align: right
+  - elementId: s5
     elementType: shape
     bounds:
       - 686
@@ -68,7 +83,7 @@ elements:
     border:
       width: 0
       color: '#E5EBDD'
-  - elementId: t5
+  - elementId: t6
     elementType: text
     bounds:
       - 48
@@ -82,7 +97,7 @@ elements:
       lineHeight: 1.1
       color: '#243F35'
       bold: false
-  - elementId: t6
+  - elementId: t7
     elementType: text
     bounds:
       - 270
@@ -96,7 +111,7 @@ elements:
       lineHeight: 1.1
       color: '#243F35'
       bold: false
-  - elementId: t7
+  - elementId: t8
     elementType: text
     bounds:
       - 483
@@ -110,7 +125,7 @@ elements:
       lineHeight: 1.1
       color: '#243F35'
       bold: false
-  - elementId: t8
+  - elementId: t9
     elementType: text
     bounds:
       - 698
@@ -124,7 +139,7 @@ elements:
       lineHeight: 1.1
       color: '#243F35'
       bold: false
-  - elementId: l9
+  - elementId: l10
     elementType: line
     bounds:
       - 48
@@ -138,7 +153,7 @@ elements:
     border:
       width: 0.6
       color: '#b8beb4'
-  - elementId: t10
+  - elementId: t11
     elementType: text
     bounds:
       - 48
@@ -152,7 +167,7 @@ elements:
       lineHeight: 1.1
       color: '#243F35'
       bold: true
-  - elementId: t11
+  - elementId: t12
     elementType: text
     bounds:
       - 270
@@ -166,7 +181,7 @@ elements:
       lineHeight: 1.1
       color: '#243F35'
       bold: false
-  - elementId: t12
+  - elementId: t13
     elementType: text
     bounds:
       - 483
@@ -180,7 +195,7 @@ elements:
       lineHeight: 1.1
       color: '#243F35'
       bold: false
-  - elementId: t13
+  - elementId: t14
     elementType: text
     bounds:
       - 698
@@ -194,7 +209,7 @@ elements:
       lineHeight: 1.1
       color: '#243F35'
       bold: false
-  - elementId: l14
+  - elementId: l15
     elementType: line
     bounds:
       - 48
@@ -208,7 +223,7 @@ elements:
     border:
       width: 0.6
       color: '#b8beb4'
-  - elementId: t15
+  - elementId: t16
     elementType: text
     bounds:
       - 48
@@ -222,7 +237,7 @@ elements:
       lineHeight: 1.1
       color: '#243F35'
       bold: true
-  - elementId: t16
+  - elementId: t17
     elementType: text
     bounds:
       - 270
@@ -236,7 +251,7 @@ elements:
       lineHeight: 1.1
       color: '#243F35'
       bold: false
-  - elementId: t17
+  - elementId: t18
     elementType: text
     bounds:
       - 483
@@ -250,7 +265,7 @@ elements:
       lineHeight: 1.1
       color: '#243F35'
       bold: false
-  - elementId: t18
+  - elementId: t19
     elementType: text
     bounds:
       - 698
@@ -264,7 +279,7 @@ elements:
       lineHeight: 1.1
       color: '#243F35'
       bold: false
-  - elementId: l19
+  - elementId: l20
     elementType: line
     bounds:
       - 48
@@ -278,7 +293,7 @@ elements:
     border:
       width: 0.6
       color: '#b8beb4'
-  - elementId: t20
+  - elementId: t21
     elementType: text
     bounds:
       - 48
@@ -292,7 +307,7 @@ elements:
       lineHeight: 1.1
       color: '#243F35'
       bold: true
-  - elementId: t21
+  - elementId: t22
     elementType: text
     bounds:
       - 270
@@ -306,7 +321,7 @@ elements:
       lineHeight: 1.1
       color: '#243F35'
       bold: false
-  - elementId: t22
+  - elementId: t23
     elementType: text
     bounds:
       - 483
@@ -320,7 +335,7 @@ elements:
       lineHeight: 1.1
       color: '#243F35'
       bold: false
-  - elementId: t23
+  - elementId: t24
     elementType: text
     bounds:
       - 698
@@ -334,21 +349,35 @@ elements:
       lineHeight: 1.1
       color: '#243F35'
       bold: false
-  - elementId: t24
+  - elementId: l25
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#c9ccc3'
+  - elementId: t26
     elementType: text
     bounds:
       - 48
-      - 469
+      - 475
       - 864
-      - 28
+      - 25
     content:
       text: Use observed work as evidence. A rubric is a guide, not a substitute for judgment.
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 13
       lineHeight: 1.1
       color: '#243F35'
       bold: false
-  - elementId: t25
+  - elementId: t27
     elementType: text
     bounds:
       - 48
@@ -362,7 +391,7 @@ elements:
       lineHeight: 1.1
       color: '#243F35'
       bold: false
-  - elementId: t26
+  - elementId: t28
     elementType: text
     bounds:
       - 871

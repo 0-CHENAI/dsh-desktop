@@ -68,9 +68,9 @@ elements:
     elementType: text
     bounds:
       - 48
-      - 78
+      - 76
       - 864
-      - 63
+      - 64
     content:
       text: Trace the question to testable branches
       fontFamily:
@@ -78,11 +78,26 @@ elements:
         mac: PingFang SC
         win: Microsoft YaHei
         ea: Noto Sans CJK SC
-      fontSize: 34
+      fontSize: 32
       lineHeight: 1.1
       color: '#F0C8A0'
       bold: true
   - elementId: t6
+    elementType: text
+    bounds:
+      - 754
+      - 46
+      - 158
+      - 13
+    content:
+      text: EXHIBIT 03
+      fontFamily: *ref_0
+      fontSize: 9
+      lineHeight: 1.1
+      color: '#b09478'
+      bold: false
+      align: right
+  - elementId: t7
     elementType: text
     bounds:
       - 48
@@ -96,7 +111,7 @@ elements:
       lineHeight: 1.1
       color: '#F0C8A0'
       bold: false
-  - elementId: s7
+  - elementId: s8
     elementType: shape
     bounds:
       - 48
@@ -110,7 +125,7 @@ elements:
     border:
       width: 0
       color: '#F0C8A0'
-  - elementId: t8
+  - elementId: t9
     elementType: text
     bounds:
       - 60
@@ -125,7 +140,7 @@ elements:
       color: '#181915'
       bold: false
       align: center
-  - elementId: l9
+  - elementId: l10
     elementType: line
     bounds:
       - 287
@@ -139,7 +154,7 @@ elements:
     border:
       width: 0.6
       color: '#F0C8A0'
-  - elementId: l10
+  - elementId: l11
     elementType: line
     bounds:
       - 287
@@ -153,7 +168,7 @@ elements:
     border:
       width: 1.2
       color: '#F0C8A0'
-  - elementId: l11
+  - elementId: l12
     elementType: line
     bounds:
       - 341.03232834558344
@@ -167,7 +182,7 @@ elements:
     border:
       width: 1.2
       color: '#F0C8A0'
-  - elementId: l12
+  - elementId: l13
     elementType: line
     bounds:
       - 341.03232834558344
@@ -181,7 +196,7 @@ elements:
     border:
       width: 1.2
       color: '#F0C8A0'
-  - elementId: s13
+  - elementId: s14
     elementType: shape
     bounds:
       - 350
@@ -195,7 +210,7 @@ elements:
     border:
       width: 0
       color: '#3D3129'
-  - elementId: t14
+  - elementId: t15
     elementType: text
     bounds:
       - 362
@@ -210,7 +225,7 @@ elements:
       color: '#F8F6EE'
       bold: false
       align: center
-  - elementId: l15
+  - elementId: l16
     elementType: line
     bounds:
       - 520
@@ -224,7 +239,7 @@ elements:
     border:
       width: 1.2
       color: '#F0C8A0'
-  - elementId: l16
+  - elementId: l17
     elementType: line
     bounds:
       - 560.0323283455834
@@ -238,7 +253,7 @@ elements:
     border:
       width: 1.2
       color: '#F0C8A0'
-  - elementId: l17
+  - elementId: l18
     elementType: line
     bounds:
       - 560.0323283455834
@@ -252,7 +267,7 @@ elements:
     border:
       width: 1.2
       color: '#F0C8A0'
-  - elementId: l18
+  - elementId: l19
     elementType: line
     bounds:
       - 566
@@ -266,7 +281,7 @@ elements:
     border:
       width: 0.6
       color: '#F0C8A0'
-  - elementId: l19
+  - elementId: l20
     elementType: line
     bounds:
       - 566
@@ -280,7 +295,7 @@ elements:
     border:
       width: 0.6
       color: '#F0C8A0'
-  - elementId: t20
+  - elementId: t21
     elementType: text
     bounds:
       - 608
@@ -294,7 +309,7 @@ elements:
       lineHeight: 1.1
       color: '#F0C8A0'
       bold: false
-  - elementId: l21
+  - elementId: l22
     elementType: line
     bounds:
       - 566
@@ -308,7 +323,7 @@ elements:
     border:
       width: 0.6
       color: '#F0C8A0'
-  - elementId: l22
+  - elementId: l23
     elementType: line
     bounds:
       - 566
@@ -322,7 +337,7 @@ elements:
     border:
       width: 0.6
       color: '#F0C8A0'
-  - elementId: t23
+  - elementId: t24
     elementType: text
     bounds:
       - 608
@@ -336,7 +351,7 @@ elements:
       lineHeight: 1.1
       color: '#F0C8A0'
       bold: false
-  - elementId: l24
+  - elementId: l25
     elementType: line
     bounds:
       - 287
@@ -350,7 +365,7 @@ elements:
     border:
       width: 0.6
       color: '#F0C8A0'
-  - elementId: l25
+  - elementId: l26
     elementType: line
     bounds:
       - 287
@@ -364,7 +379,7 @@ elements:
     border:
       width: 1.2
       color: '#F0C8A0'
-  - elementId: l26
+  - elementId: l27
     elementType: line
     bounds:
       - 341.03232834558344
@@ -378,7 +393,7 @@ elements:
     border:
       width: 1.2
       color: '#F0C8A0'
-  - elementId: l27
+  - elementId: l28
     elementType: line
     bounds:
       - 341.03232834558344
@@ -392,7 +407,7 @@ elements:
     border:
       width: 1.2
       color: '#F0C8A0'
-  - elementId: s28
+  - elementId: s29
     elementType: shape
     bounds:
       - 350
@@ -406,7 +421,7 @@ elements:
     border:
       width: 0
       color: '#3D3129'
-  - elementId: t29
+  - elementId: t30
     elementType: text
     bounds:
       - 362
@@ -421,7 +436,7 @@ elements:
       color: '#F8F6EE'
       bold: false
       align: center
-  - elementId: l30
+  - elementId: l31
     elementType: line
     bounds:
       - 520
@@ -435,7 +450,7 @@ elements:
     border:
       width: 1.2
       color: '#F0C8A0'
-  - elementId: l31
+  - elementId: l32
     elementType: line
     bounds:
       - 560.0323283455834
@@ -449,7 +464,7 @@ elements:
     border:
       width: 1.2
       color: '#F0C8A0'
-  - elementId: l32
+  - elementId: l33
     elementType: line
     bounds:
       - 560.0323283455834
@@ -463,7 +478,7 @@ elements:
     border:
       width: 1.2
       color: '#F0C8A0'
-  - elementId: l33
+  - elementId: l34
     elementType: line
     bounds:
       - 566
@@ -477,7 +492,7 @@ elements:
     border:
       width: 0.6
       color: '#F0C8A0'
-  - elementId: l34
+  - elementId: l35
     elementType: line
     bounds:
       - 566
@@ -491,7 +506,7 @@ elements:
     border:
       width: 0.6
       color: '#F0C8A0'
-  - elementId: t35
+  - elementId: t36
     elementType: text
     bounds:
       - 608
@@ -505,7 +520,7 @@ elements:
       lineHeight: 1.1
       color: '#F0C8A0'
       bold: false
-  - elementId: l36
+  - elementId: l37
     elementType: line
     bounds:
       - 566
@@ -519,7 +534,7 @@ elements:
     border:
       width: 0.6
       color: '#F0C8A0'
-  - elementId: l37
+  - elementId: l38
     elementType: line
     bounds:
       - 566
@@ -533,7 +548,7 @@ elements:
     border:
       width: 0.6
       color: '#F0C8A0'
-  - elementId: t38
+  - elementId: t39
     elementType: text
     bounds:
       - 608
@@ -547,7 +562,7 @@ elements:
       lineHeight: 1.1
       color: '#F0C8A0'
       bold: false
-  - elementId: l39
+  - elementId: l40
     elementType: line
     bounds:
       - 287
@@ -561,7 +576,7 @@ elements:
     border:
       width: 0.6
       color: '#F0C8A0'
-  - elementId: l40
+  - elementId: l41
     elementType: line
     bounds:
       - 287
@@ -575,7 +590,7 @@ elements:
     border:
       width: 1.2
       color: '#F0C8A0'
-  - elementId: l41
+  - elementId: l42
     elementType: line
     bounds:
       - 341.03232834558344
@@ -589,7 +604,7 @@ elements:
     border:
       width: 1.2
       color: '#F0C8A0'
-  - elementId: l42
+  - elementId: l43
     elementType: line
     bounds:
       - 341.03232834558344
@@ -603,7 +618,7 @@ elements:
     border:
       width: 1.2
       color: '#F0C8A0'
-  - elementId: s43
+  - elementId: s44
     elementType: shape
     bounds:
       - 350
@@ -617,7 +632,7 @@ elements:
     border:
       width: 0
       color: '#3D3129'
-  - elementId: t44
+  - elementId: t45
     elementType: text
     bounds:
       - 362
@@ -632,7 +647,7 @@ elements:
       color: '#F8F6EE'
       bold: false
       align: center
-  - elementId: l45
+  - elementId: l46
     elementType: line
     bounds:
       - 520
@@ -646,7 +661,7 @@ elements:
     border:
       width: 1.2
       color: '#F0C8A0'
-  - elementId: l46
+  - elementId: l47
     elementType: line
     bounds:
       - 560.0323283455834
@@ -660,7 +675,7 @@ elements:
     border:
       width: 1.2
       color: '#F0C8A0'
-  - elementId: l47
+  - elementId: l48
     elementType: line
     bounds:
       - 560.0323283455834
@@ -674,7 +689,7 @@ elements:
     border:
       width: 1.2
       color: '#F0C8A0'
-  - elementId: l48
+  - elementId: l49
     elementType: line
     bounds:
       - 566
@@ -688,7 +703,7 @@ elements:
     border:
       width: 0.6
       color: '#F0C8A0'
-  - elementId: l49
+  - elementId: l50
     elementType: line
     bounds:
       - 566
@@ -702,7 +717,7 @@ elements:
     border:
       width: 0.6
       color: '#F0C8A0'
-  - elementId: t50
+  - elementId: t51
     elementType: text
     bounds:
       - 608
@@ -716,7 +731,7 @@ elements:
       lineHeight: 1.1
       color: '#F0C8A0'
       bold: false
-  - elementId: l51
+  - elementId: l52
     elementType: line
     bounds:
       - 566
@@ -730,7 +745,7 @@ elements:
     border:
       width: 0.6
       color: '#F0C8A0'
-  - elementId: l52
+  - elementId: l53
     elementType: line
     bounds:
       - 566
@@ -744,7 +759,7 @@ elements:
     border:
       width: 0.6
       color: '#F0C8A0'
-  - elementId: t53
+  - elementId: t54
     elementType: text
     bounds:
       - 608
@@ -758,7 +773,7 @@ elements:
       lineHeight: 1.1
       color: '#F0C8A0'
       bold: false
-  - elementId: l54
+  - elementId: l55
     elementType: line
     bounds:
       - 267
@@ -772,21 +787,35 @@ elements:
     border:
       width: 1.2
       color: '#F0C8A0'
-  - elementId: t55
+  - elementId: l56
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#494037'
+  - elementId: t57
     elementType: text
     bounds:
       - 48
-      - 469
+      - 475
       - 864
-      - 28
+      - 25
     content:
       text: A useful branch can be confirmed or rejected independently.
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 13
       lineHeight: 1.1
       color: '#F0C8A0'
       bold: false
-  - elementId: t56
+  - elementId: t58
     elementType: text
     bounds:
       - 48
@@ -800,7 +829,7 @@ elements:
       lineHeight: 1.1
       color: '#F0C8A0'
       bold: false
-  - elementId: t57
+  - elementId: t59
     elementType: text
     bounds:
       - 871

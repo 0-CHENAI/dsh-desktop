@@ -5,7 +5,7 @@ description: DSH 演示文稿：编写本地 PPTD 工程并输出可编辑 PPTX�
 
 # DSH 演示文稿
 
-<!-- DSH-PPT-AUTHORING-20260906-V2 -->
+<!-- DSH-PPT-AUTHORING-20260907-V3 -->
 
 本 Skill 仅由用户选中的 PPT 模式启用。
 
@@ -16,8 +16,9 @@ description: DSH 演示文稿：编写本地 PPTD 工程并输出可编辑 PPTX�
 3. 按内容关系选择版式，用用户自己的文字、数字和素材重建可编辑元素。参考页不是输出背景，不得整页截图代替文字、图表。
 4. 用 `pptd_write_file` 建立 `.pptd` 清单和 `.page` 页面；用 `pptd_list_files`、`pptd_read_file` 检查工程。语法见 [本地格式说明](references/pptd.md)。
 5. 用户提供具体 PPTX 时，可用 `pptd_import` 导入工作区文件，检查转换结果后编辑。不覆盖原件。
-6. 调用 `pptd_render`，传入 `project_path` 和新的 `output_file`。发生格式、文本溢出或资源问题时，根据返回位置修正再渲染。
-7. 最终给出工具返回的 PPTX 路径和 PPTD 工程路径，准确说明已完成的检查，不声称做过未执行的 PowerPoint/WPS 验证。
+6. 先调用只读的 `pptd_check`。返回 `needs_revision` 是正常的排版反馈：按每条问题的文件路径、页码和元素 ID 定位修改，不要只按元素 ID 搜索（不同页面可能同名），也不要重复执行未改动的检查。问题清单完整返回，不需要靠反复导出来查看剩余问题。
+7. 检查通过后调用 `pptd_render`，传入 `project_path` 和新的 `output_file`。渲染仍会重新校验；`status: needs_revision` 表示尚未导出，`status: exported` 才表示已交付。建议项不阻止导出。
+8. 最终给出工具返回的 PPTX 路径和 PPTD 工程路径，准确说明已完成的检查，不声称做过未执行的 PowerPoint/WPS 验证。
 
 ## 语言和字体
 

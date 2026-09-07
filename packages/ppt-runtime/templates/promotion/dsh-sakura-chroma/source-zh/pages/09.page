@@ -82,9 +82,9 @@ elements:
     elementType: text
     bounds:
       - 48
-      - 78
+      - 76
       - 864
-      - 63
+      - 64
     content:
       text: 小范围改变，可衡量的结果
       fontFamily: &ref_1
@@ -92,11 +92,26 @@ elements:
         mac: PingFang SC
         win: Microsoft YaHei
         ea: Noto Sans CJK SC
-      fontSize: 34
+      fontSize: 32
       lineHeight: 1.1
       color: '#3A2516'
       bold: true
   - elementId: t7
+    elementType: text
+    bounds:
+      - 754
+      - 46
+      - 158
+      - 13
+    content:
+      text: 图示 08
+      fontFamily: *ref_0
+      fontSize: 9
+      lineHeight: 1.1
+      color: '#715f4c'
+      bold: false
+      align: right
+  - elementId: t8
     elementType: text
     bounds:
       - 48
@@ -110,7 +125,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: false
-  - elementId: t8
+  - elementId: t9
     elementType: text
     bounds:
       - 48
@@ -124,7 +139,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: true
-  - elementId: t9
+  - elementId: t10
     elementType: text
     bounds:
       - 48
@@ -138,7 +153,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: false
-  - elementId: l10
+  - elementId: l11
     elementType: line
     bounds:
       - 376
@@ -152,7 +167,7 @@ elements:
     border:
       width: 0.6
       color: '#baac95'
-  - elementId: t11
+  - elementId: t12
     elementType: text
     bounds:
       - 414
@@ -166,7 +181,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: true
-  - elementId: s12
+  - elementId: s13
     elementType: shape
     bounds:
       - 415
@@ -180,7 +195,7 @@ elements:
     border:
       width: 0
       color: '#baac95'
-  - elementId: s13
+  - elementId: s14
     elementType: shape
     bounds:
       - 415
@@ -194,7 +209,7 @@ elements:
     border:
       width: 0
       color: '#E54489'
-  - elementId: t14
+  - elementId: t15
     elementType: text
     bounds:
       - 754
@@ -208,7 +223,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: true
-  - elementId: t15
+  - elementId: t16
     elementType: text
     bounds:
       - 414
@@ -222,7 +237,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: true
-  - elementId: s16
+  - elementId: s17
     elementType: shape
     bounds:
       - 415
@@ -236,7 +251,7 @@ elements:
     border:
       width: 0
       color: '#baac95'
-  - elementId: s17
+  - elementId: s18
     elementType: shape
     bounds:
       - 415
@@ -250,7 +265,7 @@ elements:
     border:
       width: 0
       color: '#E54489'
-  - elementId: t18
+  - elementId: t19
     elementType: text
     bounds:
       - 754
@@ -264,21 +279,35 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: true
-  - elementId: t19
+  - elementId: l20
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#c9bca3'
+  - elementId: t21
     elementType: text
     bounds:
       - 48
-      - 469
+      - 475
       - 864
-      - 28
+      - 25
     content:
       text: 上方为试点前，下方为试点后。模拟对比不构成因果结论。
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 13
       lineHeight: 1.1
       color: '#3A2516'
       bold: false
-  - elementId: t20
+  - elementId: t22
     elementType: text
     bounds:
       - 48
@@ -292,7 +321,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: false
-  - elementId: t21
+  - elementId: t23
     elementType: text
     bounds:
       - 871

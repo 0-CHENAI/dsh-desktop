@@ -50,7 +50,7 @@ export function createCompositions(meta, lang) {
  const arrow=(x1,y1,x2,y2,c=accent)=>{line(x1,y1,x2,y2,c,1.2);const a=Math.atan2(y2-y1,x2-x1);for(const d of [-.55,.55])line(x2-7*Math.cos(a+d),y2-7*Math.sin(a+d),x2,y2,c,1.2);};
  const dot=(x,y,r,c=accent)=>box(x-r,y-r,2*r,2*r,c,undefined,'ellipse');
  const label=(v,x,y,w=240)=>t(v,x,y,w,25,13);
- const note=v=>t(v,48,469,864,28,14);
+ const note=v=>{line(48,465,912,465,blend(bg,ink,.22));t(v,48,475,864,25,13);};
  const unit=(v,x=48,y=152)=>label(v,x,y,850);
  const node=(v,x,y,w=162,h=58,em=false)=>{const fill=em?accent:surface;box(x,y,w,h,fill,slug.includes('blueprint')||slug.includes('modular')?ink:undefined,slug==='dsh-playful'?'roundRect':'rect');t(v,x+12,y+13,w-24,h-19,18,{color:'#'+contrast(fill),align:'center'});};
  const start=(title,k)=>{
@@ -69,20 +69,38 @@ export function createCompositions(meta, lang) {
   if(slug==='dsh-neo-grid-bold') for(let r=0;r<3;r++)for(let c=0;c<3;c++)if((r+c)%2===0)box(868+c*10,24+r*10,10,10,accent);
   t(meta.definition.name.toUpperCase(),48+(slug.includes('modular')?28:0),27,665,20,10);
   line(48,59,912,59,blend(bg,ink,.3));
-  t(title,48,78,864,63,34,{display:true});
+  t(title,48,76,864,64,32,{display:true});
+  t(['EXHIBIT '+String(k+1).padStart(2,'0'),'图示 '+String(k+1).padStart(2,'0')],754,46,158,13,9,{align:'right',color:'#'+blend(bg,ink,.7)});
  };
  const recipes={
   thesis:()=>{
-   t(topic[0],48,174,345,127,36,{display:true});t(topic[5],48,337,326,110,21);
-   line(427,171,427,449,blend(bg,ink,.3));
-   [1,2,3].forEach((n,i)=>{const y=174+i*91;label('0'+n,458,y,42);t(topic[n],518,y-4,383,34,24,{display:true});t([['What we can observe','可以直接观察的部分'],['What still needs a test','仍需通过试验验证的部分'],['What changes the next step','能够改变下一步的部分']][i],518,y+38,383,46,18);line(458,y+77,912,y+77,blend(bg,ink,.25));});
+   label(['THE WORKING POSITION','当前主张'],48,164,348);
+   t(topic[5],48,207,332,177,30,{display:true});
+   line(48,403,374,403,blend(bg,ink,.25));
+   t(['Start small. Learn before scaling.','小步验证，再扩大投入。'],48,420,330,43,17);
+   line(414,167,414,449,blend(bg,ink,.3));
+   const status=[['RECORD','记录'],['QUESTION','问题'],['DECISION','决策']];
+   [1,2,3].forEach((n,i)=>{const y=170+i*94;
+    t('0'+n,441,y-3,50,38,26,{display:true,color:'#'+blend(bg,ink,.55)});
+    t(topic[n],514,y,249,32,23,{display:true});
+    t(status[i],780,y+6,132,24,10,{align:'right',color:'#'+blend(bg,ink,.7)});
+    t([['What does the observed work tell us?','实际工作透露了什么？'],['Which assumption could change the plan?','哪个假设会改变计划？'],['What evidence would justify the next step?','什么证据足以支持下一步？']][i],514,y+41,398,47,18);
+    line(441,y+83,912,y+83,blend(bg,ink,.22));
+   });
   },
   evidence:()=>{
-   box(48,174,280,274,surface);t(['“The first step is clear.\nThe handoff is not.”','第一步很清楚\n交接时却不确定'],70,199,235,134,29,{display:true,color:'#'+contrast(surface)});t(['Invented interview excerpt','自编访谈示例'],70,393,234,34,13,{color:'#'+contrast(surface)});
-   t(['READING THE EVIDENCE','证据解读'],365,161,540,26,13);
-   const rows=[['Observed','观察','3 of 8 cases paused at the handoff.','8 个模拟案例中，3 个在交接时停顿。'],['Possible cause','可能原因','The next owner was not visible.','下一位负责人未明确显示。'],['Next check','下一步验证','Repeat the task with a named owner.','明确负责人后，再次完成任务。']];
-   rows.forEach(([a,b,c,d],i)=>{const y=205+i*84;t([a,b],365,y,171,33,19,{display:true});t([c,d],553,y,359,61,19);line(365,y+69,912,y+69,blend(bg,ink,.25));});
-   note(['Observation → interpretation → test. Keep uncertainty visible.','观察 → 解释 → 验证。明确保留不确定性。']);
+   box(48,176,277,274,surface);
+   t(['FIELD NOTE / 03','现场笔记 / 03'],69,190,235,23,10,{color:'#'+contrast(surface)});
+   t(['Clear first step.\nUnclear handoff.','第一步很清楚\n交接时却不确定'],69,238,232,130,28,{display:true,color:'#'+contrast(surface)});
+   line(69,390,304,390,blend(surface,contrast(surface),.35));
+   t(['Invented interview excerpt','自编访谈示例'],69,410,234,27,12,{color:'#'+contrast(surface)});
+   t('3 / 8',362,166,190,68,48,{display:true});
+   t(['cases paused at the handoff','个案例在交接时停顿'],555,176,347,48,22,{display:true});
+   for(let i=0;i<8;i++)box(364+i*22,241,14,14,i<3?ink:blend(bg,ink,.18));
+   t(['SIMULATED OBSERVATIONS','模拟观察'],561,238,351,25,10,{color:'#'+blend(bg,ink,.7)});
+   const rows=[['01 / Reading','01 / 解读','The next owner was not visible.','下一位负责人未明确显示。'],['02 / Alternative','02 / 另一种解释','The task itself may be unfamiliar.','也可能是任务本身不够熟悉。'],['03 / Next test','03 / 下一次验证','Name the owner; repeat the same task.','明确负责人，再次执行相同任务。']];
+   rows.forEach(([a,b,c,d],i)=>{const y=282+i*57;line(362,y,912,y,blend(bg,ink,.22));t([a,b],362,y+11,175,34,15,{bold:true});t([c,d],556,y+10,352,47,17);});
+   note(['Keep the observation, alternative explanation and next test separate.','区分观察、其他可能的解释，以及下一步验证。']);
   },
   tree:()=>{
    unit(['HYPOTHESIS MAP / EACH BRANCH NEEDS EVIDENCE','假设地图 / 每个分支都需要证据']);
@@ -92,20 +110,34 @@ export function createCompositions(meta, lang) {
    note(['A useful branch can be confirmed or rejected independently.','每个有效分支都应能够被单独确认或否定。']);
   },
   trend:()=>{
-   unit(plan.topic==='learning'?['TASK SCORE / 0–100','任务得分 / 0–100']:['INDEX / BASELINE = 100','指数 / 基期 = 100']);
-   const vals=plan.topic==='learning'?[34,42,61,59,76,88]:[100,108,114,112,128,142], max=plan.topic==='learning'?100:160;
-   for(let v=0;v<=max;v+=max/4){const y=430-v/max*236;line(90,y,626,y,blend(bg,ink,.18));t(String(v),48,y-10,33,22,12,{align:'right'});}
-   vals.forEach((v,i)=>{const x=108+i*96,y=430-v/max*236;if(i)line(x-96,430-vals[i-1]/max*236,x,y,accent,2.2);dot(x,y,4);t(String(v),x-21,y-31,49,26,16,{align:'center'});t('W'+(i+1),x-18,440,55,24,13);});
-   line(656,178,656,456,blend(bg,ink,.3));t(plan.topic==='learning'?'+54':'+42%',687,190,219,83,57,{display:true});t(plan.topic==='learning'?['Score-point gain','得分提升']:['Index growth','指数增长'],687,282,218,36,20,{display:true});t(['A pause in week four deserves a closer look.','第四周出现停顿，值得进一步分析。'],687,349,218,105,20);
-   note(['Six simulated weekly observations; the trend alone does not prove a cause.','六次模拟周观察；趋势本身不能证明因果关系。']);
+   const learning=plan.topic==='learning', vals=learning?[34,42,61,59,76,88]:[100,108,114,112,128,142], max=learning?100:160;
+   unit(learning?['A / TASK SCORE · 0–100','A / 任务得分 · 0–100']:['A / WEEKLY INDEX · BASELINE = 100','A / 每周指数 · 基期 = 100']);
+   box(328,190,91,236,blend(bg,accent,.10));
+   for(let v=0;v<=max;v+=max/4){const y=426-v/max*224;line(87,y,615,y,blend(bg,ink,.15),.5);t(String(v),48,y-10,30,22,11,{align:'right',color:'#'+blend(bg,ink,.7)});}
+   // Keep the highlighted observation separate from its explanatory callout.
+   const xx=i=>104+i*98, yy=v=>426-v/max*224;
+   vals.forEach((v,i)=>{const x=xx(i),y=yy(v);if(i)line(xx(i-1),yy(vals[i-1]),x,y,ink,1.8);dot(x,y,i===3?5:3.2,i===3?accent:ink);t(String(v),x-23,y-30,47,25,15,{align:'center',bold:i===5});t('W'+(i+1),x-16,437,37,24,12,{align:'center'});});
+   label(['W4 / PAUSE','W4 / 停顿'],274,186,155);line(365,210,xx(3),yy(vals[3])-10,blend(bg,ink,.5));
+   line(652,169,652,450,blend(bg,ink,.3));
+   label(['B / WHAT CHANGED','B / 变化解读'],679,163,233);
+   t(learning?'+54':'+42%',679,202,233,78,56,{display:true});
+   t(learning?['score points over six weeks','六周得分提升']:['growth from the starting index','相对基期的增长'],679,286,229,55,18);
+   line(679,354,912,354,blend(bg,ink,.25));
+   t(['CHECK NEXT','下一步检查'],679,369,229,22,10,{bold:true});
+   t(['Why did progress pause in week four?','第四周为何出现停顿？'],679,404,229,50,20,{display:true});
+   note(['Readout: the direction is positive; the week-four pause still needs an explanation.','解读：整体方向向好；第四周的停顿仍需解释。']);
   },
   matrix:()=>{
-   unit(['PRIORITY MAP / IMPACT INCREASES UPWARD','优先级地图 / 越靠上影响越大']);
-   box(89,184,497,252,blend(bg,ink,.045));box(338,184,248,126,blend(bg,accent,.28));line(338,184,338,436,blend(bg,ink,.35));line(89,310,586,310,blend(bg,ink,.35));
-   label(['Investigate','继续研究'],104,192,217);label(['Prioritize','优先投入'],354,192,210);label(['Monitor','持续观察'],104,401,212);label(['Schedule','安排实施'],354,401,210);
-   [[184,266,'A'],[431,255,'B'],[382,289,'C'],[227,354,'D'],[483,362,'E']].forEach(([x,y,v])=>{dot(x,y,10);t(v,x+17,y-12,40,30,16);});
-   label(['Low confidence','低置信度'],89,444,238);t(['High confidence','高置信度'],352,444,234,25,13,{align:'right'});
-   t(['Start with B','优先验证 B'],643,191,269,69,30,{display:true});t(['High impact.\nStronger evidence.\nA bounded first test.','影响较大\n证据较充分\n先做范围明确的试验'],643,295,269,113,22);label(['A–E = candidate actions','A–E 为候选行动'],643,432,269);
+   unit(['A / PRIORITY MAP · IMPACT INCREASES UPWARD','A / 优先级地图 · 越靠上影响越大']);
+   box(89,184,497,252,blend(bg,ink,.035));box(338,184,248,126,blend(bg,accent,.20));line(338,184,338,436,blend(bg,ink,.28));line(89,310,586,310,blend(bg,ink,.28));
+   t(['INVESTIGATE','继续研究'],103,194,214,23,10);t(['PRIORITIZE','优先投入'],354,194,214,23,10,{bold:true});t(['MONITOR','持续观察'],103,409,214,23,10);t(['SCHEDULE','安排实施'],354,409,214,23,10);
+   [[184,266,'A'],[431,255,'B'],[382,289,'C'],[227,354,'D'],[483,362,'E']].forEach(([x,y,v])=>{dot(x,y,v==='B'?13:7,v==='B'?ink:blend(bg,ink,.48));t(v,x+18,y-12,38,28,15,{bold:v==='B'});});
+   t(['Lower confidence','置信度较低'],89,442,238,22,11);t(['Higher confidence','置信度较高'],352,442,234,22,11,{align:'right'});
+   label(['B / RECOMMENDED ACTION','B / 建议行动'],632,173,280);
+   t(['Validate B first','先验证 B'],632,215,280,62,32,{display:true});
+   const rows=[[['Potential','潜力'],['High impact','影响较大']],[['Evidence','证据'],['Stronger signal','信号较强']],[['Commitment','投入'],['A bounded pilot','范围明确的试点']]];
+   rows.forEach(([a,b],i)=>{const y=305+i*46;line(632,y-6,912,y-6,blend(bg,ink,.22));t(a,632,y+6,110,31,14);t(b,753,y+6,159,34,16,{bold:true});});
+   note(['Decision: test B first; keep the other candidates visible until the evidence changes.','决策：先验证 B；保留其他候选行动，随证据更新重新评估。']);
   },
   journey:()=>{
    const phases=plan.topic==='research'?[['Find','发现'],['Choose','选择'],['Start','开始'],['Return','返回']]:topic.slice(1,5);
@@ -136,24 +168,37 @@ export function createCompositions(meta, lang) {
    note(['Top bar: before. Bottom: after. Illustrative comparison, not a causal claim.','上方为试点前，下方为试点后。模拟对比不构成因果结论。']);
   },
   roadmap:()=>{
-   ['W1–2','W3–4','W5–6','W7–8'].forEach((v,i)=>label(v,319+i*144,164,130));
-   for(let i=0;i<=4;i++)line(302+i*144,199,302+i*144,442,blend(bg,ink,.18));
+   t(['WORKSTREAM / OWNER','工作流 / 负责人'],48,167,243,23,11);
+   ['W1–2','W3–4','W5–6','W7–8'].forEach((v,i)=>t(v,316+i*147,166,132,25,12));
+   for(let i=0;i<=4;i++)line(304+i*147,198,304+i*147,440,blend(bg,ink,.16),.5);
    const tasks=plan.topic==='learning'?[['Guided example','引导示例'],['Independent practice','独立练习'],['Peer explanation','同伴讲解'],['Transfer task','迁移任务']]:plan.topic==='engineering'?[['Contract review','契约评审'],['Instrument the path','接入观测'],['Canary rollout','灰度发布'],['Expand / rollback','扩展或回滚']]:[['Baseline & scope','基线与范围'],['Build a small pilot','小规模试点'],['Evaluate evidence','评估证据'],['Decide the next step','确定下一步']];
-   tasks.forEach((v,i)=>{const y=211+i*59;t(v,48,y-5,239,32,19,{display:true});const starts=[0,.7,1.8,2.8],lengths=[.9,1.3,1.1,1.2];box(303+starts[i]*144,y,lengths[i]*144,26,i===2?accent:blend(bg,ink,.3));});
-   line(705,198,705,449,accent,1.4);dot(705,449,5);note(['Decision gate: proceed only when the evidence meets the agreed threshold.','决策门槛：证据达到约定标准后，再进入下一阶段。']);
+   const owners=plan.topic==='learning'?[['Instructor','讲师'],['Learner','学习者'],['Peer group','同伴小组'],['Learner','学习者']]:plan.topic==='engineering'?[['Tech lead','技术负责人'],['Platform','平台团队'],['Service owner','服务负责人'],['On-call lead','值班负责人']]:[['Research','研究团队'],['Delivery','交付团队'],['Analytics','分析团队'],['Sponsor','项目负责人']];
+   tasks.forEach((v,i)=>{const y=205+i*61;line(48,y-8,912,y-8,blend(bg,ink,.12));t(v,48,y,239,30,18,{display:true});t(owners[i],48,y+30,239,24,11,{color:'#'+blend(bg,ink,.68)});const starts=[0,.7,1.8,2.8],lengths=[.9,1.3,1.1,1.2];const x=305+starts[i]*147,w=lengths[i]*147;box(x,y+12,w,22,i===2?ink:blend(bg,ink,.27));dot(x+w,y+23,3,i===2?ink:blend(bg,ink,.55));});
+   line(716,198,716,448,accent,1.2);dot(716,448,4);
+   note(['Gate / W6: agree on evidence, owner and rollback conditions before expanding.','W6 决策门槛：扩大投入前，确认验证结果、负责人和回退条件。']);
   },
   scorecard:()=>{
-   const names=plan.topic==='engineering'?[['Latency / ms','延迟 / 毫秒'],['Availability / %','可用性 / %'],['Recovery / min','恢复 / 分钟'],['Coverage / %','覆盖率 / %']]:[['Completion / %','完成率 / %'],['Wait / minutes','等待 / 分钟'],['Return rate / %','回访率 / %'],['Cost / task','单次任务成本']];
-   const vals=plan.topic==='engineering'?[['72','< 100','Met','达标'],['99.8','> 99.9','Review','复核'],['12','< 15','Met','达标'],['86','> 90','Review','复核']]:[['73','> 70','Met','达标'],['7','< 10','Met','达标'],['58','> 65','Review','复核'],['$8','< $9','Met','达标']];
-   [[48,['MEASURE','指标']],[371,['ACTUAL','实际']],[533,['TARGET','目标']],[710,['RESPONSE','行动']]].forEach(([x,v])=>label(v,x,168,x===48?280:152));
-   vals.forEach(([v,goal,a,b],i)=>{const y=218+i*56;line(48,y-11,912,y-11,blend(bg,ink,.25));t(names[i],48,y,287,37,19,{display:true});t(v,371,y-5,139,44,27,{display:true});t(goal,533,y,150,36,18);box(708,y-1,192,35,a==='Met'?surface:accent);t([a,b],724,y+4,159,28,16,{color:'#'+contrast(a==='Met'?surface:accent)});});
-   note(['Every flagged measure needs an owner, a next action and a review date.','每项待复核指标都需要负责人、下一步行动和复核日期。']);
+   const engineering=plan.topic==='engineering';
+   const names=engineering?[['Latency / ms','延迟 / 毫秒'],['Availability / %','可用性 / %'],['Recovery / min','恢复 / 分钟'],['Coverage / %','覆盖率 / %']]:[['Completion / %','完成率 / %'],['Wait / minutes','等待 / 分钟'],['Return rate / %','回访率 / %'],['Cost / task','单次任务成本']];
+   const vals=engineering?[['72','< 100','Hold','保持'],['99.8','> 99.9','Review','复核'],['12','< 15','Hold','保持'],['86','> 90','Review','复核']]:[['73','> 70','Hold','保持'],['7','< 10','Hold','保持'],['58','> 65','Review','复核'],['$8','< $9','Hold','保持']];
+   [[48,['MEASURE','指标']],[373,['ACTUAL','实际']],[523,['TARGET','目标']],[692,['RESPONSE','行动']]].forEach(([x,v])=>t(v,x,167,x===48?280:170,24,11));
+   vals.forEach(([v,goal,a,b],i)=>{const y=204+i*61;
+    if(a==='Review'){box(48,y,864,61,blend(bg,accent,.11));box(48,y,3,61,ink);}
+    line(48,y,912,y,blend(bg,ink,.22));
+    t(names[i],61,y+17,280,37,18,{display:true});t(v,373,y+10,129,45,28,{display:true});t(goal,523,y+20,145,33,17);
+    t(a==='Review'?'↗':'—',692,y+19,27,30,18);t([a,b],735,y+20,158,30,16,{bold:a==='Review'});
+   });
+   note(['Review rows need a named owner and a next check; passing rows remain on the watch list.','待复核行需明确负责人和复核节点；已达标指标继续观察。']);
   },
   bridge:()=>{
-   unit(['CONTRIBUTION BRIDGE / INDEX POINTS','贡献桥 / 指数点']);
+   unit(['A / VALUE BRIDGE · INDEX POINTS','A / 价值桥 · 指数点']);
    const vals=[[0,100],[100,132],[119,132],[112,119],[0,112]], names=[['Baseline','基期'],['Volume','规模'],['Service','服务'],['Launch','启动'],['Result','结果']];
-   vals.forEach(([lo,hi],i)=>{const x=75+i*108,y=425-hi*1.5;box(x,y,64,(hi-lo)*1.5,i===0||i===4?accent:blend(bg,ink,.35));t(['100','+32','−13','−7','112'][i],x-9,y-34,82,30,21,{align:'center'});t(names[i],x-18,439,103,27,14,{align:'center'});if(i<4){const end=[100,132,119,112][i];line(x+64,425-end*1.5,x+108,425-end*1.5,blend(bg,ink,.4));}});line(64,425,638,425,ink,.8);
-   t('+12%',682,184,226,85,58,{display:true});t(['Net improvement','净改善'],682,286,226,37,23,{display:true});t(['32 points of benefit, less 20 points of cost.','收益增加 32 点，成本消耗 20 点。'],682,350,226,98,20);
+   for(const v of [0,50,100,150]){const y=423-v*1.4;line(88,y,622,y,blend(bg,ink,.12),.5);t(String(v),48,y-9,30,23,10,{align:'right',color:'#'+blend(bg,ink,.66)});}
+   vals.forEach(([lo,hi],i)=>{const x=96+i*105,y=423-hi*1.4;box(x,y,60,(hi-lo)*1.4,i===0||i===4?ink:blend(bg,ink,i===1?.52:.25));t(['100','+32','−13','−7','112'][i],x-10,y-33,80,28,20,{align:'center',bold:i===4});t(names[i],x-18,436,99,26,13,{align:'center'});if(i<4){const end=[100,132,119,112][i];line(x+60,423-end*1.4,x+105,423-end*1.4,blend(bg,ink,.45));}});
+   line(654,172,654,451,blend(bg,ink,.3));label(['B / NET EFFECT','B / 净影响'],679,166,233);
+   t('+12%',679,205,233,77,57,{display:true});t(['net of costs','扣除成本后'],679,289,233,40,18);
+   [[['Benefit','收益'],'+32'],[['Costs','成本'],'−20'],[['Net change','净变化'],'+12']].forEach(([label,value],i)=>{const y=344+i*36;line(679,y-7,912,y-7,blend(bg,ink,.22));t(label,679,y,147,30,15,{bold:i===2});t(value,826,y-2,86,31,20,{align:'right',bold:i===2});});
+   note(['Readout: 20 of the 32 benefit points are absorbed by service and launch costs.','解读：32 点收益中，有 20 点被服务与启动成本消耗。']);
   },
   storyboard:()=>{
    const stages=plan.topic==='learning'?[['See the example','观察示例'],['Make a prediction','作出预测'],['Explain the result','解释结果']]:[['A useful invitation','有用的邀请'],['A small interaction','轻量的互动'],['A reason to return','再次参与的理由']];

@@ -110,9 +110,9 @@ elements:
     elementType: text
     bounds:
       - 48
-      - 78
+      - 76
       - 864
-      - 63
+      - 64
     content:
       text: 沿漏斗追踪同一群体
       fontFamily: &ref_1
@@ -120,11 +120,26 @@ elements:
         mac: PingFang SC
         win: Microsoft YaHei
         ea: Noto Sans CJK SC
-      fontSize: 34
+      fontSize: 32
       lineHeight: 1.1
       color: '#0A0A0A'
       bold: true
   - elementId: t9
+    elementType: text
+    bounds:
+      - 754
+      - 46
+      - 158
+      - 13
+    content:
+      text: 图示 02
+      fontFamily: *ref_0
+      fontSize: 9
+      lineHeight: 1.1
+      color: '#51504f'
+      bold: false
+      align: right
+  - elementId: t10
     elementType: text
     bounds:
       - 48
@@ -138,7 +153,7 @@ elements:
       lineHeight: 1.1
       color: '#0A0A0A'
       bold: false
-  - elementId: s10
+  - elementId: s11
     elementType: shape
     bounds:
       - 48
@@ -152,7 +167,7 @@ elements:
     border:
       width: 0
       color: '#ECECE8'
-  - elementId: t11
+  - elementId: t12
     elementType: text
     bounds:
       - 60
@@ -166,7 +181,7 @@ elements:
       lineHeight: 1.1
       color: '#181915'
       bold: true
-  - elementId: t12
+  - elementId: t13
     elementType: text
     bounds:
       - 56
@@ -180,7 +195,7 @@ elements:
       lineHeight: 1.1
       color: '#181915'
       bold: false
-  - elementId: l13
+  - elementId: l14
     elementType: line
     bounds:
       - 201
@@ -194,7 +209,7 @@ elements:
     border:
       width: 1.2
       color: '#626c1e'
-  - elementId: l14
+  - elementId: l15
     elementType: line
     bounds:
       - 208.03232834558347
@@ -208,7 +223,7 @@ elements:
     border:
       width: 1.2
       color: '#626c1e'
-  - elementId: l15
+  - elementId: l16
     elementType: line
     bounds:
       - 208.03232834558347
@@ -222,7 +237,7 @@ elements:
     border:
       width: 1.2
       color: '#626c1e'
-  - elementId: s16
+  - elementId: s17
     elementType: shape
     bounds:
       - 216
@@ -236,7 +251,7 @@ elements:
     border:
       width: 0
       color: '#ECECE8'
-  - elementId: t17
+  - elementId: t18
     elementType: text
     bounds:
       - 228
@@ -250,7 +265,7 @@ elements:
       lineHeight: 1.1
       color: '#181915'
       bold: true
-  - elementId: t18
+  - elementId: t19
     elementType: text
     bounds:
       - 224
@@ -264,7 +279,7 @@ elements:
       lineHeight: 1.1
       color: '#181915'
       bold: false
-  - elementId: l19
+  - elementId: l20
     elementType: line
     bounds:
       - 369
@@ -278,7 +293,7 @@ elements:
     border:
       width: 1.2
       color: '#626c1e'
-  - elementId: l20
+  - elementId: l21
     elementType: line
     bounds:
       - 376.03232834558344
@@ -292,7 +307,7 @@ elements:
     border:
       width: 1.2
       color: '#626c1e'
-  - elementId: l21
+  - elementId: l22
     elementType: line
     bounds:
       - 376.03232834558344
@@ -306,7 +321,7 @@ elements:
     border:
       width: 1.2
       color: '#626c1e'
-  - elementId: s22
+  - elementId: s23
     elementType: shape
     bounds:
       - 384
@@ -320,7 +335,7 @@ elements:
     border:
       width: 0
       color: '#E6FF3D'
-  - elementId: t23
+  - elementId: t24
     elementType: text
     bounds:
       - 396
@@ -334,7 +349,7 @@ elements:
       lineHeight: 1.1
       color: '#181915'
       bold: true
-  - elementId: t24
+  - elementId: t25
     elementType: text
     bounds:
       - 392
@@ -348,7 +363,7 @@ elements:
       lineHeight: 1.1
       color: '#181915'
       bold: false
-  - elementId: l25
+  - elementId: l26
     elementType: line
     bounds:
       - 537
@@ -362,7 +377,7 @@ elements:
     border:
       width: 1.2
       color: '#626c1e'
-  - elementId: l26
+  - elementId: l27
     elementType: line
     bounds:
       - 544.0323283455834
@@ -376,7 +391,7 @@ elements:
     border:
       width: 1.2
       color: '#626c1e'
-  - elementId: l27
+  - elementId: l28
     elementType: line
     bounds:
       - 544.0323283455834
@@ -390,7 +405,7 @@ elements:
     border:
       width: 1.2
       color: '#626c1e'
-  - elementId: s28
+  - elementId: s29
     elementType: shape
     bounds:
       - 552
@@ -404,7 +419,7 @@ elements:
     border:
       width: 0
       color: '#ECECE8'
-  - elementId: t29
+  - elementId: t30
     elementType: text
     bounds:
       - 564
@@ -418,7 +433,7 @@ elements:
       lineHeight: 1.1
       color: '#181915'
       bold: true
-  - elementId: t30
+  - elementId: t31
     elementType: text
     bounds:
       - 560
@@ -432,7 +447,7 @@ elements:
       lineHeight: 1.1
       color: '#181915'
       bold: false
-  - elementId: l31
+  - elementId: l32
     elementType: line
     bounds:
       - 741
@@ -446,7 +461,7 @@ elements:
     border:
       width: 0.6
       color: '#afaeaa'
-  - elementId: t32
+  - elementId: t33
     elementType: text
     bounds:
       - 770
@@ -460,7 +475,7 @@ elements:
       lineHeight: 1.1
       color: '#0A0A0A'
       bold: true
-  - elementId: t33
+  - elementId: t34
     elementType: text
     bounds:
       - 770
@@ -474,7 +489,7 @@ elements:
       lineHeight: 1.1
       color: '#0A0A0A'
       bold: false
-  - elementId: t34
+  - elementId: t35
     elementType: text
     bounds:
       - 770
@@ -488,21 +503,35 @@ elements:
       lineHeight: 1.1
       color: '#0A0A0A'
       bold: false
-  - elementId: t35
+  - elementId: l36
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#c1c1bd'
+  - elementId: t37
     elementType: text
     bounds:
       - 48
-      - 469
+      - 475
       - 864
-      - 28
+      - 25
     content:
       text: 阶梯高度仅示意群体规模；具体数值以标注为准。
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 13
       lineHeight: 1.1
       color: '#0A0A0A'
       bold: false
-  - elementId: t36
+  - elementId: t38
     elementType: text
     bounds:
       - 48
@@ -516,7 +545,7 @@ elements:
       lineHeight: 1.1
       color: '#0A0A0A'
       bold: false
-  - elementId: t37
+  - elementId: t39
     elementType: text
     bounds:
       - 871

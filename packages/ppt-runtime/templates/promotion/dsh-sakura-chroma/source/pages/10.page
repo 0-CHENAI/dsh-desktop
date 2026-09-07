@@ -82,9 +82,9 @@ elements:
     elementType: text
     bounds:
       - 48
-      - 78
+      - 76
       - 864
-      - 63
+      - 64
     content:
       text: Show how the judgment develops
       fontFamily: &ref_1
@@ -92,11 +92,26 @@ elements:
         mac: PingFang SC
         win: Microsoft YaHei
         ea: Noto Sans CJK SC
-      fontSize: 34
+      fontSize: 32
       lineHeight: 1.1
       color: '#3A2516'
       bold: true
-  - elementId: l7
+  - elementId: t7
+    elementType: text
+    bounds:
+      - 754
+      - 46
+      - 158
+      - 13
+    content:
+      text: EXHIBIT 09
+      fontFamily: *ref_0
+      fontSize: 9
+      lineHeight: 1.1
+      color: '#715f4c'
+      bold: false
+      align: right
+  - elementId: l8
     elementType: line
     bounds:
       - 100
@@ -110,7 +125,7 @@ elements:
     border:
       width: 1.2
       color: '#a89983'
-  - elementId: s8
+  - elementId: s9
     elementType: shape
     bounds:
       - 88
@@ -124,7 +139,7 @@ elements:
     border:
       width: 0
       color: '#E54489'
-  - elementId: t9
+  - elementId: t10
     elementType: text
     bounds:
       - 107
@@ -138,7 +153,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: false
-  - elementId: t10
+  - elementId: t11
     elementType: text
     bounds:
       - 78
@@ -152,7 +167,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: true
-  - elementId: t11
+  - elementId: t12
     elementType: text
     bounds:
       - 78
@@ -166,7 +181,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: false
-  - elementId: s12
+  - elementId: s13
     elementType: shape
     bounds:
       - 302
@@ -180,7 +195,7 @@ elements:
     border:
       width: 0
       color: '#E54489'
-  - elementId: t13
+  - elementId: t14
     elementType: text
     bounds:
       - 321
@@ -194,7 +209,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: false
-  - elementId: t14
+  - elementId: t15
     elementType: text
     bounds:
       - 292
@@ -208,7 +223,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: true
-  - elementId: t15
+  - elementId: t16
     elementType: text
     bounds:
       - 292
@@ -222,7 +237,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: false
-  - elementId: s16
+  - elementId: s17
     elementType: shape
     bounds:
       - 516
@@ -236,7 +251,7 @@ elements:
     border:
       width: 0
       color: '#E54489'
-  - elementId: t17
+  - elementId: t18
     elementType: text
     bounds:
       - 535
@@ -250,7 +265,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: false
-  - elementId: t18
+  - elementId: t19
     elementType: text
     bounds:
       - 506
@@ -264,7 +279,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: true
-  - elementId: t19
+  - elementId: t20
     elementType: text
     bounds:
       - 506
@@ -278,7 +293,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: false
-  - elementId: s20
+  - elementId: s21
     elementType: shape
     bounds:
       - 730
@@ -292,7 +307,7 @@ elements:
     border:
       width: 0
       color: '#E54489'
-  - elementId: t21
+  - elementId: t22
     elementType: text
     bounds:
       - 749
@@ -306,7 +321,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: false
-  - elementId: t22
+  - elementId: t23
     elementType: text
     bounds:
       - 720
@@ -320,7 +335,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: true
-  - elementId: t23
+  - elementId: t24
     elementType: text
     bounds:
       - 720
@@ -334,21 +349,35 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: false
-  - elementId: t24
+  - elementId: l25
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#c9bca3'
+  - elementId: t26
     elementType: text
     bounds:
       - 48
-      - 469
+      - 475
       - 864
-      - 28
+      - 25
     content:
       text: Show what changed between milestones, not just when an event happened.
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 13
       lineHeight: 1.1
       color: '#3A2516'
       bold: false
-  - elementId: t25
+  - elementId: t27
     elementType: text
     bounds:
       - 48
@@ -362,7 +391,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: false
-  - elementId: t26
+  - elementId: t28
     elementType: text
     bounds:
       - 871

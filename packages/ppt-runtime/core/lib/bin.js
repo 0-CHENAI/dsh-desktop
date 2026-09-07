@@ -9,6 +9,7 @@ import { JSDOM } from "jsdom";
 import yaml from "js-yaml";
 import sharp from "sharp";
 import PptxGenJSImport from "pptxgenjs";
+const MISPLACED_TEXT_STYLE_FIELDS = new Set(["fontFamily", "fontSize", "bold", "italic", "color", "lineHeight", "letterSpacing", "wrap", "align", "verticalAlign", "textDirection", "style"]);
 //#region src/pptd-convert.ts
 /** Bounded PPTX to PPTD v2 conversion used by the local CLI. */
 const CSS_PIXEL_TO_POINT = 72 / 96;
@@ -1635,12 +1636,12 @@ function parsePptdProject(source) {
 			const allowed = type === void 0 ? void 0 : ELEMENT_FIELDS$1[type];
 			if (allowed === void 0) continue;
 			for (const field of unknownFields(element, allowed)) issues.push({
-				code: "unknown-field",
+				code: type === "text" && MISPLACED_TEXT_STYLE_FIELDS.has(field) ? "misplaced-text-style" : "unknown-field",
 				severity: "error",
 				file: ref,
 				page: index + 1,
 				...typeof element.elementId === "string" ? { elementId: element.elementId } : {},
-				message: `元素包含未知字段 ${field}。`
+				message: type === "text" && MISPLACED_TEXT_STYLE_FIELDS.has(field) ? `文本属性 ${field} 应放在 content 内，请修正 YAML 缩进。` : `元素包含未知字段 ${field}。`
 			});
 		}
 		pages.push({
@@ -1794,6 +1795,8 @@ function plainText(value) {
 	return value.replace(/<br\s*\/?\s*>/giu, "\n").replace(/<\/p\s*>/giu, "\n").replace(/<li(?:\s[^>]*)?>/giu, "• ").replace(/<\/li\s*>/giu, "\n").replace(/<[^>]+>/gu, "").replace(/&lt;/gu, "<").replace(/&gt;/gu, ">").replace(/&amp;/gu, "&").replace(/&quot;/gu, "\"").replace(/\n{3,}/gu, "\n\n").trimEnd();
 }
 function textLayout(project, element) {
+	// Fix structural errors before estimating layout with fallback styles.
+	if (unknownFields(element, ELEMENT_FIELDS.text).length > 0) return void 0;
 	const bounds = tuple(element.bounds, 4);
 	const content = record$1(element.content);
 	if (bounds === void 0 || content === void 0 || typeof content.text !== "string" || plainText(content.text).trim() === "") return void 0;
@@ -3860,8 +3863,9 @@ function checkedForPages(project, pages, severity) {
 function humanCheck(checked) {
 	const lines = (checked.displayedIssues ?? checked.issues).map((issue) => [
 		"[fixed: false]",
-		`[${issue.severity === "error" ? "Error" : "Warning"}:${issue.code}]`,
+		`[${issue.severity === "error" ? "Needs revision" : "Suggestion"}:${issue.code}]`,
 		issue.file ?? "",
+		issue.page === void 0 ? "" : `page=${issue.page}`,
 		issue.elementId === void 0 ? "" : `id="${issue.elementId}"`,
 		issue.message
 	].filter(Boolean).join(" "));
@@ -3967,8 +3971,11 @@ async function commandPptd(args, io) {
 		printValue(io, inspectProject(project, pages, checked), args.json);
 		return checked.status === "fail" ? 1 : 0;
 	}
-	if (args.strict && checked.status !== "pass") throw new Error(`strict mode requires a passing check; received ${checked.errorCount} errors and ${checked.warningCount} warnings`);
-	if (checked.status === "fail") throw new Error(`PPTD output requires a passing check; received ${checked.errorCount} errors`);
+	if (checked.status === "fail" || args.strict && checked.status !== "pass") {
+		printValue(io, { ...checked, exported: false, status: "needs_revision" }, args.json,
+			"No output produced; validation needs revision.\n" + humanCheck(checked));
+		return 1;
+	}
 	if (args.command === "screenshot") {
 		const output = path.resolve(args.output ?? await defaultScreenshotOutput(args.input));
 		await publishPptdDirectory(output, args.force, async (stage) => {
@@ -4057,6 +4064,7 @@ async function main() {
 	process.exitCode = await runCli(process.argv.slice(2), process);
 }
 const invoked = process.argv[1];
-if (invoked !== void 0 && pathToFileURL(path.resolve(invoked)).href === import.meta.url) main();
+// npm installs .bin symlinks on POSIX; compare canonical paths so that entry runs too.
+if (invoked !== void 0 && pathToFileURL(await realpath(path.resolve(invoked)).catch(() => path.resolve(invoked))).href === import.meta.url) await main();
 //#endregion
 export { runCli };

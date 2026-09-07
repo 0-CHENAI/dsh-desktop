@@ -40,9 +40,9 @@ elements:
     elementType: text
     bounds:
       - 48
-      - 78
+      - 76
       - 864
-      - 63
+      - 64
     content:
       text: 根据证据选择下一步
       fontFamily: &ref_1
@@ -50,11 +50,26 @@ elements:
         mac: Songti SC
         win: SimSun
         ea: Noto Serif CJK SC
-      fontSize: 34
+      fontSize: 32
       lineHeight: 1.1
       color: '#2A241B'
       bold: false
   - elementId: t4
+    elementType: text
+    bounds:
+      - 754
+      - 46
+      - 158
+      - 13
+    content:
+      text: 图示 07
+      fontFamily: *ref_0
+      fontSize: 9
+      lineHeight: 1.1
+      color: '#666156'
+      bold: false
+      align: right
+  - elementId: t5
     elementType: text
     bounds:
       - 48
@@ -62,13 +77,13 @@ elements:
       - 850
       - 25
     content:
-      text: 优先级地图 / 越靠上影响越大
+      text: A / 优先级地图 · 越靠上影响越大
       fontFamily: *ref_0
       fontSize: 13
       lineHeight: 1.1
       color: '#2A241B'
       bold: false
-  - elementId: s5
+  - elementId: s6
     elementType: shape
     bounds:
       - 89
@@ -78,11 +93,11 @@ elements:
     shapeName: rect
     fill:
       type: solid
-      color: '#e9e5d6'
+      color: '#ebe7d8'
     border:
       width: 0
-      color: '#e9e5d6'
-  - elementId: s6
+      color: '#ebe7d8'
+  - elementId: s7
     elementType: shape
     bounds:
       - 338
@@ -92,11 +107,11 @@ elements:
     shapeName: rect
     fill:
       type: solid
-      color: '#edd9d7'
+      color: '#efdfd9'
     border:
       width: 0
-      color: '#edd9d7'
-  - elementId: l7
+      color: '#efdfd9'
+  - elementId: l8
     elementType: line
     bounds:
       - 338
@@ -109,8 +124,8 @@ elements:
     points: 0,0 0,252
     border:
       width: 0.6
-      color: '#aca79a'
-  - elementId: l8
+      color: '#bab5a8'
+  - elementId: l9
     elementType: line
     bounds:
       - 89
@@ -123,278 +138,415 @@ elements:
     points: 0,0 497,0
     border:
       width: 0.6
-      color: '#aca79a'
-  - elementId: t9
-    elementType: text
-    bounds:
-      - 104
-      - 192
-      - 217
-      - 25
-    content:
-      text: 继续研究
-      fontFamily: *ref_0
-      fontSize: 13
-      lineHeight: 1.1
-      color: '#2A241B'
-      bold: false
+      color: '#bab5a8'
   - elementId: t10
     elementType: text
     bounds:
-      - 354
-      - 192
-      - 210
-      - 25
+      - 103
+      - 194
+      - 214
+      - 23
     content:
-      text: 优先投入
+      text: 继续研究
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 10
       lineHeight: 1.1
       color: '#2A241B'
       bold: false
   - elementId: t11
     elementType: text
     bounds:
-      - 104
-      - 401
-      - 212
-      - 25
+      - 354
+      - 194
+      - 214
+      - 23
     content:
-      text: 持续观察
+      text: 优先投入
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 10
       lineHeight: 1.1
       color: '#2A241B'
-      bold: false
+      bold: true
   - elementId: t12
     elementType: text
     bounds:
+      - 103
+      - 409
+      - 214
+      - 23
+    content:
+      text: 持续观察
+      fontFamily: *ref_0
+      fontSize: 10
+      lineHeight: 1.1
+      color: '#2A241B'
+      bold: false
+  - elementId: t13
+    elementType: text
+    bounds:
       - 354
-      - 401
-      - 210
-      - 25
+      - 409
+      - 214
+      - 23
     content:
       text: 安排实施
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 10
       lineHeight: 1.1
       color: '#2A241B'
       bold: false
-  - elementId: s13
+  - elementId: s14
     elementType: shape
     bounds:
-      - 174
-      - 256
-      - 20
-      - 20
+      - 177
+      - 259
+      - 14
+      - 14
     shapeName: ellipse
     fill:
       type: solid
-      color: '#E1A4C2'
+      color: '#928d81'
     border:
       width: 0
-      color: '#E1A4C2'
-  - elementId: t14
+      color: '#928d81'
+  - elementId: t15
     elementType: text
     bounds:
-      - 201
+      - 202
       - 254
-      - 40
-      - 30
+      - 38
+      - 28
     content:
       text: A
       fontFamily: *ref_0
-      fontSize: 16
+      fontSize: 15
       lineHeight: 1.1
       color: '#2A241B'
       bold: false
-  - elementId: s15
+  - elementId: s16
     elementType: shape
     bounds:
-      - 421
-      - 245
-      - 20
-      - 20
+      - 418
+      - 242
+      - 26
+      - 26
     shapeName: ellipse
     fill:
       type: solid
-      color: '#E1A4C2'
+      color: '#2A241B'
     border:
       width: 0
-      color: '#E1A4C2'
-  - elementId: t16
+      color: '#2A241B'
+  - elementId: t17
     elementType: text
     bounds:
-      - 448
+      - 449
       - 243
-      - 40
-      - 30
+      - 38
+      - 28
     content:
       text: B
       fontFamily: *ref_0
-      fontSize: 16
+      fontSize: 15
       lineHeight: 1.1
       color: '#2A241B'
-      bold: false
-  - elementId: s17
+      bold: true
+  - elementId: s18
     elementType: shape
     bounds:
-      - 372
-      - 279
-      - 20
-      - 20
+      - 375
+      - 282
+      - 14
+      - 14
     shapeName: ellipse
     fill:
       type: solid
-      color: '#E1A4C2'
+      color: '#928d81'
     border:
       width: 0
-      color: '#E1A4C2'
-  - elementId: t18
+      color: '#928d81'
+  - elementId: t19
     elementType: text
     bounds:
-      - 399
+      - 400
       - 277
-      - 40
-      - 30
+      - 38
+      - 28
     content:
       text: C
       fontFamily: *ref_0
-      fontSize: 16
+      fontSize: 15
       lineHeight: 1.1
       color: '#2A241B'
       bold: false
-  - elementId: s19
+  - elementId: s20
     elementType: shape
     bounds:
-      - 217
-      - 344
-      - 20
-      - 20
+      - 220
+      - 347
+      - 14
+      - 14
     shapeName: ellipse
     fill:
       type: solid
-      color: '#E1A4C2'
+      color: '#928d81'
     border:
       width: 0
-      color: '#E1A4C2'
-  - elementId: t20
+      color: '#928d81'
+  - elementId: t21
     elementType: text
     bounds:
-      - 244
+      - 245
       - 342
-      - 40
-      - 30
+      - 38
+      - 28
     content:
       text: D
       fontFamily: *ref_0
-      fontSize: 16
+      fontSize: 15
       lineHeight: 1.1
       color: '#2A241B'
       bold: false
-  - elementId: s21
+  - elementId: s22
     elementType: shape
     bounds:
-      - 473
-      - 352
-      - 20
-      - 20
+      - 476
+      - 355
+      - 14
+      - 14
     shapeName: ellipse
     fill:
       type: solid
-      color: '#E1A4C2'
+      color: '#928d81'
     border:
       width: 0
-      color: '#E1A4C2'
-  - elementId: t22
-    elementType: text
-    bounds:
-      - 500
-      - 350
-      - 40
-      - 30
-    content:
-      text: E
-      fontFamily: *ref_0
-      fontSize: 16
-      lineHeight: 1.1
-      color: '#2A241B'
-      bold: false
+      color: '#928d81'
   - elementId: t23
     elementType: text
     bounds:
-      - 89
-      - 444
-      - 238
-      - 25
+      - 501
+      - 350
+      - 38
+      - 28
     content:
-      text: 低置信度
+      text: E
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 15
       lineHeight: 1.1
       color: '#2A241B'
       bold: false
   - elementId: t24
     elementType: text
     bounds:
-      - 352
-      - 444
-      - 234
-      - 25
+      - 89
+      - 442
+      - 238
+      - 22
     content:
-      text: 高置信度
+      text: 置信度较低
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 11
+      lineHeight: 1.1
+      color: '#2A241B'
+      bold: false
+  - elementId: t25
+    elementType: text
+    bounds:
+      - 352
+      - 442
+      - 234
+      - 22
+    content:
+      text: 置信度较高
+      fontFamily: *ref_0
+      fontSize: 11
       lineHeight: 1.1
       color: '#2A241B'
       bold: false
       align: right
-  - elementId: t25
-    elementType: text
-    bounds:
-      - 643
-      - 191
-      - 269
-      - 69
-    content:
-      text: 优先验证 B
-      fontFamily: *ref_1
-      fontSize: 30
-      lineHeight: 1.1
-      color: '#2A241B'
-      bold: false
   - elementId: t26
     elementType: text
     bounds:
-      - 643
-      - 295
-      - 269
-      - 113
+      - 632
+      - 173
+      - 280
+      - 25
     content:
-      text: |-
-        影响较大
-        证据较充分
-        先做范围明确的试验
+      text: B / 建议行动
       fontFamily: *ref_0
-      fontSize: 22
+      fontSize: 13
       lineHeight: 1.1
       color: '#2A241B'
       bold: false
   - elementId: t27
     elementType: text
     bounds:
-      - 643
-      - 432
-      - 269
+      - 632
+      - 215
+      - 280
+      - 62
+    content:
+      text: 先验证 B
+      fontFamily: *ref_1
+      fontSize: 32
+      lineHeight: 1.1
+      color: '#2A241B'
+      bold: false
+  - elementId: l28
+    elementType: line
+    bounds:
+      - 632
+      - 299
+      - 280
+      - 1
+    viewBox:
+      - 280
+      - 1
+    points: 0,0 280,0
+    border:
+      width: 0.6
+      color: '#c6c2b4'
+  - elementId: t29
+    elementType: text
+    bounds:
+      - 632
+      - 311
+      - 110
+      - 31
+    content:
+      text: 潜力
+      fontFamily: *ref_0
+      fontSize: 14
+      lineHeight: 1.1
+      color: '#2A241B'
+      bold: false
+  - elementId: t30
+    elementType: text
+    bounds:
+      - 753
+      - 311
+      - 159
+      - 34
+    content:
+      text: 影响较大
+      fontFamily: *ref_0
+      fontSize: 16
+      lineHeight: 1.1
+      color: '#2A241B'
+      bold: true
+  - elementId: l31
+    elementType: line
+    bounds:
+      - 632
+      - 345
+      - 280
+      - 1
+    viewBox:
+      - 280
+      - 1
+    points: 0,0 280,0
+    border:
+      width: 0.6
+      color: '#c6c2b4'
+  - elementId: t32
+    elementType: text
+    bounds:
+      - 632
+      - 357
+      - 110
+      - 31
+    content:
+      text: 证据
+      fontFamily: *ref_0
+      fontSize: 14
+      lineHeight: 1.1
+      color: '#2A241B'
+      bold: false
+  - elementId: t33
+    elementType: text
+    bounds:
+      - 753
+      - 357
+      - 159
+      - 34
+    content:
+      text: 信号较强
+      fontFamily: *ref_0
+      fontSize: 16
+      lineHeight: 1.1
+      color: '#2A241B'
+      bold: true
+  - elementId: l34
+    elementType: line
+    bounds:
+      - 632
+      - 391
+      - 280
+      - 1
+    viewBox:
+      - 280
+      - 1
+    points: 0,0 280,0
+    border:
+      width: 0.6
+      color: '#c6c2b4'
+  - elementId: t35
+    elementType: text
+    bounds:
+      - 632
+      - 403
+      - 110
+      - 31
+    content:
+      text: 投入
+      fontFamily: *ref_0
+      fontSize: 14
+      lineHeight: 1.1
+      color: '#2A241B'
+      bold: false
+  - elementId: t36
+    elementType: text
+    bounds:
+      - 753
+      - 403
+      - 159
+      - 34
+    content:
+      text: 范围明确的试点
+      fontFamily: *ref_0
+      fontSize: 16
+      lineHeight: 1.1
+      color: '#2A241B'
+      bold: true
+  - elementId: l37
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#c6c2b4'
+  - elementId: t38
+    elementType: text
+    bounds:
+      - 48
+      - 475
+      - 864
       - 25
     content:
-      text: A–E 为候选行动
+      text: 决策：先验证 B；保留其他候选行动，随证据更新重新评估。
       fontFamily: *ref_0
       fontSize: 13
       lineHeight: 1.1
       color: '#2A241B'
       bold: false
-  - elementId: t28
+  - elementId: t39
     elementType: text
     bounds:
       - 48
@@ -408,7 +560,7 @@ elements:
       lineHeight: 1.1
       color: '#2A241B'
       bold: false
-  - elementId: t29
+  - elementId: t40
     elementType: text
     bounds:
       - 871

@@ -4,6 +4,10 @@ Product packages: **`dsh-ppt`** (authoring/export) and **`dsh-ppt-composer`** (P
 
 This directory maintains the distributed JavaScript extracted at Desktop base `9d4502f`; the complete original TypeScript source was not present. Original copyright notices and factual Kimi Slides research attribution remain in `THIRD_PARTY_NOTICES.md`. Renaming does not change provenance or establish legal clearance.
 
+## 参考来源
+
+实现方案参考了 **Kimi PPT（Kimi Slides）** 的 PPTD 文档与示例；其中十套模板参考并按 MIT 许可改编自 **Zara Zhang（GitHub：zarazhangrui）** 的 `beautiful-html-templates`。具体参考范围、固定版本和许可证见 [来源说明](core/THIRD_PARTY_NOTICES.md)。
+
 ## Catalog and languages
 
 **16 templates, 192 layouts**, each with English (`source/`) and Chinese (`source-zh/`) examples. All 192 gallery/reference previews are rendered from English source. Preview language does not select the user's output language.
@@ -29,3 +33,21 @@ The legacy on-disk `kimi-ppt` directory is deliberately retained to preserve ses
 PPT remains preinstalled. Its automatic instructions are scoped to sessions where the user enabled the PPT button.
 
 Validation evidence and temporary exports live under ignored `doc/ppt-remediation/`. Windows packaging and native Windows PowerPoint require their own runner/device validation.
+
+### Layout refinement
+
+The content layouts now include evidence panels, reconciled contributions, direct chart annotations, exception rows and accountable roadmaps. Shared authoring guidance lives in `scripts/ppt/refinement-guidance.mjs` and the bundled `references/composition.md`. English and Chinese pages retain separate line wrapping and font fallbacks.
+
+Historical withdrawn Kimi-associated reference images were inspected locally to identify general information-design principles. This iteration does not restore those images, their guides, or source files to the distributed packs. The new compositions and wording are authored in the maintained generators; current palette/font provenance remains unchanged.
+
+### Shared preview assets
+
+The build keeps the 192 reference JPGs only in the core skill directory. Both browser clients receive a small manifest of `/dsh-ppt/previews/<sha256>.jpg` URLs instead of Base64 image copies. The core optionally registers an HTTP route using the existing host web server, serving only build-listed reference images with immutable caching. No user files or configurable skill directories are exposed. Model reference reads, bilingual sources and editable exports continue using the existing core files; no remote download is required. Rebuilds change image URLs when the bytes change.
+
+### Validation feedback
+
+`pptd_check` is read-only and returns every diagnostic, including file, page and element ID. `pptd_render` returns `status: needs_revision` with the full `check` when blocked by validation, without publishing or consuming delivery capacity; only `status: exported` includes delivery metadata. Warning-only checks remain exportable. Filesystem, authorization and runtime faults still fail normally. Existing sessions refresh their automatic authoring instructions to this workflow.
+
+The CLI resolves npm `.bin` symlinks before detecting its entry point. `check --json` retains its complete checker output and conventional nonzero exit code for failed validation; blocked `render --json` also prints complete diagnostics and `exported: false`. Neither bypasses the compiler checks.
+
+Authoring diagnostics group misplaced text-style fields by page while retaining per-field issues. Layout estimates wait until an element has a valid field structure. Tool diagnostics include confined absolute paths and `pptd_read_file` arguments. New files accept an omitted or empty `expected_sha256`; replacements still require the current hash. The bundled CLI and tool compiler apply the same structural checks.

@@ -82,9 +82,9 @@ elements:
     elementType: text
     bounds:
       - 48
-      - 78
+      - 76
       - 864
-      - 63
+      - 64
     content:
       text: Sequence the work around a decision gate
       fontFamily: &ref_1
@@ -92,269 +92,466 @@ elements:
         mac: PingFang SC
         win: Microsoft YaHei
         ea: Noto Sans CJK SC
-      fontSize: 34
+      fontSize: 32
       lineHeight: 1.1
       color: '#3A2516'
       bold: true
   - elementId: t7
     elementType: text
     bounds:
-      - 319
-      - 164
-      - 130
-      - 25
+      - 754
+      - 46
+      - 158
+      - 13
     content:
-      text: W1–2
+      text: EXHIBIT 10
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 9
       lineHeight: 1.1
-      color: '#3A2516'
+      color: '#715f4c'
       bold: false
+      align: right
   - elementId: t8
     elementType: text
     bounds:
-      - 463
-      - 164
-      - 130
-      - 25
+      - 48
+      - 167
+      - 243
+      - 23
     content:
-      text: W3–4
+      text: WORKSTREAM / OWNER
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 11
       lineHeight: 1.1
       color: '#3A2516'
       bold: false
   - elementId: t9
     elementType: text
     bounds:
-      - 607
-      - 164
-      - 130
+      - 316
+      - 166
+      - 132
       - 25
     content:
-      text: W5–6
+      text: W1–2
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 12
       lineHeight: 1.1
       color: '#3A2516'
       bold: false
   - elementId: t10
     elementType: text
     bounds:
-      - 751
-      - 164
-      - 130
+      - 463
+      - 166
+      - 132
+      - 25
+    content:
+      text: W3–4
+      fontFamily: *ref_0
+      fontSize: 12
+      lineHeight: 1.1
+      color: '#3A2516'
+      bold: false
+  - elementId: t11
+    elementType: text
+    bounds:
+      - 610
+      - 166
+      - 132
+      - 25
+    content:
+      text: W5–6
+      fontFamily: *ref_0
+      fontSize: 12
+      lineHeight: 1.1
+      color: '#3A2516'
+      bold: false
+  - elementId: t12
+    elementType: text
+    bounds:
+      - 757
+      - 166
+      - 132
       - 25
     content:
       text: W7–8
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 12
       lineHeight: 1.1
       color: '#3A2516'
       bold: false
-  - elementId: l11
-    elementType: line
-    bounds:
-      - 302
-      - 199
-      - 1
-      - 243
-    viewBox:
-      - 1
-      - 243
-    points: 0,0 0,243
-    border:
-      width: 0.6
-      color: '#d0c3aa'
-  - elementId: l12
-    elementType: line
-    bounds:
-      - 446
-      - 199
-      - 1
-      - 243
-    viewBox:
-      - 1
-      - 243
-    points: 0,0 0,243
-    border:
-      width: 0.6
-      color: '#d0c3aa'
   - elementId: l13
     elementType: line
     bounds:
-      - 590
-      - 199
+      - 304
+      - 198
       - 1
-      - 243
+      - 242
     viewBox:
       - 1
-      - 243
-    points: 0,0 0,243
+      - 242
+    points: 0,0 0,242
     border:
-      width: 0.6
-      color: '#d0c3aa'
+      width: 0.5
+      color: '#d4c7ae'
   - elementId: l14
     elementType: line
     bounds:
-      - 734
-      - 199
+      - 451
+      - 198
       - 1
-      - 243
+      - 242
     viewBox:
       - 1
-      - 243
-    points: 0,0 0,243
+      - 242
+    points: 0,0 0,242
     border:
-      width: 0.6
-      color: '#d0c3aa'
+      width: 0.5
+      color: '#d4c7ae'
   - elementId: l15
     elementType: line
     bounds:
-      - 878
-      - 199
+      - 598
+      - 198
       - 1
-      - 243
+      - 242
     viewBox:
       - 1
-      - 243
-    points: 0,0 0,243
+      - 242
+    points: 0,0 0,242
+    border:
+      width: 0.5
+      color: '#d4c7ae'
+  - elementId: l16
+    elementType: line
+    bounds:
+      - 745
+      - 198
+      - 1
+      - 242
+    viewBox:
+      - 1
+      - 242
+    points: 0,0 0,242
+    border:
+      width: 0.5
+      color: '#d4c7ae'
+  - elementId: l17
+    elementType: line
+    bounds:
+      - 892
+      - 198
+      - 1
+      - 242
+    viewBox:
+      - 1
+      - 242
+    points: 0,0 0,242
+    border:
+      width: 0.5
+      color: '#d4c7ae'
+  - elementId: l18
+    elementType: line
+    bounds:
+      - 48
+      - 197
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
     border:
       width: 0.6
-      color: '#d0c3aa'
-  - elementId: t16
+      color: '#dbcfb5'
+  - elementId: t19
     elementType: text
     bounds:
       - 48
-      - 206
+      - 205
       - 239
-      - 32
+      - 30
     content:
       text: Baseline & scope
       fontFamily: *ref_1
-      fontSize: 19
+      fontSize: 18
       lineHeight: 1.1
       color: '#3A2516'
       bold: true
-  - elementId: s17
-    elementType: shape
-    bounds:
-      - 303
-      - 211
-      - 129.6
-      - 26
-    shapeName: rect
-    fill:
-      type: solid
-      color: '#baac95'
-    border:
-      width: 0
-      color: '#baac95'
-  - elementId: t18
-    elementType: text
-    bounds:
-      - 48
-      - 265
-      - 239
-      - 32
-    content:
-      text: Build a small pilot
-      fontFamily: *ref_1
-      fontSize: 19
-      lineHeight: 1.1
-      color: '#3A2516'
-      bold: true
-  - elementId: s19
-    elementType: shape
-    bounds:
-      - 403.8
-      - 270
-      - 187.20000000000002
-      - 26
-    shapeName: rect
-    fill:
-      type: solid
-      color: '#baac95'
-    border:
-      width: 0
-      color: '#baac95'
   - elementId: t20
     elementType: text
     bounds:
       - 48
-      - 324
+      - 235
       - 239
-      - 32
+      - 24
     content:
-      text: Evaluate evidence
-      fontFamily: *ref_1
-      fontSize: 19
+      text: Research
+      fontFamily: *ref_0
+      fontSize: 11
       lineHeight: 1.1
-      color: '#3A2516'
-      bold: true
+      color: '#756350'
+      bold: false
   - elementId: s21
     elementType: shape
     bounds:
-      - 562.2
-      - 329
-      - 158.4
-      - 26
+      - 305
+      - 217
+      - 132.3
+      - 22
     shapeName: rect
     fill:
       type: solid
-      color: '#E54489'
+      color: '#c0b29a'
     border:
       width: 0
-      color: '#E54489'
-  - elementId: t22
+      color: '#c0b29a'
+  - elementId: s22
+    elementType: shape
+    bounds:
+      - 434.3
+      - 225
+      - 6
+      - 6
+    shapeName: ellipse
+    fill:
+      type: solid
+      color: '#8c7c67'
+    border:
+      width: 0
+      color: '#8c7c67'
+  - elementId: l23
+    elementType: line
+    bounds:
+      - 48
+      - 258
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#dbcfb5'
+  - elementId: t24
     elementType: text
     bounds:
       - 48
-      - 383
+      - 266
       - 239
-      - 32
+      - 30
     content:
-      text: Decide the next step
+      text: Build a small pilot
       fontFamily: *ref_1
-      fontSize: 19
+      fontSize: 18
       lineHeight: 1.1
       color: '#3A2516'
       bold: true
-  - elementId: s23
+  - elementId: t25
+    elementType: text
+    bounds:
+      - 48
+      - 296
+      - 239
+      - 24
+    content:
+      text: Delivery
+      fontFamily: *ref_0
+      fontSize: 11
+      lineHeight: 1.1
+      color: '#756350'
+      bold: false
+  - elementId: s26
     elementType: shape
     bounds:
-      - 706.2
-      - 388
-      - 172.79999999999998
-      - 26
+      - 407.9
+      - 278
+      - 191.1
+      - 22
     shapeName: rect
     fill:
       type: solid
-      color: '#baac95'
+      color: '#c0b29a'
     border:
       width: 0
-      color: '#baac95'
-  - elementId: l24
-    elementType: line
-    bounds:
-      - 705
-      - 198
-      - 1
-      - 251
-    viewBox:
-      - 1
-      - 251
-    points: 0,0 0,251
-    border:
-      width: 1.4
-      color: '#E54489'
-  - elementId: s25
+      color: '#c0b29a'
+  - elementId: s27
     elementType: shape
     bounds:
-      - 700
+      - 596
+      - 286
+      - 6
+      - 6
+    shapeName: ellipse
+    fill:
+      type: solid
+      color: '#8c7c67'
+    border:
+      width: 0
+      color: '#8c7c67'
+  - elementId: l28
+    elementType: line
+    bounds:
+      - 48
+      - 319
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#dbcfb5'
+  - elementId: t29
+    elementType: text
+    bounds:
+      - 48
+      - 327
+      - 239
+      - 30
+    content:
+      text: Evaluate evidence
+      fontFamily: *ref_1
+      fontSize: 18
+      lineHeight: 1.1
+      color: '#3A2516'
+      bold: true
+  - elementId: t30
+    elementType: text
+    bounds:
+      - 48
+      - 357
+      - 239
+      - 24
+    content:
+      text: Analytics
+      fontFamily: *ref_0
+      fontSize: 11
+      lineHeight: 1.1
+      color: '#756350'
+      bold: false
+  - elementId: s31
+    elementType: shape
+    bounds:
+      - 569.6
+      - 339
+      - 161.70000000000002
+      - 22
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#3A2516'
+    border:
+      width: 0
+      color: '#3A2516'
+  - elementId: s32
+    elementType: shape
+    bounds:
+      - 728.3000000000001
+      - 347
+      - 6
+      - 6
+    shapeName: ellipse
+    fill:
+      type: solid
+      color: '#3A2516'
+    border:
+      width: 0
+      color: '#3A2516'
+  - elementId: l33
+    elementType: line
+    bounds:
+      - 48
+      - 380
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#dbcfb5'
+  - elementId: t34
+    elementType: text
+    bounds:
+      - 48
+      - 388
+      - 239
+      - 30
+    content:
+      text: Decide the next step
+      fontFamily: *ref_1
+      fontSize: 18
+      lineHeight: 1.1
+      color: '#3A2516'
+      bold: true
+  - elementId: t35
+    elementType: text
+    bounds:
+      - 48
+      - 418
+      - 239
+      - 24
+    content:
+      text: Sponsor
+      fontFamily: *ref_0
+      fontSize: 11
+      lineHeight: 1.1
+      color: '#756350'
+      bold: false
+  - elementId: s36
+    elementType: shape
+    bounds:
+      - 716.5999999999999
+      - 400
+      - 176.4
+      - 22
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#c0b29a'
+    border:
+      width: 0
+      color: '#c0b29a'
+  - elementId: s37
+    elementType: shape
+    bounds:
+      - 889.9999999999999
+      - 408
+      - 6
+      - 6
+    shapeName: ellipse
+    fill:
+      type: solid
+      color: '#8c7c67'
+    border:
+      width: 0
+      color: '#8c7c67'
+  - elementId: l38
+    elementType: line
+    bounds:
+      - 716
+      - 198
+      - 1
+      - 250
+    viewBox:
+      - 1
+      - 250
+    points: 0,0 0,250
+    border:
+      width: 1.2
+      color: '#E54489'
+  - elementId: s39
+    elementType: shape
+    bounds:
+      - 712
       - 444
-      - 10
-      - 10
+      - 8
+      - 8
     shapeName: ellipse
     fill:
       type: solid
@@ -362,21 +559,35 @@ elements:
     border:
       width: 0
       color: '#E54489'
-  - elementId: t26
+  - elementId: l40
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#c9bca3'
+  - elementId: t41
     elementType: text
     bounds:
       - 48
-      - 469
+      - 475
       - 864
-      - 28
+      - 25
     content:
-      text: 'Decision gate: proceed only when the evidence meets the agreed threshold.'
+      text: 'Gate / W6: agree on evidence, owner and rollback conditions before expanding.'
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 13
       lineHeight: 1.1
       color: '#3A2516'
       bold: false
-  - elementId: t27
+  - elementId: t42
     elementType: text
     bounds:
       - 48
@@ -390,7 +601,7 @@ elements:
       lineHeight: 1.1
       color: '#3A2516'
       bold: false
-  - elementId: t28
+  - elementId: t43
     elementType: text
     bounds:
       - 871

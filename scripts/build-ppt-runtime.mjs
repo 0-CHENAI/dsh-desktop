@@ -18,6 +18,7 @@ specs.sort((a, b) => a.definition.id.localeCompare(b.definition.id));
 if (specs.length !== 16)
     throw Error('Expected exactly sixteen maintained templates');
 const previews = {};
+const previewFiles = {};
 const checks = [];
 try {
     for (const { definition, provenance } of specs) {
@@ -37,7 +38,13 @@ try {
             for (const [i, f] of pngs.entries())
                 await sharp(pngDir + '/' + f).jpeg({ quality: 87 }).toFile(dir + '/pages/' + String(i + 1).padStart(2, '0') + '.jpg');
         }
-        previews[definition.id] = await Promise.all(definition.previewSlides.map(async (number) => 'data:image/jpeg;base64,' + (await fs.readFile(dir + '/pages/' + String(number).padStart(2, '0') + '.jpg')).toString('base64')));
+        previews[definition.id] = await Promise.all(definition.previewSlides.map(async number => {
+            const relative = definition.referenceDirectory + '/pages/' + String(number).padStart(2, '0') + '.jpg';
+            const bytes = await fs.readFile(root + '/templates/' + relative);
+            const hash = crypto.createHash('sha256').update(bytes).digest('hex');
+            previewFiles[hash] = relative;
+            return '/dsh-ppt/previews/' + hash + '.jpg';
+        }));
     }
     const artifacts = {};
     for (const kind of ['core', 'adapter']) {
@@ -50,6 +57,7 @@ try {
         client = client.replace('/* GENERATED_PPT_PREVIEWS */ {}', JSON.stringify(previews));
         await fs.writeFile(stage + '/lib/client.js', client);
         if (kind === 'core') {
+            await fs.writeFile(stage + '/lib/preview-manifest.js', '// Build allowlist: paths resolve only inside the bundled template references.\nexport const previewFiles = ' + JSON.stringify(previewFiles) + ';\n');
             await fs.writeFile(stage + '/lib/catalog.js', '// Generated only from the maintained template catalog.\nexport const definitions = ' + JSON.stringify(specs.map(s => s.definition)) + ';\nexport const semantics = ' + JSON.stringify(Object.fromEntries(specs.map(s => [s.definition.id, s.semantics]))) + ';\n');
             for (const { definition } of specs) {
                 const target = stage + '/skills/dsh-ppt/references/' + definition.referenceDirectory;

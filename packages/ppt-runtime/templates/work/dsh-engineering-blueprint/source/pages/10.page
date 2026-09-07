@@ -740,9 +740,9 @@ elements:
     elementType: text
     bounds:
       - 48
-      - 78
+      - 76
       - 864
-      - 63
+      - 64
     content:
       text: Connect each measure to a response
       fontFamily: &ref_1
@@ -750,71 +750,86 @@ elements:
         mac: PingFang SC
         win: Microsoft YaHei
         ea: Noto Sans CJK SC
-      fontSize: 34
+      fontSize: 32
       lineHeight: 1.1
       color: '#252824'
       bold: true
   - elementId: t54
     elementType: text
     bounds:
-      - 48
-      - 168
-      - 280
-      - 25
+      - 754
+      - 46
+      - 158
+      - 13
     content:
-      text: MEASURE
+      text: EXHIBIT 09
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 9
       lineHeight: 1.1
-      color: '#252824'
+      color: '#62625c'
       bold: false
+      align: right
   - elementId: t55
     elementType: text
     bounds:
-      - 371
-      - 168
-      - 152
-      - 25
+      - 48
+      - 167
+      - 280
+      - 24
     content:
-      text: ACTUAL
+      text: MEASURE
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 11
       lineHeight: 1.1
       color: '#252824'
       bold: false
   - elementId: t56
     elementType: text
     bounds:
-      - 533
-      - 168
-      - 152
-      - 25
+      - 373
+      - 167
+      - 170
+      - 24
     content:
-      text: TARGET
+      text: ACTUAL
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 11
       lineHeight: 1.1
       color: '#252824'
       bold: false
   - elementId: t57
     elementType: text
     bounds:
-      - 710
-      - 168
-      - 152
-      - 25
+      - 523
+      - 167
+      - 170
+      - 24
     content:
-      text: RESPONSE
+      text: TARGET
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 11
       lineHeight: 1.1
       color: '#252824'
       bold: false
-  - elementId: l58
+  - elementId: t58
+    elementType: text
+    bounds:
+      - 692
+      - 167
+      - 170
+      - 24
+    content:
+      text: RESPONSE
+      fontFamily: *ref_0
+      fontSize: 11
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: l59
     elementType: line
     bounds:
       - 48
-      - 207
+      - 204
       - 864
       - 1
     viewBox:
@@ -823,82 +838,110 @@ elements:
     points: 0,0 864,0
     border:
       width: 0.6
-      color: '#bdbab1'
-  - elementId: t59
+      color: '#c3bfb7'
+  - elementId: t60
     elementType: text
     bounds:
-      - 48
-      - 218
-      - 287
+      - 61
+      - 221
+      - 280
       - 37
     content:
       text: Latency / ms
       fontFamily: *ref_1
-      fontSize: 19
-      lineHeight: 1.1
-      color: '#252824'
-      bold: true
-  - elementId: t60
-    elementType: text
-    bounds:
-      - 371
-      - 213
-      - 139
-      - 44
-    content:
-      text: '72'
-      fontFamily: *ref_1
-      fontSize: 27
+      fontSize: 18
       lineHeight: 1.1
       color: '#252824'
       bold: true
   - elementId: t61
     elementType: text
     bounds:
-      - 533
-      - 218
-      - 150
-      - 36
+      - 373
+      - 214
+      - 129
+      - 45
+    content:
+      text: '72'
+      fontFamily: *ref_1
+      fontSize: 28
+      lineHeight: 1.1
+      color: '#252824'
+      bold: true
+  - elementId: t62
+    elementType: text
+    bounds:
+      - 523
+      - 224
+      - 145
+      - 33
     content:
       text: < 100
+      fontFamily: *ref_0
+      fontSize: 17
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: t63
+    elementType: text
+    bounds:
+      - 692
+      - 223
+      - 27
+      - 30
+    content:
+      text: —
       fontFamily: *ref_0
       fontSize: 18
       lineHeight: 1.1
       color: '#252824'
       bold: false
-  - elementId: s62
-    elementType: shape
-    bounds:
-      - 708
-      - 217
-      - 192
-      - 35
-    shapeName: rect
-    fill:
-      type: solid
-      color: '#E7E0D4'
-    border:
-      width: 0
-      color: '#E7E0D4'
-  - elementId: t63
+  - elementId: t64
     elementType: text
     bounds:
-      - 724
-      - 222
-      - 159
-      - 28
+      - 735
+      - 224
+      - 158
+      - 30
     content:
-      text: Met
+      text: Hold
       fontFamily: *ref_0
       fontSize: 16
       lineHeight: 1.1
-      color: '#181915'
+      color: '#252824'
       bold: false
-  - elementId: l64
+  - elementId: s65
+    elementType: shape
+    bounds:
+      - 48
+      - 265
+      - 864
+      - 61
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#ead7cc'
+    border:
+      width: 0
+      color: '#ead7cc'
+  - elementId: s66
+    elementType: shape
+    bounds:
+      - 48
+      - 265
+      - 3
+      - 61
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#252824'
+    border:
+      width: 0
+      color: '#252824'
+  - elementId: l67
     elementType: line
     bounds:
       - 48
-      - 263
+      - 265
       - 864
       - 1
     viewBox:
@@ -907,82 +950,82 @@ elements:
     points: 0,0 864,0
     border:
       width: 0.6
-      color: '#bdbab1'
-  - elementId: t65
+      color: '#c3bfb7'
+  - elementId: t68
     elementType: text
     bounds:
-      - 48
-      - 274
-      - 287
+      - 61
+      - 282
+      - 280
       - 37
     content:
       text: Availability / %
       fontFamily: *ref_1
-      fontSize: 19
+      fontSize: 18
       lineHeight: 1.1
       color: '#252824'
       bold: true
-  - elementId: t66
+  - elementId: t69
     elementType: text
     bounds:
-      - 371
-      - 269
-      - 139
-      - 44
+      - 373
+      - 275
+      - 129
+      - 45
     content:
       text: '99.8'
       fontFamily: *ref_1
-      fontSize: 27
+      fontSize: 28
       lineHeight: 1.1
       color: '#252824'
       bold: true
-  - elementId: t67
+  - elementId: t70
     elementType: text
     bounds:
-      - 533
-      - 274
-      - 150
-      - 36
+      - 523
+      - 285
+      - 145
+      - 33
     content:
       text: '> 99.9'
+      fontFamily: *ref_0
+      fontSize: 17
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: t71
+    elementType: text
+    bounds:
+      - 692
+      - 284
+      - 27
+      - 30
+    content:
+      text: ↗
       fontFamily: *ref_0
       fontSize: 18
       lineHeight: 1.1
       color: '#252824'
       bold: false
-  - elementId: s68
-    elementType: shape
-    bounds:
-      - 708
-      - 273
-      - 192
-      - 35
-    shapeName: rect
-    fill:
-      type: solid
-      color: '#B5392A'
-    border:
-      width: 0
-      color: '#B5392A'
-  - elementId: t69
+  - elementId: t72
     elementType: text
     bounds:
-      - 724
-      - 278
-      - 159
-      - 28
+      - 735
+      - 285
+      - 158
+      - 30
     content:
       text: Review
       fontFamily: *ref_0
       fontSize: 16
       lineHeight: 1.1
-      color: '#F8F6EE'
-      bold: false
-  - elementId: l70
+      color: '#252824'
+      bold: true
+  - elementId: l73
     elementType: line
     bounds:
       - 48
-      - 319
+      - 326
       - 864
       - 1
     viewBox:
@@ -991,82 +1034,110 @@ elements:
     points: 0,0 864,0
     border:
       width: 0.6
-      color: '#bdbab1'
-  - elementId: t71
+      color: '#c3bfb7'
+  - elementId: t74
     elementType: text
     bounds:
-      - 48
-      - 330
-      - 287
+      - 61
+      - 343
+      - 280
       - 37
     content:
       text: Recovery / min
       fontFamily: *ref_1
-      fontSize: 19
+      fontSize: 18
       lineHeight: 1.1
       color: '#252824'
       bold: true
-  - elementId: t72
+  - elementId: t75
     elementType: text
     bounds:
-      - 371
-      - 325
-      - 139
-      - 44
+      - 373
+      - 336
+      - 129
+      - 45
     content:
       text: '12'
       fontFamily: *ref_1
-      fontSize: 27
+      fontSize: 28
       lineHeight: 1.1
       color: '#252824'
       bold: true
-  - elementId: t73
+  - elementId: t76
     elementType: text
     bounds:
-      - 533
-      - 330
-      - 150
-      - 36
+      - 523
+      - 346
+      - 145
+      - 33
     content:
       text: < 15
+      fontFamily: *ref_0
+      fontSize: 17
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: t77
+    elementType: text
+    bounds:
+      - 692
+      - 345
+      - 27
+      - 30
+    content:
+      text: —
       fontFamily: *ref_0
       fontSize: 18
       lineHeight: 1.1
       color: '#252824'
       bold: false
-  - elementId: s74
-    elementType: shape
-    bounds:
-      - 708
-      - 329
-      - 192
-      - 35
-    shapeName: rect
-    fill:
-      type: solid
-      color: '#E7E0D4'
-    border:
-      width: 0
-      color: '#E7E0D4'
-  - elementId: t75
+  - elementId: t78
     elementType: text
     bounds:
-      - 724
-      - 334
-      - 159
-      - 28
+      - 735
+      - 346
+      - 158
+      - 30
     content:
-      text: Met
+      text: Hold
       fontFamily: *ref_0
       fontSize: 16
       lineHeight: 1.1
-      color: '#181915'
+      color: '#252824'
       bold: false
-  - elementId: l76
+  - elementId: s79
+    elementType: shape
+    bounds:
+      - 48
+      - 387
+      - 864
+      - 61
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#ead7cc'
+    border:
+      width: 0
+      color: '#ead7cc'
+  - elementId: s80
+    elementType: shape
+    bounds:
+      - 48
+      - 387
+      - 3
+      - 61
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#252824'
+    border:
+      width: 0
+      color: '#252824'
+  - elementId: l81
     elementType: line
     bounds:
       - 48
-      - 375
+      - 387
       - 864
       - 1
     viewBox:
@@ -1075,92 +1146,106 @@ elements:
     points: 0,0 864,0
     border:
       width: 0.6
-      color: '#bdbab1'
-  - elementId: t77
+      color: '#c3bfb7'
+  - elementId: t82
     elementType: text
     bounds:
-      - 48
-      - 386
-      - 287
+      - 61
+      - 404
+      - 280
       - 37
     content:
       text: Coverage / %
       fontFamily: *ref_1
-      fontSize: 19
+      fontSize: 18
       lineHeight: 1.1
       color: '#252824'
       bold: true
-  - elementId: t78
+  - elementId: t83
     elementType: text
     bounds:
-      - 371
-      - 381
-      - 139
-      - 44
+      - 373
+      - 397
+      - 129
+      - 45
     content:
       text: '86'
       fontFamily: *ref_1
-      fontSize: 27
+      fontSize: 28
       lineHeight: 1.1
       color: '#252824'
       bold: true
-  - elementId: t79
+  - elementId: t84
     elementType: text
     bounds:
-      - 533
-      - 386
-      - 150
-      - 36
+      - 523
+      - 407
+      - 145
+      - 33
     content:
       text: '> 90'
+      fontFamily: *ref_0
+      fontSize: 17
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: t85
+    elementType: text
+    bounds:
+      - 692
+      - 406
+      - 27
+      - 30
+    content:
+      text: ↗
       fontFamily: *ref_0
       fontSize: 18
       lineHeight: 1.1
       color: '#252824'
       bold: false
-  - elementId: s80
-    elementType: shape
-    bounds:
-      - 708
-      - 385
-      - 192
-      - 35
-    shapeName: rect
-    fill:
-      type: solid
-      color: '#B5392A'
-    border:
-      width: 0
-      color: '#B5392A'
-  - elementId: t81
+  - elementId: t86
     elementType: text
     bounds:
-      - 724
-      - 390
-      - 159
-      - 28
+      - 735
+      - 407
+      - 158
+      - 30
     content:
       text: Review
       fontFamily: *ref_0
       fontSize: 16
       lineHeight: 1.1
-      color: '#F8F6EE'
-      bold: false
-  - elementId: t82
+      color: '#252824'
+      bold: true
+  - elementId: l87
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#c3bfb7'
+  - elementId: t88
     elementType: text
     bounds:
       - 48
-      - 469
+      - 475
       - 864
-      - 28
+      - 25
     content:
-      text: Every flagged measure needs an owner, a next action and a review date.
+      text: Review rows need a named owner and a next check; passing rows remain on the watch list.
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 13
       lineHeight: 1.1
       color: '#252824'
       bold: false
-  - elementId: t83
+  - elementId: t89
     elementType: text
     bounds:
       - 48
@@ -1174,7 +1259,7 @@ elements:
       lineHeight: 1.1
       color: '#252824'
       bold: false
-  - elementId: t84
+  - elementId: t90
     elementType: text
     bounds:
       - 871

@@ -1,4 +1,10 @@
-/** MIT adaptations of Zara Zhang's selected HTML templates. Native editable PPTD, bilingual examples. */
+/**
+ * 模板设计参考并按 MIT 许可改编自 Zara Zhang（GitHub: zarazhangrui）的 PPT/HTML 模板：
+ * https://github.com/zarazhangrui/beautiful-html-templates
+ * 固定参考版本：e5e204fb1f3b06290846e7dcd7aceddabeceec8c。
+ * DSH 将所选模板重建为原生可编辑 PPTD，补充中英文示例、字体配对与扩展版式。
+ * 来源与 MIT 许可保留在 packages/ppt-runtime/upstream/zara/。
+ */
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';

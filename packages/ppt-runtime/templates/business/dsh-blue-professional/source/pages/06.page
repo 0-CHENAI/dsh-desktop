@@ -54,245 +54,172 @@ elements:
       color: '#111111'
       lineHeight: 1.12
       bold: true
-  - elementId: s4
-    elementType: shape
-    bounds:
-      - 76
-      - 292
-      - 65
-      - 132
-    shapeName: rect
-    fill:
-      type: solid
-      color: '#1E2BFA'
-    border:
-      width: 0
-      color: '#1E2BFA'
-  - elementId: t5
+  - elementId: t4
     elementType: text
     bounds:
-      - 74
-      - 257
-      - 69
-      - 30
+      - 48
+      - 153
+      - 579
+      - 23
     content:
-      text: '12'
+      text: A / OPERATING PROFIT · $m
       fontFamily: *ref_0
-      fontSize: 22
+      fontSize: 11
       color: '#111111'
       lineHeight: 1.12
       bold: false
-      align: center
+  - elementId: l5
+    elementType: line
+    bounds:
+      - 91
+      - 427
+      - 534
+      - 1
+    viewBox:
+      - 534
+      - 1
+    points: 0,0 534,0
+    border:
+      width: 0.5
+      color: '#D1D1C5'
   - elementId: t6
     elementType: text
     bounds:
-      - 59
-      - 441
-      - 100
-      - 28
+      - 48
+      - 418
+      - 31
+      - 23
     content:
-      text: Base
+      text: '0'
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 11
       color: '#111111'
       lineHeight: 1.12
       bold: false
-      align: center
+      align: right
   - elementId: l7
     elementType: line
     bounds:
-      - 141
-      - 292
-      - 46
+      - 91
+      - 377
+      - 534
       - 1
     viewBox:
-      - 46
+      - 534
       - 1
-    points: 0,0 46,0
+    points: 0,0 534,0
     border:
-      width: 0.7
-      color: '#A0A09A'
-  - elementId: s8
-    elementType: shape
-    bounds:
-      - 187
-      - 226
-      - 65
-      - 66
-    shapeName: rect
-    fill:
-      type: solid
-      color: '#929AFF'
-    border:
-      width: 0
-      color: '#929AFF'
-  - elementId: t9
+      width: 0.5
+      color: '#D1D1C5'
+  - elementId: t8
     elementType: text
     bounds:
-      - 185
-      - 191
-      - 69
-      - 30
+      - 48
+      - 368
+      - 31
+      - 23
     content:
-      text: '+6'
+      text: '5'
       fontFamily: *ref_0
-      fontSize: 22
+      fontSize: 11
       color: '#111111'
       lineHeight: 1.12
       bold: false
-      align: center
+      align: right
+  - elementId: l9
+    elementType: line
+    bounds:
+      - 91
+      - 327
+      - 534
+      - 1
+    viewBox:
+      - 534
+      - 1
+    points: 0,0 534,0
+    border:
+      width: 0.5
+      color: '#D1D1C5'
   - elementId: t10
     elementType: text
     bounds:
-      - 170
-      - 441
-      - 100
-      - 28
+      - 48
+      - 318
+      - 31
+      - 23
     content:
-      text: Volume
+      text: '10'
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 11
       color: '#111111'
       lineHeight: 1.12
       bold: false
-      align: center
+      align: right
   - elementId: l11
     elementType: line
     bounds:
-      - 252
-      - 226
-      - 46
+      - 91
+      - 277
+      - 534
       - 1
     viewBox:
-      - 46
+      - 534
       - 1
-    points: 0,0 46,0
+    points: 0,0 534,0
     border:
-      width: 0.7
-      color: '#A0A09A'
-  - elementId: s12
-    elementType: shape
-    bounds:
-      - 298
-      - 226
-      - 65
-      - 33
-    shapeName: rect
-    fill:
-      type: solid
-      color: '#929AFF'
-    border:
-      width: 0
-      color: '#929AFF'
-  - elementId: t13
+      width: 0.5
+      color: '#D1D1C5'
+  - elementId: t12
     elementType: text
     bounds:
-      - 296
-      - 191
-      - 69
-      - 30
+      - 48
+      - 268
+      - 31
+      - 23
     content:
-      text: −3
+      text: '15'
       fontFamily: *ref_0
-      fontSize: 22
+      fontSize: 11
       color: '#111111'
       lineHeight: 1.12
       bold: false
-      align: center
+      align: right
+  - elementId: l13
+    elementType: line
+    bounds:
+      - 91
+      - 227
+      - 534
+      - 1
+    viewBox:
+      - 534
+      - 1
+    points: 0,0 534,0
+    border:
+      width: 0.5
+      color: '#D1D1C5'
   - elementId: t14
     elementType: text
     bounds:
-      - 281
-      - 441
-      - 100
-      - 28
+      - 48
+      - 218
+      - 31
+      - 23
     content:
-      text: Service
+      text: '20'
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 11
       color: '#111111'
       lineHeight: 1.12
       bold: false
-      align: center
-  - elementId: l15
-    elementType: line
-    bounds:
-      - 363
-      - 259
-      - 46
-      - 1
-    viewBox:
-      - 46
-      - 1
-    points: 0,0 46,0
-    border:
-      width: 0.7
-      color: '#A0A09A'
-  - elementId: s16
+      align: right
+  - elementId: s15
     elementType: shape
     bounds:
-      - 409
-      - 259
-      - 65
-      - 22
-    shapeName: rect
-    fill:
-      type: solid
-      color: '#929AFF'
-    border:
-      width: 0
-      color: '#929AFF'
-  - elementId: t17
-    elementType: text
-    bounds:
-      - 407
-      - 224
-      - 69
-      - 30
-    content:
-      text: −2
-      fontFamily: *ref_0
-      fontSize: 22
-      color: '#111111'
-      lineHeight: 1.12
-      bold: false
-      align: center
-  - elementId: t18
-    elementType: text
-    bounds:
-      - 392
-      - 441
       - 100
-      - 28
-    content:
-      text: Launch
-      fontFamily: *ref_0
-      fontSize: 14
-      color: '#111111'
-      lineHeight: 1.12
-      bold: false
-      align: center
-  - elementId: l19
-    elementType: line
-    bounds:
-      - 474
-      - 281
-      - 46
-      - 1
-    viewBox:
-      - 46
-      - 1
-    points: 0,0 46,0
-    border:
-      width: 0.7
-      color: '#A0A09A'
-  - elementId: s20
-    elementType: shape
-    bounds:
-      - 520
-      - 281
-      - 65
-      - 143
+      - 307
+      - 61
+      - 120
     shapeName: rect
     fill:
       type: solid
@@ -300,107 +227,482 @@ elements:
     border:
       width: 0
       color: '#1E2BFA'
-  - elementId: t21
+  - elementId: t16
     elementType: text
     bounds:
-      - 518
-      - 246
-      - 69
-      - 30
-    content:
-      text: '13'
-      fontFamily: *ref_0
-      fontSize: 22
-      color: '#111111'
-      lineHeight: 1.12
-      bold: false
-      align: center
-  - elementId: t22
-    elementType: text
-    bounds:
-      - 503
-      - 441
-      - 100
+      - 95
+      - 276
+      - 71
       - 28
     content:
-      text: Plan
-      fontFamily: *ref_0
-      fontSize: 14
-      color: '#111111'
-      lineHeight: 1.12
-      bold: false
-      align: center
-  - elementId: l23
-    elementType: line
-    bounds:
-      - 66
-      - 424
-      - 559
-      - 1
-    viewBox:
-      - 559
-      - 1
-    points: 0,0 559,0
-    border:
-      width: 0.7
-      color: '#777970'
-  - elementId: t24
-    elementType: text
-    bounds:
-      - 67
-      - 155
-      - 529
-      - 22
-    content:
-      text: Operating profit / $m
-      fontFamily: *ref_0
-      fontSize: 13
-      color: '#111111'
-      lineHeight: 1.12
-      bold: false
-  - elementId: t25
-    elementType: text
-    bounds:
-      - 675
-      - 195
-      - 237
-      - 88
-    content:
-      text: +8.3%
-      fontFamily: *ref_0
-      fontSize: 56
-      color: '#1E2BFA'
-      lineHeight: 1.12
-      bold: false
-  - elementId: t26
-    elementType: text
-    bounds:
-      - 675
-      - 290
-      - 237
-      - 35
-    content:
-      text: net profit growth
-      fontFamily: *ref_1
-      fontSize: 22
-      color: '#111111'
-      lineHeight: 1.12
-      bold: true
-  - elementId: t27
-    elementType: text
-    bounds:
-      - 675
-      - 360
-      - 237
-      - 92
-    content:
-      text: Scale adds $6m. Service and launch costs absorb $5m.
+      text: '12'
       fontFamily: *ref_0
       fontSize: 20
       color: '#111111'
       lineHeight: 1.12
       bold: false
+      align: center
+  - elementId: t17
+    elementType: text
+    bounds:
+      - 83
+      - 439
+      - 95
+      - 27
+    content:
+      text: Base
+      fontFamily: *ref_0
+      fontSize: 13
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+      align: center
+  - elementId: l18
+    elementType: line
+    bounds:
+      - 161
+      - 307
+      - 45
+      - 1
+    viewBox:
+      - 45
+      - 1
+    points: 0,0 45,0
+    border:
+      width: 0.7
+      color: '#A0A09A'
+  - elementId: s19
+    elementType: shape
+    bounds:
+      - 206
+      - 247
+      - 61
+      - 60
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#929AFF'
+    border:
+      width: 0
+      color: '#929AFF'
+  - elementId: t20
+    elementType: text
+    bounds:
+      - 201
+      - 216
+      - 71
+      - 28
+    content:
+      text: '+6'
+      fontFamily: *ref_0
+      fontSize: 20
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+      align: center
+  - elementId: t21
+    elementType: text
+    bounds:
+      - 189
+      - 439
+      - 95
+      - 27
+    content:
+      text: Volume
+      fontFamily: *ref_0
+      fontSize: 13
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+      align: center
+  - elementId: l22
+    elementType: line
+    bounds:
+      - 267
+      - 247
+      - 45
+      - 1
+    viewBox:
+      - 45
+      - 1
+    points: 0,0 45,0
+    border:
+      width: 0.7
+      color: '#A0A09A'
+  - elementId: s23
+    elementType: shape
+    bounds:
+      - 312
+      - 247
+      - 61
+      - 30
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#BCBEB9'
+    border:
+      width: 0
+      color: '#BCBEB9'
+  - elementId: t24
+    elementType: text
+    bounds:
+      - 307
+      - 216
+      - 71
+      - 28
+    content:
+      text: −3
+      fontFamily: *ref_0
+      fontSize: 20
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+      align: center
+  - elementId: t25
+    elementType: text
+    bounds:
+      - 295
+      - 439
+      - 95
+      - 27
+    content:
+      text: Service
+      fontFamily: *ref_0
+      fontSize: 13
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+      align: center
+  - elementId: l26
+    elementType: line
+    bounds:
+      - 373
+      - 277
+      - 45
+      - 1
+    viewBox:
+      - 45
+      - 1
+    points: 0,0 45,0
+    border:
+      width: 0.7
+      color: '#A0A09A'
+  - elementId: s27
+    elementType: shape
+    bounds:
+      - 418
+      - 277
+      - 61
+      - 20
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#BCBEB9'
+    border:
+      width: 0
+      color: '#BCBEB9'
   - elementId: t28
+    elementType: text
+    bounds:
+      - 413
+      - 246
+      - 71
+      - 28
+    content:
+      text: −2
+      fontFamily: *ref_0
+      fontSize: 20
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+      align: center
+  - elementId: t29
+    elementType: text
+    bounds:
+      - 401
+      - 439
+      - 95
+      - 27
+    content:
+      text: Launch
+      fontFamily: *ref_0
+      fontSize: 13
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+      align: center
+  - elementId: l30
+    elementType: line
+    bounds:
+      - 479
+      - 297
+      - 45
+      - 1
+    viewBox:
+      - 45
+      - 1
+    points: 0,0 45,0
+    border:
+      width: 0.7
+      color: '#A0A09A'
+  - elementId: s31
+    elementType: shape
+    bounds:
+      - 524
+      - 297
+      - 61
+      - 130
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#1E2BFA'
+    border:
+      width: 0
+      color: '#1E2BFA'
+  - elementId: t32
+    elementType: text
+    bounds:
+      - 519
+      - 266
+      - 71
+      - 28
+    content:
+      text: '13'
+      fontFamily: *ref_0
+      fontSize: 20
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+      align: center
+  - elementId: t33
+    elementType: text
+    bounds:
+      - 507
+      - 439
+      - 95
+      - 27
+    content:
+      text: Plan
+      fontFamily: *ref_0
+      fontSize: 13
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+      align: center
+  - elementId: l34
+    elementType: line
+    bounds:
+      - 652
+      - 169
+      - 1
+      - 282
+    viewBox:
+      - 1
+      - 282
+    points: 0,0 0,282
+    border:
+      width: 0.7
+      color: '#C9C8BC'
+  - elementId: t35
+    elementType: text
+    bounds:
+      - 679
+      - 160
+      - 233
+      - 25
+    content:
+      text: B / THE NET RESULT
+      fontFamily: *ref_0
+      fontSize: 11
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+  - elementId: t36
+    elementType: text
+    bounds:
+      - 679
+      - 205
+      - 233
+      - 85
+    content:
+      text: +8.3%
+      fontFamily: *ref_0
+      fontSize: 54
+      color: '#1E2BFA'
+      lineHeight: 1.12
+      bold: false
+  - elementId: t37
+    elementType: text
+    bounds:
+      - 679
+      - 294
+      - 233
+      - 49
+    content:
+      text: profit growth after costs
+      fontFamily: *ref_1
+      fontSize: 19
+      color: '#111111'
+      lineHeight: 1.12
+      bold: true
+  - elementId: l38
+    elementType: line
+    bounds:
+      - 679
+      - 344
+      - 233
+      - 1
+    viewBox:
+      - 233
+      - 1
+    points: 0,0 233,0
+    border:
+      width: 0.5
+      color: '#C9C8BC'
+  - elementId: t39
+    elementType: text
+    bounds:
+      - 679
+      - 351
+      - 171
+      - 27
+    content:
+      text: Scale benefit
+      fontFamily: *ref_0
+      fontSize: 14
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+  - elementId: t40
+    elementType: text
+    bounds:
+      - 850
+      - 349
+      - 62
+      - 30
+    content:
+      text: '+6'
+      fontFamily: *ref_0
+      fontSize: 19
+      color: '#1E2BFA'
+      lineHeight: 1.12
+      bold: false
+      align: right
+  - elementId: l41
+    elementType: line
+    bounds:
+      - 679
+      - 379
+      - 233
+      - 1
+    viewBox:
+      - 233
+      - 1
+    points: 0,0 233,0
+    border:
+      width: 0.5
+      color: '#C9C8BC'
+  - elementId: t42
+    elementType: text
+    bounds:
+      - 679
+      - 386
+      - 171
+      - 27
+    content:
+      text: Service + launch
+      fontFamily: *ref_0
+      fontSize: 14
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+  - elementId: t43
+    elementType: text
+    bounds:
+      - 850
+      - 384
+      - 62
+      - 30
+    content:
+      text: −5
+      fontFamily: *ref_0
+      fontSize: 19
+      color: '#1E2BFA'
+      lineHeight: 1.12
+      bold: false
+      align: right
+  - elementId: l44
+    elementType: line
+    bounds:
+      - 679
+      - 414
+      - 233
+      - 1
+    viewBox:
+      - 233
+      - 1
+    points: 0,0 233,0
+    border:
+      width: 0.5
+      color: '#C9C8BC'
+  - elementId: t45
+    elementType: text
+    bounds:
+      - 679
+      - 421
+      - 171
+      - 27
+    content:
+      text: Net profit change
+      fontFamily: *ref_1
+      fontSize: 14
+      color: '#111111'
+      lineHeight: 1.12
+      bold: true
+  - elementId: t46
+    elementType: text
+    bounds:
+      - 850
+      - 419
+      - 62
+      - 30
+    content:
+      text: '+1'
+      fontFamily: *ref_0
+      fontSize: 19
+      color: '#1E2BFA'
+      lineHeight: 1.12
+      bold: false
+      align: right
+  - elementId: l47
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.4
+      color: '#C9C8BC'
+  - elementId: t48
+    elementType: text
+    bounds:
+      - 48
+      - 475
+      - 864
+      - 25
+    content:
+      text: 'Decision: test service and launch costs first; they absorb five-sixths of the scale benefit.'
+      fontFamily: *ref_0
+      fontSize: 13
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+  - elementId: t49
     elementType: text
     bounds:
       - 48
@@ -414,7 +716,7 @@ elements:
       color: '#111111'
       lineHeight: 1.12
       bold: false
-  - elementId: t29
+  - elementId: t50
     elementType: text
     bounds:
       - 870

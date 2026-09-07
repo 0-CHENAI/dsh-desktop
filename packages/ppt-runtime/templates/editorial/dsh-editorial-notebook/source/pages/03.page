@@ -13,7 +13,7 @@ elements:
       - 20
     content:
       text: EDITORIAL NOTEBOOK
-      fontFamily: &ref_1
+      fontFamily: &ref_0
         latin: Arial
         mac: PingFang SC
         win: Microsoft YaHei
@@ -40,26 +40,41 @@ elements:
     elementType: text
     bounds:
       - 48
-      - 78
+      - 76
       - 864
-      - 63
+      - 64
     content:
       text: Separate the record from the explanation
-      fontFamily: &ref_0
+      fontFamily: &ref_1
         latin: Georgia
         mac: Songti SC
         win: SimSun
         ea: Noto Serif CJK SC
-      fontSize: 34
+      fontSize: 32
       lineHeight: 1.1
       color: '#252320'
       bold: false
-  - elementId: s4
+  - elementId: t4
+    elementType: text
+    bounds:
+      - 754
+      - 46
+      - 158
+      - 13
+    content:
+      text: EXHIBIT 02
+      fontFamily: *ref_0
+      fontSize: 9
+      lineHeight: 1.1
+      color: '#646360'
+      bold: false
+      align: right
+  - elementId: s5
     elementType: shape
     bounds:
       - 48
-      - 174
-      - 280
+      - 176
+      - 277
       - 274
     shapeName: rect
     fill:
@@ -68,191 +83,373 @@ elements:
     border:
       width: 0
       color: '#EDEBE5'
-  - elementId: t5
-    elementType: text
-    bounds:
-      - 70
-      - 199
-      - 235
-      - 134
-    content:
-      text: |-
-        “The first step is clear.
-        The handoff is not.”
-      fontFamily: *ref_0
-      fontSize: 29
-      lineHeight: 1.1
-      color: '#181915'
-      bold: false
   - elementId: t6
     elementType: text
     bounds:
-      - 70
-      - 393
-      - 234
-      - 34
+      - 69
+      - 190
+      - 235
+      - 23
     content:
-      text: Invented interview excerpt
-      fontFamily: *ref_1
-      fontSize: 13
+      text: FIELD NOTE / 03
+      fontFamily: *ref_0
+      fontSize: 10
       lineHeight: 1.1
       color: '#181915'
       bold: false
   - elementId: t7
     elementType: text
     bounds:
-      - 365
-      - 161
-      - 540
-      - 26
+      - 69
+      - 238
+      - 232
+      - 130
     content:
-      text: READING THE EVIDENCE
+      text: |-
+        Clear first step.
+        Unclear handoff.
       fontFamily: *ref_1
+      fontSize: 28
+      lineHeight: 1.1
+      color: '#181915'
+      bold: false
+  - elementId: l8
+    elementType: line
+    bounds:
+      - 69
+      - 390
+      - 235
+      - 1
+    viewBox:
+      - 235
+      - 1
+    points: 0,0 235,0
+    border:
+      width: 0.6
+      color: '#a2a29c'
+  - elementId: t9
+    elementType: text
+    bounds:
+      - 69
+      - 410
+      - 234
+      - 27
+    content:
+      text: Invented interview excerpt
+      fontFamily: *ref_0
+      fontSize: 12
+      lineHeight: 1.1
+      color: '#181915'
+      bold: false
+  - elementId: t10
+    elementType: text
+    bounds:
+      - 362
+      - 166
+      - 190
+      - 68
+    content:
+      text: 3 / 8
+      fontFamily: *ref_1
+      fontSize: 48
+      lineHeight: 1.1
+      color: '#252320'
+      bold: false
+  - elementId: t11
+    elementType: text
+    bounds:
+      - 555
+      - 176
+      - 347
+      - 48
+    content:
+      text: cases paused at the handoff
+      fontFamily: *ref_1
+      fontSize: 22
+      lineHeight: 1.1
+      color: '#252320'
+      bold: false
+  - elementId: s12
+    elementType: shape
+    bounds:
+      - 364
+      - 241
+      - 14
+      - 14
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#252320'
+    border:
+      width: 0
+      color: '#252320'
+  - elementId: s13
+    elementType: shape
+    bounds:
+      - 386
+      - 241
+      - 14
+      - 14
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#252320'
+    border:
+      width: 0
+      color: '#252320'
+  - elementId: s14
+    elementType: shape
+    bounds:
+      - 408
+      - 241
+      - 14
+      - 14
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#252320'
+    border:
+      width: 0
+      color: '#252320'
+  - elementId: s15
+    elementType: shape
+    bounds:
+      - 430
+      - 241
+      - 14
+      - 14
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#d2d2cf'
+    border:
+      width: 0
+      color: '#d2d2cf'
+  - elementId: s16
+    elementType: shape
+    bounds:
+      - 452
+      - 241
+      - 14
+      - 14
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#d2d2cf'
+    border:
+      width: 0
+      color: '#d2d2cf'
+  - elementId: s17
+    elementType: shape
+    bounds:
+      - 474
+      - 241
+      - 14
+      - 14
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#d2d2cf'
+    border:
+      width: 0
+      color: '#d2d2cf'
+  - elementId: s18
+    elementType: shape
+    bounds:
+      - 496
+      - 241
+      - 14
+      - 14
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#d2d2cf'
+    border:
+      width: 0
+      color: '#d2d2cf'
+  - elementId: s19
+    elementType: shape
+    bounds:
+      - 518
+      - 241
+      - 14
+      - 14
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#d2d2cf'
+    border:
+      width: 0
+      color: '#d2d2cf'
+  - elementId: t20
+    elementType: text
+    bounds:
+      - 561
+      - 238
+      - 351
+      - 25
+    content:
+      text: SIMULATED OBSERVATIONS
+      fontFamily: *ref_0
+      fontSize: 10
+      lineHeight: 1.1
+      color: '#646360'
+      bold: false
+  - elementId: l21
+    elementType: line
+    bounds:
+      - 362
+      - 282
+      - 550
+      - 1
+    viewBox:
+      - 550
+      - 1
+    points: 0,0 550,0
+    border:
+      width: 0.6
+      color: '#cac9c7'
+  - elementId: t22
+    elementType: text
+    bounds:
+      - 362
+      - 293
+      - 175
+      - 34
+    content:
+      text: 01 / Reading
+      fontFamily: *ref_0
+      fontSize: 15
+      lineHeight: 1.1
+      color: '#252320'
+      bold: true
+  - elementId: t23
+    elementType: text
+    bounds:
+      - 556
+      - 292
+      - 352
+      - 47
+    content:
+      text: The next owner was not visible.
+      fontFamily: *ref_0
+      fontSize: 17
+      lineHeight: 1.1
+      color: '#252320'
+      bold: false
+  - elementId: l24
+    elementType: line
+    bounds:
+      - 362
+      - 339
+      - 550
+      - 1
+    viewBox:
+      - 550
+      - 1
+    points: 0,0 550,0
+    border:
+      width: 0.6
+      color: '#cac9c7'
+  - elementId: t25
+    elementType: text
+    bounds:
+      - 362
+      - 350
+      - 175
+      - 34
+    content:
+      text: 02 / Alternative
+      fontFamily: *ref_0
+      fontSize: 15
+      lineHeight: 1.1
+      color: '#252320'
+      bold: true
+  - elementId: t26
+    elementType: text
+    bounds:
+      - 556
+      - 349
+      - 352
+      - 47
+    content:
+      text: The task itself may be unfamiliar.
+      fontFamily: *ref_0
+      fontSize: 17
+      lineHeight: 1.1
+      color: '#252320'
+      bold: false
+  - elementId: l27
+    elementType: line
+    bounds:
+      - 362
+      - 396
+      - 550
+      - 1
+    viewBox:
+      - 550
+      - 1
+    points: 0,0 550,0
+    border:
+      width: 0.6
+      color: '#cac9c7'
+  - elementId: t28
+    elementType: text
+    bounds:
+      - 362
+      - 407
+      - 175
+      - 34
+    content:
+      text: 03 / Next test
+      fontFamily: *ref_0
+      fontSize: 15
+      lineHeight: 1.1
+      color: '#252320'
+      bold: true
+  - elementId: t29
+    elementType: text
+    bounds:
+      - 556
+      - 406
+      - 352
+      - 47
+    content:
+      text: Name the owner; repeat the same task.
+      fontFamily: *ref_0
+      fontSize: 17
+      lineHeight: 1.1
+      color: '#252320'
+      bold: false
+  - elementId: l30
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#cac9c7'
+  - elementId: t31
+    elementType: text
+    bounds:
+      - 48
+      - 475
+      - 864
+      - 25
+    content:
+      text: Keep the observation, alternative explanation and next test separate.
+      fontFamily: *ref_0
       fontSize: 13
       lineHeight: 1.1
       color: '#252320'
       bold: false
-  - elementId: t8
-    elementType: text
-    bounds:
-      - 365
-      - 205
-      - 171
-      - 33
-    content:
-      text: Observed
-      fontFamily: *ref_0
-      fontSize: 19
-      lineHeight: 1.1
-      color: '#252320'
-      bold: false
-  - elementId: t9
-    elementType: text
-    bounds:
-      - 553
-      - 205
-      - 359
-      - 61
-    content:
-      text: 3 of 8 cases paused at the handoff.
-      fontFamily: *ref_1
-      fontSize: 19
-      lineHeight: 1.1
-      color: '#252320'
-      bold: false
-  - elementId: l10
-    elementType: line
-    bounds:
-      - 365
-      - 274
-      - 547
-      - 1
-    viewBox:
-      - 547
-      - 1
-    points: 0,0 547,0
-    border:
-      width: 0.6
-      color: '#c3c3c1'
-  - elementId: t11
-    elementType: text
-    bounds:
-      - 365
-      - 289
-      - 171
-      - 33
-    content:
-      text: Possible cause
-      fontFamily: *ref_0
-      fontSize: 19
-      lineHeight: 1.1
-      color: '#252320'
-      bold: false
-  - elementId: t12
-    elementType: text
-    bounds:
-      - 553
-      - 289
-      - 359
-      - 61
-    content:
-      text: The next owner was not visible.
-      fontFamily: *ref_1
-      fontSize: 19
-      lineHeight: 1.1
-      color: '#252320'
-      bold: false
-  - elementId: l13
-    elementType: line
-    bounds:
-      - 365
-      - 358
-      - 547
-      - 1
-    viewBox:
-      - 547
-      - 1
-    points: 0,0 547,0
-    border:
-      width: 0.6
-      color: '#c3c3c1'
-  - elementId: t14
-    elementType: text
-    bounds:
-      - 365
-      - 373
-      - 171
-      - 33
-    content:
-      text: Next check
-      fontFamily: *ref_0
-      fontSize: 19
-      lineHeight: 1.1
-      color: '#252320'
-      bold: false
-  - elementId: t15
-    elementType: text
-    bounds:
-      - 553
-      - 373
-      - 359
-      - 61
-    content:
-      text: Repeat the task with a named owner.
-      fontFamily: *ref_1
-      fontSize: 19
-      lineHeight: 1.1
-      color: '#252320'
-      bold: false
-  - elementId: l16
-    elementType: line
-    bounds:
-      - 365
-      - 442
-      - 547
-      - 1
-    viewBox:
-      - 547
-      - 1
-    points: 0,0 547,0
-    border:
-      width: 0.6
-      color: '#c3c3c1'
-  - elementId: t17
-    elementType: text
-    bounds:
-      - 48
-      - 469
-      - 864
-      - 28
-    content:
-      text: Observation → interpretation → test. Keep uncertainty visible.
-      fontFamily: *ref_1
-      fontSize: 14
-      lineHeight: 1.1
-      color: '#252320'
-      bold: false
-  - elementId: t18
+  - elementId: t32
     elementType: text
     bounds:
       - 48
@@ -261,12 +458,12 @@ elements:
       - 16
     content:
       text: ILLUSTRATIVE DATA / LAYOUT STUDY
-      fontFamily: *ref_1
+      fontFamily: *ref_0
       fontSize: 9
       lineHeight: 1.1
       color: '#252320'
       bold: false
-  - elementId: t19
+  - elementId: t33
     elementType: text
     bounds:
       - 871
@@ -275,7 +472,7 @@ elements:
       - 22
     content:
       text: '03'
-      fontFamily: *ref_1
+      fontFamily: *ref_0
       fontSize: 11
       lineHeight: 1.1
       color: '#252320'

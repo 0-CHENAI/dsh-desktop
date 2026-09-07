@@ -20,7 +20,7 @@ window.__ModuleLoader__.load({
 		//#endregion
 		//#region src/client/curated-previews.ts
 		/** Browser preview registry for every source-backed catalog template. */
-		/** Preview-image sequences keyed by built-in template identifier. */
+		/** Content-addressed local image URLs; both clients share the core JPG files. */
 		const CURATED_TEMPLATE_PREVIEWS = /* GENERATED_PPT_PREVIEWS */ {};
 		//#endregion
 		//#region \0dsh-css:ppt-composer.css.mjs
@@ -201,6 +201,8 @@ window.__ModuleLoader__.load({
 				children: [previewImage !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("img", {
 					className: OfficePptHero_module_css_default.previewImage,
 					src: previewImage,
+					loading: "lazy",
+					decoding: "async",
 					alt: "",
 					"aria-hidden": "true"
 				}), previewImage === void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [
