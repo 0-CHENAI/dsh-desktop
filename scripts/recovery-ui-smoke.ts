@@ -58,7 +58,8 @@ async function main(): Promise<void> {
   const preload = join(process.cwd(), 'out/preload/index.cjs')
   const names = ['calendar-plugin', 'search-plugin', 'notes-plugin', '@community/billing-plugin', '@community/longer-agent-memory-plugin', 'mobile-plugin']
   let closed = 0
-  for (const page of ['safe-mode', 'plugin-recovery']) {
+  for (const scenario of ['safe-mode', 'plugin-recovery', 'unidentified-plugin']) {
+    const page = scenario === 'unidentified-plugin' ? 'plugin-recovery' : scenario
     await parent.loadURL('data:text/html,<body style="background:%2318181b;color:%23999">DSH Desktop</body>')
     const overlay = page === 'safe-mode' ? new SafeModeOverlay(parent, preload, () => { closed++ }) : undefined
     const contents = overlay?.webContents ?? parent.webContents
@@ -71,7 +72,7 @@ async function main(): Promise<void> {
         menu.setBounds(windowsMenuViewBounds({ width: width!, height: height! }, false))
       }
       const model = page === 'safe-mode' ? buildSafeModeViewModel({ locale, plugins: names }) : buildPluginRecoveryViewModel({
-        locale, plugins: [names[0]!], removedPlugins: [],
+        locale, plugins: scenario === 'unidentified-plugin' ? [] : [names[0]!], removedPlugins: [],
         snapshot: { phase: 'failed', message: 'Plugin startup conflict', logs: ['duplicate prefix route "/calendar/api"'] }
       })
       if ('pluginItems' in model) {
@@ -113,7 +114,13 @@ async function main(): Promise<void> {
         assert.equal(layout.buttonsVisible, true)
         if (width === 1280) assert.equal(layout.listScroll, false)
       }
-      const prefix = `${page}-${locale}-${theme}-${width}`
+      if (page === 'plugin-recovery') {
+        const actions = await contents.executeJavaScript(`Array.from(document.querySelectorAll('.actions button')).filter(b => b.getBoundingClientRect().height > 0).map(b => b.textContent)`)
+        const safeModeLabel = locale === 'zh' ? '进入安全模式' : 'Enter Safe Mode'
+        assert.equal(actions.filter((label: string) => label === safeModeLabel).length, 1)
+        if (scenario === 'unidentified-plugin') assert.deepEqual(actions, [safeModeLabel])
+      }
+      const prefix = `${scenario}-${locale}-${theme}-${width}`
       await capture(contents, join(output, `${prefix}.png`))
       const before = contents.getURL()
       await contents.executeJavaScript("document.getElementById('community-wechat').dispatchEvent(new PointerEvent('pointerenter'))")
@@ -130,7 +137,16 @@ async function main(): Promise<void> {
       await delay(60)
       assert.equal(contents.getURL(), before)
       assert.deepEqual(external.splice(0), ['https://discord.gg/he2gAKCpj'])
-      results.push({ page, locale, theme, requestedSize: [width,height], layout, popup })
+      if (scenario === 'unidentified-plugin') {
+        const action = await contents.executeJavaScript(`(() => {
+          let action;
+          window.dshRecovery = { action: value => { action = value } };
+          document.getElementById('primary').click();
+          return { action, disabled: document.getElementById('primary').disabled };
+        })()`)
+        assert.deepEqual(action, { action: 'safe-mode', disabled: true })
+      }
+      results.push({ page, scenario, locale, theme, requestedSize: [width,height], layout, popup })
     }
     assert.deepEqual(rendererErrors, [])
     if (overlay) {
