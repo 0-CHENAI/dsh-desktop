@@ -404,21 +404,35 @@ elements:
       color: '#111111'
       lineHeight: 1.12
       bold: false
-  - elementId: t29
+  - elementId: l29
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.4
+      color: '#C9C8BC'
+  - elementId: t30
     elementType: text
     bounds:
       - 48
-      - 470
+      - 475
       - 864
-      - 28
+      - 25
     content:
       text: 建议：先在试点验证调度改善，再评估运力投入。
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 13
       color: '#111111'
       lineHeight: 1.12
       bold: false
-  - elementId: t30
+  - elementId: t31
     elementType: text
     bounds:
       - 48
@@ -432,7 +446,7 @@ elements:
       color: '#111111'
       lineHeight: 1.12
       bold: false
-  - elementId: t31
+  - elementId: t32
     elementType: text
     bounds:
       - 870

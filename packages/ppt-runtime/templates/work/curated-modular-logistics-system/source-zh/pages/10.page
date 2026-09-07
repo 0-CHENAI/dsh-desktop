@@ -68,9 +68,9 @@ elements:
     elementType: text
     bounds:
       - 48
-      - 78
+      - 76
       - 864
-      - 63
+      - 64
     content:
       text: 沿运营网络追踪流转关系
       fontFamily:
@@ -78,11 +78,26 @@ elements:
         mac: PingFang SC
         win: Microsoft YaHei
         ea: Noto Sans CJK SC
-      fontSize: 34
+      fontSize: 32
       lineHeight: 1.1
       color: '#202224'
       bold: true
-  - elementId: l6
+  - elementId: t6
+    elementType: text
+    bounds:
+      - 754
+      - 46
+      - 158
+      - 13
+    content:
+      text: 图示 01
+      fontFamily: *ref_0
+      fontSize: 9
+      lineHeight: 1.1
+      color: '#5f6061'
+      bold: false
+      align: right
+  - elementId: l7
     elementType: line
     bounds:
       - 238
@@ -96,7 +111,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l7
+  - elementId: l8
     elementType: line
     bounds:
       - 350.0061352522853
@@ -110,7 +125,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l8
+  - elementId: l9
     elementType: line
     bounds:
       - 354.0887443125036
@@ -124,7 +139,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l9
+  - elementId: l10
     elementType: line
     bounds:
       - 238
@@ -138,7 +153,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l10
+  - elementId: l11
     elementType: line
     bounds:
       - 354.01468234499043
@@ -152,7 +167,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l11
+  - elementId: l12
     elementType: line
     bounds:
       - 350.00319305803697
@@ -166,7 +181,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l12
+  - elementId: l13
     elementType: line
     bounds:
       - 537
@@ -180,7 +195,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l13
+  - elementId: l14
     elementType: line
     bounds:
       - 680.8824206645075
@@ -194,7 +209,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l14
+  - elementId: l15
     elementType: line
     bounds:
       - 677.0002969184977
@@ -208,7 +223,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l15
+  - elementId: l16
     elementType: line
     bounds:
       - 537
@@ -222,7 +237,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l16
+  - elementId: l17
     elementType: line
     bounds:
       - 677.6714668829369
@@ -236,7 +251,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l17
+  - elementId: l18
     elementType: line
     bounds:
       - 678.4632662794226
@@ -250,7 +265,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l18
+  - elementId: l19
     elementType: line
     bounds:
       - 537
@@ -264,7 +279,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l19
+  - elementId: l20
     elementType: line
     bounds:
       - 537
@@ -278,7 +293,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l20
+  - elementId: l21
     elementType: line
     bounds:
       - 537
@@ -292,7 +307,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: s21
+  - elementId: s22
     elementType: shape
     bounds:
       - 48
@@ -306,7 +321,7 @@ elements:
     border:
       width: 0.8
       color: '#202224'
-  - elementId: t22
+  - elementId: t23
     elementType: text
     bounds:
       - 60
@@ -321,7 +336,7 @@ elements:
       color: '#181915'
       bold: false
       align: center
-  - elementId: s23
+  - elementId: s24
     elementType: shape
     bounds:
       - 48
@@ -335,7 +350,7 @@ elements:
     border:
       width: 0.8
       color: '#202224'
-  - elementId: t24
+  - elementId: t25
     elementType: text
     bounds:
       - 60
@@ -350,7 +365,7 @@ elements:
       color: '#181915'
       bold: false
       align: center
-  - elementId: s25
+  - elementId: s26
     elementType: shape
     bounds:
       - 357
@@ -364,7 +379,7 @@ elements:
     border:
       width: 0.8
       color: '#202224'
-  - elementId: t26
+  - elementId: t27
     elementType: text
     bounds:
       - 369
@@ -379,7 +394,7 @@ elements:
       color: '#181915'
       bold: false
       align: center
-  - elementId: s27
+  - elementId: s28
     elementType: shape
     bounds:
       - 684
@@ -393,7 +408,7 @@ elements:
     border:
       width: 0.8
       color: '#202224'
-  - elementId: t28
+  - elementId: t29
     elementType: text
     bounds:
       - 696
@@ -408,7 +423,7 @@ elements:
       color: '#181915'
       bold: false
       align: center
-  - elementId: s29
+  - elementId: s30
     elementType: shape
     bounds:
       - 684
@@ -422,7 +437,7 @@ elements:
     border:
       width: 0.8
       color: '#202224'
-  - elementId: t30
+  - elementId: t31
     elementType: text
     bounds:
       - 696
@@ -437,7 +452,7 @@ elements:
       color: '#181915'
       bold: false
       align: center
-  - elementId: s31
+  - elementId: s32
     elementType: shape
     bounds:
       - 684
@@ -451,7 +466,7 @@ elements:
     border:
       width: 0.8
       color: '#202224'
-  - elementId: t32
+  - elementId: t33
     elementType: text
     bounds:
       - 696
@@ -466,7 +481,7 @@ elements:
       color: '#181915'
       bold: false
       align: center
-  - elementId: t33
+  - elementId: t34
     elementType: text
     bounds:
       - 248
@@ -480,7 +495,7 @@ elements:
       lineHeight: 1.1
       color: '#202224'
       bold: false
-  - elementId: t34
+  - elementId: t35
     elementType: text
     bounds:
       - 248
@@ -494,7 +509,7 @@ elements:
       lineHeight: 1.1
       color: '#202224'
       bold: false
-  - elementId: t35
+  - elementId: t36
     elementType: text
     bounds:
       - 552
@@ -508,7 +523,7 @@ elements:
       lineHeight: 1.1
       color: '#202224'
       bold: false
-  - elementId: t36
+  - elementId: t37
     elementType: text
     bounds:
       - 552
@@ -522,21 +537,35 @@ elements:
       lineHeight: 1.1
       color: '#202224'
       bold: false
-  - elementId: t37
+  - elementId: l38
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#c4c4c2'
+  - elementId: t39
     elementType: text
     bounds:
       - 48
-      - 469
+      - 475
       - 864
-      - 28
+      - 25
     content:
       text: 箭头表示实物流动；逆向回收与正向交付分开呈现。
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 13
       lineHeight: 1.1
       color: '#202224'
       bold: false
-  - elementId: t38
+  - elementId: t40
     elementType: text
     bounds:
       - 48
@@ -550,7 +579,7 @@ elements:
       lineHeight: 1.1
       color: '#202224'
       bold: false
-  - elementId: t39
+  - elementId: t41
     elementType: text
     bounds:
       - 871

@@ -1,5 +1,11 @@
 # PPT runtime and template provenance
 
+## 参考说明
+
+- **实现方案**：参考 Kimi PPT（Kimi Slides）的 PPTD 文档与示例，采用本地声明式页面工程、校验与可编辑 PPTX 导出的工作流程。
+- **模板设计**：部分模板参考并按 MIT 许可改编自 Zara Zhang（GitHub：`zarazhangrui`）的 [`beautiful-html-templates`](https://github.com/zarazhangrui/beautiful-html-templates)，固定版本为 `e5e204fb1f3b06290846e7dcd7aceddabeceec8c`。DSH 重建了原生可编辑版式，并补充中英文示例及字体配对。
+
+
 The maintained runtime was extracted from the DSH-distributed `dsh-kimi-ppt@0.1.1-rc.2` artifact pinned by Desktop commit `9d4502f`. Its original MIT notice remains in LICENSE. This is maintenance of distributed JavaScript, not a claim that the complete upstream TypeScript source or a legal clean-room process has been recovered.
 
 Historical development studied Kimi Slides client-distributed documentation and example PPTD files. The current product names are dsh-ppt and dsh-ppt-composer. Only legacy storage paths, old RPC aliases and migration checks remain for compatibility. This package does not ship the Kimi executable, its original documentation, or the withdrawn community template packs. The authoring documentation in this edition was rewritten against the local implementation.
@@ -20,4 +26,4 @@ Other runtime dependencies retain their own package licenses. No font binary is 
 
 ## Zara template adaptations
 
-Copyright (c) 2026 Zara Zhang. Ten templates adapt beautiful-html-templates at e5e204fb1f3b06290846e7dcd7aceddabeceec8c under MIT. See licenses/zara/LICENSE and the pinned design/HTML source files. DSH rebuilt eight native editable layouts per template, added English and Chinese examples, replaced web-only typefaces with documented Office font pairs, and generated new previews.
+Copyright (c) 2026 Zara Zhang. Ten templates adapt beautiful-html-templates at e5e204fb1f3b06290846e7dcd7aceddabeceec8c under MIT. See licenses/zara/LICENSE and the pinned design/HTML source files. DSH rebuilt native editable layouts and expanded each of the ten templates to twelve layouts, added English and Chinese examples, replaced web-only typefaces with documented Office font pairs, and generated new previews.

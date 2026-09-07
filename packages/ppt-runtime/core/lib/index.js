@@ -1,4 +1,12 @@
-// DSH PPT: historical workflow research referenced Kimi Slides. See THIRD_PARTY_NOTICES.md.
+import { validationSchema, validationReport, formatValidation } from "./validation.js";
+/**
+ * 实现方案参考了 Kimi PPT（Kimi Slides）的 PPTD 文档与示例：
+ * 以本地声明式工程组织页面，经校验后导出可编辑 PPTX。
+ * 部分模板参考并改编自 Zara Zhang（GitHub: zarazhangrui）的 beautiful-html-templates。
+ * 具体来源、改编范围及许可证见 ../THIRD_PARTY_NOTICES.md。
+ */
+import { registerPreviewAssets } from "./preview-assets.js";
+import { previewFiles } from "./preview-manifest.js";
 import { definitions as DSH_PPT_TEMPLATE_DEFINITIONS, semantics as DSH_PPT_TEMPLATE_SEMANTICS } from "./catalog.js";
 import { i as renderPptdProject, n as loadPptdProject, o as recommendedTextCapacity, r as parsePptdProject, t as checkPptdProject } from "./pptd-2VqVzr_T.js";
 import z from "@deepseek-ai/schemastery";
@@ -2349,8 +2357,27 @@ function safePptxName(value, kind) {
 	if (path.posix.extname(safe).toLowerCase() !== ".pptx") throw new Error(`${kind} must end in .pptx`);
 	return safe;
 }
+async function projectValidationReport(project, input, workspace) {
+	const directory = (await stat(input)).isDirectory() ? input : path.dirname(input);
+	return validationReport(checkPptdProject(project), {
+		projectPath: relativeToWorkspace(await realpath(workspace), directory), projectDirectory: directory
+	});
+}
 /** Register the direct PPTD project workflow used by PPT mode. */
 function registerPptdProjectTools(ctx, service) {
+	ctx.tools.register(defineTool({
+		name: "pptd_check",
+		description: "Read-only validation of a workspace PPTD project. Returns all issues with page, file, elementId and repair guidance. needs_revision is a normal authoring result; fix the listed files and check again. Does not publish files or consume a delivery slot.",
+		parameters: { project_path: { type: "string", required: true, description: "Workspace-relative PPTD project directory or .pptd manifest." } },
+		output: { schema: validationSchema, render: (_args, value) => [{ type: "text", text: formatValidation(value) }] },
+		async execute(args, exec) {
+			const input = await existingWorkspacePath(workspaceRoot(exec), args.project_path, "project_path");
+			exec.signal.throwIfAborted();
+			return projectValidationReport(await loadPptdProject(input), input, workspaceRoot(exec));
+		},
+		isConcurrencySafe: () => true,
+		presentCall: () => ({ card: "generic", title: "检查 PPT 排版", kind: "read" })
+	}));
 	ctx.tools.register(defineTool({
 		name: "pptd_list_files",
 		description: "List the regular files inside one workspace PPTD project. This bounded project tool replaces generic filesystem discovery for PPT mode and rejects symbolic links.",
@@ -2527,7 +2554,7 @@ function registerPptdProjectTools(ctx, service) {
 			},
 			expected_sha256: {
 				type: "string",
-				description: "Required current SHA-256 when replacing an existing file; omit when creating a file."
+				description: "Required current SHA-256 when replacing an existing file; omit or use an empty string when creating a file."
 			}
 		},
 		output: {
@@ -2581,7 +2608,7 @@ function registerPptdProjectTools(ctx, service) {
 			if (exists) {
 				if (args.expected_sha256 === void 0 || !/^[0-9a-f]{64}$/u.test(args.expected_sha256)) throw new Error("expected_sha256 must contain the current SHA-256 from pptd_read_file when replacing a file");
 				if (sha256(await readFile(target, { signal: exec.signal })) !== args.expected_sha256) throw new Error("PPTD file changed after pptd_read_file; read it again before replacing it");
-			} else if (args.expected_sha256 !== void 0) throw new Error("expected_sha256 applies only when replacing an existing PPTD file");
+			} else if (args.expected_sha256 !== void 0 && args.expected_sha256 !== "") throw new Error("expected_sha256 applies only when replacing an existing PPTD file; omit it or pass an empty string to create a file");
 			await publishPptdFile(target, bytes, exists);
 			return {
 				operation: exists ? "replace" : "create",
@@ -2816,7 +2843,7 @@ function registerPptdProjectTools(ctx, service) {
 	}));
 	ctx.tools.register(defineTool({
 		name: "pptd_render",
-		description: "Convert the current workspace PPTD project directly into one editable PPTX and register its browser delivery. The host applies path, resource, format, and compiler safeguards inside this operation. Every successful call creates a new public delivery folder and keeps the complete PPTD source plane beside the PPTX.",
+		description: "Convert the current workspace PPTD project directly into one editable PPTX and register its browser delivery. The host applies path, resource, format, and compiler safeguards inside this operation. When validation needs revision, returns status needs_revision with the complete check and does not export. Only status exported is a delivery. Every successful export creates a new public delivery folder and keeps the complete PPTD source plane beside the PPTX.",
 		parameters: {
 			project_path: {
 				type: "string",
@@ -2834,49 +2861,41 @@ function registerPptdProjectTools(ctx, service) {
 				type: "object",
 				additionalProperties: false,
 				properties: {
+					status: { type: "string", required: true, enum: ["exported", "needs_revision"] },
+					check: { ...validationSchema, required: true },
 					id: {
-						type: "string",
-						required: true
+						type: "string"
 					},
 					title: {
-						type: "string",
-						required: true
+						type: "string"
 					},
 					revision: {
-						type: "integer",
-						required: true
+						type: "integer"
 					},
 					fileName: {
-						type: "string",
-						required: true
+						type: "string"
 					},
 					workspaceDirectoryPath: {
-						type: "string",
-						required: true
+						type: "string"
 					},
 					sha256: {
-						type: "string",
-						required: true
+						type: "string"
 					},
 					outputPath: {
-						type: "string",
-						required: true
+						type: "string"
 					},
 					pageCount: {
-						type: "integer",
-						required: true
+						type: "integer"
 					},
 					nativeObjectCount: {
-						type: "integer",
-						required: true
+						type: "integer"
 					},
 					sizeBytes: {
-						type: "integer",
-						required: true
+						type: "integer"
 					}
 				}
 			},
-			render: (_args, value) => [{
+			render: (_args, value) => value.status === "needs_revision" ? [{ type: "text", text: "尚未导出 PPTX。\n" + formatValidation(value.check) }] : [{
 				type: "text",
 				text: [
 					`${value.title}：${value.pageCount} 页，修订版 ${value.revision}，${value.fileName}，SHA-256 ${value.sha256}`,
@@ -2884,7 +2903,8 @@ function registerPptdProjectTools(ctx, service) {
 					`工作区产出目录：${value.workspaceDirectoryPath}`,
 					`PPTX：${value.outputPath}`,
 					`大小：${value.sizeBytes} bytes`,
-					`演示文稿 ID：${value.id}。`
+					`演示文稿 ID：${value.id}。`,
+					formatValidation(value.check)
 				].join("\n")
 			}]
 		},
@@ -2893,10 +2913,14 @@ function registerPptdProjectTools(ctx, service) {
 			const input = await existingWorkspacePath(workspace, args.project_path, "project_path");
 			const outputRelative = safePptxName(args.output_file, "output_file");
 			const project = await loadPptdProject(input);
+			exec.signal.throwIfAborted();
+			const check = await projectValidationReport(project, input, workspace);
+			if (check.status === "needs_revision") return { status: "needs_revision", check };
 			if (exec.agent === void 0) throw new Error("pptd_render requires an active DSH session");
 			const deck = await service.createPptdDeck(exec.agent.id, project, path.posix.basename(outputRelative), workspace, { kind: "agent" }, exec.signal);
 			if (deck.output.workspaceDirectoryPath === void 0 || deck.output.workspaceFilePath === void 0) throw new Error("pptd_render completed without a server workspace delivery");
 			return {
+				status: "exported", check,
 				id: deck.id,
 				title: deck.title,
 				revision: deck.revision,
@@ -3163,7 +3187,7 @@ function clearAutomaticPptContext(agent, staleOnly = false) {
 		const source = event.data.source;
 		if (source.kind !== "plugin" || source.form !== "snapshot") continue;
 		if (![SKILL_PLUGIN, "dsh-ppt-composer", "kimi-ppt-skill", "kimi-ppt-composer"].includes(source.plugin)) continue;
-        if (staleOnly && source.plugin !== "kimi-ppt-skill" && source.plugin !== "kimi-ppt-composer" && (source.plugin !== SKILL_PLUGIN || event.data.content.some(part => part.type === "text" && part.text.includes("DSH-PPT-AUTHORING-20260906-V2")))) continue;
+        if (staleOnly && source.plugin !== "kimi-ppt-skill" && source.plugin !== "kimi-ppt-composer" && (source.plugin !== SKILL_PLUGIN || event.data.content.some(part => part.type === "text" && part.text.includes("DSH-PPT-AUTHORING-20260907-V3")))) continue;
 		agent.session.append("user/message", createUserMessage({
 			content: [{ type: "text", text: "[Retired automatic PPT instructions cleared.]" }],
 			source: { kind: "plugin", plugin: "dsh-ppt-context-cleared" }
@@ -3585,6 +3609,7 @@ const Config = z.object({
 /** Compose storage, browser RPC, and bounded model tools. */
 async function apply(ctx, config) {
 	const bundledPptSkillRoot = fileURLToPath(new URL("../skills/dsh-ppt", import.meta.url));
+	registerPreviewAssets(ctx, previewFiles, path.join(bundledPptSkillRoot, "references"));
 	registerPptSkill(ctx, config.pptSkillRoot ?? config.kimiPptSkillRoot ?? process.env.DSH_PPT_SKILL_ROOT ?? process.env.DSH_KIMI_PPT_SKILL_ROOT ?? bundledPptSkillRoot);
 	const service = new PptService(new PptStore(config.root, {
 		maxDecksPerSession: config.maxDecksPerSession ?? 50,

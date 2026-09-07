@@ -13,7 +13,7 @@ elements:
       - 20
     content:
       text: MONOCHROME
-      fontFamily: &ref_1
+      fontFamily: &ref_0
         latin: Arial
         mac: PingFang SC
         win: Microsoft YaHei
@@ -40,21 +40,36 @@ elements:
     elementType: text
     bounds:
       - 48
-      - 78
+      - 76
       - 864
-      - 63
+      - 64
     content:
       text: 看到结果之前，先设计验证方法
-      fontFamily: &ref_0
+      fontFamily: &ref_1
         latin: Helvetica Neue
         mac: PingFang SC
         win: Microsoft YaHei
         ea: Noto Sans CJK SC
-      fontSize: 34
+      fontSize: 32
       lineHeight: 1.1
       color: '#1A1A16'
       bold: true
   - elementId: t4
+    elementType: text
+    bounds:
+      - 754
+      - 46
+      - 158
+      - 13
+    content:
+      text: 图示 07
+      fontFamily: *ref_0
+      fontSize: 9
+      lineHeight: 1.1
+      color: '#5d5d52'
+      bold: false
+      align: right
+  - elementId: t5
     elementType: text
     bounds:
       - 48
@@ -65,12 +80,12 @@ elements:
       text: |-
         一次验证
         一个假设
-      fontFamily: *ref_0
+      fontFamily: *ref_1
       fontSize: 32
       lineHeight: 1.1
       color: '#1A1A16'
       bold: true
-  - elementId: t5
+  - elementId: t6
     elementType: text
     bounds:
       - 48
@@ -79,12 +94,12 @@ elements:
       - 117
     content:
       text: 观察真实任务，区分用户证据与研究者解释。
-      fontFamily: *ref_1
+      fontFamily: *ref_0
       fontSize: 21
       lineHeight: 1.1
       color: '#1A1A16'
       bold: false
-  - elementId: l6
+  - elementId: l7
     elementType: line
     bounds:
       - 365
@@ -98,7 +113,7 @@ elements:
     border:
       width: 0.6
       color: '#b7b7a3'
-  - elementId: t7
+  - elementId: t8
     elementType: text
     bounds:
       - 402
@@ -107,12 +122,12 @@ elements:
       - 34
     content:
       text: 假设
-      fontFamily: *ref_0
+      fontFamily: *ref_1
       fontSize: 18
       lineHeight: 1.1
       color: '#1A1A16'
       bold: true
-  - elementId: t8
+  - elementId: t9
     elementType: text
     bounds:
       - 561
@@ -121,12 +136,12 @@ elements:
       - 58
     content:
       text: 明确下一步能够减少犹豫。
-      fontFamily: *ref_1
+      fontFamily: *ref_0
       fontSize: 18
       lineHeight: 1.1
       color: '#1A1A16'
       bold: false
-  - elementId: l9
+  - elementId: l10
     elementType: line
     bounds:
       - 402
@@ -140,7 +155,7 @@ elements:
     border:
       width: 0.6
       color: '#c2c2ad'
-  - elementId: t10
+  - elementId: t11
     elementType: text
     bounds:
       - 402
@@ -149,12 +164,12 @@ elements:
       - 34
     content:
       text: 比较
-      fontFamily: *ref_0
+      fontFamily: *ref_1
       fontSize: 18
       lineHeight: 1.1
       color: '#1A1A16'
       bold: true
-  - elementId: t11
+  - elementId: t12
     elementType: text
     bounds:
       - 561
@@ -163,12 +178,12 @@ elements:
       - 58
     content:
       text: 相同任务；比较现有与修改后的引导。
-      fontFamily: *ref_1
+      fontFamily: *ref_0
       fontSize: 18
       lineHeight: 1.1
       color: '#1A1A16'
       bold: false
-  - elementId: l12
+  - elementId: l13
     elementType: line
     bounds:
       - 402
@@ -182,7 +197,7 @@ elements:
     border:
       width: 0.6
       color: '#c2c2ad'
-  - elementId: t13
+  - elementId: t14
     elementType: text
     bounds:
       - 402
@@ -191,12 +206,12 @@ elements:
       - 34
     content:
       text: 衡量
-      fontFamily: *ref_0
+      fontFamily: *ref_1
       fontSize: 18
       lineHeight: 1.1
       color: '#1A1A16'
       bold: true
-  - elementId: t14
+  - elementId: t15
     elementType: text
     bounds:
       - 561
@@ -205,12 +220,12 @@ elements:
       - 58
     content:
       text: 完成率、耗时与求助次数。
-      fontFamily: *ref_1
+      fontFamily: *ref_0
       fontSize: 18
       lineHeight: 1.1
       color: '#1A1A16'
       bold: false
-  - elementId: l15
+  - elementId: l16
     elementType: line
     bounds:
       - 402
@@ -224,7 +239,7 @@ elements:
     border:
       width: 0.6
       color: '#c2c2ad'
-  - elementId: t16
+  - elementId: t17
     elementType: text
     bounds:
       - 402
@@ -233,12 +248,12 @@ elements:
       - 34
     content:
       text: 决策
-      fontFamily: *ref_0
+      fontFamily: *ref_1
       fontSize: 18
       lineHeight: 1.1
       color: '#1A1A16'
       bold: true
-  - elementId: t17
+  - elementId: t18
     elementType: text
     bounds:
       - 561
@@ -247,12 +262,12 @@ elements:
       - 58
     content:
       text: 达到约定目标后再采用。
-      fontFamily: *ref_1
+      fontFamily: *ref_0
       fontSize: 18
       lineHeight: 1.1
       color: '#1A1A16'
       bold: false
-  - elementId: l18
+  - elementId: l19
     elementType: line
     bounds:
       - 402
@@ -266,21 +281,35 @@ elements:
     border:
       width: 0.6
       color: '#c2c2ad'
-  - elementId: t19
+  - elementId: l20
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#c9c9b3'
+  - elementId: t21
     elementType: text
     bounds:
       - 48
-      - 469
+      - 475
       - 864
-      - 28
+      - 25
     content:
       text: 收集结果前先定义成功标准，同时记录相反证据。
-      fontFamily: *ref_1
-      fontSize: 14
+      fontFamily: *ref_0
+      fontSize: 13
       lineHeight: 1.1
       color: '#1A1A16'
       bold: false
-  - elementId: t20
+  - elementId: t22
     elementType: text
     bounds:
       - 48
@@ -289,12 +318,12 @@ elements:
       - 16
     content:
       text: 版式示例 / 数据为模拟值
-      fontFamily: *ref_1
+      fontFamily: *ref_0
       fontSize: 9
       lineHeight: 1.1
       color: '#1A1A16'
       bold: false
-  - elementId: t21
+  - elementId: t23
     elementType: text
     bounds:
       - 871
@@ -303,7 +332,7 @@ elements:
       - 22
     content:
       text: '08'
-      fontFamily: *ref_1
+      fontFamily: *ref_0
       fontSize: 11
       lineHeight: 1.1
       color: '#1A1A16'

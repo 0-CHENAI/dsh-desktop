@@ -323,21 +323,35 @@ elements:
       color: '#111111'
       lineHeight: 1.12
       bold: false
-  - elementId: t23
+  - elementId: l23
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.4
+      color: '#C9C8BC'
+  - elementId: t24
     elementType: text
     bounds:
       - 48
-      - 470
+      - 475
       - 864
-      - 28
+      - 25
     content:
       text: 分层依据：客户年度支出；所有占比采用同一分母。
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 13
       color: '#111111'
       lineHeight: 1.12
       bold: false
-  - elementId: t24
+  - elementId: t25
     elementType: text
     bounds:
       - 48
@@ -351,7 +365,7 @@ elements:
       color: '#111111'
       lineHeight: 1.12
       bold: false
-  - elementId: t25
+  - elementId: t26
     elementType: text
     bounds:
       - 870

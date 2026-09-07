@@ -13,7 +13,7 @@ elements:
       - 20
     content:
       text: SOFT EDITORIAL
-      fontFamily: &ref_1
+      fontFamily: &ref_0
         latin: Arial
         mac: PingFang SC
         win: Microsoft YaHei
@@ -40,156 +40,158 @@ elements:
     elementType: text
     bounds:
       - 48
-      - 78
+      - 76
       - 864
-      - 63
+      - 64
     content:
       text: A judgment worth revisiting
-      fontFamily: &ref_0
+      fontFamily: &ref_1
         latin: Georgia
         mac: Songti SC
         win: SimSun
         ea: Noto Serif CJK SC
-      fontSize: 34
+      fontSize: 32
       lineHeight: 1.1
       color: '#2A241B'
       bold: false
   - elementId: t4
     elementType: text
     bounds:
-      - 48
-      - 174
-      - 345
-      - 127
+      - 754
+      - 46
+      - 158
+      - 13
     content:
-      text: A judgment worth revisiting
+      text: EXHIBIT 01
       fontFamily: *ref_0
-      fontSize: 36
+      fontSize: 9
       lineHeight: 1.1
-      color: '#2A241B'
+      color: '#666156'
       bold: false
+      align: right
   - elementId: t5
     elementType: text
     bounds:
       - 48
-      - 337
-      - 326
-      - 110
+      - 164
+      - 348
+      - 25
+    content:
+      text: THE WORKING POSITION
+      fontFamily: *ref_0
+      fontSize: 13
+      lineHeight: 1.1
+      color: '#2A241B'
+      bold: false
+  - elementId: t6
+    elementType: text
+    bounds:
+      - 48
+      - 207
+      - 332
+      - 177
     content:
       text: Start with the source. Leave room for a different explanation.
       fontFamily: *ref_1
-      fontSize: 21
+      fontSize: 30
       lineHeight: 1.1
       color: '#2A241B'
       bold: false
-  - elementId: l6
+  - elementId: l7
     elementType: line
     bounds:
-      - 427
-      - 171
-      - 1
-      - 278
-    viewBox:
-      - 1
-      - 278
-    points: 0,0 0,278
-    border:
-      width: 0.6
-      color: '#b6b1a4'
-  - elementId: t7
-    elementType: text
-    bounds:
-      - 458
-      - 174
-      - 42
-      - 25
-    content:
-      text: '01'
-      fontFamily: *ref_1
-      fontSize: 13
-      lineHeight: 1.1
-      color: '#2A241B'
-      bold: false
-  - elementId: t8
-    elementType: text
-    bounds:
-      - 518
-      - 170
-      - 383
-      - 34
-    content:
-      text: Observation
-      fontFamily: *ref_0
-      fontSize: 24
-      lineHeight: 1.1
-      color: '#2A241B'
-      bold: false
-  - elementId: t9
-    elementType: text
-    bounds:
-      - 518
-      - 212
-      - 383
-      - 46
-    content:
-      text: What we can observe
-      fontFamily: *ref_1
-      fontSize: 18
-      lineHeight: 1.1
-      color: '#2A241B'
-      bold: false
-  - elementId: l10
-    elementType: line
-    bounds:
-      - 458
-      - 251
-      - 454
+      - 48
+      - 403
+      - 326
       - 1
     viewBox:
-      - 454
+      - 326
       - 1
-    points: 0,0 454,0
+    points: 0,0 326,0
     border:
       width: 0.6
       color: '#c0bcae'
+  - elementId: t8
+    elementType: text
+    bounds:
+      - 48
+      - 420
+      - 330
+      - 43
+    content:
+      text: Start small. Learn before scaling.
+      fontFamily: *ref_0
+      fontSize: 17
+      lineHeight: 1.1
+      color: '#2A241B'
+      bold: false
+  - elementId: l9
+    elementType: line
+    bounds:
+      - 414
+      - 167
+      - 1
+      - 282
+    viewBox:
+      - 1
+      - 282
+    points: 0,0 0,282
+    border:
+      width: 0.6
+      color: '#b6b1a4'
+  - elementId: t10
+    elementType: text
+    bounds:
+      - 441
+      - 167
+      - 50
+      - 38
+    content:
+      text: '01'
+      fontFamily: *ref_1
+      fontSize: 26
+      lineHeight: 1.1
+      color: '#847f73'
+      bold: false
   - elementId: t11
     elementType: text
     bounds:
-      - 458
-      - 265
-      - 42
-      - 25
+      - 514
+      - 170
+      - 249
+      - 32
     content:
-      text: '02'
+      text: Observation
       fontFamily: *ref_1
-      fontSize: 13
+      fontSize: 23
       lineHeight: 1.1
       color: '#2A241B'
       bold: false
   - elementId: t12
     elementType: text
     bounds:
-      - 518
-      - 261
-      - 383
-      - 34
+      - 780
+      - 176
+      - 132
+      - 24
     content:
-      text: Meaning
+      text: RECORD
       fontFamily: *ref_0
-      fontSize: 24
+      fontSize: 10
       lineHeight: 1.1
-      color: '#2A241B'
+      color: '#666156'
       bold: false
+      align: right
   - elementId: t13
     elementType: text
     bounds:
-      - 518
-      - 303
-      - 383
-      - 46
+      - 514
+      - 211
+      - 398
+      - 47
     content:
-      text: What still needs a test
-      fontFamily: *ref_1
+      text: What does the observed work tell us?
+      fontFamily: *ref_0
       fontSize: 18
       lineHeight: 1.1
       color: '#2A241B'
@@ -197,74 +199,160 @@ elements:
   - elementId: l14
     elementType: line
     bounds:
-      - 458
-      - 342
-      - 454
+      - 441
+      - 253
+      - 471
       - 1
     viewBox:
-      - 454
+      - 471
       - 1
-    points: 0,0 454,0
+    points: 0,0 471,0
     border:
       width: 0.6
-      color: '#c0bcae'
+      color: '#c6c2b4'
   - elementId: t15
     elementType: text
     bounds:
-      - 458
-      - 356
-      - 42
-      - 25
+      - 441
+      - 261
+      - 50
+      - 38
     content:
-      text: '03'
+      text: '02'
       fontFamily: *ref_1
-      fontSize: 13
+      fontSize: 26
       lineHeight: 1.1
-      color: '#2A241B'
+      color: '#847f73'
       bold: false
   - elementId: t16
     elementType: text
     bounds:
-      - 518
-      - 352
-      - 383
-      - 34
+      - 514
+      - 264
+      - 249
+      - 32
     content:
-      text: Evidence
-      fontFamily: *ref_0
-      fontSize: 24
+      text: Meaning
+      fontFamily: *ref_1
+      fontSize: 23
       lineHeight: 1.1
       color: '#2A241B'
       bold: false
   - elementId: t17
     elementType: text
     bounds:
-      - 518
-      - 394
-      - 383
-      - 46
+      - 780
+      - 270
+      - 132
+      - 24
     content:
-      text: What changes the next step
-      fontFamily: *ref_1
+      text: QUESTION
+      fontFamily: *ref_0
+      fontSize: 10
+      lineHeight: 1.1
+      color: '#666156'
+      bold: false
+      align: right
+  - elementId: t18
+    elementType: text
+    bounds:
+      - 514
+      - 305
+      - 398
+      - 47
+    content:
+      text: Which assumption could change the plan?
+      fontFamily: *ref_0
       fontSize: 18
       lineHeight: 1.1
       color: '#2A241B'
       bold: false
-  - elementId: l18
+  - elementId: l19
     elementType: line
     bounds:
-      - 458
-      - 433
-      - 454
+      - 441
+      - 347
+      - 471
       - 1
     viewBox:
-      - 454
+      - 471
       - 1
-    points: 0,0 454,0
+    points: 0,0 471,0
     border:
       width: 0.6
-      color: '#c0bcae'
-  - elementId: t19
+      color: '#c6c2b4'
+  - elementId: t20
+    elementType: text
+    bounds:
+      - 441
+      - 355
+      - 50
+      - 38
+    content:
+      text: '03'
+      fontFamily: *ref_1
+      fontSize: 26
+      lineHeight: 1.1
+      color: '#847f73'
+      bold: false
+  - elementId: t21
+    elementType: text
+    bounds:
+      - 514
+      - 358
+      - 249
+      - 32
+    content:
+      text: Evidence
+      fontFamily: *ref_1
+      fontSize: 23
+      lineHeight: 1.1
+      color: '#2A241B'
+      bold: false
+  - elementId: t22
+    elementType: text
+    bounds:
+      - 780
+      - 364
+      - 132
+      - 24
+    content:
+      text: DECISION
+      fontFamily: *ref_0
+      fontSize: 10
+      lineHeight: 1.1
+      color: '#666156'
+      bold: false
+      align: right
+  - elementId: t23
+    elementType: text
+    bounds:
+      - 514
+      - 399
+      - 398
+      - 47
+    content:
+      text: What evidence would justify the next step?
+      fontFamily: *ref_0
+      fontSize: 18
+      lineHeight: 1.1
+      color: '#2A241B'
+      bold: false
+  - elementId: l24
+    elementType: line
+    bounds:
+      - 441
+      - 441
+      - 471
+      - 1
+    viewBox:
+      - 471
+      - 1
+    points: 0,0 471,0
+    border:
+      width: 0.6
+      color: '#c6c2b4'
+  - elementId: t25
     elementType: text
     bounds:
       - 48
@@ -273,12 +361,12 @@ elements:
       - 16
     content:
       text: ILLUSTRATIVE DATA / LAYOUT STUDY
-      fontFamily: *ref_1
+      fontFamily: *ref_0
       fontSize: 9
       lineHeight: 1.1
       color: '#2A241B'
       bold: false
-  - elementId: t20
+  - elementId: t26
     elementType: text
     bounds:
       - 871
@@ -287,7 +375,7 @@ elements:
       - 22
     content:
       text: '02'
-      fontFamily: *ref_1
+      fontFamily: *ref_0
       fontSize: 11
       lineHeight: 1.1
       color: '#2A241B'

@@ -45,7 +45,7 @@ elements:
       - 68
     content:
       text: 持续性需求支撑业务扩张
-      fontFamily:
+      fontFamily: &ref_1
         latin: Arial
         ea: Noto Serif CJK SC
         mac: PingFang SC
@@ -54,129 +54,199 @@ elements:
       color: '#111111'
       lineHeight: 1.12
       bold: true
-  - elementId: l4
-    elementType: line
-    bounds:
-      - 92
-      - 425
-      - 510
-      - 1
-    viewBox:
-      - 510
-      - 1
-    points: 0,0 510,0
-    border:
-      width: 0.5
-      color: '#D1D1C5'
-  - elementId: t5
+  - elementId: t4
     elementType: text
     bounds:
       - 48
-      - 415
+      - 153
+      - 516
+      - 24
+    content:
+      text: A / 收入结构 · 百万美元
+      fontFamily: *ref_0
+      fontSize: 11
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+  - elementId: s5
+    elementType: shape
+    bounds:
+      - 108
+      - 177
+      - 9
+      - 9
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#1E2BFA'
+    border:
+      width: 0
+      color: '#1E2BFA'
+  - elementId: t6
+    elementType: text
+    bounds:
+      - 124
+      - 172
+      - 157
+      - 23
+    content:
+      text: 持续性收入
+      fontFamily: *ref_0
+      fontSize: 11
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+  - elementId: s7
+    elementType: shape
+    bounds:
+      - 300
+      - 177
+      - 9
+      - 9
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#A1A7FA'
+    border:
+      width: 0
+      color: '#A1A7FA'
+  - elementId: t8
+    elementType: text
+    bounds:
+      - 316
+      - 172
+      - 210
+      - 23
+    content:
+      text: 新增业务
+      fontFamily: *ref_0
+      fontSize: 11
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+  - elementId: l9
+    elementType: line
+    bounds:
+      - 92
+      - 407
+      - 512
+      - 1
+    viewBox:
+      - 512
+      - 1
+    points: 0,0 512,0
+    border:
+      width: 0.5
+      color: '#D1D1C5'
+  - elementId: t10
+    elementType: text
+    bounds:
+      - 48
+      - 397
       - 35
       - 22
     content:
       text: '0'
       fontFamily: *ref_0
-      fontSize: 12
+      fontSize: 11
       color: '#111111'
       lineHeight: 1.12
       bold: false
       align: right
-  - elementId: l6
+  - elementId: l11
     elementType: line
     bounds:
       - 92
-      - 349
-      - 510
+      - 346.2
+      - 512
       - 1
     viewBox:
-      - 510
+      - 512
       - 1
-    points: 0,0 510,0
+    points: 0,0 512,0
     border:
       width: 0.5
       color: '#D1D1C5'
-  - elementId: t7
+  - elementId: t12
     elementType: text
     bounds:
       - 48
-      - 339
+      - 336.2
       - 35
       - 22
     content:
       text: '40'
       fontFamily: *ref_0
-      fontSize: 12
+      fontSize: 11
       color: '#111111'
       lineHeight: 1.12
       bold: false
       align: right
-  - elementId: l8
+  - elementId: l13
     elementType: line
     bounds:
       - 92
-      - 273
-      - 510
+      - 285.4
+      - 512
       - 1
     viewBox:
-      - 510
+      - 512
       - 1
-    points: 0,0 510,0
+    points: 0,0 512,0
     border:
       width: 0.5
       color: '#D1D1C5'
-  - elementId: t9
+  - elementId: t14
     elementType: text
     bounds:
       - 48
-      - 263
+      - 275.4
       - 35
       - 22
     content:
       text: '80'
       fontFamily: *ref_0
-      fontSize: 12
+      fontSize: 11
       color: '#111111'
       lineHeight: 1.12
       bold: false
       align: right
-  - elementId: l10
+  - elementId: l15
     elementType: line
     bounds:
       - 92
-      - 197
-      - 510
+      - 224.6
+      - 512
       - 1
     viewBox:
-      - 510
+      - 512
       - 1
-    points: 0,0 510,0
+    points: 0,0 512,0
     border:
       width: 0.5
       color: '#D1D1C5'
-  - elementId: t11
+  - elementId: t16
     elementType: text
     bounds:
       - 48
-      - 187
+      - 214.6
       - 35
       - 22
     content:
       text: '120'
       fontFamily: *ref_0
-      fontSize: 12
+      fontSize: 11
       color: '#111111'
       lineHeight: 1.12
       bold: false
       align: right
-  - elementId: s12
+  - elementId: s17
     elementType: shape
     bounds:
       - 111
-      - 345.2
+      - 343.15999999999997
       - 43
-      - 79.8
+      - 63.84
     shapeName: rect
     fill:
       type: solid
@@ -184,13 +254,13 @@ elements:
     border:
       width: 0
       color: '#1E2BFA'
-  - elementId: s13
+  - elementId: s18
     elementType: shape
     bounds:
       - 111
-      - 311
+      - 315.8
       - 43
-      - 34.199999999999996
+      - 27.36
     shapeName: rect
     fill:
       type: solid
@@ -198,42 +268,42 @@ elements:
     border:
       width: 0
       color: '#A1A7FA'
-  - elementId: t14
+  - elementId: t19
     elementType: text
     bounds:
       - 106
-      - 277
+      - 287.8
       - 60
       - 25
     content:
       text: '60'
       fontFamily: *ref_0
-      fontSize: 16
+      fontSize: 14
       color: '#111111'
       lineHeight: 1.12
       bold: false
       align: center
-  - elementId: t15
+  - elementId: t20
     elementType: text
     bounds:
       - 109
-      - 439
+      - 417
       - 56
       - 25
     content:
       text: Q1
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 12
       color: '#111111'
       lineHeight: 1.12
       bold: false
-  - elementId: s16
+  - elementId: s21
     elementType: shape
     bounds:
       - 193
-      - 333.8
+      - 334.03999999999996
       - 43
-      - 91.19999999999999
+      - 72.96000000000001
     shapeName: rect
     fill:
       type: solid
@@ -241,11 +311,125 @@ elements:
     border:
       width: 0
       color: '#1E2BFA'
-  - elementId: s17
+  - elementId: s22
     elementType: shape
     bounds:
       - 193
-      - 295.8
+      - 303.64
+      - 43
+      - 30.4
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#A1A7FA'
+    border:
+      width: 0
+      color: '#A1A7FA'
+  - elementId: t23
+    elementType: text
+    bounds:
+      - 188
+      - 275.64
+      - 60
+      - 25
+    content:
+      text: '68'
+      fontFamily: *ref_0
+      fontSize: 14
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+      align: center
+  - elementId: t24
+    elementType: text
+    bounds:
+      - 191
+      - 417
+      - 56
+      - 25
+    content:
+      text: Q2
+      fontFamily: *ref_0
+      fontSize: 12
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+  - elementId: s25
+    elementType: shape
+    bounds:
+      - 275
+      - 326.44
+      - 43
+      - 80.56
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#1E2BFA'
+    border:
+      width: 0
+      color: '#1E2BFA'
+  - elementId: s26
+    elementType: shape
+    bounds:
+      - 275
+      - 291.48
+      - 43
+      - 34.96
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#A1A7FA'
+    border:
+      width: 0
+      color: '#A1A7FA'
+  - elementId: t27
+    elementType: text
+    bounds:
+      - 270
+      - 263.48
+      - 60
+      - 25
+    content:
+      text: '76'
+      fontFamily: *ref_0
+      fontSize: 14
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+      align: center
+  - elementId: t28
+    elementType: text
+    bounds:
+      - 273
+      - 417
+      - 56
+      - 25
+    content:
+      text: Q3
+      fontFamily: *ref_0
+      fontSize: 12
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+  - elementId: s29
+    elementType: shape
+    bounds:
+      - 357
+      - 314.28
+      - 43
+      - 92.72
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#1E2BFA'
+    border:
+      width: 0
+      color: '#1E2BFA'
+  - elementId: s30
+    elementType: shape
+    bounds:
+      - 357
+      - 276.28
       - 43
       - 38
     shapeName: rect
@@ -255,156 +439,42 @@ elements:
     border:
       width: 0
       color: '#A1A7FA'
-  - elementId: t18
-    elementType: text
-    bounds:
-      - 188
-      - 261.8
-      - 60
-      - 25
-    content:
-      text: '68'
-      fontFamily: *ref_0
-      fontSize: 16
-      color: '#111111'
-      lineHeight: 1.12
-      bold: false
-      align: center
-  - elementId: t19
-    elementType: text
-    bounds:
-      - 191
-      - 439
-      - 56
-      - 25
-    content:
-      text: Q2
-      fontFamily: *ref_0
-      fontSize: 14
-      color: '#111111'
-      lineHeight: 1.12
-      bold: false
-  - elementId: s20
-    elementType: shape
-    bounds:
-      - 275
-      - 324.3
-      - 43
-      - 100.69999999999999
-    shapeName: rect
-    fill:
-      type: solid
-      color: '#1E2BFA'
-    border:
-      width: 0
-      color: '#1E2BFA'
-  - elementId: s21
-    elementType: shape
-    bounds:
-      - 275
-      - 280.6
-      - 43
-      - 43.699999999999996
-    shapeName: rect
-    fill:
-      type: solid
-      color: '#A1A7FA'
-    border:
-      width: 0
-      color: '#A1A7FA'
-  - elementId: t22
-    elementType: text
-    bounds:
-      - 270
-      - 246.6
-      - 60
-      - 25
-    content:
-      text: '76'
-      fontFamily: *ref_0
-      fontSize: 16
-      color: '#111111'
-      lineHeight: 1.12
-      bold: false
-      align: center
-  - elementId: t23
-    elementType: text
-    bounds:
-      - 273
-      - 439
-      - 56
-      - 25
-    content:
-      text: Q3
-      fontFamily: *ref_0
-      fontSize: 14
-      color: '#111111'
-      lineHeight: 1.12
-      bold: false
-  - elementId: s24
-    elementType: shape
-    bounds:
-      - 357
-      - 309.1
-      - 43
-      - 115.89999999999999
-    shapeName: rect
-    fill:
-      type: solid
-      color: '#1E2BFA'
-    border:
-      width: 0
-      color: '#1E2BFA'
-  - elementId: s25
-    elementType: shape
-    bounds:
-      - 357
-      - 261.6
-      - 43
-      - 47.5
-    shapeName: rect
-    fill:
-      type: solid
-      color: '#A1A7FA'
-    border:
-      width: 0
-      color: '#A1A7FA'
-  - elementId: t26
+  - elementId: t31
     elementType: text
     bounds:
       - 352
-      - 227.6
+      - 248.28
       - 60
       - 25
     content:
       text: '86'
       fontFamily: *ref_0
-      fontSize: 16
+      fontSize: 14
       color: '#111111'
       lineHeight: 1.12
       bold: false
       align: center
-  - elementId: t27
+  - elementId: t32
     elementType: text
     bounds:
       - 355
-      - 439
+      - 417
       - 56
       - 25
     content:
       text: Q4
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 12
       color: '#111111'
       lineHeight: 1.12
       bold: false
-  - elementId: s28
+  - elementId: s33
     elementType: shape
     bounds:
       - 439
-      - 301.5
+      - 308.2
       - 43
-      - 123.5
+      - 98.8
     shapeName: rect
     fill:
       type: solid
@@ -412,13 +482,13 @@ elements:
     border:
       width: 0
       color: '#1E2BFA'
-  - elementId: s29
+  - elementId: s34
     elementType: shape
     bounds:
       - 439
-      - 246.4
+      - 264.12
       - 43
-      - 55.099999999999994
+      - 44.08
     shapeName: rect
     fill:
       type: solid
@@ -426,113 +496,42 @@ elements:
     border:
       width: 0
       color: '#A1A7FA'
-  - elementId: t30
+  - elementId: t35
     elementType: text
     bounds:
       - 434
-      - 212.4
+      - 236.12
       - 60
       - 25
     content:
       text: '94'
       fontFamily: *ref_0
-      fontSize: 16
+      fontSize: 14
       color: '#111111'
       lineHeight: 1.12
       bold: false
       align: center
-  - elementId: t31
+  - elementId: t36
     elementType: text
     bounds:
       - 437
-      - 439
+      - 417
       - 56
       - 25
     content:
       text: Q5
       fontFamily: *ref_0
-      fontSize: 14
-      color: '#111111'
-      lineHeight: 1.12
-      bold: false
-  - elementId: s32
-    elementType: shape
-    bounds:
-      - 521
-      - 288.20000000000005
-      - 43
-      - 136.79999999999998
-    shapeName: rect
-    fill:
-      type: solid
-      color: '#1E2BFA'
-    border:
-      width: 0
-      color: '#1E2BFA'
-  - elementId: s33
-    elementType: shape
-    bounds:
-      - 521
-      - 225.5
-      - 43
-      - 62.699999999999996
-    shapeName: rect
-    fill:
-      type: solid
-      color: '#A1A7FA'
-    border:
-      width: 0
-      color: '#A1A7FA'
-  - elementId: t34
-    elementType: text
-    bounds:
-      - 516
-      - 191.5
-      - 60
-      - 25
-    content:
-      text: '105'
-      fontFamily: *ref_0
-      fontSize: 16
-      color: '#111111'
-      lineHeight: 1.12
-      bold: false
-      align: center
-  - elementId: t35
-    elementType: text
-    bounds:
-      - 519
-      - 439
-      - 56
-      - 25
-    content:
-      text: Q6
-      fontFamily: *ref_0
-      fontSize: 14
-      color: '#111111'
-      lineHeight: 1.12
-      bold: false
-  - elementId: t36
-    elementType: text
-    bounds:
-      - 92
-      - 162
-      - 420
-      - 24
-    content:
-      text: 收入 / 百万美元
-      fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 12
       color: '#111111'
       lineHeight: 1.12
       bold: false
   - elementId: s37
     elementType: shape
     bounds:
-      - 674
-      - 169
-      - 15
-      - 15
+      - 521
+      - 297.56
+      - 43
+      - 109.44
     shapeName: rect
     fill:
       type: solid
@@ -540,55 +539,112 @@ elements:
     border:
       width: 0
       color: '#1E2BFA'
-  - elementId: t38
+  - elementId: s38
+    elementType: shape
+    bounds:
+      - 521
+      - 247.4
+      - 43
+      - 50.160000000000004
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#A1A7FA'
+    border:
+      width: 0
+      color: '#A1A7FA'
+  - elementId: t39
     elementType: text
     bounds:
-      - 700
-      - 164
-      - 190
+      - 516
+      - 219.4
+      - 60
       - 25
     content:
-      text: 持续性收入
+      text: '105'
       fontFamily: *ref_0
-      fontSize: 15
+      fontSize: 14
       color: '#111111'
       lineHeight: 1.12
       bold: false
-  - elementId: s39
-    elementType: shape
-    bounds:
-      - 674
-      - 207
-      - 15
-      - 15
-    shapeName: rect
-    fill:
-      type: solid
-      color: '#A1A7FA'
-    border:
-      width: 0
-      color: '#A1A7FA'
+      align: center
   - elementId: t40
     elementType: text
     bounds:
-      - 700
-      - 201
-      - 190
-      - 27
+      - 519
+      - 417
+      - 56
+      - 25
     content:
-      text: 新增业务
+      text: Q6
       fontFamily: *ref_0
-      fontSize: 15
+      fontSize: 12
       color: '#111111'
       lineHeight: 1.12
       bold: false
   - elementId: t41
     elementType: text
     bounds:
+      - 93
+      - 448
+      - 151
+      - 27
+    content:
+      text: 60 → 105
+      fontFamily: *ref_1
+      fontSize: 17
+      color: '#1E2BFA'
+      lineHeight: 1.12
+      bold: true
+  - elementId: t42
+    elementType: text
+    bounds:
+      - 246
+      - 448
+      - 365
+      - 27
+    content:
+      text: 六个季度的总收入变化
+      fontFamily: *ref_0
+      fontSize: 14
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+  - elementId: l43
+    elementType: line
+    bounds:
+      - 642
+      - 169
+      - 1
+      - 281
+    viewBox:
+      - 1
+      - 281
+    points: 0,0 0,281
+    border:
+      width: 0.7
+      color: '#C9C8BC'
+  - elementId: t44
+    elementType: text
+    bounds:
       - 674
-      - 263
+      - 155
       - 238
-      - 78
+      - 28
+    content:
+      text: B / 增长贡献
+      fontFamily: *ref_0
+      fontSize: 11
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+  - elementId: t45
+    elementType: text
+    bounds:
+      - 674
+      - 204
+      - 238
+      - 74
     content:
       text: 67%
       fontFamily: *ref_0
@@ -596,37 +652,178 @@ elements:
       color: '#1E2BFA'
       lineHeight: 1.12
       bold: false
-  - elementId: t42
+  - elementId: t46
     elementType: text
     bounds:
       - 674
-      - 351
+      - 285
       - 238
-      - 100
+      - 51
     content:
-      text: |-
-        总增长中来自
-        持续性需求的比例
-      fontFamily: *ref_0
+      text: 来自持续性需求
+      fontFamily: *ref_1
       fontSize: 20
       color: '#111111'
       lineHeight: 1.12
-      bold: false
-  - elementId: t43
+      bold: true
+  - elementId: l47
+    elementType: line
+    bounds:
+      - 674
+      - 337
+      - 238
+      - 1
+    viewBox:
+      - 238
+      - 1
+    points: 0,0 238,0
+    border:
+      width: 0.5
+      color: '#C9C8BC'
+  - elementId: t48
     elementType: text
     bounds:
-      - 48
-      - 470
-      - 864
+      - 674
+      - 344
+      - 165
       - 28
     content:
-      text: Q1–Q6 示例：收入由 60 增至 105；持续性收入增长占 30/45，约 67%。
+      text: 持续性收入
       fontFamily: *ref_0
       fontSize: 14
       color: '#111111'
       lineHeight: 1.12
       bold: false
-  - elementId: t44
+  - elementId: t49
+    elementType: text
+    bounds:
+      - 839
+      - 343
+      - 73
+      - 29
+    content:
+      text: '+30'
+      fontFamily: *ref_0
+      fontSize: 19
+      color: '#1E2BFA'
+      lineHeight: 1.12
+      bold: false
+      align: right
+  - elementId: l50
+    elementType: line
+    bounds:
+      - 674
+      - 373
+      - 238
+      - 1
+    viewBox:
+      - 238
+      - 1
+    points: 0,0 238,0
+    border:
+      width: 0.5
+      color: '#C9C8BC'
+  - elementId: t51
+    elementType: text
+    bounds:
+      - 674
+      - 380
+      - 165
+      - 28
+    content:
+      text: 新增业务
+      fontFamily: *ref_0
+      fontSize: 14
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+  - elementId: t52
+    elementType: text
+    bounds:
+      - 839
+      - 379
+      - 73
+      - 29
+    content:
+      text: '+15'
+      fontFamily: *ref_0
+      fontSize: 19
+      color: '#1E2BFA'
+      lineHeight: 1.12
+      bold: false
+      align: right
+  - elementId: l53
+    elementType: line
+    bounds:
+      - 674
+      - 409
+      - 238
+      - 1
+    viewBox:
+      - 238
+      - 1
+    points: 0,0 238,0
+    border:
+      width: 0.5
+      color: '#C9C8BC'
+  - elementId: t54
+    elementType: text
+    bounds:
+      - 674
+      - 416
+      - 165
+      - 28
+    content:
+      text: 合计增长
+      fontFamily: *ref_1
+      fontSize: 14
+      color: '#111111'
+      lineHeight: 1.12
+      bold: true
+  - elementId: t55
+    elementType: text
+    bounds:
+      - 839
+      - 415
+      - 73
+      - 29
+    content:
+      text: '+45'
+      fontFamily: *ref_0
+      fontSize: 19
+      color: '#1E2BFA'
+      lineHeight: 1.12
+      bold: false
+      align: right
+  - elementId: l56
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.4
+      color: '#C9C8BC'
+  - elementId: t57
+    elementType: text
+    bounds:
+      - 48
+      - 475
+      - 864
+      - 25
+    content:
+      text: 解读：持续性收入贡献 4,500 万美元增长中的 3,000 万，应重视存量客户。
+      fontFamily: *ref_0
+      fontSize: 13
+      color: '#111111'
+      lineHeight: 1.12
+      bold: false
+  - elementId: t58
     elementType: text
     bounds:
       - 48
@@ -640,7 +837,7 @@ elements:
       color: '#111111'
       lineHeight: 1.12
       bold: false
-  - elementId: t45
+  - elementId: t59
     elementType: text
     bounds:
       - 870

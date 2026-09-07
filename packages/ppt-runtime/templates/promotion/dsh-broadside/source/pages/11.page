@@ -502,21 +502,35 @@ elements:
     border:
       width: 1.5
       color: '#F0ECE5'
-  - elementId: t36
+  - elementId: l36
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.4
+      color: '#F0ECE5'
+  - elementId: t37
     elementType: text
     bounds:
       - 48
-      - 470
+      - 475
       - 864
-      - 28
+      - 25
     content:
       text: A white tick marks the target. Investigate the reply gap before expanding.
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 13
       color: '#F0ECE5'
       lineHeight: 1.12
       bold: false
-  - elementId: t37
+  - elementId: t38
     elementType: text
     bounds:
       - 48
@@ -530,7 +544,7 @@ elements:
       color: '#F0ECE5'
       lineHeight: 1.12
       bold: false
-  - elementId: t38
+  - elementId: t39
     elementType: text
     bounds:
       - 870

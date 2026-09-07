@@ -1,11 +1,12 @@
 /** DSH-authored layout experiments. The parent pack supplies its licensed visual style. */
+import {refinementGuidance} from './refinement-guidance.mjs';
 export const richLayoutSlugs = new Set(['blue-professional', 'broadside']);
 
 export function richLayoutGuidance(slug) {
   if (!richLayoutSlugs.has(slug)) return '';
   return `## Expanded composition rules\n\nThis pack has twelve layouts. Start with the information relationship, then choose a reference page. Do not default to three equal cards or one chart per slide.\n\n${slug === 'blue-professional'
     ? 'Use evidence-led report compositions: an executive thesis beside supporting evidence, stacked trends with annotations, a contribution bridge, a portfolio matrix, a customer journey, a capability architecture, a case comparison, a dependency roadmap, and a decision table. Keep cream as the field and use cobalt to identify the decision or most important series.'
-    : 'Use editorial rhythm: alternate a quiet cream evidence page, a black analytical page and an orange statement page. Combine oversized type with smaller supporting evidence; use a conversion staircase, causal feedback loop, effort/impact map, annotated case results, campaign storyboard, launch schedule and scorecard. Do not apply one recolored grid to every page.'}\n\nFor a deck of six or more content pages, use at least four distinct structural families when the material supports them. Avoid repeating the same family on adjacent slides. A detailed page should have one dominant argument, a supporting chart/diagram/table, and one concise interpretation. Alternate detailed evidence pages with simpler synthesis pages.\n\nAdapt the reference geometry to the real content. Add annotations, units, direct labels, baselines, owners and dependencies where they carry meaning. These examples use invented, explicitly marked sample data: replace every value and conclusion with user evidence; never fabricate data to make a page look fuller. Preserve native editable text and geometry. Do not turn all content into images. Keep body text around 18–22 pt and chart labels around 13–16 pt; reflow or split before shrinking.\n\nReference families: ${slug === 'blue-professional' ? '2 executive synthesis; 3 market segmentation; 4 stacked trend; 5 opportunity matrix; 6 profit bridge; 7 customer journey; 8 service architecture; 9 case study; 10 delivery roadmap; 11 decision table' : '2 editorial thesis; 3 evidence spread; 4 operating model comparison; 5 feedback loop; 6 conversion staircase; 7 priority map; 8 campaign storyboard; 9 case study; 10 launch schedule; 11 performance scorecard'}.\n\n`;
+    : 'Use editorial rhythm: alternate a quiet cream evidence page, a black analytical page and an orange statement page. Combine oversized type with smaller supporting evidence; use a conversion staircase, causal feedback loop, effort/impact map, annotated case results, campaign storyboard, launch schedule and scorecard. Do not apply one recolored grid to every page.'}\n\nFor a deck of six or more content pages, use at least four distinct structural families when the material supports them. Avoid repeating the same family on adjacent slides. A detailed page should have one dominant argument, a supporting chart/diagram/table, and one concise interpretation. Alternate detailed evidence pages with simpler synthesis pages.\n\nAdapt the reference geometry to the real content. Add annotations, units, direct labels, baselines, owners and dependencies where they carry meaning. These examples use invented, explicitly marked sample data: replace every value and conclusion with user evidence; never fabricate data to make a page look fuller. Preserve native editable text and geometry. Do not turn all content into images. Keep body text around 18–22 pt and chart labels around 13–16 pt; reflow or split before shrinking.\n\nReference families: ${slug === 'blue-professional' ? '2 executive synthesis; 3 market segmentation; 4 stacked trend; 5 opportunity matrix; 6 profit bridge; 7 customer journey; 8 service architecture; 9 case study; 10 delivery roadmap; 11 decision table' : '2 editorial thesis; 3 evidence spread; 4 operating model comparison; 5 feedback loop; 6 conversion staircase; 7 priority map; 8 campaign storyboard; 9 case study; 10 launch schedule; 11 performance scorecard'}.\n\n` + refinementGuidance;
 }
 
 export function createRichLayouts(s, lang, pairs, basicPages) {
@@ -46,7 +47,7 @@ export function createRichLayouts(s, lang, pairs, basicPages) {
     pages.push({name:tr(name,zh),family,columns,density:'high',summary,
       page:{pageType:'content',background:{type:'solid',color:'#'+bg},notes:'DSH-authored composition experiment using the parent pack palette and typography. All figures are fictional demonstration data; replace with actual evidence.',elements}});
   };
-  const note = (en,zh,y=470) => text(en,zh,48,y,864,28,14);
+  const note = (en,zh,y=475) => {line(48,y-10,912,y-10,isBlue?'C9C8BC':ink,.4);text(en,zh,48,y,864,25,13);};
   const dot = (x,y,r,fill=s.accent) => rect(x-r,y-r,r*2,r*2,fill,undefined,'ellipse');
 
   if (isBlue) {
@@ -72,12 +73,15 @@ export function createRichLayouts(s, lang, pairs, basicPages) {
 
     start('Recurring demand carries the expansion','持续性需求支撑业务扩张','03 / REVENUE MIX','03 / 收入结构');
     const base=[42,48,53,61,65,72],newBiz=[18,20,23,25,29,33];
-    for(let v=0;v<=120;v+=40){const y=425-v*1.9;line(92,y,602,y,'D1D1C5',.5);text(String(v),String(v),48,y-10,35,22,12,{align:'right'});}
-    for(let i=0;i<6;i++){const x=111+i*82;rect(x,425-base[i]*1.9,43,base[i]*1.9,s.accent);rect(x,425-(base[i]+newBiz[i])*1.9,43,newBiz[i]*1.9,'A1A7FA');text(String(base[i]+newBiz[i]),String(base[i]+newBiz[i]),x-5,391-(base[i]+newBiz[i])*1.9,60,25,16,{align:'center'});text('Q'+(i+1),'Q'+(i+1),x-2,439,56,25,14);}
-    text('Revenue / $m','收入 / 百万美元',92,162,420,24,13);
-    rect(674,169,15,15,s.accent);text('Recurring','持续性收入',700,164,190,25,15);rect(674,207,15,15,'A1A7FA');text('New business','新增业务',700,201,190,27,15);
-    text('67%','67%',674,263,238,78,57,{color:'#'+s.accent});text('of total growth comes\nfrom recurring demand','总增长中来自\n持续性需求的比例',674,351,238,100,20);
-    note('Q1–Q6 sample: revenue rises from $60m to $105m; recurring growth is $30m of $45m (~67%).','Q1–Q6 示例：收入由 60 增至 105；持续性收入增长占 30/45，约 67%。');
+    text('A / REVENUE MIX · $m','A / 收入结构 · 百万美元',48,153,516,24,11);
+    rect(108,177,9,9,s.accent);text('Recurring','持续性收入',124,172,157,23,11);rect(300,177,9,9,'A1A7FA');text('New business','新增业务',316,172,210,23,11);
+    for(let v=0;v<=120;v+=40){const y=407-v*1.52;line(92,y,604,y,'D1D1C5',.5);text(String(v),String(v),48,y-10,35,22,11,{align:'right'});}
+    for(let i=0;i<6;i++){const x=111+i*82,scale=1.52;rect(x,407-base[i]*scale,43,base[i]*scale,s.accent);rect(x,407-(base[i]+newBiz[i])*scale,43,newBiz[i]*scale,'A1A7FA');text(String(base[i]+newBiz[i]),String(base[i]+newBiz[i]),x-5,379-(base[i]+newBiz[i])*scale,60,25,14,{align:'center'});text('Q'+(i+1),'Q'+(i+1),x-2,417,56,25,12);}
+    text('60 → 105','60 → 105',93,448,151,27,17,{display:true,color:'#'+s.accent});text('Total revenue over six quarters','六个季度的总收入变化',246,448,365,27,14);
+    line(642,169,642,450,'C9C8BC');text('B / GROWTH CONTRIBUTION','B / 增长贡献',674,155,238,28,11);
+    text('67%','67%',674,204,238,74,57,{color:'#'+s.accent});text('from recurring demand','来自持续性需求',674,285,238,51,20,{display:true});
+    [['Recurring','持续性收入','+30'],['New business','新增业务','+15'],['Total change','合计增长','+45']].forEach(([a,b,v],i)=>{const y=344+i*36;line(674,y-7,912,y-7,'C9C8BC',.5);text(a,b,674,y,165,28,14,{display:i===2});text(v,v,839,y-1,73,29,19,{align:'right',color:'#'+s.accent});});
+    note('Readout: recurring revenue contributes 30 of the $45m revenue growth; protect the installed base.','解读：持续性收入贡献 4,500 万美元增长中的 3,000 万，应重视存量客户。');
     save('Stacked trend and interpretation','堆叠趋势与解读','data','Stacked columns on a common scale with a derived contribution callout');
 
     start('Choose markets by return and readiness','按回报与准备度选择市场','04 / OPPORTUNITY MAP','04 / 机会地图');
@@ -91,11 +95,14 @@ export function createRichLayouts(s, lang, pairs, basicPages) {
     save('Opportunity matrix','机会矩阵','comparison','Two-axis market map, sized markers and a separate decision rationale');
 
     start('The margin bridge makes the tradeoffs visible','用利润桥呈现增长的代价','05 / ECONOMICS','05 / 经营测算');
+    text('A / OPERATING PROFIT · $m','A / 经营利润 · 百万美元',48,153,579,23,11);
     const bridge=[['Base','基期',0,12],['Volume','规模',12,18],['Service','服务',15,18],['Launch','启动',13,15],['Plan','计划',0,13]];
-    bridge.forEach(([a,b,lo,hi],i)=>{const x=76+i*111,y=424-hi*11;rect(x,y,65,(hi-lo)*11,i===0||i===4?s.accent:'929AFF');text(i===0?'12':i===4?'13':i===1?'+6':i===2?'−3':'−2',i===0?'12':i===4?'13':i===1?'+6':i===2?'−3':'−2',x-2,y-35,69,30,22,{align:'center'});text(a,b,x-17,441,100,28,14,{align:'center'});if(i<4){const end=i===0?12:i===1?18:i===2?15:13;line(x+65,424-end*11,x+111,424-end*11,'A0A09A');}});
-    line(66,424,625,424,'777970');text('Operating profit / $m','经营利润 / 百万美元',67,155,529,22,13);
-    text('+8.3%','+8.3%',675,195,237,88,56,{color:'#'+s.accent});text('net profit growth','利润净增长',675,290,237,35,22,{display:true});
-    text('Scale adds $6m. Service and launch costs absorb $5m.','规模增长贡献 6；服务与启动成本消耗 5。',675,360,237,92,20);
+    for(const v of [0,5,10,15,20]){const y=427-v*10;line(91,y,625,y,'D1D1C5',.5);text(String(v),String(v),48,y-9,31,23,11,{align:'right'});}
+    bridge.forEach(([a,b,lo,hi],i)=>{const x=100+i*106,y=427-hi*10;rect(x,y,61,(hi-lo)*10,i===0||i===4?s.accent:i===1?'929AFF':'BCBEB9');text(['12','+6','−3','−2','13'][i],['12','+6','−3','−2','13'][i],x-5,y-31,71,28,20,{align:'center'});text(a,b,x-17,439,95,27,13,{align:'center'});if(i<4){const end=[12,18,15,13][i];line(x+61,427-end*10,x+106,427-end*10,'A0A09A');}});
+    line(652,169,652,451,'C9C8BC');text('B / THE NET RESULT','B / 净结果',679,160,233,25,11);
+    text('+8.3%','+8.3%',679,205,233,85,54,{color:'#'+s.accent});text('profit growth after costs','扣除成本后的利润增长',679,294,233,49,19,{display:true});
+    [['Scale benefit','规模收益','+6'],['Service + launch','服务与启动','−5'],['Net profit change','利润净变化','+1']].forEach(([a,b,v],i)=>{const y=351+i*35;line(679,y-7,912,y-7,'C9C8BC',.5);text(a,b,679,y,171,27,14,{display:i===2});text(v,v,850,y-2,62,30,19,{align:'right',color:'#'+s.accent});});
+    note('Decision: test service and launch costs first; they absorb five-sixths of the scale benefit.','决策：先验证服务与启动成本，两者消耗了规模收益的六分之五。');
     save('Profit bridge','利润桥','data','Editable waterfall with sequential baselines and a reconciled net change');
 
     start('Find the friction between intent and delivery','定位意图到交付之间的阻力','06 / CUSTOMER JOURNEY','06 / 客户旅程');
@@ -140,9 +147,12 @@ export function createRichLayouts(s, lang, pairs, basicPages) {
     save('Editorial thesis','编辑式主张','insights','Oversized chapter numeral against a compact operating thesis');
 
     start('where requests get stuck','需求卡在哪里','02 / THE FRICTION','02 / 阻力所在','F0ECE5','111111');
-    text('42%','42%',48,167,471,181,136,{display:true});text('of sampled requests\nwait for a second team','抽样需求中\n需要等待第二个团队的比例',54,370,410,76,24);
-    line(524,171,524,450,'A7A69D');text('SHARE OF DELAYS','等待原因占比',568,151,339,22,11);
-    [['Quote review','报价复核',42],['Scheduling','排期',33],['Other','其他',25]].forEach(([a,b,v],i)=>{const y=182+i*89;text(a,b,568,y,339,30,19,{display:true});rect(568,y+41,276*v/42,18,i===0?s.accent:'8F9086');text(v+'%',v+'%',852,y+31,59,37,20);});
+    text('42%','42%',48,165,447,164,125,{display:true});text('wait for another team','等待另一团队',54,335,426,47,25,{display:true});
+    text('A / REQUESTS WITH A SECOND-TEAM WAIT','A / 需要等待第二团队的需求',54,410,427,32,10);
+    line(521,169,521,451,'A7A69D');text('B / DELAY REASONS · SHARE OF DELAYS','B / 等待原因 · 占所有等待的比例',555,153,357,26,10);
+    [['Quote review','报价复核',42],['Scheduling','排期',33],['Other','其他',25]].forEach(([a,b,v],i)=>{const y=193+i*67;text(a,b,555,y,285,27,17,{display:true});rect(555,y+32,274*v/42,13,i===0?s.accent:'ABADA3');text(v+'%',v+'%',850,y+18,62,31,20);});
+    line(555,401,912,401,'A7A69D');text('FIRST MOVE','先做什么',555,416,98,25,10,{display:true});text('Name the quote owner.','明确报价责任人。',664,411,248,48,18,{display:true});
+    note('Two measures: 42% of requests wait; quote review accounts for 42% of those delays.','两个口径：42% 的需求发生等待；报价复核占这些等待的 42%。');
     save('Evidence spread','证据跨栏','data','One editorial statistic and a ranked breakdown on a cream field');
 
     start('change who owns the outcome','改变结果的归属方式','03 / THE OPERATING SHIFT','03 / 运营方式变化');
@@ -161,10 +171,13 @@ export function createRichLayouts(s, lang, pairs, basicPages) {
     save('Learning feedback loop','学习反馈回路','process','Four-step closed loop with cycle time and an ownership annotation');
 
     start('where the journey loses people','用户在哪一步离开','05 / CONVERSION','05 / 转化');
-    const funnel=[['VISIT','访问',100,184],['START','开始',68,254],['FINISH','完成',41,324],['RETURN','返回',29,394]];
-    funnel.forEach(([a,b,v,y],i)=>{const w=492*v/100;rect(48,y,w,53,i===0?s.accent:i===1?'C9653E':i===2?'995E46':'6F5144');text(a,b,64,y+14,192,30,18,{display:true,color:'#'+(i===0?'111111':'F0ECE5')});text(String(v),String(v),566,y+6,84,45,31,{display:true});});
-    text('INDEX / FIRST STAGE = 100','指数 / 首阶段 = 100',48,153,556,21,11);
-    line(692,183,692,448,'5E5E56');text('27','27',734,203,176,94,70,{display:true,color:'#'+s.accent});text('points lost\nbefore completion','完成前流失的\n百分点',734,308,175,84,23);text('68 − 41 = 27','68 − 41 = 27',734,421,177,30,15);
+    const funnel=[['VISIT','访问',100,188],['START','开始',68,259],['FINISH','完成',41,330],['RETURN','返回',29,401]];
+    text('A / COHORT INDEX · FIRST STAGE = 100','A / 群体指数 · 首阶段 = 100',48,153,556,23,11);
+    funnel.forEach(([a,b,v,y],i)=>{const w=470*v/100;rect(48,y,w,42,i===0?s.accent:i===1?'C9653E':i===2?'995E46':'6F5144');text(a,b,61,y+9,180,28,16,{display:true,color:'#'+(i===0?'111111':'F0ECE5')});text(String(v),String(v),554,y+2,79,39,27,{display:true});if(i<3){const next=[68,41,29][i],conversion=Math.round(next/v*100);text(conversion+'% continue',conversion+'% 继续',48,y+46,243,25,11,{color:'#B4B4A9'});}});
+    line(675,182,675,450,'5E5E56');text('B / THE BOTTLENECK','B / 瓶颈',706,166,206,27,11);
+    text('27','27',706,208,206,92,70,{display:true,color:'#'+s.accent});text('points lost before completion','完成前流失的百分点',706,309,206,88,23);
+    line(706,411,912,411,'5E5E56');text('68 − 41 = 27','68 − 41 = 27',706,427,206,28,16);
+    note('Only 60% of starters finish. Improve this handoff before increasing traffic.','开始后完成的比例约为 60%；增加流量前，先改善这一环节。');
     save('Conversion staircase','转化阶梯','data','Proportional descending bars, direct counts and a quantified bottleneck');
 
     start('do the high-impact work first','优先做高影响的事','06 / PRIORITY MAP','06 / 优先级地图','F0ECE5','111111');

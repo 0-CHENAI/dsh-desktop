@@ -68,9 +68,9 @@ elements:
     elementType: text
     bounds:
       - 48
-      - 78
+      - 76
       - 864
-      - 63
+      - 64
     content:
       text: Make the handoff order visible
       fontFamily:
@@ -78,11 +78,26 @@ elements:
         mac: PingFang SC
         win: Microsoft YaHei
         ea: Noto Sans CJK SC
-      fontSize: 34
+      fontSize: 32
       lineHeight: 1.1
       color: '#202224'
       bold: true
-  - elementId: s6
+  - elementId: t6
+    elementType: text
+    bounds:
+      - 754
+      - 46
+      - 158
+      - 13
+    content:
+      text: EXHIBIT 02
+      fontFamily: *ref_0
+      fontSize: 9
+      lineHeight: 1.1
+      color: '#5f6061'
+      bold: false
+      align: right
+  - elementId: s7
     elementType: shape
     bounds:
       - 70
@@ -96,7 +111,7 @@ elements:
     border:
       width: 0.8
       color: '#202224'
-  - elementId: t7
+  - elementId: t8
     elementType: text
     bounds:
       - 82
@@ -111,7 +126,7 @@ elements:
       color: '#181915'
       bold: false
       align: center
-  - elementId: l8
+  - elementId: l9
     elementType: line
     bounds:
       - 151
@@ -125,7 +140,7 @@ elements:
     border:
       width: 0.6
       color: '#b3b4b1'
-  - elementId: s9
+  - elementId: s10
     elementType: shape
     bounds:
       - 289
@@ -139,7 +154,7 @@ elements:
     border:
       width: 0.8
       color: '#202224'
-  - elementId: t10
+  - elementId: t11
     elementType: text
     bounds:
       - 301
@@ -154,7 +169,7 @@ elements:
       color: '#181915'
       bold: false
       align: center
-  - elementId: l11
+  - elementId: l12
     elementType: line
     bounds:
       - 370
@@ -168,7 +183,7 @@ elements:
     border:
       width: 0.6
       color: '#b3b4b1'
-  - elementId: s12
+  - elementId: s13
     elementType: shape
     bounds:
       - 508
@@ -182,7 +197,7 @@ elements:
     border:
       width: 0.8
       color: '#202224'
-  - elementId: t13
+  - elementId: t14
     elementType: text
     bounds:
       - 520
@@ -197,7 +212,7 @@ elements:
       color: '#181915'
       bold: false
       align: center
-  - elementId: l14
+  - elementId: l15
     elementType: line
     bounds:
       - 589
@@ -211,7 +226,7 @@ elements:
     border:
       width: 0.6
       color: '#b3b4b1'
-  - elementId: s15
+  - elementId: s16
     elementType: shape
     bounds:
       - 727
@@ -225,7 +240,7 @@ elements:
     border:
       width: 0.8
       color: '#202224'
-  - elementId: t16
+  - elementId: t17
     elementType: text
     bounds:
       - 739
@@ -240,7 +255,7 @@ elements:
       color: '#181915'
       bold: false
       align: center
-  - elementId: l17
+  - elementId: l18
     elementType: line
     bounds:
       - 808
@@ -254,7 +269,7 @@ elements:
     border:
       width: 0.6
       color: '#b3b4b1'
-  - elementId: l18
+  - elementId: l19
     elementType: line
     bounds:
       - 151
@@ -268,7 +283,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l19
+  - elementId: l20
     elementType: line
     bounds:
       - 364.03232834558344
@@ -282,7 +297,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l20
+  - elementId: l21
     elementType: line
     bounds:
       - 364.03232834558344
@@ -296,7 +311,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: t21
+  - elementId: t22
     elementType: text
     bounds:
       - 166
@@ -311,7 +326,7 @@ elements:
       color: '#202224'
       bold: false
       align: center
-  - elementId: l22
+  - elementId: l23
     elementType: line
     bounds:
       - 370
@@ -325,7 +340,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l23
+  - elementId: l24
     elementType: line
     bounds:
       - 583.0323283455834
@@ -339,7 +354,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l24
+  - elementId: l25
     elementType: line
     bounds:
       - 583.0323283455834
@@ -353,7 +368,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: t25
+  - elementId: t26
     elementType: text
     bounds:
       - 385
@@ -368,7 +383,7 @@ elements:
       color: '#202224'
       bold: false
       align: center
-  - elementId: l26
+  - elementId: l27
     elementType: line
     bounds:
       - 589
@@ -382,7 +397,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l27
+  - elementId: l28
     elementType: line
     bounds:
       - 802.0323283455834
@@ -396,7 +411,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l28
+  - elementId: l29
     elementType: line
     bounds:
       - 802.0323283455834
@@ -410,7 +425,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: t29
+  - elementId: t30
     elementType: text
     bounds:
       - 604
@@ -425,7 +440,7 @@ elements:
       color: '#202224'
       bold: false
       align: center
-  - elementId: l30
+  - elementId: l31
     elementType: line
     bounds:
       - 151
@@ -439,7 +454,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l31
+  - elementId: l32
     elementType: line
     bounds:
       - 151
@@ -453,7 +468,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: l32
+  - elementId: l33
     elementType: line
     bounds:
       - 151
@@ -467,7 +482,7 @@ elements:
     border:
       width: 1.2
       color: '#796916'
-  - elementId: t33
+  - elementId: t34
     elementType: text
     bounds:
       - 166
@@ -482,21 +497,35 @@ elements:
       color: '#202224'
       bold: false
       align: center
-  - elementId: t34
+  - elementId: l35
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#c4c4c2'
+  - elementId: t36
     elementType: text
     bounds:
       - 48
-      - 469
+      - 475
       - 864
-      - 28
+      - 25
     content:
       text: Confirm inventory and capacity before promising a delivery slot.
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 13
       lineHeight: 1.1
       color: '#202224'
       bold: false
-  - elementId: t35
+  - elementId: t37
     elementType: text
     bounds:
       - 48
@@ -510,7 +539,7 @@ elements:
       lineHeight: 1.1
       color: '#202224'
       bold: false
-  - elementId: t36
+  - elementId: t38
     elementType: text
     bounds:
       - 871

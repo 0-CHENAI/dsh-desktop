@@ -913,6 +913,7 @@ function createWindow(): BrowserWindow {
     title: '',
     icon: desktopIconPath(),
     frame: process.platform !== 'darwin',
+    ...(process.platform === 'darwin' ? { titleBarStyle: 'hidden' as const } : {}),
     ...(isWindows
       ? {
         titleBarStyle: 'hidden' as const,
@@ -931,7 +932,18 @@ function createWindow(): BrowserWindow {
   })
   if (process.platform === 'darwin') {
     window.setWindowButtonVisibility(true)
-    window.setWindowButtonPosition({ x: 12, y: 9 })
+    // Match the sidebar inset at the current zoom, with a 2px optical correction
+    // for the round native buttons relative to the logo's visible left edge.
+    const alignWindowButtons = (): void => {
+      if (window.isDestroyed()) return
+      window.setWindowButtonPosition({
+        x: Math.round(16 * window.webContents.getZoomFactor()) - 2,
+        y: 9
+      })
+    }
+    alignWindowButtons()
+    window.webContents.on('did-finish-load', alignWindowButtons)
+    window.webContents.on('zoom-changed', () => setImmediate(alignWindowButtons))
   } else if (isWindows) {
     window.setMenuBarVisibility(false)
   }

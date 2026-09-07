@@ -40,9 +40,9 @@ elements:
     elementType: text
     bounds:
       - 48
-      - 78
+      - 76
       - 864
-      - 63
+      - 64
     content:
       text: Design around explicit boundaries
       fontFamily: &ref_1
@@ -50,11 +50,26 @@ elements:
         mac: Songti SC
         win: SimSun
         ea: Noto Serif CJK SC
-      fontSize: 34
+      fontSize: 32
       lineHeight: 1.1
       color: '#EFE7D4'
       bold: false
   - elementId: t4
+    elementType: text
+    bounds:
+      - 754
+      - 46
+      - 158
+      - 13
+    content:
+      text: EXHIBIT 08
+      fontFamily: *ref_0
+      fontSize: 9
+      lineHeight: 1.1
+      color: '#b5b8a1'
+      bold: false
+      align: right
+  - elementId: t5
     elementType: text
     bounds:
       - 48
@@ -68,7 +83,7 @@ elements:
       lineHeight: 1.1
       color: '#EFE7D4'
       bold: false
-  - elementId: s5
+  - elementId: s6
     elementType: shape
     bounds:
       - 191
@@ -82,7 +97,7 @@ elements:
     border:
       width: 0
       color: '#3A5A36'
-  - elementId: t6
+  - elementId: t7
     elementType: text
     bounds:
       - 203
@@ -97,7 +112,7 @@ elements:
       color: '#F8F6EE'
       bold: false
       align: center
-  - elementId: l7
+  - elementId: l8
     elementType: line
     bounds:
       - 335
@@ -111,7 +126,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: l8
+  - elementId: l9
     elementType: line
     bounds:
       - 344.03232834558344
@@ -125,7 +140,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: l9
+  - elementId: l10
     elementType: line
     bounds:
       - 344.03232834558344
@@ -139,7 +154,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: s10
+  - elementId: s11
     elementType: shape
     bounds:
       - 351
@@ -153,7 +168,7 @@ elements:
     border:
       width: 0
       color: '#3A5A36'
-  - elementId: t11
+  - elementId: t12
     elementType: text
     bounds:
       - 363
@@ -168,7 +183,7 @@ elements:
       color: '#F8F6EE'
       bold: false
       align: center
-  - elementId: l12
+  - elementId: l13
     elementType: line
     bounds:
       - 495
@@ -182,7 +197,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: l13
+  - elementId: l14
     elementType: line
     bounds:
       - 504.03232834558344
@@ -196,7 +211,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: l14
+  - elementId: l15
     elementType: line
     bounds:
       - 504.03232834558344
@@ -210,7 +225,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: s15
+  - elementId: s16
     elementType: shape
     bounds:
       - 511
@@ -224,7 +239,7 @@ elements:
     border:
       width: 0
       color: '#3A5A36'
-  - elementId: t16
+  - elementId: t17
     elementType: text
     bounds:
       - 523
@@ -239,7 +254,7 @@ elements:
       color: '#F8F6EE'
       bold: false
       align: center
-  - elementId: l17
+  - elementId: l18
     elementType: line
     bounds:
       - 423
@@ -253,7 +268,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: l18
+  - elementId: l19
     elementType: line
     bounds:
       - 419.3411893974854
@@ -267,7 +282,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: l19
+  - elementId: l20
     elementType: line
     bounds:
       - 423
@@ -281,7 +296,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: t20
+  - elementId: t21
     elementType: text
     bounds:
       - 48
@@ -295,7 +310,7 @@ elements:
       lineHeight: 1.1
       color: '#EFE7D4'
       bold: false
-  - elementId: s21
+  - elementId: s22
     elementType: shape
     bounds:
       - 191
@@ -309,7 +324,7 @@ elements:
     border:
       width: 0
       color: '#E89CB1'
-  - elementId: t22
+  - elementId: t23
     elementType: text
     bounds:
       - 203
@@ -324,7 +339,7 @@ elements:
       color: '#181915'
       bold: false
       align: center
-  - elementId: l23
+  - elementId: l24
     elementType: line
     bounds:
       - 335
@@ -338,7 +353,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: l24
+  - elementId: l25
     elementType: line
     bounds:
       - 344.03232834558344
@@ -352,7 +367,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: l25
+  - elementId: l26
     elementType: line
     bounds:
       - 344.03232834558344
@@ -366,7 +381,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: s26
+  - elementId: s27
     elementType: shape
     bounds:
       - 351
@@ -380,7 +395,7 @@ elements:
     border:
       width: 0
       color: '#E89CB1'
-  - elementId: t27
+  - elementId: t28
     elementType: text
     bounds:
       - 363
@@ -395,7 +410,7 @@ elements:
       color: '#181915'
       bold: false
       align: center
-  - elementId: l28
+  - elementId: l29
     elementType: line
     bounds:
       - 495
@@ -409,7 +424,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: l29
+  - elementId: l30
     elementType: line
     bounds:
       - 504.03232834558344
@@ -423,7 +438,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: l30
+  - elementId: l31
     elementType: line
     bounds:
       - 504.03232834558344
@@ -437,7 +452,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: s31
+  - elementId: s32
     elementType: shape
     bounds:
       - 511
@@ -451,7 +466,7 @@ elements:
     border:
       width: 0
       color: '#E89CB1'
-  - elementId: t32
+  - elementId: t33
     elementType: text
     bounds:
       - 523
@@ -466,7 +481,7 @@ elements:
       color: '#181915'
       bold: false
       align: center
-  - elementId: l33
+  - elementId: l34
     elementType: line
     bounds:
       - 423
@@ -480,7 +495,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: l34
+  - elementId: l35
     elementType: line
     bounds:
       - 419.3411893974854
@@ -494,7 +509,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: l35
+  - elementId: l36
     elementType: line
     bounds:
       - 423
@@ -508,7 +523,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: t36
+  - elementId: t37
     elementType: text
     bounds:
       - 48
@@ -522,7 +537,7 @@ elements:
       lineHeight: 1.1
       color: '#EFE7D4'
       bold: false
-  - elementId: s37
+  - elementId: s38
     elementType: shape
     bounds:
       - 191
@@ -536,7 +551,7 @@ elements:
     border:
       width: 0
       color: '#3A5A36'
-  - elementId: t38
+  - elementId: t39
     elementType: text
     bounds:
       - 203
@@ -551,7 +566,7 @@ elements:
       color: '#F8F6EE'
       bold: false
       align: center
-  - elementId: l39
+  - elementId: l40
     elementType: line
     bounds:
       - 335
@@ -565,7 +580,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: l40
+  - elementId: l41
     elementType: line
     bounds:
       - 344.03232834558344
@@ -579,7 +594,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: l41
+  - elementId: l42
     elementType: line
     bounds:
       - 344.03232834558344
@@ -593,7 +608,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: s42
+  - elementId: s43
     elementType: shape
     bounds:
       - 351
@@ -607,7 +622,7 @@ elements:
     border:
       width: 0
       color: '#3A5A36'
-  - elementId: t43
+  - elementId: t44
     elementType: text
     bounds:
       - 363
@@ -622,7 +637,7 @@ elements:
       color: '#F8F6EE'
       bold: false
       align: center
-  - elementId: l44
+  - elementId: l45
     elementType: line
     bounds:
       - 495
@@ -636,7 +651,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: l45
+  - elementId: l46
     elementType: line
     bounds:
       - 504.03232834558344
@@ -650,7 +665,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: l46
+  - elementId: l47
     elementType: line
     bounds:
       - 504.03232834558344
@@ -664,7 +679,7 @@ elements:
     border:
       width: 1.2
       color: '#E89CB1'
-  - elementId: s47
+  - elementId: s48
     elementType: shape
     bounds:
       - 511
@@ -678,7 +693,7 @@ elements:
     border:
       width: 0
       color: '#3A5A36'
-  - elementId: t48
+  - elementId: t49
     elementType: text
     bounds:
       - 523
@@ -693,7 +708,7 @@ elements:
       color: '#F8F6EE'
       bold: false
       align: center
-  - elementId: l49
+  - elementId: l50
     elementType: line
     bounds:
       - 703
@@ -707,7 +722,7 @@ elements:
     border:
       width: 0.6
       color: '#728165'
-  - elementId: t50
+  - elementId: t51
     elementType: text
     bounds:
       - 737
@@ -721,7 +736,7 @@ elements:
       lineHeight: 1.1
       color: '#EFE7D4'
       bold: false
-  - elementId: t51
+  - elementId: t52
     elementType: text
     bounds:
       - 737
@@ -738,21 +753,35 @@ elements:
       lineHeight: 1.1
       color: '#EFE7D4'
       bold: false
-  - elementId: t52
+  - elementId: l53
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#586d4f'
+  - elementId: t54
     elementType: text
     bounds:
       - 48
-      - 469
+      - 475
       - 864
-      - 28
+      - 25
     content:
       text: 'Horizontal arrows: handoffs. Vertical arrows: dependencies.'
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 13
       lineHeight: 1.1
       color: '#EFE7D4'
       bold: false
-  - elementId: t53
+  - elementId: t55
     elementType: text
     bounds:
       - 48
@@ -766,7 +795,7 @@ elements:
       lineHeight: 1.1
       color: '#EFE7D4'
       bold: false
-  - elementId: t54
+  - elementId: t56
     elementType: text
     bounds:
       - 871

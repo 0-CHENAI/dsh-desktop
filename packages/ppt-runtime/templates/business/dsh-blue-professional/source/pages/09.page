@@ -224,21 +224,35 @@ elements:
       color: '#1E2BFA'
       lineHeight: 1.12
       bold: false
-  - elementId: t16
+  - elementId: l16
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.4
+      color: '#C9C8BC'
+  - elementId: t17
     elementType: text
     bounds:
       - 48
-      - 470
+      - 475
       - 864
-      - 28
+      - 25
     content:
       text: 'Comparison: before / after pilot. Sample observations do not establish causality.'
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 13
       color: '#111111'
       lineHeight: 1.12
       bold: false
-  - elementId: t17
+  - elementId: t18
     elementType: text
     bounds:
       - 48
@@ -252,7 +266,7 @@ elements:
       color: '#111111'
       lineHeight: 1.12
       bold: false
-  - elementId: t18
+  - elementId: t19
     elementType: text
     bounds:
       - 870

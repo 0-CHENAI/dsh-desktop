@@ -110,9 +110,9 @@ elements:
     elementType: text
     bounds:
       - 48
-      - 78
+      - 76
       - 864
-      - 63
+      - 64
     content:
       text: A small intervention, a measurable change
       fontFamily: &ref_1
@@ -120,11 +120,26 @@ elements:
         mac: PingFang SC
         win: Microsoft YaHei
         ea: Noto Sans CJK SC
-      fontSize: 34
+      fontSize: 32
       lineHeight: 1.1
       color: '#0A0A0A'
       bold: true
   - elementId: t9
+    elementType: text
+    bounds:
+      - 754
+      - 46
+      - 158
+      - 13
+    content:
+      text: EXHIBIT 08
+      fontFamily: *ref_0
+      fontSize: 9
+      lineHeight: 1.1
+      color: '#51504f'
+      bold: false
+      align: right
+  - elementId: t10
     elementType: text
     bounds:
       - 48
@@ -138,7 +153,7 @@ elements:
       lineHeight: 1.1
       color: '#0A0A0A'
       bold: false
-  - elementId: t10
+  - elementId: t11
     elementType: text
     bounds:
       - 48
@@ -152,7 +167,7 @@ elements:
       lineHeight: 1.1
       color: '#0A0A0A'
       bold: true
-  - elementId: t11
+  - elementId: t12
     elementType: text
     bounds:
       - 48
@@ -166,7 +181,7 @@ elements:
       lineHeight: 1.1
       color: '#0A0A0A'
       bold: false
-  - elementId: l12
+  - elementId: l13
     elementType: line
     bounds:
       - 376
@@ -180,7 +195,7 @@ elements:
     border:
       width: 0.6
       color: '#afaeaa'
-  - elementId: t13
+  - elementId: t14
     elementType: text
     bounds:
       - 414
@@ -194,7 +209,7 @@ elements:
       lineHeight: 1.1
       color: '#0A0A0A'
       bold: true
-  - elementId: s14
+  - elementId: s15
     elementType: shape
     bounds:
       - 415
@@ -208,7 +223,7 @@ elements:
     border:
       width: 0
       color: '#afaeaa'
-  - elementId: s15
+  - elementId: s16
     elementType: shape
     bounds:
       - 415
@@ -222,7 +237,7 @@ elements:
     border:
       width: 0
       color: '#E6FF3D'
-  - elementId: t16
+  - elementId: t17
     elementType: text
     bounds:
       - 754
@@ -236,7 +251,7 @@ elements:
       lineHeight: 1.1
       color: '#0A0A0A'
       bold: true
-  - elementId: t17
+  - elementId: t18
     elementType: text
     bounds:
       - 414
@@ -250,7 +265,7 @@ elements:
       lineHeight: 1.1
       color: '#0A0A0A'
       bold: true
-  - elementId: s18
+  - elementId: s19
     elementType: shape
     bounds:
       - 415
@@ -264,7 +279,7 @@ elements:
     border:
       width: 0
       color: '#afaeaa'
-  - elementId: s19
+  - elementId: s20
     elementType: shape
     bounds:
       - 415
@@ -278,7 +293,7 @@ elements:
     border:
       width: 0
       color: '#E6FF3D'
-  - elementId: t20
+  - elementId: t21
     elementType: text
     bounds:
       - 754
@@ -292,21 +307,35 @@ elements:
       lineHeight: 1.1
       color: '#0A0A0A'
       bold: true
-  - elementId: t21
+  - elementId: l22
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#c1c1bd'
+  - elementId: t23
     elementType: text
     bounds:
       - 48
-      - 469
+      - 475
       - 864
-      - 28
+      - 25
     content:
       text: 'Top bar: before. Bottom: after. Illustrative comparison, not a causal claim.'
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 13
       lineHeight: 1.1
       color: '#0A0A0A'
       bold: false
-  - elementId: t22
+  - elementId: t24
     elementType: text
     bounds:
       - 48
@@ -320,7 +349,7 @@ elements:
       lineHeight: 1.1
       color: '#0A0A0A'
       bold: false
-  - elementId: t23
+  - elementId: t25
     elementType: text
     bounds:
       - 871

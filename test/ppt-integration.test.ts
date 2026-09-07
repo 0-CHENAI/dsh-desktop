@@ -125,12 +125,20 @@ describe('DSH PPT built-in plugin', () => {
     expect(entries.get('package/THIRD_PARTY_NOTICES.md')?.toString()).toContain('Apache-2.0')
   })
 
-  it('excludes withdrawn bytes and allows embedded previews only from the shipped sixteen packs', async () => {
+  it('excludes withdrawn bytes and shares build-listed local preview assets without embedded copies', async () => {
     const excluded = JSON.parse(await readFile(path.join(projectRoot, 'packages/ppt-runtime/excluded-assets.json'), 'utf8')) as { file: string; sha256: string }[]
     const denied = new Set(excluded.map(item => item.sha256))
     const core = tarEntries(await artifact('core'))
     const allowed = new Set([...core].filter(([name]) => name.endsWith('.jpg')).map(([, bytes]) => createHash('sha256').update(bytes).digest('hex')))
     expect(allowed.size).toBe(192)
+    const manifestSource = core.get('package/lib/preview-manifest.js')!.toString()
+    const manifest = JSON.parse(/export const previewFiles = (.*);/u.exec(manifestSource)![1]!) as Record<string, string>
+    expect(Object.keys(manifest)).toHaveLength(192)
+    for (const [hash, relative] of Object.entries(manifest)) {
+      const image = core.get(`package/skills/dsh-ppt/references/${relative}`)!
+      expect(createHash('sha256').update(image).digest('hex')).toBe(hash)
+    }
+    expect(core.get('package/lib/index.js')!.toString()).toContain('registerPreviewAssets(ctx, previewFiles')
     for (const name of ['core', 'adapter'] as const) {
       const entries = tarEntries(await artifact(name))
       for (const [file, bytes] of entries) {
@@ -138,9 +146,12 @@ describe('DSH PPT built-in plugin', () => {
         expect(excluded.some(item => file === `package/${item.file}`), file).toBe(false)
       }
       const client = entries.get('package/lib/client.js')!.toString()
-      const images = [...client.matchAll(/data:image\/jpeg;base64,([A-Za-z0-9+/=]+)/gu)]
-      expect(images.length).toBeGreaterThan(0)
-      for (const image of images) expect(allowed.has(createHash('sha256').update(Buffer.from(image[1]!, 'base64')).digest('hex'))).toBe(true)
+      expect(client).not.toContain('data:image/jpeg;base64,')
+      expect(Buffer.byteLength(client)).toBeLessThan(100_000)
+      const urls = [...client.matchAll(/\/dsh-ppt\/previews\/([a-f0-9]{64})\.jpg/gu)]
+      expect(urls).toHaveLength(192)
+      for (const url of urls) expect(allowed.has(url[1]!)).toBe(true)
+      if (name === 'adapter') expect([...entries.keys()].some(file => file.endsWith('.jpg'))).toBe(false)
     }
   })
 

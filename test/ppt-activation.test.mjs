@@ -35,6 +35,7 @@ async function fixture(existingRoot) {
     inject: ['systemPrompt', 'skills'],
     async apply(pluginCtx) {
       await apply({
+        inject: pluginCtx.inject.bind(pluginCtx),
         systemPrompt: pluginCtx.systemPrompt,
         skills: pluginCtx.skills,
         on: pluginCtx.on.bind(pluginCtx),
@@ -188,6 +189,21 @@ describe('PPT instructions follow the session composer button', () => {
 
 
 describe('PPT catalog migration', () => {
+  it('refreshes the previous authoring snapshot with the validation workflow', async () => {
+    const f = await fixture()
+    const agent = await f.agent()
+    await f.toggle(agent, true)
+    agent.session.append('user/message', createUserMessage({
+      content: [{ type: 'text', text: 'DSH-PPT-AUTHORING-20260906-V2 old workflow' }],
+      source: { kind: 'plugin', plugin: 'dsh-ppt-skill', form: 'snapshot', sections: [{ name: 'dsh-ppt', text: 'DSH-PPT-AUTHORING-20260906-V2 old workflow' }] }
+    }), { surfaceOp: 'append' })
+    await f.preStep(agent)
+    const messages = automaticMessages(agent).filter(m => m.source.plugin === 'dsh-ppt-skill')
+    expect(messages).toHaveLength(1)
+    expect(JSON.stringify(messages)).toContain('pptd_check')
+    expect(JSON.stringify(messages)).not.toContain('old workflow')
+  })
+
   it('refreshes an old automatic Skill snapshot when PPT remains active', async () => {
     const f = await fixture()
     const agent = await f.agent()
@@ -199,7 +215,7 @@ describe('PPT catalog migration', () => {
     await f.preStep(agent)
     const messages = automaticMessages(agent).filter(m => m.source.plugin === 'dsh-ppt-skill')
     expect(messages).toHaveLength(1)
-    expect(JSON.stringify(messages)).toContain('DSH-PPT-AUTHORING-20260906')
+    expect(JSON.stringify(messages)).toContain('DSH-PPT-AUTHORING-20260907-V3')
     expect(JSON.stringify(messages)).not.toContain('Withdrawn template instructions')
   })
 

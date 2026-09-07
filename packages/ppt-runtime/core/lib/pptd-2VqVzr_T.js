@@ -1,3 +1,4 @@
+const MISPLACED_TEXT_STYLE_FIELDS = new Set(["fontFamily", "fontSize", "bold", "italic", "color", "lineHeight", "letterSpacing", "wrap", "align", "verticalAlign", "textDirection", "style"]);
 import { wrapTextLines } from "./text-wrap.js";
 import { lstat, readFile, readdir, realpath } from "node:fs/promises";
 import path from "node:path";
@@ -521,12 +522,12 @@ function parsePptdProject(source) {
 			const allowed = type === void 0 ? void 0 : ELEMENT_FIELDS[type];
 			if (allowed === void 0) continue;
 			for (const field of unknownFields(element, allowed)) issues.push({
-				code: "unknown-field",
+				code: type === "text" && MISPLACED_TEXT_STYLE_FIELDS.has(field) ? "misplaced-text-style" : "unknown-field",
 				severity: "error",
 				file: ref,
 				page: index + 1,
 				...typeof element.elementId === "string" ? { elementId: element.elementId } : {},
-				message: `元素包含未知字段 ${field}。`
+				message: type === "text" && MISPLACED_TEXT_STYLE_FIELDS.has(field) ? `文本属性 ${field} 应放在 content 内，请修正 YAML 缩进。` : `元素包含未知字段 ${field}。`
 			});
 		}
 		pages.push({
@@ -680,6 +681,8 @@ function plainText(value) {
 	return value.replace(/<br\s*\/?\s*>/giu, "\n").replace(/<\/p\s*>/giu, "\n").replace(/<li(?:\s[^>]*)?>/giu, "• ").replace(/<\/li\s*>/giu, "\n").replace(/<[^>]+>/gu, "").replace(/&lt;/gu, "<").replace(/&gt;/gu, ">").replace(/&amp;/gu, "&").replace(/&quot;/gu, "\"").replace(/\n{3,}/gu, "\n\n").trimEnd();
 }
 function textLayout(project, element) {
+	// Fix structural errors before estimating layout with fallback styles.
+	if (unknownFields(element, ELEMENT_FIELDS.text).length > 0) return void 0;
 	const bounds = tuple(element.bounds, 4);
 	const content = record(element.content);
 	if (bounds === void 0 || content === void 0 || typeof content.text !== "string" || plainText(content.text).trim() === "") return void 0;

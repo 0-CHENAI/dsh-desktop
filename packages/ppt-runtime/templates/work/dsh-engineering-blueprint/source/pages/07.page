@@ -740,9 +740,9 @@ elements:
     elementType: text
     bounds:
       - 48
-      - 78
+      - 76
       - 864
-      - 63
+      - 64
     content:
       text: Choose the next move with evidence
       fontFamily: &ref_1
@@ -750,11 +750,26 @@ elements:
         mac: PingFang SC
         win: Microsoft YaHei
         ea: Noto Sans CJK SC
-      fontSize: 34
+      fontSize: 32
       lineHeight: 1.1
       color: '#252824'
       bold: true
   - elementId: t54
+    elementType: text
+    bounds:
+      - 754
+      - 46
+      - 158
+      - 13
+    content:
+      text: EXHIBIT 06
+      fontFamily: *ref_0
+      fontSize: 9
+      lineHeight: 1.1
+      color: '#62625c'
+      bold: false
+      align: right
+  - elementId: t55
     elementType: text
     bounds:
       - 48
@@ -762,13 +777,13 @@ elements:
       - 850
       - 25
     content:
-      text: PRIORITY MAP / IMPACT INCREASES UPWARD
+      text: A / PRIORITY MAP · IMPACT INCREASES UPWARD
       fontFamily: *ref_0
       fontSize: 13
       lineHeight: 1.1
       color: '#252824'
       bold: false
-  - elementId: s55
+  - elementId: s56
     elementType: shape
     bounds:
       - 89
@@ -778,11 +793,11 @@ elements:
     shapeName: rect
     fill:
       type: solid
-      color: '#e7e1d8'
+      color: '#e9e3d9'
     border:
       width: 0
-      color: '#e7e1d8'
-  - elementId: s56
+      color: '#e9e3d9'
+  - elementId: s57
     elementType: shape
     bounds:
       - 338
@@ -792,11 +807,11 @@ elements:
     shapeName: rect
     fill:
       type: solid
-      color: '#dfb8ad'
+      color: '#e4c7bc'
     border:
       width: 0
-      color: '#dfb8ad'
-  - elementId: l57
+      color: '#e4c7bc'
+  - elementId: l58
     elementType: line
     bounds:
       - 338
@@ -809,8 +824,8 @@ elements:
     points: 0,0 0,252
     border:
       width: 0.6
-      color: '#a9a69e'
-  - elementId: l58
+      color: '#b7b4ab'
+  - elementId: l59
     elementType: line
     bounds:
       - 89
@@ -823,278 +838,415 @@ elements:
     points: 0,0 497,0
     border:
       width: 0.6
-      color: '#a9a69e'
-  - elementId: t59
-    elementType: text
-    bounds:
-      - 104
-      - 192
-      - 217
-      - 25
-    content:
-      text: Investigate
-      fontFamily: *ref_0
-      fontSize: 13
-      lineHeight: 1.1
-      color: '#252824'
-      bold: false
+      color: '#b7b4ab'
   - elementId: t60
     elementType: text
     bounds:
-      - 354
-      - 192
-      - 210
-      - 25
+      - 103
+      - 194
+      - 214
+      - 23
     content:
-      text: Prioritize
+      text: INVESTIGATE
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 10
       lineHeight: 1.1
       color: '#252824'
       bold: false
   - elementId: t61
     elementType: text
     bounds:
-      - 104
-      - 401
-      - 212
-      - 25
+      - 354
+      - 194
+      - 214
+      - 23
     content:
-      text: Monitor
+      text: PRIORITIZE
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 10
       lineHeight: 1.1
       color: '#252824'
-      bold: false
+      bold: true
   - elementId: t62
     elementType: text
     bounds:
-      - 354
-      - 401
-      - 210
-      - 25
+      - 103
+      - 409
+      - 214
+      - 23
     content:
-      text: Schedule
+      text: MONITOR
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 10
       lineHeight: 1.1
       color: '#252824'
       bold: false
-  - elementId: s63
+  - elementId: t63
+    elementType: text
+    bounds:
+      - 354
+      - 409
+      - 214
+      - 23
+    content:
+      text: SCHEDULE
+      fontFamily: *ref_0
+      fontSize: 10
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: s64
     elementType: shape
     bounds:
-      - 174
-      - 256
-      - 20
-      - 20
+      - 177
+      - 259
+      - 14
+      - 14
     shapeName: ellipse
     fill:
       type: solid
-      color: '#B5392A'
+      color: '#8f8d86'
     border:
       width: 0
-      color: '#B5392A'
-  - elementId: t64
+      color: '#8f8d86'
+  - elementId: t65
     elementType: text
     bounds:
-      - 201
+      - 202
       - 254
-      - 40
-      - 30
+      - 38
+      - 28
     content:
       text: A
       fontFamily: *ref_0
-      fontSize: 16
+      fontSize: 15
       lineHeight: 1.1
       color: '#252824'
       bold: false
-  - elementId: s65
+  - elementId: s66
     elementType: shape
     bounds:
-      - 421
-      - 245
-      - 20
-      - 20
+      - 418
+      - 242
+      - 26
+      - 26
     shapeName: ellipse
     fill:
       type: solid
-      color: '#B5392A'
+      color: '#252824'
     border:
       width: 0
-      color: '#B5392A'
-  - elementId: t66
+      color: '#252824'
+  - elementId: t67
     elementType: text
     bounds:
-      - 448
+      - 449
       - 243
-      - 40
-      - 30
+      - 38
+      - 28
     content:
       text: B
       fontFamily: *ref_0
-      fontSize: 16
+      fontSize: 15
       lineHeight: 1.1
       color: '#252824'
-      bold: false
-  - elementId: s67
+      bold: true
+  - elementId: s68
     elementType: shape
     bounds:
-      - 372
-      - 279
-      - 20
-      - 20
+      - 375
+      - 282
+      - 14
+      - 14
     shapeName: ellipse
     fill:
       type: solid
-      color: '#B5392A'
+      color: '#8f8d86'
     border:
       width: 0
-      color: '#B5392A'
-  - elementId: t68
+      color: '#8f8d86'
+  - elementId: t69
     elementType: text
     bounds:
-      - 399
+      - 400
       - 277
-      - 40
-      - 30
+      - 38
+      - 28
     content:
       text: C
       fontFamily: *ref_0
-      fontSize: 16
+      fontSize: 15
       lineHeight: 1.1
       color: '#252824'
       bold: false
-  - elementId: s69
+  - elementId: s70
     elementType: shape
     bounds:
-      - 217
-      - 344
-      - 20
-      - 20
+      - 220
+      - 347
+      - 14
+      - 14
     shapeName: ellipse
     fill:
       type: solid
-      color: '#B5392A'
+      color: '#8f8d86'
     border:
       width: 0
-      color: '#B5392A'
-  - elementId: t70
+      color: '#8f8d86'
+  - elementId: t71
     elementType: text
     bounds:
-      - 244
+      - 245
       - 342
-      - 40
-      - 30
+      - 38
+      - 28
     content:
       text: D
       fontFamily: *ref_0
-      fontSize: 16
+      fontSize: 15
       lineHeight: 1.1
       color: '#252824'
       bold: false
-  - elementId: s71
+  - elementId: s72
     elementType: shape
     bounds:
-      - 473
-      - 352
-      - 20
-      - 20
+      - 476
+      - 355
+      - 14
+      - 14
     shapeName: ellipse
     fill:
       type: solid
-      color: '#B5392A'
+      color: '#8f8d86'
     border:
       width: 0
-      color: '#B5392A'
-  - elementId: t72
-    elementType: text
-    bounds:
-      - 500
-      - 350
-      - 40
-      - 30
-    content:
-      text: E
-      fontFamily: *ref_0
-      fontSize: 16
-      lineHeight: 1.1
-      color: '#252824'
-      bold: false
+      color: '#8f8d86'
   - elementId: t73
     elementType: text
     bounds:
-      - 89
-      - 444
-      - 238
-      - 25
+      - 501
+      - 350
+      - 38
+      - 28
     content:
-      text: Low confidence
+      text: E
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 15
       lineHeight: 1.1
       color: '#252824'
       bold: false
   - elementId: t74
     elementType: text
     bounds:
-      - 352
-      - 444
-      - 234
-      - 25
+      - 89
+      - 442
+      - 238
+      - 22
     content:
-      text: High confidence
+      text: Lower confidence
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 11
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: t75
+    elementType: text
+    bounds:
+      - 352
+      - 442
+      - 234
+      - 22
+    content:
+      text: Higher confidence
+      fontFamily: *ref_0
+      fontSize: 11
       lineHeight: 1.1
       color: '#252824'
       bold: false
       align: right
-  - elementId: t75
-    elementType: text
-    bounds:
-      - 643
-      - 191
-      - 269
-      - 69
-    content:
-      text: Start with B
-      fontFamily: *ref_1
-      fontSize: 30
-      lineHeight: 1.1
-      color: '#252824'
-      bold: true
   - elementId: t76
     elementType: text
     bounds:
-      - 643
-      - 295
-      - 269
-      - 113
+      - 632
+      - 173
+      - 280
+      - 25
     content:
-      text: |-
-        High impact.
-        Stronger evidence.
-        A bounded first test.
+      text: B / RECOMMENDED ACTION
       fontFamily: *ref_0
-      fontSize: 22
+      fontSize: 13
       lineHeight: 1.1
       color: '#252824'
       bold: false
   - elementId: t77
     elementType: text
     bounds:
-      - 643
-      - 432
-      - 269
+      - 632
+      - 215
+      - 280
+      - 62
+    content:
+      text: Validate B first
+      fontFamily: *ref_1
+      fontSize: 32
+      lineHeight: 1.1
+      color: '#252824'
+      bold: true
+  - elementId: l78
+    elementType: line
+    bounds:
+      - 632
+      - 299
+      - 280
+      - 1
+    viewBox:
+      - 280
+      - 1
+    points: 0,0 280,0
+    border:
+      width: 0.6
+      color: '#c3bfb7'
+  - elementId: t79
+    elementType: text
+    bounds:
+      - 632
+      - 311
+      - 110
+      - 31
+    content:
+      text: Potential
+      fontFamily: *ref_0
+      fontSize: 14
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: t80
+    elementType: text
+    bounds:
+      - 753
+      - 311
+      - 159
+      - 34
+    content:
+      text: High impact
+      fontFamily: *ref_0
+      fontSize: 16
+      lineHeight: 1.1
+      color: '#252824'
+      bold: true
+  - elementId: l81
+    elementType: line
+    bounds:
+      - 632
+      - 345
+      - 280
+      - 1
+    viewBox:
+      - 280
+      - 1
+    points: 0,0 280,0
+    border:
+      width: 0.6
+      color: '#c3bfb7'
+  - elementId: t82
+    elementType: text
+    bounds:
+      - 632
+      - 357
+      - 110
+      - 31
+    content:
+      text: Evidence
+      fontFamily: *ref_0
+      fontSize: 14
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: t83
+    elementType: text
+    bounds:
+      - 753
+      - 357
+      - 159
+      - 34
+    content:
+      text: Stronger signal
+      fontFamily: *ref_0
+      fontSize: 16
+      lineHeight: 1.1
+      color: '#252824'
+      bold: true
+  - elementId: l84
+    elementType: line
+    bounds:
+      - 632
+      - 391
+      - 280
+      - 1
+    viewBox:
+      - 280
+      - 1
+    points: 0,0 280,0
+    border:
+      width: 0.6
+      color: '#c3bfb7'
+  - elementId: t85
+    elementType: text
+    bounds:
+      - 632
+      - 403
+      - 110
+      - 31
+    content:
+      text: Commitment
+      fontFamily: *ref_0
+      fontSize: 14
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: t86
+    elementType: text
+    bounds:
+      - 753
+      - 403
+      - 159
+      - 34
+    content:
+      text: A bounded pilot
+      fontFamily: *ref_0
+      fontSize: 16
+      lineHeight: 1.1
+      color: '#252824'
+      bold: true
+  - elementId: l87
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#c3bfb7'
+  - elementId: t88
+    elementType: text
+    bounds:
+      - 48
+      - 475
+      - 864
       - 25
     content:
-      text: A–E = candidate actions
+      text: 'Decision: test B first; keep the other candidates visible until the evidence changes.'
       fontFamily: *ref_0
       fontSize: 13
       lineHeight: 1.1
       color: '#252824'
       bold: false
-  - elementId: t78
+  - elementId: t89
     elementType: text
     bounds:
       - 48
@@ -1108,7 +1260,7 @@ elements:
       lineHeight: 1.1
       color: '#252824'
       bold: false
-  - elementId: t79
+  - elementId: t90
     elementType: text
     bounds:
       - 871

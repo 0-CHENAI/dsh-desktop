@@ -740,9 +740,9 @@ elements:
     elementType: text
     bounds:
       - 48
-      - 78
+      - 76
       - 864
-      - 63
+      - 64
     content:
       text: Sequence the work around a decision gate
       fontFamily: &ref_1
@@ -750,269 +750,466 @@ elements:
         mac: PingFang SC
         win: Microsoft YaHei
         ea: Noto Sans CJK SC
-      fontSize: 34
+      fontSize: 32
       lineHeight: 1.1
       color: '#252824'
       bold: true
   - elementId: t54
     elementType: text
     bounds:
-      - 319
-      - 164
-      - 130
-      - 25
+      - 754
+      - 46
+      - 158
+      - 13
     content:
-      text: W1–2
+      text: EXHIBIT 10
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 9
       lineHeight: 1.1
-      color: '#252824'
+      color: '#62625c'
       bold: false
+      align: right
   - elementId: t55
     elementType: text
     bounds:
-      - 463
-      - 164
-      - 130
-      - 25
+      - 48
+      - 167
+      - 243
+      - 23
     content:
-      text: W3–4
+      text: WORKSTREAM / OWNER
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 11
       lineHeight: 1.1
       color: '#252824'
       bold: false
   - elementId: t56
     elementType: text
     bounds:
-      - 607
-      - 164
-      - 130
+      - 316
+      - 166
+      - 132
       - 25
     content:
-      text: W5–6
+      text: W1–2
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 12
       lineHeight: 1.1
       color: '#252824'
       bold: false
   - elementId: t57
     elementType: text
     bounds:
-      - 751
-      - 164
-      - 130
+      - 463
+      - 166
+      - 132
+      - 25
+    content:
+      text: W3–4
+      fontFamily: *ref_0
+      fontSize: 12
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: t58
+    elementType: text
+    bounds:
+      - 610
+      - 166
+      - 132
+      - 25
+    content:
+      text: W5–6
+      fontFamily: *ref_0
+      fontSize: 12
+      lineHeight: 1.1
+      color: '#252824'
+      bold: false
+  - elementId: t59
+    elementType: text
+    bounds:
+      - 757
+      - 166
+      - 132
       - 25
     content:
       text: W7–8
       fontFamily: *ref_0
-      fontSize: 13
+      fontSize: 12
       lineHeight: 1.1
       color: '#252824'
       bold: false
-  - elementId: l58
-    elementType: line
-    bounds:
-      - 302
-      - 199
-      - 1
-      - 243
-    viewBox:
-      - 1
-      - 243
-    points: 0,0 0,243
-    border:
-      width: 0.6
-      color: '#cbc7be'
-  - elementId: l59
-    elementType: line
-    bounds:
-      - 446
-      - 199
-      - 1
-      - 243
-    viewBox:
-      - 1
-      - 243
-    points: 0,0 0,243
-    border:
-      width: 0.6
-      color: '#cbc7be'
   - elementId: l60
     elementType: line
     bounds:
-      - 590
-      - 199
+      - 304
+      - 198
       - 1
-      - 243
+      - 242
     viewBox:
       - 1
-      - 243
-    points: 0,0 0,243
+      - 242
+    points: 0,0 0,242
     border:
-      width: 0.6
-      color: '#cbc7be'
+      width: 0.5
+      color: '#d0cbc2'
   - elementId: l61
     elementType: line
     bounds:
-      - 734
-      - 199
+      - 451
+      - 198
       - 1
-      - 243
+      - 242
     viewBox:
       - 1
-      - 243
-    points: 0,0 0,243
+      - 242
+    points: 0,0 0,242
     border:
-      width: 0.6
-      color: '#cbc7be'
+      width: 0.5
+      color: '#d0cbc2'
   - elementId: l62
     elementType: line
     bounds:
-      - 878
-      - 199
+      - 598
+      - 198
       - 1
-      - 243
+      - 242
     viewBox:
       - 1
-      - 243
-    points: 0,0 0,243
+      - 242
+    points: 0,0 0,242
+    border:
+      width: 0.5
+      color: '#d0cbc2'
+  - elementId: l63
+    elementType: line
+    bounds:
+      - 745
+      - 198
+      - 1
+      - 242
+    viewBox:
+      - 1
+      - 242
+    points: 0,0 0,242
+    border:
+      width: 0.5
+      color: '#d0cbc2'
+  - elementId: l64
+    elementType: line
+    bounds:
+      - 892
+      - 198
+      - 1
+      - 242
+    viewBox:
+      - 1
+      - 242
+    points: 0,0 0,242
+    border:
+      width: 0.5
+      color: '#d0cbc2'
+  - elementId: l65
+    elementType: line
+    bounds:
+      - 48
+      - 197
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
     border:
       width: 0.6
-      color: '#cbc7be'
-  - elementId: t63
+      color: '#d8d3c9'
+  - elementId: t66
     elementType: text
     bounds:
       - 48
-      - 206
+      - 205
       - 239
-      - 32
+      - 30
     content:
       text: Contract review
       fontFamily: *ref_1
-      fontSize: 19
+      fontSize: 18
       lineHeight: 1.1
       color: '#252824'
       bold: true
-  - elementId: s64
-    elementType: shape
-    bounds:
-      - 303
-      - 211
-      - 129.6
-      - 26
-    shapeName: rect
-    fill:
-      type: solid
-      color: '#b3b0a8'
-    border:
-      width: 0
-      color: '#b3b0a8'
-  - elementId: t65
-    elementType: text
-    bounds:
-      - 48
-      - 265
-      - 239
-      - 32
-    content:
-      text: Instrument the path
-      fontFamily: *ref_1
-      fontSize: 19
-      lineHeight: 1.1
-      color: '#252824'
-      bold: true
-  - elementId: s66
-    elementType: shape
-    bounds:
-      - 403.8
-      - 270
-      - 187.20000000000002
-      - 26
-    shapeName: rect
-    fill:
-      type: solid
-      color: '#b3b0a8'
-    border:
-      width: 0
-      color: '#b3b0a8'
   - elementId: t67
     elementType: text
     bounds:
       - 48
-      - 324
+      - 235
       - 239
-      - 32
+      - 24
     content:
-      text: Canary rollout
-      fontFamily: *ref_1
-      fontSize: 19
+      text: Tech lead
+      fontFamily: *ref_0
+      fontSize: 11
       lineHeight: 1.1
-      color: '#252824'
-      bold: true
+      color: '#666660'
+      bold: false
   - elementId: s68
     elementType: shape
     bounds:
-      - 562.2
-      - 329
-      - 158.4
-      - 26
+      - 305
+      - 217
+      - 132.3
+      - 22
     shapeName: rect
     fill:
       type: solid
-      color: '#B5392A'
+      color: '#b9b6ad'
     border:
       width: 0
-      color: '#B5392A'
-  - elementId: t69
+      color: '#b9b6ad'
+  - elementId: s69
+    elementType: shape
+    bounds:
+      - 434.3
+      - 225
+      - 6
+      - 6
+    shapeName: ellipse
+    fill:
+      type: solid
+      color: '#807f79'
+    border:
+      width: 0
+      color: '#807f79'
+  - elementId: l70
+    elementType: line
+    bounds:
+      - 48
+      - 258
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#d8d3c9'
+  - elementId: t71
     elementType: text
     bounds:
       - 48
-      - 383
+      - 266
       - 239
-      - 32
+      - 30
     content:
-      text: Expand / rollback
+      text: Instrument the path
       fontFamily: *ref_1
-      fontSize: 19
+      fontSize: 18
       lineHeight: 1.1
       color: '#252824'
       bold: true
-  - elementId: s70
+  - elementId: t72
+    elementType: text
+    bounds:
+      - 48
+      - 296
+      - 239
+      - 24
+    content:
+      text: Platform
+      fontFamily: *ref_0
+      fontSize: 11
+      lineHeight: 1.1
+      color: '#666660'
+      bold: false
+  - elementId: s73
     elementType: shape
     bounds:
-      - 706.2
-      - 388
-      - 172.79999999999998
-      - 26
+      - 407.9
+      - 278
+      - 191.1
+      - 22
     shapeName: rect
     fill:
       type: solid
-      color: '#b3b0a8'
+      color: '#b9b6ad'
     border:
       width: 0
-      color: '#b3b0a8'
-  - elementId: l71
-    elementType: line
-    bounds:
-      - 705
-      - 198
-      - 1
-      - 251
-    viewBox:
-      - 1
-      - 251
-    points: 0,0 0,251
-    border:
-      width: 1.4
-      color: '#B5392A'
-  - elementId: s72
+      color: '#b9b6ad'
+  - elementId: s74
     elementType: shape
     bounds:
-      - 700
+      - 596
+      - 286
+      - 6
+      - 6
+    shapeName: ellipse
+    fill:
+      type: solid
+      color: '#807f79'
+    border:
+      width: 0
+      color: '#807f79'
+  - elementId: l75
+    elementType: line
+    bounds:
+      - 48
+      - 319
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#d8d3c9'
+  - elementId: t76
+    elementType: text
+    bounds:
+      - 48
+      - 327
+      - 239
+      - 30
+    content:
+      text: Canary rollout
+      fontFamily: *ref_1
+      fontSize: 18
+      lineHeight: 1.1
+      color: '#252824'
+      bold: true
+  - elementId: t77
+    elementType: text
+    bounds:
+      - 48
+      - 357
+      - 239
+      - 24
+    content:
+      text: Service owner
+      fontFamily: *ref_0
+      fontSize: 11
+      lineHeight: 1.1
+      color: '#666660'
+      bold: false
+  - elementId: s78
+    elementType: shape
+    bounds:
+      - 569.6
+      - 339
+      - 161.70000000000002
+      - 22
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#252824'
+    border:
+      width: 0
+      color: '#252824'
+  - elementId: s79
+    elementType: shape
+    bounds:
+      - 728.3000000000001
+      - 347
+      - 6
+      - 6
+    shapeName: ellipse
+    fill:
+      type: solid
+      color: '#252824'
+    border:
+      width: 0
+      color: '#252824'
+  - elementId: l80
+    elementType: line
+    bounds:
+      - 48
+      - 380
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#d8d3c9'
+  - elementId: t81
+    elementType: text
+    bounds:
+      - 48
+      - 388
+      - 239
+      - 30
+    content:
+      text: Expand / rollback
+      fontFamily: *ref_1
+      fontSize: 18
+      lineHeight: 1.1
+      color: '#252824'
+      bold: true
+  - elementId: t82
+    elementType: text
+    bounds:
+      - 48
+      - 418
+      - 239
+      - 24
+    content:
+      text: On-call lead
+      fontFamily: *ref_0
+      fontSize: 11
+      lineHeight: 1.1
+      color: '#666660'
+      bold: false
+  - elementId: s83
+    elementType: shape
+    bounds:
+      - 716.5999999999999
+      - 400
+      - 176.4
+      - 22
+    shapeName: rect
+    fill:
+      type: solid
+      color: '#b9b6ad'
+    border:
+      width: 0
+      color: '#b9b6ad'
+  - elementId: s84
+    elementType: shape
+    bounds:
+      - 889.9999999999999
+      - 408
+      - 6
+      - 6
+    shapeName: ellipse
+    fill:
+      type: solid
+      color: '#807f79'
+    border:
+      width: 0
+      color: '#807f79'
+  - elementId: l85
+    elementType: line
+    bounds:
+      - 716
+      - 198
+      - 1
+      - 250
+    viewBox:
+      - 1
+      - 250
+    points: 0,0 0,250
+    border:
+      width: 1.2
+      color: '#B5392A'
+  - elementId: s86
+    elementType: shape
+    bounds:
+      - 712
       - 444
-      - 10
-      - 10
+      - 8
+      - 8
     shapeName: ellipse
     fill:
       type: solid
@@ -1020,21 +1217,35 @@ elements:
     border:
       width: 0
       color: '#B5392A'
-  - elementId: t73
+  - elementId: l87
+    elementType: line
+    bounds:
+      - 48
+      - 465
+      - 864
+      - 1
+    viewBox:
+      - 864
+      - 1
+    points: 0,0 864,0
+    border:
+      width: 0.6
+      color: '#c3bfb7'
+  - elementId: t88
     elementType: text
     bounds:
       - 48
-      - 469
+      - 475
       - 864
-      - 28
+      - 25
     content:
-      text: 'Decision gate: proceed only when the evidence meets the agreed threshold.'
+      text: 'Gate / W6: agree on evidence, owner and rollback conditions before expanding.'
       fontFamily: *ref_0
-      fontSize: 14
+      fontSize: 13
       lineHeight: 1.1
       color: '#252824'
       bold: false
-  - elementId: t74
+  - elementId: t89
     elementType: text
     bounds:
       - 48
@@ -1048,7 +1259,7 @@ elements:
       lineHeight: 1.1
       color: '#252824'
       bold: false
-  - elementId: t75
+  - elementId: t90
     elementType: text
     bounds:
       - 871
