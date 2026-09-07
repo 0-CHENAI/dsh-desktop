@@ -20,7 +20,7 @@ async function work(): Promise<string> {
   return dir
 }
 
-const run = (args: string[]) => execFile('python3', [script, ...args], { cwd: projectRoot })
+const run = (args: string[]) => execFile('python3', [script, ...args], { cwd: projectRoot, timeout: 20_000 })
 
 const VALID = `# DSH Desktop v9.9.9 — 测试主题
 
@@ -36,7 +36,9 @@ const VALID = `# DSH Desktop v9.9.9 — 测试主题
 `
 
 describe('github_release_notes build-prompt', () => {
-  it('emits the evidence blocks, the style reference, and the Chinese contract', async () => {
+  // Reading repository history and generating diffs can exceed the default
+  // five seconds on native Intel CI. Keep the subprocess independently bounded.
+  it('emits the evidence blocks, the style reference, and the Chinese contract', { timeout: 30_000 }, async () => {
     const dir = await work()
     const out = path.join(dir, 'prompt.txt')
     await run(['build-prompt', '--tag', 'v9.9.9', '--output', out])
@@ -77,7 +79,7 @@ describe('github_release_notes validate', () => {
 })
 
 describe('github_release_notes generate-fallback', () => {
-  it('produces a note that passes validate and starts with the contract title', async () => {
+  it('produces a note that passes validate and starts with the contract title', { timeout: 30_000 }, async () => {
     const dir = await work()
     const file = path.join(dir, 'fb.md')
     await run(['generate-fallback', '--tag', 'v9.9.9', '--output', file])
