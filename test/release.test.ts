@@ -189,6 +189,10 @@ describe('GitHub release contract', () => {
       from: 'build/dsh-desktop.patch.yml',
       to: 'dsh-desktop.patch.yml'
     })
+    expect(packageJson.build.extraResources).toContainEqual({
+      from: 'build/dsh-desktop-safe.patch.yml',
+      to: 'dsh-desktop-safe.patch.yml'
+    })
     expect(packageJson.build.nsis.artifactName).toBe(
       'dsh-desktop-windows-${arch}-setup.${ext}'
     )
