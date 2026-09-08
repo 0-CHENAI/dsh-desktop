@@ -39,5 +39,7 @@ describe('desktop provider onboarding patch', () => {
     expect(installed).toContain('SETTINGS_PROVIDER_PRIORITY')
     expect(installed.indexOf('"deepseek-official"')).toBeLessThan(installed.indexOf('"openai"'))
     expect(installed).toContain('left.entry.displayName.localeCompare(right.entry.displayName)')
+    expect(installed).not.toContain('deepSeekOnboardingInjected')
+    expect(installed).not.toContain(', DeepSeekOnboardingDialog)')
   })
 })

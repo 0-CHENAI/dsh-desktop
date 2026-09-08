@@ -1,5 +1,5 @@
 diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js
-index dd1dc8d..493bfc1 100644
+index dd1dc8d..c437b8e 100644
 --- a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js
 +++ b/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js
 @@ -64,6 +64,38 @@ window.__ModuleLoader__.load({
@@ -19,7 +19,7 @@ index dd1dc8d..493bfc1 100644
 +			const tag = document.createElement("style");
 +			tag.dataset.plugin = "@deepseek-ai/dsh-client-ui-settings-models";
 +			tag.dataset.pluginCss = modelModalityTagId;
-+			tag.textContent = ".dshModelModalityToggle{grid-column:1/-1;align-items:flex-start;gap:9px;min-height:36px;padding:4px;display:flex;cursor:pointer}.dshModelModalityToggle[aria-disabled=true]{cursor:default;opacity:.6}.dshModelModalityToggle input{accent-color:var(--dsw-alias-brand-primary);flex:none;width:16px;height:16px;margin:2px 0 0}.dshModelModalityCopy{flex-direction:column;gap:1px;display:flex}.dshModelModalityTitle{color:var(--dsw-alias-label-secondary);font-size:12px;font-weight:500;line-height:18px}.dshModelModalityHint{color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:16px}.dshModelModalityToggleCompact{grid-column:auto;align-items:center;gap:5px;min-height:28px;white-space:nowrap;border-radius:6px;padding:0 4px;position:relative}.dshModelModalityToggleCompact:hover{background:var(--dsw-alias-interactive-bg-hover)}.dshModelModalityToggleCompact input{width:14px;height:14px;margin:0}.dshModelModalityToggleCompact .dshModelModalityCopy{display:block}.dshModelModalityToggleCompact .dshModelModalityTitle{color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:16px}.dshModelModalityToggleCompact:after{content:attr(data-tooltip);z-index:12;pointer-events:none;box-sizing:border-box;width:max-content;max-width:260px;color:var(--dsw-alias-label-primary-foreground);background:var(--dsw-alias-label-primary);border-radius:6px;padding:6px 8px;font-size:11px;font-weight:400;line-height:16px;white-space:normal;visibility:hidden;opacity:0;position:absolute;top:calc(100% + 5px);right:0}.dshModelModalityToggleCompact:hover:after,.dshModelModalityToggleCompact:focus-within:after{visibility:visible;opacity:1}.qy-_KG_modelRow{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto auto auto}";
++			tag.textContent = ".dshModelModalityToggle{grid-column:1/-1;align-items:flex-start;gap:9px;min-height:36px;padding:4px;display:flex;cursor:pointer}.dshModelModalityToggle[aria-disabled=true]{cursor:default;opacity:.6}.dshModelModalityToggle input{accent-color:var(--dsw-alias-brand-primary);flex:none;width:16px;height:16px;margin:2px 0 0}.dshModelModalityCopy{flex-direction:column;gap:1px;display:flex}.dshModelModalityTitle{color:var(--dsw-alias-label-secondary);font-size:12px;font-weight:500;line-height:18px}.dshModelModalityHint{color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:16px}.dshModelModalityToggleCompact{grid-column:auto;align-items:center;gap:5px;min-height:28px;white-space:nowrap;border-radius:6px;padding:0 4px;position:relative}.dshModelModalityToggleCompact:hover{background:var(--dsw-alias-interactive-bg-hover)}.dshModelModalityToggleCompact input{width:14px;height:14px;margin:0}.dshModelModalityToggleCompact .dshModelModalityCopy{display:block}.dshModelModalityToggleCompact .dshModelModalityTitle{color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:16px}.dshModelModalityTip{position:fixed;z-index:80;pointer-events:none;box-sizing:border-box;max-width:280px;padding:8px 10px;border:1px solid var(--dsw-alias-border-l2);border-radius:8px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-secondary);box-shadow:0 6px 18px rgba(16,18,24,.12),0 1px 2px rgba(16,18,24,.06);font-size:12px;font-weight:400;line-height:18px;letter-spacing:0;white-space:normal;overflow-wrap:break-word}.qy-_KG_modelEntry,.qy-_KG_modelRow{overflow:visible}.qy-_KG_modelRow{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto auto auto}";
 +			document.head.appendChild(tag);
 +		}
 +		const modelCatalogUxTagId = "@deepseek-ai/dsh-client-ui-settings-models/ModelCatalogUx";
@@ -41,7 +41,7 @@ index dd1dc8d..493bfc1 100644
  		var ModelsSection_module_css_default = {
  			"addActions": "qy-_KG_addActions",
  			"addBlock": "qy-_KG_addBlock",
-@@ -158,6 +190,149 @@ window.__ModuleLoader__.load({
+@@ -158,6 +190,233 @@ window.__ModuleLoader__.load({
  			});
  		}
  		//#endregion
@@ -55,16 +55,93 @@ index dd1dc8d..493bfc1 100644
 +		function imageInputModalities(enabled) {
 +			return enabled ? ["text", "image"] : ["text"];
 +		}
++		/** Compact-row copy for the hover tip — real text, not CSS attr(), so CJK stays crisp on Windows. */
++		function compactImageInputTip(t) {
++			return `${t("modelImageInput")}: ${t("modelImageInputHint")}`;
++		}
++		/**
++		* Viewport-fixed box for the compact tip. Snap to the device-pixel grid so
++		* Win10 125%/150% DPI does not blur CJK; flip above the control when the
++		* measured (or estimated) box would otherwise leave the viewport.
++		*/
++		function placeCompactImageInputTip(node, tip) {
++			const rect = node.getBoundingClientRect();
++			const dpr = window.devicePixelRatio || 1;
++			const snap = (value) => Math.round(value * dpr) / dpr;
++			const gutter = 12;
++			const gap = 8;
++			const width = Math.min(280, Math.max(0, window.innerWidth - gutter * 2));
++			const maxLeft = window.innerWidth - gutter - width;
++			let left = rect.right - width;
++			if (left < gutter) left = gutter;
++			if (left > maxLeft) left = Math.max(gutter, maxLeft);
++			const measured = tip === void 0 ? 0 : tip.getBoundingClientRect().height;
++			const height = measured > 0 ? measured : 96;
++			const below = rect.bottom + gap + height <= window.innerHeight - gutter;
++			const top = below ? rect.bottom + gap : Math.max(gutter, rect.top - gap - height);
++			return {
++				left: `${snap(left)}px`,
++				top: `${snap(top)}px`,
++				width: `${snap(width)}px`
++			};
++		}
 +		/** Render the shared per-model image-input declaration control. */
 +		function ModelImageInputToggle(props) {
++			const rootRef = (0, react.useRef)(null);
++			const tipRef = (0, react.useRef)(null);
++			const hoverRef = (0, react.useRef)(false);
++			const [tipBox, setTipBox] = (0, react.useState)(void 0);
++			const hideTip = () => {
++				setTipBox((current) => current === void 0 ? current : void 0);
++			};
++			const showTip = () => {
++				if (props.compact !== true || props.disabled === true || rootRef.current === null) return;
++				setTipBox(placeCompactImageInputTip(rootRef.current, tipRef.current));
++			};
++			(0, react.useEffect)(() => {
++				if (props.disabled === true) setTipBox(void 0);
++			}, [props.disabled]);
++			(0, react.useLayoutEffect)(() => {
++				if (tipBox === void 0 || rootRef.current === null || tipRef.current === null) return;
++				const next = placeCompactImageInputTip(rootRef.current, tipRef.current);
++				if (next.left !== tipBox.left || next.top !== tipBox.top || next.width !== tipBox.width) setTipBox(next);
++			}, [tipBox]);
++			(0, react.useEffect)(() => {
++				if (tipBox === void 0) return;
++				const hide = () => {
++					setTipBox(void 0);
++				};
++				window.addEventListener("scroll", hide, true);
++				window.addEventListener("resize", hide);
++				return () => {
++					window.removeEventListener("scroll", hide, true);
++					window.removeEventListener("resize", hide);
++				};
++			}, [tipBox]);
++			const tipId = `dsh-model-modality-tip-${props.field}-${String(props.index)}`;
 +			return (0, react_jsx_runtime.jsxs)("label", {
++				ref: rootRef,
 +				className: props.compact ? "dshModelModalityToggle dshModelModalityToggleCompact" : "dshModelModalityToggle",
 +				"aria-disabled": props.disabled,
-+				"data-tooltip": props.compact ? `${props.t("modelImageInput")}: ${props.t("modelImageInputHint")}` : void 0,
++				onPointerEnter: props.compact === true ? () => {
++					hoverRef.current = true;
++					showTip();
++				} : void 0,
++				onPointerLeave: props.compact === true ? () => {
++					hoverRef.current = false;
++					hideTip();
++				} : void 0,
++				onFocus: props.compact === true ? (event) => {
++					if (event.target instanceof Element && event.target.matches(":focus-visible")) showTip();
++				} : void 0,
++				onBlur: props.compact === true ? () => {
++					if (hoverRef.current !== true) hideTip();
++				} : void 0,
 +				children: [(0, react_jsx_runtime.jsx)("input", {
 +					type: "checkbox",
 +					checked: imageInputEnabled(props.model, props.field),
 +					"aria-label": `${props.t("modelImageInput")} ${String(props.index + 1)}`,
++					"aria-describedby": props.compact === true && tipBox !== void 0 ? tipId : void 0,
 +					disabled: props.disabled,
 +					onChange: (event) => {
 +						props.onChange(event.target.checked);
@@ -78,7 +155,14 @@ index dd1dc8d..493bfc1 100644
 +						className: "dshModelModalityHint",
 +						children: props.t("modelImageInputHint")
 +					})]
-+				})]
++				}), props.compact === true && tipBox !== void 0 ? (0, react_jsx_runtime.jsx)("span", {
++					ref: tipRef,
++					id: tipId,
++					className: "dshModelModalityTip",
++					role: "tooltip",
++					style: tipBox,
++					children: compactImageInputTip(props.t)
++				}) : null]
 +			});
 +		}
 +		//#endregion
@@ -191,7 +275,7 @@ index dd1dc8d..493bfc1 100644
  		//#region lib/types/client/DeepSeekModelsEditor.js
  		/**
  		* Curated editor for the direct DeepSeek adapter's advisory model catalog.
-@@ -259,6 +427,7 @@ window.__ModuleLoader__.load({
+@@ -259,6 +518,7 @@ window.__ModuleLoader__.load({
  		function DeepSeekModelsEditor(props) {
  			const [editing, setEditing] = (0, react.useState)(() => /* @__PURE__ */ new Map());
  			const [expanded, setExpanded] = (0, react.useState)(() => /* @__PURE__ */ new Set());
@@ -199,7 +283,7 @@ index dd1dc8d..493bfc1 100644
  			const update = (index, key, value) => {
  				const next = props.models.map((model, at) => {
  					const copy = { ...model };
-@@ -367,12 +536,20 @@ window.__ModuleLoader__.load({
+@@ -367,12 +627,20 @@ window.__ModuleLoader__.load({
  							children: props.t("resetModels")
  						}) : null]
  					}),
@@ -221,7 +305,7 @@ index dd1dc8d..493bfc1 100644
  							className: ModelsSection_module_css_default["modelEntry"],
  							children: [(0, react_jsx_runtime.jsxs)("div", {
  								className: ModelsSection_module_css_default["modelRow"],
-@@ -398,12 +575,23 @@ window.__ModuleLoader__.load({
+@@ -398,12 +666,23 @@ window.__ModuleLoader__.load({
  										value: typeof model["name"] === "string" ? model["name"] : "",
  										placeholder: props.t("modelName"),
  										"aria-label": `${props.t("modelName")} ${String(index + 1)}`,
@@ -251,7 +335,7 @@ index dd1dc8d..493bfc1 100644
  										type: "button",
  										className: ModelsSection_module_css_default["iconButton"],
  										"aria-label": `${props.t("modelAdvanced")} ${String(index + 1)}`,
-@@ -428,18 +616,9 @@ window.__ModuleLoader__.load({
+@@ -428,18 +707,9 @@ window.__ModuleLoader__.load({
  								]
  							}), expanded.has(index) ? (0, react_jsx_runtime.jsxs)("div", {
  								className: ModelsSection_module_css_default["modelAdvanced"],
@@ -271,7 +355,7 @@ index dd1dc8d..493bfc1 100644
  					})
  				]
  			});
-@@ -557,6 +736,7 @@ window.__ModuleLoader__.load({
+@@ -557,6 +827,7 @@ window.__ModuleLoader__.load({
  			const [candidateQuery, setCandidateQuery] = (0, react.useState)("");
  			const [expanded, setExpanded] = (0, react.useState)(/* @__PURE__ */ new Set());
  			const [editing, setEditing] = (0, react.useState)(/* @__PURE__ */ new Map());
@@ -279,7 +363,7 @@ index dd1dc8d..493bfc1 100644
  			/** Buffer key for one capacity field; the row half moves when rows do. */
  			const bufferKey = (index, field) => `${String(index)}:${field}`;
  			const editCapacity = (index, field, text) => {
-@@ -691,11 +871,19 @@ window.__ModuleLoader__.load({
+@@ -691,11 +962,19 @@ window.__ModuleLoader__.load({
  							})
  						]
  					}),
@@ -300,7 +384,7 @@ index dd1dc8d..493bfc1 100644
  						className: ModelsSection_module_css_default["modelEntry"],
  						children: [(0, react_jsx_runtime.jsxs)("div", {
  							className: ModelsSection_module_css_default["modelRow"],
-@@ -717,12 +905,23 @@ window.__ModuleLoader__.load({
+@@ -717,12 +996,23 @@ window.__ModuleLoader__.load({
  									value: textOf(model, "name"),
  									placeholder: t("modelName"),
  									"aria-label": `${t("modelName")} ${index + 1}`,
@@ -330,7 +414,7 @@ index dd1dc8d..493bfc1 100644
  									type: "button",
  									className: ModelsSection_module_css_default["iconButton"],
  									"aria-label": `${t("modelAdvanced")} ${index + 1}`,
-@@ -788,18 +987,17 @@ window.__ModuleLoader__.load({
+@@ -788,18 +1078,17 @@ window.__ModuleLoader__.load({
  										editCapacity(index, "maxTokens", event.target.value);
  									}
  								})]
@@ -357,7 +441,7 @@ index dd1dc8d..493bfc1 100644
  					failure !== void 0 ? (0, react_jsx_runtime.jsx)("p", {
  						className: ModelsSection_module_css_default["error"],
  						children: failure
-@@ -1155,6 +1353,7 @@ window.__ModuleLoader__.load({
+@@ -1155,6 +1444,7 @@ window.__ModuleLoader__.load({
  			const [protocol, setProtocol] = (0, react.useState)(protocols[0] ?? "");
  			const [keyDraft, setKeyDraft] = (0, react.useState)("");
  			const [models, setModels] = (0, react.useState)([]);
@@ -365,7 +449,7 @@ index dd1dc8d..493bfc1 100644
  			const [busy, setBusy] = (0, react.useState)(false);
  			const [failure, setFailure] = (0, react.useState)(void 0);
  			/**
-@@ -1212,6 +1411,11 @@ window.__ModuleLoader__.load({
+@@ -1212,6 +1502,11 @@ window.__ModuleLoader__.load({
  					setBusy(false);
  				}
  			};
@@ -377,7 +461,7 @@ index dd1dc8d..493bfc1 100644
  			return (0, react_jsx_runtime.jsxs)("div", {
  				className: ModelsSection_module_css_default["editor"],
  				children: [
-@@ -1327,6 +1531,8 @@ window.__ModuleLoader__.load({
+@@ -1327,6 +1622,8 @@ window.__ModuleLoader__.load({
  					(0, react_jsx_runtime.jsx)(ModelListEditor, {
  						models,
  						onChange: setModels,
@@ -386,7 +470,7 @@ index dd1dc8d..493bfc1 100644
  						probe: {
  							settingsNs: NS$1,
  							baseURL,
-@@ -1346,18 +1552,27 @@ window.__ModuleLoader__.load({
+@@ -1346,18 +1643,27 @@ window.__ModuleLoader__.load({
  						className: ModelsSection_module_css_default["advancedHint"],
  						children: hint
  					}),
@@ -426,7 +510,7 @@ index dd1dc8d..493bfc1 100644
  					})
  				]
  			});
-@@ -1445,6 +1660,8 @@ window.__ModuleLoader__.load({
+@@ -1445,6 +1751,8 @@ window.__ModuleLoader__.load({
  			const [keyState, setKeyState] = (0, react.useState)(void 0);
  			const [busy, setBusy] = (0, react.useState)(false);
  			const [failure, setFailure] = (0, react.useState)(void 0);
@@ -435,7 +519,7 @@ index dd1dc8d..493bfc1 100644
  			const [committedOriginal, setCommittedOriginal] = (0, react.useState)(() => schema.getPath(namespace.user, settingsPath));
  			const [expectedRevision, setExpectedRevision] = (0, react.useState)(() => namespace.revision);
  			const root = (0, react.useMemo)(() => schema.rehydrate(namespace.schema), [namespace.schema, schema]);
-@@ -1565,6 +1782,15 @@ window.__ModuleLoader__.load({
+@@ -1565,6 +1873,15 @@ window.__ModuleLoader__.load({
  			const inheritedModels = () => {
  				return schema.getPath(namespace.base, [...settingsPath, "models"]) ?? schema.nodeAtPath(root, [...settingsPath, "models"])?.meta.default;
  			};
@@ -451,7 +535,7 @@ index dd1dc8d..493bfc1 100644
  			/**
  			* The curated fields of one known adapter family. The family arrives
  			* narrowed so the per-family branches below are total: an unknown namespace
-@@ -1582,6 +1808,8 @@ window.__ModuleLoader__.load({
+@@ -1582,6 +1899,8 @@ window.__ModuleLoader__.load({
  				const catalogProps = {
  					models,
  					overridden: modelsOverridden,
@@ -460,7 +544,7 @@ index dd1dc8d..493bfc1 100644
  					t,
  					disabled,
  					onChange: (next) => {
-@@ -1620,6 +1848,10 @@ window.__ModuleLoader__.load({
+@@ -1620,6 +1939,10 @@ window.__ModuleLoader__.load({
  					]
  				}), props.credentialOnly === true ? null : (0, react_jsx_runtime.jsxs)("details", {
  					className: ModelsSection_module_css_default["customized"],
@@ -471,7 +555,7 @@ index dd1dc8d..493bfc1 100644
  					children: [(0, react_jsx_runtime.jsx)("summary", {
  						className: ModelsSection_module_css_default["customizedSummary"],
  						children: t("customized")
-@@ -1696,8 +1928,22 @@ window.__ModuleLoader__.load({
+@@ -1696,8 +2019,22 @@ window.__ModuleLoader__.load({
  					})]
  				})] });
  			};
@@ -495,7 +579,7 @@ index dd1dc8d..493bfc1 100644
  				children: [
  					props.hideTitle === true ? null : (0, react_jsx_runtime.jsxs)("div", {
  						className: ModelsSection_module_css_default["editorHeader"],
-@@ -1721,19 +1967,15 @@ window.__ModuleLoader__.load({
+@@ -1721,19 +2058,15 @@ window.__ModuleLoader__.load({
  						className: ModelsSection_module_css_default["advancedHint"],
  						children: `${t("model")} ${String(modelFailure.index + 1)}: ${t(modelFailure.key)}`
  					}),
@@ -524,7 +608,7 @@ index dd1dc8d..493bfc1 100644
  					})
  				]
  			});
-@@ -1830,6 +2072,26 @@ window.__ModuleLoader__.load({
+@@ -1830,6 +2163,26 @@ window.__ModuleLoader__.load({
  		function providerCopy(template, target) {
  			return template.replace("{provider}", () => providerTargetLabel(target));
  		}
@@ -551,7 +635,7 @@ index dd1dc8d..493bfc1 100644
  		/**
  		* Render the Models section content column.
  		* @param props - slot-delivered injected dependencies.
-@@ -1859,6 +2121,8 @@ window.__ModuleLoader__.load({
+@@ -1859,6 +2212,8 @@ window.__ModuleLoader__.load({
  			const [deleteFailure, setDeleteFailure] = (0, react.useState)(void 0);
  			const [savedTarget, setSavedTarget] = (0, react.useState)(void 0);
  			const [declaring, setDeclaring] = (0, react.useState)(false);
@@ -560,7 +644,7 @@ index dd1dc8d..493bfc1 100644
  			const [dismissedSetup, setDismissedSetup] = (0, react.useState)(() => /* @__PURE__ */ new Set());
  			const announceSaved = (target) => {
  				controller.load().then(() => {
-@@ -1928,11 +2192,17 @@ window.__ModuleLoader__.load({
+@@ -1928,11 +2283,17 @@ window.__ModuleLoader__.load({
  			};
  			const anyUsable = state.rows.some(providerUsable);
  			const configured = state.rows.filter((row) => row.configured);
@@ -579,7 +663,7 @@ index dd1dc8d..493bfc1 100644
  			return (0, react_jsx_runtime.jsxs)("div", {
  				className: ModelsSection_module_css_default["section"],
  				children: [
-@@ -2067,20 +2337,62 @@ window.__ModuleLoader__.load({
+@@ -2067,20 +2428,62 @@ window.__ModuleLoader__.load({
  									children: [(0, react_jsx_runtime.jsx)("span", {
  										className: ModelsSection_module_css_default["fieldLabel"],
  										children: t("provider")
@@ -656,7 +740,7 @@ index dd1dc8d..493bfc1 100644
  									})]
  								}),
  								(0, react_jsx_runtime.jsx)(ProviderEditor, {
-@@ -2132,6 +2444,8 @@ window.__ModuleLoader__.load({
+@@ -2132,6 +2535,8 @@ window.__ModuleLoader__.load({
  									setDeclaring(false);
  									setAdding(true);
  									setEditing(targetOf(first));
@@ -665,7 +749,7 @@ index dd1dc8d..493bfc1 100644
  								},
  								children: [(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconPlusOutline16, { size: 14 }), t("add")]
  							}), (0, react_jsx_runtime.jsxs)("button", {
-@@ -2240,7 +2554,7 @@ window.__ModuleLoader__.load({
+@@ -2240,7 +2645,7 @@ window.__ModuleLoader__.load({
  			});
  		}
  		//#endregion
@@ -674,7 +758,7 @@ index dd1dc8d..493bfc1 100644
  		const css$1 = ".lbsctW_description{color:var(--dsw-alias-label-secondary);margin:0;font-size:14px;line-height:24px}.lbsctW_editor{margin-top:24px}@media (width<=560px){.lbsctW_editor{margin-top:20px}}";
  		const tagId$1 = "@deepseek-ai/dsh-client-ui-settings-models/DeepSeekOnboardingDialog.module.css";
  		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$1) + "]") === null) {
-@@ -2267,35 +2581,50 @@ window.__ModuleLoader__.load({
+@@ -2267,35 +2672,50 @@ window.__ModuleLoader__.load({
  		function assertNever$1(_value) {
  			throw new Error("unexpected DeepSeek onboarding state");
  		}
@@ -743,7 +827,7 @@ index dd1dc8d..493bfc1 100644
  			const finishCredential = (changed) => {
  				if (!changed) {
  					complete();
-@@ -2633,6 +2962,8 @@ window.__ModuleLoader__.load({
+@@ -2633,6 +3053,8 @@ window.__ModuleLoader__.load({
  			deleting: "Deleting {provider}…",
  			add: "Add provider",
  			provider: "Provider",
@@ -752,7 +836,7 @@ index dd1dc8d..493bfc1 100644
  			close: "Close",
  			cancel: "Cancel",
  			apply: "Apply",
-@@ -2664,7 +2995,15 @@ window.__ModuleLoader__.load({
+@@ -2664,7 +3086,15 @@ window.__ModuleLoader__.load({
  			contextWindowPlaceholder: "Uses the provider default",
  			maxTokens: "Max output tokens",
  			maxTokensPlaceholder: "Uses the provider default",
@@ -769,7 +853,7 @@ index dd1dc8d..493bfc1 100644
  			addModel: "Add model",
  			removeModel: "Delete model",
  			modelsEmpty: "No models will be shown in the selector. Unlisted IDs can still be sent directly.",
-@@ -2712,10 +3051,14 @@ window.__ModuleLoader__.load({
+@@ -2712,10 +3142,14 @@ window.__ModuleLoader__.load({
  			welcomeBody: "DeepSeek Harness 0.1 remains in testing for Harness developers. Many areas need further improvement, and we welcome feedback from the developer community. DeepSeek Harness's core plugins and foundational APIs will continue to evolve rapidly over the coming months.\n\nWe look forward to exploring the limits of intelligence with developers around the world, building on open-source, open, reusable, and composable infrastructure. We welcome Harness developers everywhere to join the DSH plugin ecosystem.",
  			welcomeContinue: "Continue",
  			welcomeError: "The acknowledgement could not be saved. Please try again.",
@@ -787,7 +871,7 @@ index dd1dc8d..493bfc1 100644
  			onboardingSaving: "Saving…",
  			keyRequired: "Enter an API key to continue."
  		};
-@@ -2735,6 +3078,8 @@ window.__ModuleLoader__.load({
+@@ -2735,6 +3169,8 @@ window.__ModuleLoader__.load({
  			deleting: "正在删除 {provider}…",
  			add: "添加提供方",
  			provider: "提供方",
@@ -796,7 +880,7 @@ index dd1dc8d..493bfc1 100644
  			close: "关闭",
  			cancel: "取消",
  			apply: "保存",
-@@ -2766,7 +3111,15 @@ window.__ModuleLoader__.load({
+@@ -2766,7 +3202,15 @@ window.__ModuleLoader__.load({
  			contextWindowPlaceholder: "使用提供方默认值",
  			maxTokens: "最大输出 token 数",
  			maxTokensPlaceholder: "使用提供方默认值",
@@ -813,7 +897,7 @@ index dd1dc8d..493bfc1 100644
  			addModel: "添加模型",
  			removeModel: "删除模型",
  			modelsEmpty: "模型选择器中将不显示任何模型；目录外 ID 仍可直接发送。",
-@@ -2814,10 +3167,14 @@ window.__ModuleLoader__.load({
+@@ -2814,10 +3258,14 @@ window.__ModuleLoader__.load({
  			welcomeBody: "DeepSeek Harness 目前的 0.1 版本仍处在面向 Harness 开发者进行测试的阶段，还有许多地方需要持续改进和打磨，希望听取广大开发者的反馈建议。预计 DeepSeek Harness 的核心插件以及基础 API 都会在接下来的一段时间内快速迭代、持续演化。\n\n我们期待与全球开发者一起，在开源、开放、可复用、可组合的基础设施之上，共同探索智能上限。欢迎全球 Harness 开发者加入 DSH 插件生态。",
  			welcomeContinue: "继续",
  			welcomeError: "暂时无法保存确认状态，请重试。",
@@ -831,10 +915,37 @@ index dd1dc8d..493bfc1 100644
  			onboardingSaving: "保存中…",
  			keyRequired: "请输入 API 密钥后继续。"
  		};
-@@ -2942,4 +3299,4 @@ window.__ModuleLoader__.load({
+@@ -2871,13 +3319,6 @@ window.__ModuleLoader__.load({
+ 				schema,
+ 				t
+ 			});
+-			const deepSeekOnboardingInjected = () => ({
+-				controller,
+-				hooks: { models: controller.store },
+-				operations,
+-				schema,
+-				t
+-			});
+ 			const welcomeController = new WelcomeNoticeStore(ctx.settingsScope.bind({
+ 				namespace: WELCOME_NOTICE_SETTINGS_NAMESPACE,
+ 				decode: decodeWelcomeSection
+@@ -2927,12 +3368,6 @@ window.__ModuleLoader__.load({
+ 				order: -100,
+ 				inject: welcomeInjected
+ 			}, WelcomeNotice));
+-			ctx.slots.inject("settings.onboarding", () => ctx.slots.register({
+-				name: "settings.onboarding",
+-				id: "deepseek-official",
+-				order: 0,
+-				inject: deepSeekOnboardingInjected
+-			}, DeepSeekOnboardingDialog));
+ 		}
+ 		//#endregion
+ 		exports.apply = apply;
+@@ -2942,4 +3377,4 @@ window.__ModuleLoader__.load({
  	}
  });
-
+ 
 -//# sourceMappingURL=client.js.map
 \ No newline at end of file
 +//# sourceMappingURL=client.js.map
