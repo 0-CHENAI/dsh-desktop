@@ -74,14 +74,28 @@ describe('DSH Desktop client slot occupants', () => {
         return () => undefined
       }
     }
-    plugin.apply({ slots })
+    plugin.apply({
+      slots,
+      locale: {
+        register: () => undefined,
+        bind: () => (key: string) => key
+      },
+      effect: (fn: () => unknown) => {
+        fn()
+      }
+    })
 
-    expect(plugin.inject).toEqual(['slots'])
+    expect(plugin.inject).toEqual(['slots', 'locale'])
     expect(registrations.map(({ config }) => config.name)).toEqual([
       'sidebar.brand.mark',
       'sidebar.brand.name',
-      'conversation.hero.brand.mark'
+      'conversation.hero.brand.mark',
+      'settings.section'
     ])
+    expect(registrations.at(-1)?.config).toMatchObject({
+      id: 'version',
+      order: 50
+    })
 
     const sidebarName = registrations.find(
       ({ config }) => config.name === 'sidebar.brand.name'
@@ -96,5 +110,29 @@ describe('DSH Desktop client slot occupants', () => {
       registrations.find(({ config }) => config.name === 'conversation.hero.brand.mark')!
         .component
     ).toBe(FishLogo)
+  })
+
+  it('exposes version notes through the desktop bridge and settings section', async () => {
+    const [client, manifest, preload, main] = await Promise.all([
+      readFile(path.join(projectRoot, 'packages', 'dsh-desktop-client-ui', 'client.js'), 'utf8'),
+      readFile(
+        path.join(projectRoot, 'packages', 'dsh-desktop-client-ui', 'package.json'),
+        'utf8'
+      ),
+      readFile(path.join(projectRoot, 'src', 'preload', 'index.ts'), 'utf8'),
+      readFile(path.join(projectRoot, 'src', 'main', 'index.ts'), 'utf8')
+    ])
+
+    expect(client).toContain("id: 'version'")
+    expect(client).toContain('order: 50')
+    expect(client).toContain("nav: '版本'")
+    expect(client).toContain("changelog: '更新说明'")
+    expect(client).toContain('bridge.getVersionPage')
+    expect(manifest).toContain('@deepseek-ai/dsh-client-ui-settings-general')
+    expect(manifest).toContain('@deepseek-ai/dsh-client-locale')
+    expect(preload).toContain('getVersionPage: (): Promise<VersionPageInfo>')
+    expect(preload).toContain("ipcRenderer.invoke('desktop:version-page')")
+    expect(main).toContain("ipcMain.handle('desktop:version-page'")
+    expect(main).toContain('fetchDesktopReleaseNotes()')
   })
 })
