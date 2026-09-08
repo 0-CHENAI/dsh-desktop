@@ -57,17 +57,27 @@ O DeepSeek Harness já fornece o Agent Runtime e a Web UI. O DSH Desktop acresce
 - Verifica atualizações do aplicativo e mantém download e instalação sob controle do usuário
 - Adapta menus, barra de título, foco da janela, tema e marca para macOS e Windows
 
+## Criação de PPT
+
+Ative o botão **PPT**, escolha um modelo e descreva a apresentação desejada. O catálogo inclui **16 modelos e 192 layouts**, com exportação para PPTX editável. As prévias são em inglês; as apresentações podem ser geradas em inglês ou chinês, com configurações de fontes para ambos. O idioma da prévia não determina o idioma do resultado.
+
+O PPT vem pré-instalado e suas instruções automáticas se aplicam apenas às sessões com o botão PPT ativado. Consulte o [guia de PPT](packages/ppt-runtime/README.md) para detalhes sobre modelos, validação e fontes de referência.
+
 ## Acesso pelo celular
 
 Selecione **Connect Phone…** no menu `Harness` e leia o código. O desktop precisa aprovar explicitamente a conexão antes que o celular acesse as sessões.
 
 O Harness permanece em uma porta aleatória de `127.0.0.1`. O celular usa um Bridge separado e pareado: ele pode ficar restrito à rede local ou ativar um Cloudflare Quick Tunnel temporário para acesso remoto.
 
+Se o Cloudflare não iniciar, o aplicativo tenta usar o Pinggy. Se o link do Cloudflare aparecer, mas o celular não conseguir abri-lo, selecione **Can’t open? Try another link** para mudar para o Pinggy.
+
 ## Modo de segurança e recuperação
 
 Se um plugin de terceiros impedir a inicialização ou a renderização, o DSH Desktop relaciona as evidências do Runtime e do frontend aos plugins instalados e abre uma recuperação guiada.
 
 Selecione **Restart as Safe Mode…** no menu `Harness` para iniciar um Profile isolado apenas com os Bundle oficiais principais. Os plugins externos do Profile normal ficam bloqueados, mas o Agent, as sessões, as configurações de modelos e os espaços de trabalho continuam disponíveis.
+
+A tela de recuperação verifica se há atualizações compatíveis dos plugins e permite instalá-las quando disponíveis. O Modo de segurança também permite atualizar vários plugins de uma vez. Para obter ajuda, passe o cursor sobre **WeChat group** para exibir o QR code ou clique em **Discord** para abrir a comunidade.
 
 Se a interface normal não abrir, inicie o aplicativo com `--safe-mode`. No macOS:
 
