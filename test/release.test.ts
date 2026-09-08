@@ -427,10 +427,18 @@ describe('GitHub release contract', () => {
       /macos-apple-silicon:\n(?:[ \t]+[^\n]+\n)*?[ \t]+if: >-\n(?:[ \t]+[^\n]+\n)*?[ \t]+github\.event_name == 'pull_request'/
     )
     expect(workflow).toContain('name: Publish GitHub Release from main')
+    expect(workflow).toContain('name: Generate GitHub release note from main')
     expect(workflow).toContain('name: macos-apple-silicon-dev')
     expect(workflow).toContain('name: windows-x64-dev')
     expect(workflow).toContain('gh release create')
     expect(workflow).toContain('--latest')
+    expect(workflow).toMatch(
+      /Generate GitHub release note from main[\s\S]*github_release_notes\.py generate-fallback/
+    )
+    expect(workflow).not.toContain("git log -1 --pretty=format:'- %s'")
+    expect(workflow).toContain('scripts/next-release-version.mjs')
+    expect(workflow.match(/Set app version from next patch release/g)).toHaveLength(2)
+    expect(workflow).toContain('description: Override the next version')
   })
 
   it('signs and notarizes Apple Silicon on tag releases', async () => {
