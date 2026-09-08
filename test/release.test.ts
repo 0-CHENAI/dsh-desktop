@@ -436,8 +436,9 @@ describe('GitHub release contract', () => {
       /Generate GitHub release note from main[\s\S]*github_release_notes\.py generate-fallback/
     )
     expect(workflow).not.toContain("git log -1 --pretty=format:'- %s'")
-    expect(workflow).toContain('scripts/next-release-version.mjs')
+    expect(workflow).toContain('scripts/next-release-version.mjs --apply')
     expect(workflow.match(/Set app version from next patch release/g)).toHaveLength(2)
+    expect(workflow).toContain('RELEASE_VERSION_OVERRIDE')
     expect(workflow).toContain('description: Override the next version')
   })
 

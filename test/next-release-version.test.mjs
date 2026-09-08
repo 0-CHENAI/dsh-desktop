@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises'
+import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   bumpStableVersion,
@@ -50,5 +52,14 @@ describe('next release version', () => {
 
   it('reads the highest stable v tag and ignores pre-releases', () => {
     expect(readLastStableVersion(['v0.1.1', 'v0.1.2-rc.1', 'v0.0.9', 'nightly'])).toBe('0.1.1')
+  })
+
+  it('applies the resolved version with a Node command that Windows can run', async () => {
+    const workflow = await readFile(
+      path.join(import.meta.dirname, '..', '.github', 'workflows', 'release.yml'),
+      'utf8'
+    )
+    expect(workflow).toContain('node scripts/next-release-version.mjs --apply')
+    expect(workflow).not.toContain('if [ -n "${{ inputs.version }}" ]')
   })
 })

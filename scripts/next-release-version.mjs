@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -100,33 +100,45 @@ function readGitStableTags() {
 function parseArgs(argv) {
   let bump = 'patch'
   let setVersion = ''
+  let apply = false
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index]
     if (arg === '--minor') bump = 'minor'
     else if (arg === '--major') bump = 'major'
+    else if (arg === '--apply') apply = true
     else if (arg === '--set') {
       setVersion = argv[index + 1] ?? ''
       index += 1
     } else if (arg.startsWith('--set=')) setVersion = arg.slice('--set='.length)
     else throw new Error(`Unknown argument: ${arg}`)
   }
-  return { bump, setVersion }
+  return { bump, setVersion, apply }
+}
+
+function resolveCliVersion(setVersion, bump) {
+  if (setVersion) return formatStableVersion(parseStableVersion(setVersion))
+  const override = String(process.env.RELEASE_VERSION_OVERRIDE ?? '').trim()
+  if (override) return formatStableVersion(parseStableVersion(override))
+  const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+  const packageJson = JSON.parse(readFileSync(path.join(projectRoot, 'package.json'), 'utf8'))
+  return resolveNextReleaseVersion({
+    packageVersion: String(packageJson.version),
+    lastStableVersion: readLastStableVersion(readGitStableTags()),
+    bump
+  })
 }
 
 const invokedDirectly = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 
 if (invokedDirectly) {
-  const { bump, setVersion } = parseArgs(process.argv.slice(2))
-  if (setVersion) {
-    process.stdout.write(`${formatStableVersion(parseStableVersion(setVersion))}\n`)
-  } else {
-    const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-    const packageJson = JSON.parse(await readFile(path.join(projectRoot, 'package.json'), 'utf8'))
-    const version = resolveNextReleaseVersion({
-      packageVersion: String(packageJson.version),
-      lastStableVersion: readLastStableVersion(readGitStableTags()),
-      bump
+  const { bump, setVersion, apply } = parseArgs(process.argv.slice(2))
+  const version = resolveCliVersion(setVersion, bump)
+  if (apply) {
+    execFileSync('npm', ['version', '--no-git-tag-version', '--allow-same-version', version], {
+      stdio: 'inherit'
     })
+    console.log(`Resolved app version ${version}`)
+  } else {
     process.stdout.write(`${version}\n`)
   }
 }
