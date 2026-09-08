@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { it, expect } from 'vitest'
 import { HarnessRuntime } from '../src/main/runtime/harness-runtime'
 import { ensureSafeModeProfile, SAFE_MODE_PROFILE } from '../src/main/state/safe-mode-profile'
@@ -34,7 +35,7 @@ registerHooks({ resolve(specifier, context, next) {
     dshHome: home,
     logPath: join(home, logName),
     startupTimeoutMs: 30_000,
-    launchProcess: (executable, args, options) => spawn(executable, ['--import', hook, ...args], options),
+    launchProcess: (executable, args, options) => spawn(executable, ['--import', pathToFileURL(hook).href, ...args], options),
     onChanged() {}
   })
   // Positive control: the same safe Profile with a PPT-only overlay must fail.
@@ -47,11 +48,11 @@ registerHooks({ resolve(specifier, context, next) {
     await ensureSafeModeProfile(home)
     await broken.start(home, SAFE_MODE_PROFILE)
     expect(broken.snapshot().phase).toBe('failed')
-    expect(broken.snapshot().message).toContain(missing)
+    expect(broken.snapshot().message, broken.snapshot().logs.join('\n')).toContain(missing)
     await broken.stop()
 
     await recovered.start(home, SAFE_MODE_PROFILE)
-    expect(recovered.snapshot().phase, recovered.snapshot().message).toBe('ready')
+    expect(recovered.snapshot().phase, recovered.snapshot().logs.join('\n')).toBe('ready')
     expect(recovered.snapshot().authToken).toBeTruthy()
     expect((await fetch(recovered.snapshot().url!)).status).toBe(401)
     // Recovery uses its own overlay and never edits the normal composition.
