@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { githubReleasesUrl } from '../src/main/release-notes'
+import { githubLatestReleaseUrl, githubReleasesUrl } from '../src/main/release-notes'
 import {
   archiveFeedUrl,
   compareVersions,
   fetchAvailableReleases,
+  fetchLatestPublishedVersion,
   githubReleaseTag,
   parseVersionIndex,
   STABLE_FEED_URL
@@ -119,5 +120,35 @@ describe('fetchAvailableReleases', () => {
     await expect(
       fetchAvailableReleases('1.1.0', boom as unknown as typeof fetch)
     ).rejects.toThrow('offline')
+  })
+})
+
+describe('fetchLatestPublishedVersion', () => {
+  it('reads the latest GitHub Release version', async () => {
+    const fetchImpl = async (url: unknown) => {
+      expect(url).toBe(githubLatestReleaseUrl())
+      return {
+        ok: true,
+        json: async () => ({ tag_name: 'v0.1.2', name: 'v0.1.2', draft: false })
+      }
+    }
+    await expect(
+      fetchLatestPublishedVersion(fetchImpl as unknown as typeof fetch)
+    ).resolves.toBe('0.1.2')
+  })
+
+  it('throws when the latest release has no version', async () => {
+    const empty = () =>
+      Promise.resolve({ ok: true, json: () => Promise.resolve({ draft: true }) } as Response)
+    await expect(
+      fetchLatestPublishedVersion(empty as unknown as typeof fetch)
+    ).rejects.toThrow('Latest GitHub Release has no version')
+  })
+
+  it('throws when the request fails', async () => {
+    const bad = () => Promise.resolve({ ok: false, status: 404 } as Response)
+    await expect(fetchLatestPublishedVersion(bad as unknown as typeof fetch)).rejects.toThrow(
+      'Latest release request failed: 404'
+    )
   })
 })

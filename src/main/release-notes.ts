@@ -9,6 +9,14 @@ export function githubReleasesUrl(repo = GITHUB_RELEASES_REPO): string {
   return `https://api.github.com/repos/${repo}/releases?per_page=10`
 }
 
+export function githubLatestReleaseUrl(repo = GITHUB_RELEASES_REPO): string {
+  return `https://api.github.com/repos/${repo}/releases/latest`
+}
+
+export function githubLatestReleasePage(repo = GITHUB_RELEASES_REPO): string {
+  return `https://github.com/${repo}/releases/latest`
+}
+
 export function formatReleaseBody(body: string): string {
   return body
     .replaceAll('\r\n', '\n')

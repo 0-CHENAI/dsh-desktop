@@ -108,6 +108,21 @@ describe('installing a specific version', () => {
   })
 })
 
+describe('unpackaged update checks', () => {
+  it('compares GitHub Releases instead of marking the environment unsupported', async () => {
+    const manager = await readFile(
+      path.join(projectRoot, 'src/main/update/update-manager.ts'),
+      'utf8'
+    )
+    expect(manager).not.toContain('Update checks are only available')
+    expect(manager).not.toContain('Updates are available in installed macOS and Windows builds.')
+    expect(manager).toContain('checkGitHubRelease()')
+    expect(manager).toContain('fetchLatestPublishedVersion()')
+    expect(manager).toContain('shell.openExternal(githubLatestReleasePage())')
+    expect(manager).toContain('if (supportsUpdates()) {\n    configureUpdater()')
+  })
+})
+
 function metadata(architecture: 'arm64' | 'x64', releaseDate: string) {
   return {
     version: '0.2.0',
