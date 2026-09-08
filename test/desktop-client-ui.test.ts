@@ -22,15 +22,7 @@ describe('DSH Desktop client slot occupants', () => {
         inject: string[]
       }
     } | undefined
-    const appended: Array<{ textContent?: string }> = []
-    const document = {
-      getElementById: vi.fn(() => null),
-      createElement: vi.fn(() => ({ id: '', dataset: {}, textContent: '' })),
-      head: { appendChild: (node: { textContent?: string }) => appended.push(node) }
-    }
     vm.runInNewContext(source, {
-      document,
-      navigator: { language: 'en-US' },
       window: {
         __ModuleLoader__: {
           load: (value: typeof definition) => {
@@ -90,7 +82,6 @@ describe('DSH Desktop client slot occupants', () => {
       'sidebar.brand.name',
       'conversation.hero.brand.mark'
     ])
-    expect(appended).toHaveLength(1)
 
     const sidebarName = registrations.find(
       ({ config }) => config.name === 'sidebar.brand.name'
@@ -98,16 +89,12 @@ describe('DSH Desktop client slot occupants', () => {
     expect(sidebarName.type).toBe(BrandWordmark)
     expect(sidebarName.props.includeMark).toBe(false)
 
-    const sidebarMark = registrations.find(
-      ({ config }) => config.name === 'sidebar.brand.mark'
-    )!.component({ size: 24 }) as { type: unknown; props: Record<string, unknown> }
-    expect(sidebarMark.type).toBe('svg')
-    expect(sidebarMark.props.height).toBe(17)
-
-    const heroMark = registrations.find(
-      ({ config }) => config.name === 'conversation.hero.brand.mark'
-    )!.component({ size: 48 }) as { type: unknown; props: Record<string, unknown> }
-    expect(heroMark.type).toBe(FishLogo)
-    expect(heroMark.props.size).toBe(48)
+    expect(
+      registrations.find(({ config }) => config.name === 'sidebar.brand.mark')!.component
+    ).toBe(FishLogo)
+    expect(
+      registrations.find(({ config }) => config.name === 'conversation.hero.brand.mark')!
+        .component
+    ).toBe(FishLogo)
   })
 })
