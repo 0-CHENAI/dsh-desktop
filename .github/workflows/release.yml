@@ -828,6 +828,36 @@ jobs:
         with:
           name: windows-x64-dev
           path: release-assets
+      - name: Generate GitHub release note from main
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.MODELS_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+          tag="v${version}"
+          mkdir -p .github/release-artifacts
+          git fetch --force --tags
+          out=.github/release-artifacts/github-release-notes.md
+          if [ -n "${COPILOT_GITHUB_TOKEN:-}" ]; then
+            echo "Generating GitHub release note via Copilot CLI..."
+            python3 .github/scripts/github_release_notes.py build-prompt \
+              --tag "$tag" \
+              --output .github/release-artifacts/github-release-prompt.txt
+            npm install -g @github/copilot@latest || true
+            prompt="$(cat .github/release-artifacts/github-release-prompt.txt)"
+            if copilot -p "$prompt" -s --model gpt-5.6-terra --no-ask-user > "$out" 2>/dev/null && \
+               python3 .github/scripts/github_release_notes.py validate --tag "$tag" --input "$out"; then
+              echo "✅ AI GitHub release note generated and validated."
+            else
+              echo "⚠️ Falling back to the deterministic GitHub release note."
+              python3 .github/scripts/github_release_notes.py generate-fallback --tag "$tag" --output "$out"
+            fi
+          else
+            echo "MODELS_TOKEN not set; using the deterministic GitHub release note."
+            python3 .github/scripts/github_release_notes.py generate-fallback --tag "$tag" --output "$out"
+          fi
+          printf '%s\n' '- 本仓库构建为未签名 Dev 包（无 Apple 公证 / Windows UKey）。' >> "$out"
+          python3 .github/scripts/github_release_notes.py validate --tag "$tag" --input "$out"
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -835,17 +865,7 @@ jobs:
           set -euo pipefail
           version="$(node -p "require('./package.json').version")"
           tag="v${version}"
-          notes="$(mktemp)"
-          {
-            echo "DSH Desktop ${tag} from \`main\` (\`${GITHUB_SHA:0:7}\`)."
-            echo
-            echo "This build is unsigned (no Apple notarization or Windows UKey on this repository)."
-            echo
-            echo "## Changes"
-            echo
-            git log -1 --pretty=format:'- %s'
-            echo
-          } > "$notes"
+          notes=.github/release-artifacts/github-release-notes.md
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$tag" release-assets/* --clobber --repo "$GITHUB_REPOSITORY"
             gh release edit "$tag" --notes-file "$notes" --latest --repo "$GITHUB_REPOSITORY"
