@@ -6,7 +6,6 @@ const projectRoot = path.resolve(import.meta.dirname, '..')
 
 const releaseAssets = [
   'dsh-desktop-mac-arm64.dmg',
-  'dsh-desktop-mac-x64.dmg',
   'dsh-desktop-windows-x64-setup.exe'
 ]
 
@@ -305,16 +304,14 @@ describe('GitHub release contract', () => {
     expect(packageJson.build.win.verifyUpdateCodeSignature).toBe(false)
     for (const asset of [
       'latest-mac-arm64.yml',
-      'latest-mac-x64.yml',
       'latest-mac.yml',
       'latest.yml',
       'dsh-desktop-mac-arm64.zip.blockmap',
-      'dsh-desktop-mac-x64.zip.blockmap',
       'dsh-desktop-windows-x64-setup.exe.blockmap'
     ]) {
       expect(workflow).toContain(asset)
     }
-    expect(workflow).toContain('merge-mac-update-metadata.mjs')
+    expect(workflow).toContain('cp release-assets/latest-mac-arm64.yml release-assets/latest-mac.yml')
     expect(workflow).toContain('Verify release assets before publication')
     expect(workflow).toContain('verify-release-assets.mjs release-assets')
   })
@@ -385,7 +382,7 @@ describe('GitHub release contract', () => {
     )
 
     expect(workflow).toContain('runs-on: macos-15')
-    expect(workflow).toContain('runs-on: macos-15-intel')
+    expect(workflow).not.toContain('runs-on: macos-15-intel')
     expect(workflow).toContain('runs-on: windows-2022')
     expect(workflow).toContain('npm run package:dev:win')
     expect(workflow).toContain('Smoke test packaged Windows Harness')
@@ -413,10 +410,27 @@ describe('GitHub release contract', () => {
       workflow.match(
         /npm version --no-git-tag-version --allow-same-version "\$\{\{ github\.ref_name \}\}"/g
       )
-    ).toHaveLength(3)
+    ).toHaveLength(2)
   })
 
-  it('signs and notarizes both macOS architectures on tag releases', async () => {
+  it('publishes unsigned installers to GitHub Releases on push to main', async () => {
+    const workflow = (
+      await readFile(
+        path.join(projectRoot, '.github', 'workflows', 'release.yml'),
+        'utf8'
+      )
+    ).replace(/\r\n/g, '\n')
+
+    expect(workflow).toMatch(/push:\n[ \t]+branches:\n[ \t]+- main\n/)
+    expect(workflow).toContain('github.ref == \'refs/heads/main\'')
+    expect(workflow).toContain('name: Publish GitHub Release from main')
+    expect(workflow).toContain('name: macos-apple-silicon-dev')
+    expect(workflow).toContain('name: windows-x64-dev')
+    expect(workflow).toContain('gh release create')
+    expect(workflow).toContain('--latest')
+  })
+
+  it('signs and notarizes Apple Silicon on tag releases', async () => {
     const workflow = await readFile(
       path.join(projectRoot, '.github', 'workflows', 'release.yml'),
       'utf8'
@@ -432,17 +446,15 @@ describe('GitHub release contract', () => {
     ]) {
       expect(workflow).toContain(`secrets.${secret}`)
     }
-    expect(workflow.match(/Prepare macOS signing keychain/g)).toHaveLength(2)
-    expect(workflow.match(/xcrun stapler validate/g)).toHaveLength(4)
-    expect(workflow.match(/xcrun notarytool submit/g)).toHaveLength(2)
-    expect(workflow.match(/CSC_IDENTITY_AUTO_DISCOVERY: 'false'/g)).toHaveLength(2)
+    expect(workflow.match(/Prepare macOS signing keychain/g)).toHaveLength(1)
+    expect(workflow.match(/xcrun stapler validate/g)).toHaveLength(2)
+    expect(workflow.match(/xcrun notarytool submit/g)).toHaveLength(1)
+    expect(workflow.match(/CSC_IDENTITY_AUTO_DISCOVERY: 'false'/g)).toHaveLength(1)
     expect(workflow).not.toContain("CSC_LINK: ''")
     expect(workflow).toMatch(
       /macos-apple-silicon:\r?\n\s+name: macOS Apple Silicon\r?\n(?:[\s\S]*?)runs-on: macos-15\r?\n\s+steps:/
     )
-    expect(workflow).toMatch(
-      /macos-intel:\r?\n\s+name: macOS Intel\r?\n(?:[\s\S]*?)runs-on: macos-15-intel\r?\n\s+steps:/
-    )
+    expect(workflow).not.toContain('macos-intel:')
     expect(workflow).toMatch(
       /windows-x64:\r?\n\s+name: Windows x64\r?\n(?:[\s\S]*?)runs-on: windows-2022\r?\n\s+steps:/
     )
