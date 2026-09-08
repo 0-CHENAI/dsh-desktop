@@ -313,6 +313,30 @@ ipcRenderer.on('mobile:status-changed', (_event, status: { connected?: boolean }
   applyMobileStatus(status?.connected === true)
 })
 
+function overlayStillOpen(): boolean {
+  return (
+    aboutOpen ||
+    Boolean(document.querySelector('[role="dialog"], [aria-modal="true"]'))
+  )
+}
+
+function blurFocusAfterEscapeDismiss(): void {
+  window.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key !== 'Escape') return
+      if (!overlayStillOpen()) return
+      window.setTimeout(() => {
+        if (overlayStillOpen()) return
+        const active = document.activeElement
+        if (!(active instanceof HTMLElement) || active === document.body) return
+        active.blur()
+      }, 0)
+    },
+    true
+  )
+}
+
 function initializeUi(): void {
   if (process.platform === 'win32') {
     mountWindowsTitlebarLayout({ document, ipcRenderer })
@@ -320,6 +344,7 @@ function initializeUi(): void {
   mount()
   mountAbout()
   mountMobileButton()
+  blurFocusAfterEscapeDismiss()
   checkBootFailureInDom()
   domObserver.observe(document.documentElement, {
     childList: true,
