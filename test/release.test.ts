@@ -436,6 +436,9 @@ describe('GitHub release contract', () => {
       /Generate GitHub release note from main[\s\S]*github_release_notes\.py generate-fallback/
     )
     expect(workflow).not.toContain("git log -1 --pretty=format:'- %s'")
+    expect(workflow).toContain('scripts/next-release-version.mjs')
+    expect(workflow.match(/Set app version from next patch release/g)).toHaveLength(2)
+    expect(workflow).toContain('description: Override the next version')
   })
 
   it('signs and notarizes Apple Silicon on tag releases', async () => {

@@ -24,6 +24,10 @@ on:
         description: Non-v semver tag for a production-parity pre-release (e.g. 2.1.0-rc.1)
         required: false
         type: string
+      version:
+        description: Override the next version (default is last tag + 0.0.1)
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -55,6 +59,18 @@ jobs:
       - name: Set app version from pre-release tag
         if: inputs.prerelease_tag != ''
         run: npm version --no-git-tag-version --allow-same-version "${{ inputs.prerelease_tag }}"
+      - name: Set app version from next patch release
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') && inputs.prerelease_tag == '' }}
+        run: |
+          set -euo pipefail
+          git fetch --force --tags
+          if [ -n "${{ inputs.version }}" ]; then
+            version="$(node scripts/next-release-version.mjs --set "${{ inputs.version }}")"
+          else
+            version="$(node scripts/next-release-version.mjs)"
+          fi
+          npm version --no-git-tag-version --allow-same-version "$version"
+          echo "Resolved app version $version"
       - run: npm ci
       - run: npm test
       - run: npm run typecheck
@@ -194,6 +210,18 @@ jobs:
       - name: Set app version from pre-release tag
         if: inputs.prerelease_tag != ''
         run: npm version --no-git-tag-version --allow-same-version "${{ inputs.prerelease_tag }}"
+      - name: Set app version from next patch release
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') && inputs.prerelease_tag == '' }}
+        run: |
+          set -euo pipefail
+          git fetch --force --tags
+          if [ -n "${{ inputs.version }}" ]; then
+            version="$(node scripts/next-release-version.mjs --set "${{ inputs.version }}")"
+          else
+            version="$(node scripts/next-release-version.mjs)"
+          fi
+          npm version --no-git-tag-version --allow-same-version "$version"
+          echo "Resolved app version $version"
       - run: npm ci
       - run: npm test
       - run: npm run typecheck
@@ -833,10 +861,10 @@ jobs:
           COPILOT_GITHUB_TOKEN: ${{ secrets.MODELS_TOKEN }}
         run: |
           set -euo pipefail
-          version="$(node -p "require('./package.json').version")"
+          git fetch --force --tags
+          version="$(node scripts/next-release-version.mjs)"
           tag="v${version}"
           mkdir -p .github/release-artifacts
-          git fetch --force --tags
           out=.github/release-artifacts/github-release-notes.md
           if [ -n "${COPILOT_GITHUB_TOKEN:-}" ]; then
             echo "Generating GitHub release note via Copilot CLI..."
@@ -863,7 +891,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          version="$(node -p "require('./package.json').version")"
+          git fetch --force --tags
+          version="$(node scripts/next-release-version.mjs)"
           tag="v${version}"
           notes=.github/release-artifacts/github-release-notes.md
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then

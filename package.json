@@ -28,6 +28,8 @@
     "build": "npm run build:market && electron-vite build",
     "build:market": "tsc -p packages/dshmarket/tsconfig.json",
     "icons:generate": "node scripts/generate-app-icons.mjs",
+    "version:next": "node scripts/next-release-version.mjs",
+    "version:patch": "npm version --no-git-tag-version --allow-same-version $(node scripts/next-release-version.mjs)",
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json",
     "test": "vitest run",
