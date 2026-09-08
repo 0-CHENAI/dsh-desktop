@@ -262,14 +262,26 @@ window.__ModuleLoader__.load({
       return React.createElement(BrandWordmark, { includeMark: false })
     }
 
+    function bindLocale(ctx) {
+      try {
+        ctx.effect(
+          () => ctx.locale.register(NS, { zh, en }),
+          'dsh-desktop-client-ui: copy dictionaries'
+        )
+        return ctx.locale.bind(NS)
+      } catch {
+        const dict = (
+          typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('zh')
+            ? zh
+            : en
+        )
+        return (key) => dict[key] ?? key
+      }
+    }
+
     const inject = ['slots', 'locale']
     function apply(ctx) {
       installStyles()
-      ctx.effect(
-        () => ctx.locale.register(NS, { zh, en }),
-        'dsh-desktop-client-ui: copy dictionaries'
-      )
-      const t = ctx.locale.bind(NS)
       ctx.slots.inject('sidebar.brand.mark', () =>
         ctx.slots.inject('sidebar.brand.name', () =>
           ctx.slots.inject('conversation.hero.brand.mark', function* () {
@@ -279,6 +291,9 @@ window.__ModuleLoader__.load({
           })
         )
       )
+      const t = bindLocale(ctx)
+      // Nested inject waits for the settings slots; do not hard-depend on
+      // settings-general at plugin-graph level or this occupant can stay unmounted.
       ctx.slots.inject('settings.section', () =>
         ctx.slots.register(
           {
@@ -286,6 +301,19 @@ window.__ModuleLoader__.load({
             id: 'version',
             order: 50,
             label: () => t('nav'),
+            locale: NS,
+            inject: () => ({ t })
+          },
+          VersionSection
+        )
+      )
+      ctx.slots.inject('settings.general.item', () =>
+        ctx.slots.register(
+          {
+            name: 'settings.general.item',
+            id: 'desktop-version',
+            order: 100,
+            locale: NS,
             inject: () => ({ t })
           },
           VersionSection

@@ -90,11 +90,20 @@ describe('DSH Desktop client slot occupants', () => {
       'sidebar.brand.mark',
       'sidebar.brand.name',
       'conversation.hero.brand.mark',
-      'settings.section'
+      'settings.section',
+      'settings.general.item'
     ])
-    expect(registrations.at(-1)?.config).toMatchObject({
+    expect(
+      registrations.find(({ config }) => config.name === 'settings.section')?.config
+    ).toMatchObject({
       id: 'version',
       order: 50
+    })
+    expect(
+      registrations.find(({ config }) => config.name === 'settings.general.item')?.config
+    ).toMatchObject({
+      id: 'desktop-version',
+      order: 100
     })
 
     const sidebarName = registrations.find(
@@ -124,11 +133,14 @@ describe('DSH Desktop client slot occupants', () => {
     ])
 
     expect(client).toContain("id: 'version'")
+    expect(client).toContain("id: 'desktop-version'")
+    expect(client).toContain("name: 'settings.general.item'")
     expect(client).toContain('order: 50')
     expect(client).toContain("nav: '版本'")
     expect(client).toContain("changelog: '更新说明'")
     expect(client).toContain('bridge.getVersionPage')
-    expect(manifest).toContain('@deepseek-ai/dsh-client-ui-settings-general')
+    expect(manifest).toContain('@deepseek-ai/dsh-client-ui-settings')
+    expect(manifest).not.toContain('@deepseek-ai/dsh-client-ui-settings-general')
     expect(manifest).toContain('@deepseek-ai/dsh-client-locale')
     expect(preload).toContain('getVersionPage: (): Promise<VersionPageInfo>')
     expect(preload).toContain("ipcRenderer.invoke('desktop:version-page')")
