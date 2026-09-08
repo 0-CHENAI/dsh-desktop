@@ -29,7 +29,9 @@ O DSH Desktop transforma a experiência local do DeepSeek Harness em um aplicati
 
 ## Download
 
-Baixe o DSH Desktop para macOS e Windows no [site oficial](https://www.dshdesktop.com/#download).
+Oferecemos versões estáveis e de prévia: a **versão estável**, recomendada para o uso diário, está disponível no [site oficial](https://www.dshdesktop.com/#download). Para experimentar uma **versão de prévia**, escolha uma versão marcada como **Pre-release** no [GitHub Releases](https://github.com/dataelement/dsh-desktop/releases).
+
+As versões de prévia incluem nossos novos recursos e adotam rapidamente as versões oficiais mais recentes do DeepSeek Harness. Elas podem ser incompatíveis com plugins da comunidade e **não são recomendadas para usuários em geral**. Quem quiser experimentar as novidades antecipadamente é bem-vindo a compartilhar comentários na comunidade; só distribuímos as atualizações para toda a comunidade após a validação desses usuários.
 
 As versões instaladas verificam atualizações logo após a inicialização e a cada seis horas. Quando há uma nova versão, o DSH Desktop pede confirmação antes do download; a instalação só começa ao escolher **Restart and install**. Também é possível verificar manualmente ou ignorar uma versão sem ocultar lançamentos futuros.
 
