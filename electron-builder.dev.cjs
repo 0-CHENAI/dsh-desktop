@@ -17,6 +17,5 @@ module.exports = {
   nsis: {
     ...packageJson.build.nsis,
     artifactName: 'dsh-desktop-dev-windows-${arch}-setup.${ext}'
-  },
-  publish: null
+  }
 }

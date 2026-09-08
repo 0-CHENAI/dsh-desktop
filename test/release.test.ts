@@ -299,7 +299,10 @@ describe('GitHub release contract', () => {
 
     expect(packageJson.dependencies['electron-updater']).toBeTruthy()
     expect(packageJson.build.publish).toEqual([
-      { provider: 'generic', url: 'https://dshdesktop.com/updates/latest/' }
+      {
+        provider: 'generic',
+        url: 'https://github.com/0-CHENAI/dsh-desktop/releases/latest/download/'
+      }
     ])
     expect(packageJson.build.win.verifyUpdateCodeSignature).toBe(false)
     for (const asset of [
@@ -361,6 +364,7 @@ describe('GitHub release contract', () => {
     expect(developmentConfig).toContain("productName: 'DSH Desktop Dev'")
     expect(developmentConfig).toContain("output: 'dist-dev'")
     expect(developmentConfig).toContain("dshDesktopChannel: 'development'")
+    expect(developmentConfig).not.toContain('publish: null')
     expect(developmentConfig).toContain(
       "artifactName: 'dsh-desktop-dev-${os}-${arch}.${ext}'"
     )
@@ -429,6 +433,7 @@ describe('GitHub release contract', () => {
     expect(workflow).toContain('name: Publish GitHub Release from main')
     expect(workflow).toContain('name: Generate GitHub release note from main')
     expect(workflow).toContain('name: macos-apple-silicon-dev')
+    expect(workflow).toContain('dist-dev/latest-mac.yml')
     expect(workflow).toContain('name: windows-x64-dev')
     expect(workflow).toContain('gh release create')
     expect(workflow).toContain('--latest')

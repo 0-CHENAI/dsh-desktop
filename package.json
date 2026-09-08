@@ -379,7 +379,7 @@
     "publish": [
       {
         "provider": "generic",
-        "url": "https://dshdesktop.com/updates/latest/"
+        "url": "https://github.com/0-CHENAI/dsh-desktop/releases/latest/download/"
       }
     ],
     "detectUpdateChannel": false,

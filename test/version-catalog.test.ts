@@ -1,21 +1,27 @@
 import { describe, expect, it } from 'vitest'
+import { githubReleasesUrl } from '../src/main/release-notes'
 import {
   archiveFeedUrl,
   compareVersions,
   fetchAvailableReleases,
+  githubReleaseTag,
   parseVersionIndex,
-  STABLE_FEED_URL,
-  VERSION_INDEX_URL
+  STABLE_FEED_URL
 } from '../src/main/update/version-catalog'
 
 describe('version-catalog constants', () => {
-  it('points the stable feed and index at the dshdesktop domain', () => {
-    expect(STABLE_FEED_URL).toBe('https://dshdesktop.com/updates/latest/')
-    expect(VERSION_INDEX_URL).toBe('https://dshdesktop.com/updates/versions.json')
+  it('points the stable feed at this fork’s GitHub Releases', () => {
+    expect(STABLE_FEED_URL).toBe(
+      'https://github.com/0-CHENAI/dsh-desktop/releases/latest/download/'
+    )
   })
 
-  it('builds a per-version archive feed url with a trailing slash', () => {
-    expect(archiveFeedUrl('1.2.3')).toBe('https://dshdesktop.com/updates/archive/1.2.3/')
+  it('builds a per-version GitHub Release download url', () => {
+    expect(githubReleaseTag('1.2.3')).toBe('v1.2.3')
+    expect(githubReleaseTag('v1.2.3')).toBe('v1.2.3')
+    expect(archiveFeedUrl('1.2.3')).toBe(
+      'https://github.com/0-CHENAI/dsh-desktop/releases/download/v1.2.3/'
+    )
   })
 })
 
@@ -54,14 +60,14 @@ describe('parseVersionIndex', () => {
   it('keeps well-formed entries and drops the rest', () => {
     const raw = {
       versions: [
-        { version: '1.2.3', tag: 'v1.2.3', archiveUrl: 'https://dshdesktop.com/updates/archive/1.2.3/' },
+        { version: '1.2.3', tag: 'v1.2.3', archiveUrl: 'https://example.test/1.2.3/' },
         { version: '', tag: 'v0', archiveUrl: 'x' },
         { nope: true },
         42
       ]
     }
     expect(parseVersionIndex(raw)).toEqual([
-      { version: '1.2.3', tag: 'v1.2.3', archiveUrl: 'https://dshdesktop.com/updates/archive/1.2.3/' }
+      { version: '1.2.3', tag: 'v1.2.3', archiveUrl: 'https://example.test/1.2.3/' }
     ])
   })
 
@@ -73,19 +79,32 @@ describe('parseVersionIndex', () => {
 })
 
 describe('fetchAvailableReleases', () => {
-  const index = {
-    versions: [
-      { version: '1.0.0', tag: 'v1.0.0', archiveUrl: 'a' },
-      { version: '1.2.0', tag: 'v1.2.0', archiveUrl: 'b' },
-      { version: '1.1.0', tag: 'v1.1.0', archiveUrl: 'c' }
-    ]
-  }
+  const index = [
+    { tag_name: 'v1.0.0', name: 'v1.0.0', draft: false },
+    { tag_name: 'v1.2.0', name: 'v1.2.0', draft: false },
+    { tag_name: 'v1.1.0', name: 'v1.1.0', draft: false }
+  ]
   const ok = () =>
     Promise.resolve({ ok: true, json: () => Promise.resolve(index) } as Response)
 
-  it('drops the current version and sorts descending', async () => {
+  it('drops the current version and sorts descending from GitHub Releases', async () => {
     const releases = await fetchAvailableReleases('1.1.0', ok as unknown as typeof fetch)
     expect(releases.map((r) => r.version)).toEqual(['1.2.0', '1.0.0'])
+    expect(releases[0]).toEqual({
+      version: '1.2.0',
+      tag: 'v1.2.0',
+      archiveUrl: archiveFeedUrl('1.2.0')
+    })
+  })
+
+  it('requests this fork’s GitHub Releases API', async () => {
+    const fetchImpl = async (url: unknown) => {
+      expect(url).toBe(githubReleasesUrl())
+      return { ok: true, json: async () => [] }
+    }
+    await expect(
+      fetchAvailableReleases('1.0.0', fetchImpl as unknown as typeof fetch)
+    ).resolves.toEqual([])
   })
 
   it('throws when the request fails', async () => {

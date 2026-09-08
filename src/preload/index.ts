@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { AvailableRelease, UpdateStatus } from '../shared/contracts'
+import type { AvailableRelease, UpdateStatus, VersionPageInfo } from '../shared/contracts'
 import { setupDesktopStoragePersistence } from './desktop-storage'
 import {
   isUpdateDismissed,
@@ -380,7 +380,9 @@ contextBridge.exposeInMainWorld(
   Object.freeze({
     restartHarness: (): Promise<{ ok: boolean }> => ipcRenderer.invoke('harness:restart'),
     uninstallMarket: (): Promise<{ ok: boolean }> => ipcRenderer.invoke('market:uninstall'),
-    openInFinder: (path: string): Promise<{ ok: boolean }> => ipcRenderer.invoke('harness:open-in-finder', path)
+    openInFinder: (path: string): Promise<{ ok: boolean }> => ipcRenderer.invoke('harness:open-in-finder', path),
+    getVersionPage: (): Promise<VersionPageInfo> => ipcRenderer.invoke('desktop:version-page'),
+    checkForUpdates: (): Promise<UpdateStatus> => ipcRenderer.invoke('updates:check')
   })
 )
 

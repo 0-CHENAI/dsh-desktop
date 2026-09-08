@@ -42,3 +42,21 @@ export interface AvailableRelease {
   tag: string
   archiveUrl: string
 }
+
+/** One published GitHub Release shown on the Settings > Version page. */
+export interface DesktopReleaseNote {
+  version: string
+  tag: string
+  heading: string
+  publishedAt: string | null
+  body: string
+}
+
+/** Payload for the Settings > Version page. */
+export interface VersionPageInfo {
+  desktopVersion: string
+  harnessVersion: string
+  locale: 'en' | 'zh'
+  releases: DesktopReleaseNote[]
+  notesError?: string
+}
