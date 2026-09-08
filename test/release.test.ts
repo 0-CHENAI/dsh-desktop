@@ -11,17 +11,18 @@ const releaseAssets = [
 ]
 
 describe('GitHub release contract', () => {
-  it('runs the Windows PR gate for both main and test', async () => {
+  it('keeps the installer PR gate on main only', async () => {
     const workflow = (
       await readFile(
         path.join(projectRoot, '.github', 'workflows', 'release.yml'),
         'utf8'
       )
     ).replace(/\r\n/g, '\n')
+    const branches = workflow.match(
+      /pull_request:\n[ \t]+branches:\n((?:[ \t]+-[ \t]+\S+\n)+)/
+    )?.[1]
 
-    expect(workflow).toMatch(
-      /pull_request:\n(?:[ \t]+[^\n]+\n)*?[ \t]+branches:\n(?:[ \t]+-[ \t]+\S+\n)*?[ \t]+- main\n(?:[ \t]+-[ \t]+\S+\n)*?[ \t]+- test\n/
-    )
+    expect(branches).toBe('      - main\n')
   })
 
   it('keeps the package and lockfile versions aligned', async () => {
