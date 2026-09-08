@@ -234,6 +234,7 @@ export function stopUpdateManager(): void {
 }
 
 function configureUpdater(): void {
+  autoUpdater.setFeedURL({ provider: 'generic', url: STABLE_FEED_URL })
   // The download is ours to start: an update the user skipped should not be
   // fetched at all, and update-available is the only place that is known.
   autoUpdater.autoDownload = false

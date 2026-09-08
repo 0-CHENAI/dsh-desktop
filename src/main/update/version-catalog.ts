@@ -1,14 +1,19 @@
 import type { AvailableRelease } from '../../shared/contracts'
+import { GITHUB_RELEASES_REPO, githubReleasesUrl, parseGitHubReleases } from '../release-notes'
 
 export type { AvailableRelease }
 
-export const STABLE_FEED_URL = 'https://dshdesktop.com/updates/latest/'
-export const VERSION_INDEX_URL = 'https://dshdesktop.com/updates/versions.json'
+export const STABLE_FEED_URL = `https://github.com/${GITHUB_RELEASES_REPO}/releases/latest/download/`
 
 const INDEX_TIMEOUT_MS = 8_000
 
+export function githubReleaseTag(version: string): string {
+  const trimmed = version.trim()
+  return trimmed.startsWith('v') ? trimmed : `v${trimmed}`
+}
+
 export function archiveFeedUrl(version: string): string {
-  return `https://dshdesktop.com/updates/archive/${version}/`
+  return `https://github.com/${GITHUB_RELEASES_REPO}/releases/download/${githubReleaseTag(version)}/`
 }
 
 /** Split "1.2.3-rc.1" into ([1,2,3], "rc.1"). Non-numeric segments read as 0. */
@@ -100,12 +105,22 @@ export async function fetchAvailableReleases(
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), INDEX_TIMEOUT_MS)
   try {
-    const response = await fetchImpl(VERSION_INDEX_URL, { signal: controller.signal })
+    const response = await fetchImpl(githubReleasesUrl(), {
+      signal: controller.signal,
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'dsh-desktop'
+      }
+    })
     if (!response.ok) {
       throw new Error(`Version index request failed: ${response.status}`)
     }
-    const releases = parseVersionIndex(await response.json())
-    return releases
+    return parseGitHubReleases(await response.json())
+      .map((release) => ({
+        version: release.version,
+        tag: release.tag,
+        archiveUrl: archiveFeedUrl(release.version)
+      }))
       .filter((release) => compareVersions(release.version, currentVersion) !== 0)
       .sort((a, b) => compareVersions(b.version, a.version))
   } finally {
