@@ -6,10 +6,9 @@ const projectRoot = path.resolve(import.meta.dirname, '..')
 
 describe('pull request CI', () => {
   it('runs test, typecheck, and build on PRs to main and test', async () => {
-    const workflow = await readFile(
-      path.join(projectRoot, '.github', 'workflows', 'ci.yml'),
-      'utf8'
-    )
+    const workflow = (
+      await readFile(path.join(projectRoot, '.github', 'workflows', 'ci.yml'), 'utf8')
+    ).replace(/\r\n/g, '\n')
 
     expect(workflow).toMatch(/^name: CI$/m)
     expect(workflow).toContain('pull_request:')

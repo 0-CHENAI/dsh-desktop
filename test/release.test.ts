@@ -12,10 +12,12 @@ const releaseAssets = [
 
 describe('GitHub release contract', () => {
   it('runs the Windows PR gate for both main and test', async () => {
-    const workflow = await readFile(
-      path.join(projectRoot, '.github', 'workflows', 'release.yml'),
-      'utf8'
-    )
+    const workflow = (
+      await readFile(
+        path.join(projectRoot, '.github', 'workflows', 'release.yml'),
+        'utf8'
+      )
+    ).replace(/\r\n/g, '\n')
 
     expect(workflow).toMatch(
       /pull_request:\n(?:[ \t]+[^\n]+\n)*?[ \t]+branches:\n(?:[ \t]+-[ \t]+\S+\n)*?[ \t]+- main\n(?:[ \t]+-[ \t]+\S+\n)*?[ \t]+- test\n/
