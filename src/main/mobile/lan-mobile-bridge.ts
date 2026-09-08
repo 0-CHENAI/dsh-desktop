@@ -95,6 +95,8 @@ export interface LanMobileBridgeOptions {
   cloudflaredPath?: string
   pinggySshPath?: string
   forceCloudflareFailure?: boolean
+  createCloudflareTunnel?: (port: number) => Promise<InternetTunnelInstance>
+  createPinggyTunnel?: (port: number) => Promise<InternetTunnelInstance>
   tunnelLog?: (message: string) => void
   now?: () => number
   onReconnectRequested?: () => void
@@ -301,32 +303,81 @@ export class LanMobileBridge {
     return this.snapshot()
   }
 
+  async fallbackToPinggy(): Promise<LanMobileBridgeSnapshot> {
+    if (this.sessions.size > 0) {
+      throw new Error('Disconnect the phone before switching connection modes.')
+    }
+    if (!this.tunnelActive || this.tunnelInstance?.provider !== 'cloudflare') {
+      throw new Error('Fallback is only available for an active Cloudflare tunnel.')
+    }
+    if (this.tunnelLaunch) {
+      throw new Error('A tunnel switch is already in progress.')
+    }
+
+    this.tunnelLoading = true
+    this.tunnelError = undefined
+    const launch = this.swapToPinggy()
+    this.tunnelLaunch = launch
+    try {
+      await launch
+    } catch (error) {
+      this.tunnelError = error instanceof Error ? error.message : String(error)
+    } finally {
+      this.tunnelLoading = false
+      if (this.tunnelLaunch === launch) this.tunnelLaunch = undefined
+    }
+    return this.snapshot()
+  }
+
   private async launchTunnel(): Promise<void> {
     const port = this.port
     if (!port) throw new Error('Bridge is not running.')
-    const cacheDir = this.options.cloudflaredCacheDir ?? join(tmpdir(), 'dsh-cloudflared')
     this.tunnelInstance = await startTunnelWithFallback({
       forceCloudflareFailure: this.options.forceCloudflareFailure,
-      startCloudflare: async () => {
-        const binaryPath = await ensureCloudflaredBinary({
-          cacheDir,
-          customPath: this.options.cloudflaredPath
-        })
-        return startCloudflareQuickTunnel({
-          port,
-          binaryPath,
-          log: this.options.tunnelLog
-        })
-      },
-      startPinggy: () =>
-        startPinggyTunnel({
-          port,
-          sshPath: this.options.pinggySshPath,
-          knownHostsPath: join(cacheDir, 'pinggy-known-hosts'),
-          log: this.options.tunnelLog
-        }),
+      startCloudflare: () => this.startCloudflareInstance(port),
+      startPinggy: () => this.startPinggyInstance(port),
       log: this.options.tunnelLog
     })
+  }
+
+  private async swapToPinggy(): Promise<void> {
+    const port = this.port
+    if (!port) throw new Error('Bridge is not running.')
+    const pinggy = await this.startPinggyInstance(port)
+    const previous = this.tunnelInstance
+    this.tunnelInstance = pinggy
+    this.tunnelActive = true
+    this.tunnelError = undefined
+    if (previous) await previous.stop().catch(() => undefined)
+  }
+
+  private async startCloudflareInstance(port: number): Promise<InternetTunnelInstance> {
+    if (this.options.createCloudflareTunnel) return this.options.createCloudflareTunnel(port)
+    const cacheDir = this.tunnelCacheDir()
+    const binaryPath = await ensureCloudflaredBinary({
+      cacheDir,
+      customPath: this.options.cloudflaredPath
+    })
+    return startCloudflareQuickTunnel({
+      port,
+      binaryPath,
+      log: this.options.tunnelLog
+    })
+  }
+
+  private async startPinggyInstance(port: number): Promise<InternetTunnelInstance> {
+    if (this.options.createPinggyTunnel) return this.options.createPinggyTunnel(port)
+    const cacheDir = this.tunnelCacheDir()
+    return startPinggyTunnel({
+      port,
+      sshPath: this.options.pinggySshPath,
+      knownHostsPath: join(cacheDir, 'pinggy-known-hosts'),
+      log: this.options.tunnelLog
+    })
+  }
+
+  private tunnelCacheDir(): string {
+    return this.options.cloudflaredCacheDir ?? join(tmpdir(), 'dsh-cloudflared')
   }
 
   snapshot(): LanMobileBridgeSnapshot {
@@ -445,6 +496,7 @@ export class LanMobileBridge {
           connected: this.sessions.size > 0,
           tunnelActive: snapshot.tunnelActive,
           tunnelLoading: snapshot.tunnelLoading,
+          tunnelProvider: snapshot.tunnelProvider,
           tunnelUrl: snapshot.tunnelUrl,
           tunnelError: snapshot.tunnelError
         })
@@ -475,6 +527,44 @@ export class LanMobileBridge {
         ? await QRCode.toString(snapshot.pairingUrl, { type: 'svg', margin: 1, width: 260 })
         : undefined
       return this.json(response, 200, {
+        active: snapshot.tunnelActive,
+        loading: snapshot.tunnelLoading,
+        url: snapshot.tunnelUrl,
+        provider: snapshot.tunnelProvider,
+        error: snapshot.tunnelError,
+        pairingUrl: snapshot.pairingUrl,
+        qrSvg,
+        expiresAt: snapshot.expiresAt
+      })
+    }
+
+    if (request.method === 'POST' && url.pathname === '/desktop/tunnel/fallback') {
+      if (!isLoopbackAddress(remoteAddress)) return this.text(response, 403, 'Desktop only.')
+      this.verifySameOrigin(request)
+      if (this.sessions.size > 0) {
+        return this.json(response, 409, {
+          ok: false,
+          error: 'Disconnect the phone before switching connection modes.'
+        })
+      }
+      if (this.tunnelLoading || this.tunnelLaunch) {
+        return this.json(response, 409, {
+          ok: false,
+          error: 'A tunnel switch is already in progress.'
+        })
+      }
+      if (!this.tunnelActive || this.tunnelInstance?.provider !== 'cloudflare') {
+        return this.json(response, 400, {
+          ok: false,
+          error: 'Fallback is only available for an active Cloudflare tunnel.'
+        })
+      }
+      const snapshot = await this.fallbackToPinggy()
+      const qrSvg = snapshot.pairingUrl
+        ? await QRCode.toString(snapshot.pairingUrl, { type: 'svg', margin: 1, width: 260 })
+        : undefined
+      return this.json(response, 200, {
+        ok: !snapshot.tunnelError,
         active: snapshot.tunnelActive,
         loading: snapshot.tunnelLoading,
         url: snapshot.tunnelUrl,
