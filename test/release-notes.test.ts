@@ -3,6 +3,8 @@ import {
   fetchDesktopReleaseNotes,
   formatReleaseBody,
   GITHUB_RELEASES_REPO,
+  githubLatestReleasePage,
+  githubLatestReleaseUrl,
   githubReleasesUrl,
   parseGitHubReleases,
   releaseHeading
@@ -13,6 +15,12 @@ describe('GitHub release notes for Settings > Version', () => {
     expect(GITHUB_RELEASES_REPO).toBe('0-CHENAI/dsh-desktop')
     expect(githubReleasesUrl()).toBe(
       'https://api.github.com/repos/0-CHENAI/dsh-desktop/releases?per_page=10'
+    )
+    expect(githubLatestReleaseUrl()).toBe(
+      'https://api.github.com/repos/0-CHENAI/dsh-desktop/releases/latest'
+    )
+    expect(githubLatestReleasePage()).toBe(
+      'https://github.com/0-CHENAI/dsh-desktop/releases/latest'
     )
   })
 

@@ -1,5 +1,10 @@
 import type { AvailableRelease } from '../../shared/contracts'
-import { GITHUB_RELEASES_REPO, githubReleasesUrl, parseGitHubReleases } from '../release-notes'
+import {
+  GITHUB_RELEASES_REPO,
+  githubLatestReleaseUrl,
+  githubReleasesUrl,
+  parseGitHubReleases
+} from '../release-notes'
 
 export type { AvailableRelease }
 
@@ -123,6 +128,30 @@ export async function fetchAvailableReleases(
       }))
       .filter((release) => compareVersions(release.version, currentVersion) !== 0)
       .sort((a, b) => compareVersions(b.version, a.version))
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+export async function fetchLatestPublishedVersion(
+  fetchImpl: typeof fetch = globalThis.fetch
+): Promise<string> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), INDEX_TIMEOUT_MS)
+  try {
+    const response = await fetchImpl(githubLatestReleaseUrl(), {
+      signal: controller.signal,
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'dsh-desktop'
+      }
+    })
+    if (!response.ok) {
+      throw new Error(`Latest release request failed: ${response.status}`)
+    }
+    const version = parseGitHubReleases([await response.json()])[0]?.version
+    if (!version) throw new Error('Latest GitHub Release has no version')
+    return version
   } finally {
     clearTimeout(timer)
   }
