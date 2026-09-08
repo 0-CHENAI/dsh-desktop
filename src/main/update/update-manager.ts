@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, powerMonitor } from 'electron'
+import { app, BrowserWindow, ipcMain, powerMonitor, shell } from 'electron'
 import electronUpdater from 'electron-updater'
 import type { UpdateStatus } from '../../shared/contracts'
 import {
@@ -20,10 +20,12 @@ import {
   skippedVersionPath,
   writeSkippedVersion
 } from './skipped-version'
+import { githubLatestReleasePage } from '../release-notes'
 import {
   archiveFeedUrl,
   compareVersions,
   fetchAvailableReleases,
+  fetchLatestPublishedVersion,
   STABLE_FEED_URL
 } from './version-catalog'
 
@@ -96,36 +98,18 @@ export function startUpdateManager(options: { prepareToInstall: () => Promise<vo
   if (started) return
   started = true
 
-  if (!supportsUpdates()) {
-    transition({
-      type: 'unsupported',
-      message: 'Updates are available in installed macOS and Windows builds.'
-    })
-    return
+  if (supportsUpdates()) {
+    configureUpdater()
+    startupTimer = setTimeout(
+      () => void checkForUpdates(),
+      UPDATE_STARTUP_DELAY_MS + Math.random() * UPDATE_STARTUP_JITTER_MS
+    )
+    intervalTimer = setInterval(() => void checkForUpdates(), UPDATE_CHECK_INTERVAL_MS)
+    powerMonitor.on('resume', checkAfterResume)
   }
-
-  configureUpdater()
-  startupTimer = setTimeout(
-    () => void checkForUpdates(),
-    UPDATE_STARTUP_DELAY_MS + Math.random() * UPDATE_STARTUP_JITTER_MS
-  )
-  intervalTimer = setInterval(() => void checkForUpdates(), UPDATE_CHECK_INTERVAL_MS)
-  powerMonitor.on('resume', checkAfterResume)
 }
 
 export async function checkForUpdates(manual = false): Promise<UpdateStatus> {
-  if (!supportsUpdates()) {
-    transition(
-      {
-        type: 'unsupported',
-        message: 'Update checks are only available in installed macOS and Windows builds.'
-      },
-      manual
-    )
-    if (manual) scheduleReset()
-    return getUpdateStatus()
-  }
-
   if (checkPromise || ['available', 'downloading', 'downloaded'].includes(status.phase)) {
     return getUpdateStatus()
   }
@@ -133,7 +117,7 @@ export async function checkForUpdates(manual = false): Promise<UpdateStatus> {
   transition({ type: 'check', manual })
   manualCheck = manual
   lastCheckedAt = Date.now()
-  checkPromise = autoUpdater.checkForUpdates()
+  checkPromise = supportsUpdates() ? autoUpdater.checkForUpdates() : checkGitHubRelease()
 
   try {
     await checkPromise
@@ -147,12 +131,31 @@ export async function checkForUpdates(manual = false): Promise<UpdateStatus> {
   return getUpdateStatus()
 }
 
+async function checkGitHubRelease(): Promise<void> {
+  const latest = await fetchLatestPublishedVersion()
+  if (compareVersions(latest, app.getVersion()) <= 0) {
+    transition({ type: 'not-available' })
+    if (manualCheck) scheduleReset()
+    return
+  }
+  if (!shouldOfferUpdate(latest, currentSkippedVersion(), manualCheck)) {
+    console.info('[updater] skipping', latest, 'at the user’s request')
+    transition({ type: 'reset' })
+    return
+  }
+  transition({ type: 'available', version: latest })
+}
+
 /**
  * Start the download the user just accepted. Consent and download are one
  * action — an update sits at `available` until it is taken.
  */
 export async function downloadAvailableUpdate(): Promise<UpdateStatus> {
   if (status.phase !== 'available' || downloading) return getUpdateStatus()
+  if (!supportsUpdates()) {
+    await shell.openExternal(githubLatestReleasePage())
+    return getUpdateStatus()
+  }
   downloading = true
 
   try {
@@ -234,6 +237,7 @@ export function stopUpdateManager(): void {
 }
 
 function configureUpdater(): void {
+  autoUpdater.setFeedURL({ provider: 'generic', url: STABLE_FEED_URL })
   // The download is ours to start: an update the user skipped should not be
   // fetched at all, and update-available is the only place that is known.
   autoUpdater.autoDownload = false

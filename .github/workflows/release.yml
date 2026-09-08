@@ -180,6 +180,7 @@ jobs:
             dist-dev/dsh-desktop-dev-mac-arm64.dmg
             dist-dev/dsh-desktop-dev-mac-arm64.zip
             dist-dev/dsh-desktop-dev-mac-arm64.zip.blockmap
+            dist-dev/latest-mac.yml
           if-no-files-found: error
 
   windows-x64:

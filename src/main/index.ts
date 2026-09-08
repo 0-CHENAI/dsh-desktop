@@ -136,6 +136,7 @@ import {
   type PluginUpgradeCandidate
 } from './state/plugin-market-check'
 import { upgradePluginToGeneration } from './state/plugin-upgrade'
+import { fetchDesktopReleaseNotes } from './release-notes'
 import { aboutDetail, bundledHarnessVersion } from './version-info'
 import { windowsMenuViewBounds } from './windows-menu-view'
 import { shouldKeepRunningInBackground } from './close-to-tray'
@@ -1412,6 +1413,25 @@ function registerHarnessHandlers(): void {
       harnessVersion:
         bundledHarnessVersion(app.getAppPath()) ?? (locale === 'zh' ? '未知' : 'Unknown'),
       locale
+    }
+  })
+
+  ipcMain.removeHandler('desktop:version-page')
+  ipcMain.handle('desktop:version-page', async (event) => {
+    assertTrustedMainWindowEvent(event)
+    const locale = harnessLocale()
+    const { releases, failed } = await fetchDesktopReleaseNotes()
+    return {
+      desktopVersion: app.getVersion(),
+      harnessVersion:
+        bundledHarnessVersion(app.getAppPath()) ?? (locale === 'zh' ? '未知' : 'Unknown'),
+      locale,
+      releases,
+      notesError: failed
+        ? locale === 'zh'
+          ? '无法加载更新说明'
+          : 'Could not load release notes'
+        : undefined
     }
   })
 }
