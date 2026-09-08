@@ -35,8 +35,9 @@ describe('official whale brand assets', () => {
 
     const appIcon = whaleAppIconSvg({ size: 1024, path: whalePath })
     expect(appIcon).toContain(whalePath)
+    expect(appIcon).toContain('fill="#000000"')
     expect(appIcon).toContain('fill="#ffffff"')
-    expect(appIcon).toContain('fill="#111213"')
+    expect(appIcon).not.toContain('#111213')
   })
 
   it('rebuilds committed brand rasters from FishLogo', async () => {

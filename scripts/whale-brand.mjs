@@ -40,7 +40,7 @@ export function whaleMarkSvg({ fill, width, height, path: whalePath, padding }) 
 }
 
 /**
- * Dark rounded tile with a white whale, matching the previous app-icon chrome.
+ * Light rounded tile with the official black whale.
  * @param options.size - square edge in pixels.
  * @param options.path - FISH_LOGO_PATH.
  * @returns SVG markup.
@@ -50,16 +50,16 @@ export function whaleAppIconSvg({ size, path: whalePath }) {
   const tile = size - inset * 2
   const radius = tile * 0.26
   const mark = whaleMarkSvg({
-    fill: '#ffffff',
+    fill: '#000000',
     width: tile,
     height: tile,
     path: whalePath,
-    padding: tile * 0.18
+    padding: tile * 0.16
   })
   const inner = mark.replace(/^[\s\S]*?<svg[^>]*>/u, '').replace(/<\/svg>\s*$/u, '')
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${String(size)}" height="${String(size)}" viewBox="0 0 ${String(size)} ${String(size)}">
-  <rect x="${String(inset)}" y="${String(inset)}" width="${String(tile)}" height="${String(tile)}" rx="${String(radius)}" fill="#111213"/>
+  <rect x="${String(inset)}" y="${String(inset)}" width="${String(tile)}" height="${String(tile)}" rx="${String(radius)}" fill="#ffffff"/>
   <g transform="translate(${String(inset)} ${String(inset)})">
     ${inner}
   </g>
