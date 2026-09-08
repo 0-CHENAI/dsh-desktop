@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -85,6 +85,30 @@ export function readLastStableVersion(tagNames) {
   return latest
 }
 
+/**
+ * Write a stable version into package.json and the lockfile root.
+ * Avoids spawning `npm` so Windows CI does not fail with spawnSync ENOENT.
+ * @param {string} version
+ * @param {string} projectRoot
+ */
+export function applyReleaseVersion(version, projectRoot) {
+  const normalized = formatStableVersion(parseStableVersion(version))
+  const packagePath = path.join(projectRoot, 'package.json')
+  const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'))
+  packageJson.version = normalized
+  writeFileSync(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`)
+
+  const lockPath = path.join(projectRoot, 'package-lock.json')
+  if (!existsSync(lockPath)) return normalized
+  const lock = JSON.parse(readFileSync(lockPath, 'utf8'))
+  lock.version = normalized
+  if (lock.packages && typeof lock.packages === 'object' && lock.packages['']) {
+    lock.packages[''].version = normalized
+  }
+  writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`)
+  return normalized
+}
+
 function readGitStableTags() {
   try {
     const output = execFileSync('git', ['tag', '--list', 'v*'], {
@@ -134,9 +158,8 @@ if (invokedDirectly) {
   const { bump, setVersion, apply } = parseArgs(process.argv.slice(2))
   const version = resolveCliVersion(setVersion, bump)
   if (apply) {
-    execFileSync('npm', ['version', '--no-git-tag-version', '--allow-same-version', version], {
-      stdio: 'inherit'
-    })
+    const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+    applyReleaseVersion(version, projectRoot)
     console.log(`Resolved app version ${version}`)
   } else {
     process.stdout.write(`${version}\n`)

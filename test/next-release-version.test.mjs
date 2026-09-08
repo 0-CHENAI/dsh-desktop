@@ -1,7 +1,9 @@
-import { readFile } from 'node:fs/promises'
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
+  applyReleaseVersion,
   bumpStableVersion,
   readLastStableVersion,
   resolveNextReleaseVersion
@@ -61,5 +63,28 @@ describe('next release version', () => {
     )
     expect(workflow).toContain('node scripts/next-release-version.mjs --apply')
     expect(workflow).not.toContain('if [ -n "${{ inputs.version }}" ]')
+  })
+
+  it('writes package.json and the lockfile without spawning npm', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'dsh-version-'))
+    await writeFile(
+      path.join(dir, 'package.json'),
+      `${JSON.stringify({ name: 'dsh-desktop', version: '0.1.1' }, null, 2)}\n`
+    )
+    await writeFile(
+      path.join(dir, 'package-lock.json'),
+      `${JSON.stringify({ name: 'dsh-desktop', version: '0.1.1', packages: { '': { version: '0.1.1' } } }, null, 2)}\n`
+    )
+    const source = await readFile(
+      path.join(import.meta.dirname, '..', 'scripts', 'next-release-version.mjs'),
+      'utf8'
+    )
+    expect(source).not.toContain("execFileSync('npm'")
+    expect(applyReleaseVersion('0.1.2', dir)).toBe('0.1.2')
+    const pkg = JSON.parse(await readFile(path.join(dir, 'package.json'), 'utf8'))
+    const lock = JSON.parse(await readFile(path.join(dir, 'package-lock.json'), 'utf8'))
+    expect(pkg.version).toBe('0.1.2')
+    expect(lock.version).toBe('0.1.2')
+    expect(lock.packages[''].version).toBe('0.1.2')
   })
 })
