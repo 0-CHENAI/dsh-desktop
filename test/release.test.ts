@@ -423,6 +423,9 @@ describe('GitHub release contract', () => {
 
     expect(workflow).toMatch(/push:\n[ \t]+branches:\n[ \t]+- main\n/)
     expect(workflow).toContain('github.ref == \'refs/heads/main\'')
+    expect(workflow).toMatch(
+      /macos-apple-silicon:\n(?:[ \t]+[^\n]+\n)*?[ \t]+if: >-\n(?:[ \t]+[^\n]+\n)*?[ \t]+github\.event_name == 'pull_request'/
+    )
     expect(workflow).toContain('name: Publish GitHub Release from main')
     expect(workflow).toContain('name: macos-apple-silicon-dev')
     expect(workflow).toContain('name: windows-x64-dev')
