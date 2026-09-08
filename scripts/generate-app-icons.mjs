@@ -3,13 +3,67 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import sharp from 'sharp'
+import { readFishLogoPath, whaleAppIconSvg, whaleMarkSvg } from './whale-brand.mjs'
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const buildDirectory = path.join(projectRoot, 'build')
+const fishLogoTypes = path.join(
+  projectRoot,
+  'node_modules',
+  '@deepseek-ai',
+  'dsh-client-ui-primitives',
+  'lib',
+  'types',
+  'FishLogo.d.ts'
+)
 const source = path.join(buildDirectory, 'app-icon.png')
 const iconsetDirectory = path.join(buildDirectory, 'app-icon.iconset')
 const icnsDestination = path.join(buildDirectory, 'icon.icns')
 const icoDestination = path.join(buildDirectory, 'icon.ico')
+
+async function rasterizeSvg(svg, destination) {
+  await sharp(Buffer.from(svg)).png().toFile(destination)
+}
+
+const whalePath = readFishLogoPath(await readFile(fishLogoTypes, 'utf8'))
+
+await mkdir(buildDirectory, { recursive: true })
+await rasterizeSvg(
+  whaleMarkSvg({
+    fill: '#000000',
+    width: 168,
+    height: 96,
+    path: whalePath,
+    padding: 8
+  }),
+  path.join(buildDirectory, 'logo-light.png')
+)
+await rasterizeSvg(
+  whaleMarkSvg({
+    fill: '#ffffff',
+    width: 168,
+    height: 96,
+    path: whalePath,
+    padding: 8
+  }),
+  path.join(buildDirectory, 'logo-dark.png')
+)
+await writeFile(
+  path.join(buildDirectory, 'logo-light.svg'),
+  whaleMarkSvg({
+    fill: '#000000',
+    width: 168,
+    height: 96,
+    path: whalePath,
+    padding: 8
+  })
+)
+await rasterizeSvg(whaleAppIconSvg({ size: 1024, path: whalePath }), source)
+await rasterizeSvg(
+  whaleAppIconSvg({ size: 1254, path: whalePath }),
+  path.join(buildDirectory, 'icon.png')
+)
 
 await rm(iconsetDirectory, { recursive: true, force: true })
 await mkdir(iconsetDirectory, { recursive: true })
@@ -74,4 +128,4 @@ await writeFile(icoDestination, Buffer.concat([header, ...icoImages]))
 await rm(icoDirectory, { recursive: true, force: true })
 
 const icon = await readFile(source)
-console.log(`Generated app icons from ${path.relative(projectRoot, source)} (${icon.length} bytes PNG).`)
+console.log(`Generated whale brand icons and app icons from FishLogo (${icon.length} bytes PNG).`)
