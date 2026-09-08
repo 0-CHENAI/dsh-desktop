@@ -11,6 +11,20 @@ const releaseAssets = [
 ]
 
 describe('GitHub release contract', () => {
+  it('keeps the installer PR gate on main only', async () => {
+    const workflow = (
+      await readFile(
+        path.join(projectRoot, '.github', 'workflows', 'release.yml'),
+        'utf8'
+      )
+    ).replace(/\r\n/g, '\n')
+    const branches = workflow.match(
+      /pull_request:\n[ \t]+branches:\n((?:[ \t]+-[ \t]+\S+\n)+)/
+    )?.[1]
+
+    expect(branches).toBe('      - main\n')
+  })
+
   it('keeps the package and lockfile versions aligned', async () => {
     const packageJson = JSON.parse(
       await readFile(path.join(projectRoot, 'package.json'), 'utf8')
