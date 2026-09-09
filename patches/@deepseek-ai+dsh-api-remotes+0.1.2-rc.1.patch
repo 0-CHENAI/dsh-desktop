@@ -1,0 +1,32 @@
+diff --git a/node_modules/@deepseek-ai/dsh-api-remotes/lib/client.js b/node_modules/@deepseek-ai/dsh-api-remotes/lib/client.js
+--- a/node_modules/@deepseek-ai/dsh-api-remotes/lib/client.js
++++ b/node_modules/@deepseek-ai/dsh-api-remotes/lib/client.js
+@@ -8366,6 +8366,28 @@
+ 					}
+ 				},
+ 				{
++					id: "@deepseek-ai/dsh-api-session-controller#session/delete",
++					service: "sessionController",
++					namespace: "session",
++					method: "delete",
++					invocation: { kind: "direct" },
++					parameters: [{
++						name: "request",
++						wire: "request",
++						source: "json",
++						codec: {
++							mode: "strict",
++							typeSymbol: "@deepseek-ai/dsh-api-session-controller/types#SessionDeleteRequest",
++							schema: object({ "sessionId": intersection(string(), unknown()).readonly() })
++						}
++					}],
++					result: {
++						mode: "strict",
++						typeSymbol: "@deepseek-ai/dsh-api-session-controller/types#SessionDeleteValue",
++						schema: object({ "deleted": literal(true).readonly() })
++					}
++				},
++				{
+ 					id: "@deepseek-ai/dsh-api-session-controller#session/rename",
+ 					service: "sessionController",
+ 					namespace: "session",
