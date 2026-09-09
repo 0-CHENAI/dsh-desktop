@@ -12,10 +12,17 @@
       }
     </script>
     <style>
-      :root { color-scheme: light dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      :root {
+        /* scripts/generate-splash-loader.mjs reads these two colors and bakes
+           them into the loader GIFs' anti-aliased edges. Declare each once. */
+        --splash-matte-light: #f8f8f6;
+        --splash-matte-dark: #141416;
+        color-scheme: light dark;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
       * { box-sizing: border-box; }
       html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
-      body { color: #17181a; background: #f8f8f6; }
+      body { color: #17181a; background: var(--splash-matte-light); }
       main {
         position: fixed;
         inset: 0;
@@ -27,8 +34,11 @@
         text-align: center;
       }
       html[data-platform="windows"] main { padding-top: 70px; }
-      .markFrame { display: grid; place-items: center; }
-      .mark { grid-area: 1 / 1; width: 196px; height: auto; image-rendering: pixelated; }
+      /* The loader canvas is 640x360 (SPLASH_LOADER in scripts/whale-brand.mjs).
+         Reserving that box keeps the copy below from jumping when the first
+         frame decodes, because the grid re-centers whatever the mark weighs. */
+      .markFrame { display: grid; place-items: center; aspect-ratio: 16 / 9; }
+      .mark { grid-area: 1 / 1; width: 196px; height: auto; }
       .markDark { display: none; }
       .title { margin: 0; font-size: 23px; font-weight: 650; letter-spacing: -0.02em; }
       .status { margin: -4px 0 0; color: #777a80; font-size: 13px; }
@@ -37,18 +47,18 @@
       }
       :root[data-theme='dark'] body {
         color: #f3f4f6;
-        background: #141416;
+        background: var(--splash-matte-dark);
       }
       :root[data-theme='dark'] .markLight { display: none; }
-      :root[data-theme='dark'] .markDark {
-        display: block;
-        filter: brightness(2.4) saturate(0.72) drop-shadow(0 0 7px rgba(111, 134, 255, 0.16));
-      }
+      /* The dark loader is already drawn light-on-dark, so it needs no color
+         correction at all. The old brightness, saturation and glow stack only
+         existed to rescue a black mark shared between both themes. */
+      :root[data-theme='dark'] .markDark { display: block; }
       :root[data-theme='dark'] .status {
         color: #9ca0a8;
       }
       @media (prefers-color-scheme: dark) {
-        :root:not([data-theme]) body { color: #f3f4f6; background: #141416; }
+        :root:not([data-theme]) body { color: #f3f4f6; background: var(--splash-matte-dark); }
         :root:not([data-theme]) .markLight { display: none; }
         :root:not([data-theme]) .markDark { display: block; }
         :root:not([data-theme]) .status { color: #9ca0a8; }
