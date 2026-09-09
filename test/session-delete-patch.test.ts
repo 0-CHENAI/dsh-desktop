@@ -1,6 +1,7 @@
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { runInNewContext } from 'node:vm'
 import { Context } from '@deepseek-ai/cordis'
 import SessionStore, { SESSION_FORMAT_VERSION, SessionId, SessionSeq } from '@deepseek-ai/dsh-session'
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
@@ -47,6 +48,12 @@ const patchedPackages = [
     markers: ["id: '@deepseek-ai/dsh-api-session-controller#session/delete'", "method: 'delete'"]
   },
   {
+    name: 'dsh-api-remotes',
+    version: '0.1.2-rc.1',
+    file: 'lib/client.js',
+    markers: ['#session/delete', 'SessionDeleteRequest', 'SessionDeleteValue']
+  },
+  {
     name: 'dsh-client-ui-workspace',
     version: '0.1.2-rc.1',
     file: 'lib/client.js',
@@ -64,6 +71,52 @@ describe('permanent session deletion dependency patches', () => {
     for (const marker of markers) {
       expect(patch).toContain(marker)
       expect(installed).toContain(marker)
+    }
+  })
+
+  it('mounts the delete command from the actual client bundle with matching wire schemas', async () => {
+    type Schema = { parse(value: unknown): unknown; safeParse(value: unknown): { success: boolean } }
+    type Command = {
+      id: string; service: string; namespace: string; method: string
+      parameters: Array<{ name: string; wire: string; source: string; codec: { schema: Schema; typeSymbol: string } }>
+      result: { schema: Schema; typeSymbol: string }
+    }
+    const commands: Command[] = []
+    let client!: { apply(ctx: unknown): Promise<() => Promise<void>> }
+    const source = await readFile(
+      path.join(projectRoot, 'node_modules/@deepseek-ai/dsh-api-remotes/lib/client.js'), 'utf8'
+    )
+    runInNewContext(source, {
+      window: { __ModuleLoader__: { load: (module: { factory(): typeof client }) => {
+        client = module.factory()
+      } } }
+    })
+    const dispose = await client.apply({ remote: { $mount: async (contribution: { descriptors: Command[] }) => {
+      commands.push(...contribution.descriptors)
+      return async () => {}
+    } } })
+    try {
+      const matches = commands.filter((command) => command.namespace === 'session' && command.method === 'delete')
+      expect(matches).toHaveLength(1)
+      const command = matches[0]
+      if (!command) throw new Error('Missing session/delete descriptor')
+      expect(command.id).toBe('@deepseek-ai/dsh-api-session-controller#session/delete')
+      expect(command.service).toBe('sessionController')
+      expect(command.parameters).toHaveLength(1)
+      const parameter = command.parameters[0]
+      if (!parameter) throw new Error('Missing session/delete request parameter')
+      expect(parameter).toMatchObject({ name: 'request', wire: 'request', source: 'json' })
+      expect(parameter.codec.typeSymbol).toBe('@deepseek-ai/dsh-api-session-controller/types#SessionDeleteRequest')
+      const request = parameter.codec.schema
+      expect(request.parse({ sessionId: 'delete-test' })).toEqual({ sessionId: 'delete-test' })
+      expect(request.safeParse({}).success).toBe(false)
+      expect(request.safeParse({ sessionId: 42 }).success).toBe(false)
+      expect(command.result.typeSymbol).toBe('@deepseek-ai/dsh-api-session-controller/types#SessionDeleteValue')
+      expect(command.result.schema.parse({ deleted: true })).toEqual({ deleted: true })
+      expect(command.result.schema.safeParse({ deleted: false }).success).toBe(false)
+      expect(command.result.schema.safeParse({}).success).toBe(false)
+    } finally {
+      await dispose()
     }
   })
 

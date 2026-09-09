@@ -251,9 +251,22 @@ describe('GitHub release contract', () => {
     expect(splash).toContain('src="dsh-loader-dark.gif"')
     expect(splash).toContain("document.documentElement.dataset.theme = splashTheme === 'dark'")
     expect(splash).toContain(":root[data-theme='dark']")
-    expect(splash).toContain('brightness(2.4) saturate(0.72)')
+    // The dark loader is drawn light-on-dark, so no color filter may rescue it:
+    // the old brightness/saturate stack tinted the whale toward the old glow.
+    expect(splash).not.toContain('filter:')
+    expect(splash).not.toContain('drop-shadow(')
     expect(splash).not.toContain('filter: invert(1)')
     expect(splash).not.toContain('class="track"')
+    expect(splash).not.toContain('class="dot')
+    // The GIF bakes these exact backgrounds into its own edges, so the page has
+    // to keep declaring them as the single source the generator reads.
+    expect(splash).toContain('--splash-matte-light: #f8f8f6;')
+    expect(splash).toContain('--splash-matte-dark: #141416;')
+    expect(splash).toContain('background: var(--splash-matte-light)')
+    expect(splash).toContain('background: var(--splash-matte-dark)')
+    // A vector-scale whale, not the old pixel art, so no nearest-neighbor hint.
+    expect(splash).not.toContain('image-rendering')
+    expect(splash).toContain('aspect-ratio: 16 / 9')
     expect(splash).toContain('position: fixed;')
     expect(splash).toContain('html[data-platform="windows"] main { padding-top: 70px; }')
     expect(patch).not.toMatch(/id:\s*directory-picker/)

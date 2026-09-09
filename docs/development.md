@@ -74,6 +74,19 @@ When upgrading Harness:
 5. Run the full automated suite.
 6. Start the real app and exercise every affected user flow.
 
+## Regenerating brand assets
+
+The sidebar mark, the application icon, and the startup loader are generated, never drawn by hand. All three are rasterized from `FISH_LOGO_PATH`, the official whale inside the pinned Harness `FishLogo.d.ts`, so an upstream brand change is one command per surface:
+
+```bash
+npm run icons:generate     # logo-light/dark.png, logo-light.svg, app-icon.png, icon.png, .icns, .ico
+npm run splash:generate    # dsh-loader.gif and dsh-loader-dark.gif
+```
+
+Commit the regenerated files together with the change that caused them; the installers copy them straight out of `build/`.
+
+The startup loader is the one surface coupled to its page. Both GIFs are flattened onto the exact backgrounds `build/splash.html` paints, read from that page's own `--splash-matte-light` and `--splash-matte-dark`. Re-run `npm run splash:generate` after changing either color, the whale path, or the motion, or `test/splash-loader.test.mjs` fails: it re-renders the shipped first frame and compares it against the committed GIF.
+
 ## Packaging
 
 Harness includes architecture-specific native dependencies. Build each installer on the operating system and architecture where it will run.
