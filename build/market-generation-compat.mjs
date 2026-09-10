@@ -54,7 +54,7 @@ export function installMarketGenerationCompatibility() {
       if (manifest.name !== 'dshmarket') return loaded
       const source = typeof loaded.source === 'string' ? loaded.source : Buffer.from(loaded.source).toString('utf8')
       try {
-        return { ...loaded, source: adaptMarketGenerationSource(source, path.endsWith('/routes.js') ? 'routes.js' : 'dsh-cli.js') }
+        return { ...loaded, source: adaptMarketGenerationSource(source, url.endsWith('/routes.js') ? 'routes.js' : 'dsh-cli.js') }
       } catch (error) {
         process.stderr.write(`[desktop] market generation compatibility unavailable (${manifest.version}): ${error.message}\n`)
         return loaded
