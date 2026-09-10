@@ -50,9 +50,13 @@ export function updateHeadline(status: UpdateStatus, locale: UpdateLocale): Upda
     case 'available':
       return {
         title: zh ? '有可用更新' : 'Update available',
-        description: zh
-          ? `${version} 已发布，同意后开始下载。`
-          : `${version} is ready to download.`
+        description: status.canInstall === false
+          ? zh
+            ? `${version} 已发布。当前构建不能在应用内安装，请手动下载安装包。`
+            : `${version} is out. This build cannot install updates in-app; download the installer yourself.`
+          : zh
+            ? `${version} 已发布，同意后开始下载。`
+            : `${version} is ready to download.`
       }
     case 'downloading':
       return {
@@ -107,9 +111,13 @@ export function updateMessage(status: UpdateStatus, locale: UpdateLocale): strin
     case 'checking':
       return zh ? '正在检查更新…' : 'Checking for updates…'
     case 'available':
-      return zh
-        ? `发现新版本${version}，是否更新？`
-        : `DSH Desktop${version} is available. Update now?`
+      return status.canInstall === false
+        ? zh
+          ? `发现新版本${version}，请手动下载安装包。`
+          : `DSH Desktop${version} is available. Download the installer yourself.`
+        : zh
+          ? `发现新版本${version}，是否更新？`
+          : `DSH Desktop${version} is available. Update now?`
     case 'downloading': {
       const percent = Math.round(status.percent ?? 0)
       return zh ? `正在下载更新 ${percent}%` : `Downloading update ${percent}%`
