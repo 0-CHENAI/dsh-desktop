@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { describe, expect, it } from 'vitest'
-import { patchPath } from './patch-path'
+import path from 'node:path'
+import { patchPath, projectRoot } from './patch-path'
 
 /**
  * The patch is the source of truth for this helper: `node_modules` may hold a
@@ -39,10 +40,11 @@ describe('assistant local path links', () => {
     )
 
     expect(patch).toContain('localPathReference(value)')
-    expect(patch).toContain('paths ?? []')
+    const installed = await readFile(path.join(projectRoot, 'node_modules/@deepseek-ai/dsh-client-ui-deliverables/lib/client.js'), 'utf8')
+    expect(installed).toContain('paths ?? []')
     expect(patch).toContain('#L\\d+')
     expect(patch).toContain('[A-Za-z]:[\\\\/]')
-    expect(patch).toContain('owner.openFile')
+    expect(installed).toContain('owner.openFile')
   })
 
   it('resolves real local paths', async () => {
@@ -84,7 +86,7 @@ describe('assistant local path links', () => {
     for (const value of [
       './@scope/pkg',
       '/tmp/@scope/pkg/index.js',
-      'patches/@deepseek-ai+dsh-client-ui-deliverables+0.1.2-rc.1.patch',
+      'patches/@deepseek-ai+dsh-client-ui-deliverables+0.1.5-rc.1.patch',
       'node_modules/@foo/bar/lib/client.js',
     ]) {
       expect(localPathReference(value), value).toBe(value)

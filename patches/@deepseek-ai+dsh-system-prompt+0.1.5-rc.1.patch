@@ -1,0 +1,34 @@
+diff --git a/node_modules/@deepseek-ai/dsh-system-prompt/lib/index.js b/node_modules/@deepseek-ai/dsh-system-prompt/lib/index.js
+--- a/node_modules/@deepseek-ai/dsh-system-prompt/lib/index.js
++++ b/node_modules/@deepseek-ai/dsh-system-prompt/lib/index.js
+@@ -199,7 +199,8 @@ var SystemPrompt = class extends Service {
+ 	static Config = z.object({
+ 		includeHarnessIdentity: z.boolean().default(true),
+ 		includeRuntimeContext: z.boolean().default(true),
+-		personaPrefix: z.string().default(""),
++		personaPrefix: z.string(),
++		persona: z.string(),
+ 		personaSuffix: z.string().default(""),
+ 		toolOrder: z.array(z.string()).default(void 0)
+ 	});
+@@ -218,7 +219,7 @@ var SystemPrompt = class extends Service {
+ 		this.section({
+ 			name: PERSONA_PREFIX_SECTION,
+ 			order: this.getSectionOrder("DEPLOYMENT_PERSONA_PREFIX"),
+-			text: config.personaPrefix ?? ""
++			text: config.personaPrefix ?? config.persona ?? ""
+ 		});
+ 		this.section({
+ 			name: PERSONA_SUFFIX_SECTION,
+diff --git a/node_modules/@deepseek-ai/dsh-system-prompt/lib/types/index.d.ts b/node_modules/@deepseek-ai/dsh-system-prompt/lib/types/index.d.ts
+--- a/node_modules/@deepseek-ai/dsh-system-prompt/lib/types/index.d.ts
++++ b/node_modules/@deepseek-ai/dsh-system-prompt/lib/types/index.d.ts
+@@ -170,6 +170,8 @@ export interface Config {
+      * `deployment:persona-prefix` shadows it; `{{variable}}` references are strict.
+      */
+     personaPrefix?: string;
++    /** Legacy deployment persona; used only when personaPrefix is absent. */
++    persona?: string;
+     /**
+      * Persona suffix template after first-party guidance. A scoped `deployment:persona-suffix`
+      * section shadows it; `{{variable}}` references are strict. Defaults to empty.

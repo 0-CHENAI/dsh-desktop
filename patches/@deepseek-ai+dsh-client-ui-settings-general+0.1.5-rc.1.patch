@@ -1,0 +1,28 @@
+diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-general/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-settings-general/lib/client.js
+--- a/node_modules/@deepseek-ai/dsh-client-ui-settings-general/lib/client.js
++++ b/node_modules/@deepseek-ai/dsh-client-ui-settings-general/lib/client.js
+@@ -181,16 +181,10 @@ window.__ModuleLoader__.load({
+ 			const [activeId, setActiveId] = (0, react.useState)(void 0);
+ 			const [completedOnboarding, setCompletedOnboarding] = (0, react.useState)(() => /* @__PURE__ */ new Set());
+ 			const [showRecovery, setShowRecovery] = (0, react.useState)(false);
+-			const triggerButton = (0, react.useRef)(null);
+-			const wasOpen = (0, react.useRef)(open);
+ 			const close = (0, react.useCallback)(() => {
+ 				setOpen(false);
+ 				setActiveId(void 0);
+ 			}, []);
+-			(0, react.useEffect)(() => {
+-				if (wasOpen.current && !open) triggerButton.current?.focus();
+-				wasOpen.current = open;
+-			}, [open]);
+ 			const openSection = (0, react.useCallback)((id) => {
+ 				setActiveId(id);
+ 				setOpen(true);
+@@ -235,7 +229,6 @@ window.__ModuleLoader__.load({
+ 				(0, react_jsx_runtime.jsxs)("div", {
+ 					className: clsx(SettingsRoot_module_css_default.triggerRow, !wide && SettingsRoot_module_css_default.railRow),
+ 					children: [(0, react_jsx_runtime.jsx)("button", {
+-						ref: triggerButton,
+ 						type: "button",
+ 						className: clsx(SettingsRoot_module_css_default.trigger, !wide && SettingsRoot_module_css_default.rail),
+ 						"aria-label": t("trigger"),

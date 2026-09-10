@@ -61,7 +61,7 @@ describe('profile compatibility recovery', () => {
     })
     await manifest(join(bundled, '@deepseek-ai', 'dsh-client-locale'), {
       name: '@deepseek-ai/dsh-client-locale',
-      version: '0.1.2-rc.1'
+      version: '0.1.5-rc.1'
     })
   })
 
@@ -80,7 +80,7 @@ describe('profile compatibility recovery', () => {
         kind: 'core-version-mismatch',
         packageName: '@deepseek-ai/dsh-client-locale',
         installedVersion: '0.1.0-rc.8',
-        expectedVersion: '0.1.2-rc.1',
+        expectedVersion: '0.1.5-rc.1',
         resolution: 'rebuild-profile'
       }),
       expect.objectContaining({

@@ -46,3 +46,28 @@ describe('workspace session unread markers', () => {
     expect(patch).toContain('open(sessionId)')
   })
 })
+
+it('marks search results read while preserving search exit and reveal navigation', async () => {
+  const source = await readFile(new URL('../node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js', import.meta.url), 'utf8')
+  const open = source.match(/const openSession = \(sessionId\) => \{[\s\S]*?\n\t\t\t\};/)![0]
+  const search = source.match(/const openSearchResult = \(sessionId\) => \{[\s\S]*?\n\t\t\t\};/)![0]
+  const calls: unknown[][] = []
+  const handler = new Function('actions', 'open', 'setRevealSessionId', 'setQuery', 'setSearchExpanded', `${open}\n${search}\nreturn openSearchResult;`)(
+    { markSessionRead: (id: string) => calls.push(['read', id]) },
+    (id: string) => calls.push(['open', id]),
+    (id: string) => calls.push(['reveal', id]),
+    (query: string) => calls.push(['query', query]),
+    (expanded: boolean) => calls.push(['expanded', expanded])
+  )
+  handler('searched-session')
+  expect(calls).toEqual([['reveal', 'searched-session'], ['query', ''], ['expanded', false], ['read', 'searched-session'], ['open', 'searched-session']])
+})
+
+it('maps every workspace browser class to a shipped CSS selector or animation', async () => {
+  const source = await readFile(new URL('../node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js', import.meta.url), 'utf8')
+  const map = source.match(/var WorkspaceBrowser_module_css_default = \{([\s\S]*?)\n\s*\};/)![1]!
+  const classes = [...map.matchAll(/"[^"]+": "([^"]+)"/g)].map(match => match[1]!)
+  expect(classes.length).toBeGreaterThan(20)
+  const missing = classes.filter(name => !source.includes(`.${name}`) && !source.includes(`@keyframes ${name}`))
+  expect(missing).toEqual([])
+})

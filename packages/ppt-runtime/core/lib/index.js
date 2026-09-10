@@ -3192,7 +3192,7 @@ function clearAutomaticPptContext(agent, staleOnly = false) {
 			content: [{ type: "text", text: "[Retired automatic PPT instructions cleared.]" }],
 			source: { kind: "plugin", plugin: "dsh-ppt-context-cleared" }
 		}), {
-			surfaceOp: { op: "replace", start: seq, end: seq },
+			surfaceOp: { op: "replace", startSeq: seq, endSeq: seq },
 			sourceEventSeqs: [seq]
 		});
 	}

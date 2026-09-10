@@ -62,7 +62,9 @@ if (!dshEntryPath) {
   process.stdout.write(`[harness-node] loading=${dshEntryPath}\n`)
   process.argv = [process.execPath, dshEntryPath, ...dshArguments]
   try {
-    await import(pathToFileURL(dshEntryPath).href)
+    const entry = await import(pathToFileURL(dshEntryPath).href)
+    // Harness 0.1.5 only auto-runs when bin.js is the main module.
+    if (typeof entry.runCli === 'function') await entry.runCli()
     process.stdout.write('[harness-node] DSH entry loaded\n')
   } catch (error) {
     report('DSH entry failed', error?.stack ?? error)
