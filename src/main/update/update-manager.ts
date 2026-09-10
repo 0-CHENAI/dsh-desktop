@@ -32,7 +32,7 @@ import {
 const { autoUpdater } = electronUpdater
 const TRANSIENT_STATUS_MS = 8_000
 
-let status = initialUpdateStatus(app.getVersion())
+let status = initialUpdateStatus(app.getVersion(), supportsUpdates())
 let prepareToInstall: (() => Promise<void>) | undefined
 let startupTimer: NodeJS.Timeout | undefined
 let intervalTimer: NodeJS.Timeout | undefined
@@ -154,6 +154,7 @@ export async function downloadAvailableUpdate(): Promise<UpdateStatus> {
   if (status.phase !== 'available' || downloading) return getUpdateStatus()
   if (!supportsUpdates()) {
     await shell.openExternal(githubLatestReleasePage())
+    transition({ type: 'reset' })
     return getUpdateStatus()
   }
   downloading = true

@@ -492,7 +492,13 @@ function render(): void {
 
   if (status.phase === 'available') {
     const actions = element('div', 'actions')
-    const accept = button(locale === 'zh' ? '同意更新' : 'Update now', 'primary')
+    const canInstall = status.canInstall !== false
+    const accept = button(
+      canInstall
+        ? locale === 'zh' ? '同意更新' : 'Update now'
+        : locale === 'zh' ? '打开下载页' : 'Open download page',
+      'primary'
+    )
     accept.disabled = accepting
     accept.addEventListener('click', () => {
       accepting = true

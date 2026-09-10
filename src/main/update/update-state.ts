@@ -10,8 +10,11 @@ export type UpdateStateEvent =
   | { type: 'unsupported'; message: string }
   | { type: 'reset' }
 
-export function initialUpdateStatus(currentVersion: string): UpdateStatus {
-  return { phase: 'idle', currentVersion, manual: false }
+export function initialUpdateStatus(
+  currentVersion: string,
+  canInstall = true
+): UpdateStatus {
+  return { phase: 'idle', currentVersion, manual: false, canInstall }
 }
 
 export function reduceUpdateStatus(
@@ -21,7 +24,8 @@ export function reduceUpdateStatus(
   const base = {
     currentVersion: current.currentVersion,
     manual: current.manual,
-    downgrade: current.downgrade
+    downgrade: current.downgrade,
+    canInstall: current.canInstall
   }
 
   switch (event.type) {
@@ -40,7 +44,7 @@ export function reduceUpdateStatus(
     case 'unsupported':
       return { ...base, phase: 'unsupported', message: event.message }
     case 'reset':
-      return initialUpdateStatus(current.currentVersion)
+      return initialUpdateStatus(current.currentVersion, current.canInstall)
   }
 }
 

@@ -119,6 +119,21 @@ describe('unpackaged update checks', () => {
     expect(manager).toContain('fetchLatestPublishedVersion()')
     expect(manager).toContain('shell.openExternal(githubLatestReleasePage())')
     expect(manager).toContain('if (supportsUpdates()) {\n    configureUpdater()')
+    expect(manager).toContain('initialUpdateStatus(app.getVersion(), supportsUpdates())')
+  })
+
+  it('labels a GitHub-only offer as a download page, not an in-app install', async () => {
+    const [manager, preload, view] = await Promise.all([
+      readFile(path.join(projectRoot, 'src/main/update/update-manager.ts'), 'utf8'),
+      readFile(path.join(projectRoot, 'src/preload/index.ts'), 'utf8'),
+      readFile(path.join(projectRoot, 'src/preload/update-view.ts'), 'utf8')
+    ])
+    expect(manager).toContain('if (!supportsUpdates())')
+    expect(manager).toContain('await shell.openExternal(githubLatestReleasePage())')
+    expect(preload).toContain("locale === 'zh' ? '打开下载页' : 'Open download page'")
+    expect(preload).toContain('status.canInstall !== false')
+    expect(view).toContain('status.canInstall === false')
+    expect(view).toContain('请手动下载安装包')
   })
 })
 

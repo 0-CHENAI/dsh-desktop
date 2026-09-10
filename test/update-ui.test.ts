@@ -98,6 +98,22 @@ describe('accepting an update is what starts the download', () => {
     }
     expect(updateMessage(available, 'zh')).toBe('发现新版本 0.4.4，是否更新？')
     expect(updateMessage(available, 'en')).toBe('DSH Desktop 0.4.4 is available. Update now?')
+    expect(updateHeadline(available, 'zh').description).toBe('v0.4.4 已发布，同意后开始下载。')
+  })
+
+  it('does not promise an in-app download when this build cannot install', () => {
+    const available: UpdateStatus = {
+      phase: 'available',
+      currentVersion: '0.1.2',
+      availableVersion: '0.1.4',
+      manual: false,
+      canInstall: false
+    }
+    expect(updateHeadline(available, 'zh').description).toContain('不能在应用内安装')
+    expect(updateHeadline(available, 'zh').description).not.toContain('同意后开始下载')
+    expect(updateMessage(available, 'zh')).toBe('发现新版本 0.1.4，请手动下载安装包。')
+    expect(updateHeadline(available, 'en').description).toContain('cannot install updates in-app')
+    expect(updateMessage(available, 'en')).toContain('Download the installer yourself')
   })
 })
 

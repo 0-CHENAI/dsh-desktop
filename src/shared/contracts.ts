@@ -34,6 +34,11 @@ export interface UpdateStatus {
   manual: boolean
   /** Set while an explicitly chosen older version is being installed. */
   downgrade?: boolean
+  /**
+   * False when this build can only open a download page. Packaged macOS and
+   * Windows installs download and apply the update in-app.
+   */
+  canInstall?: boolean
 }
 
 /** One past release the user may install or roll back to, from the update index. */

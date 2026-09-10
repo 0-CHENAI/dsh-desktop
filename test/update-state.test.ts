@@ -16,7 +16,8 @@ describe('desktop update state', () => {
       currentVersion: '1.0.0',
       availableVersion: '1.1.0',
       percent: 52.4,
-      manual: false
+      manual: false,
+      canInstall: true
     })
 
     status = reduceUpdateStatus(status, { type: 'downloaded', version: '1.1.0' })
@@ -24,7 +25,8 @@ describe('desktop update state', () => {
       phase: 'downloaded',
       currentVersion: '1.0.0',
       availableVersion: '1.1.0',
-      manual: false
+      manual: false,
+      canInstall: true
     })
   })
 
@@ -43,6 +45,14 @@ describe('desktop update state', () => {
     expect(reduceUpdateStatus(base, { type: 'progress', percent: 40 }).downgrade).toBe(true)
     expect(reduceUpdateStatus(base, { type: 'downloaded', version: '1.2.0' }).downgrade).toBe(true)
     expect(reduceUpdateStatus(base, { type: 'reset' }).downgrade).toBeUndefined()
+  })
+
+  it('keeps whether this build can install an update in-app', () => {
+    const status = initialUpdateStatus('1.0.0', false)
+    expect(reduceUpdateStatus(status, { type: 'available', version: '1.1.0' }).canInstall).toBe(
+      false
+    )
+    expect(reduceUpdateStatus(status, { type: 'reset' }).canInstall).toBe(false)
   })
 
   it('clamps invalid download percentages', () => {
