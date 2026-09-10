@@ -72,6 +72,58 @@ window.__ModuleLoader__.load({
       .dshDesktopVersionBadge{color:var(--dsw-alias-label-secondary);border:1px solid var(--dsw-alias-border-l2);border-radius:999px;padding:0 8px;font-size:11px;line-height:18px}
       .dshDesktopVersionBody{margin:0;color:var(--dsw-alias-label-secondary);font-size:13px;line-height:20px;white-space:pre-wrap;overflow-wrap:anywhere}
       .dshDesktopVersionEmpty{margin:0;color:var(--dsw-alias-label-tertiary);font-size:13px;line-height:20px}
+
+      /* Settings-card chrome for third-party plugin cards that name classes
+         without shipping rules for them.
+
+         The plugins tab draws the column, not the card: it dispatches
+         settings.plugin.item and leaves the appearance to the plugin. A plugin
+         that names classes and ships no stylesheet therefore renders with
+         browser defaults — its header <button> reads as a hairline input box
+         and its title and description run together on one line, next to cards
+         the host drew properly. @perrylink/dsh-github is one: 0.7.7 and 0.7.8
+         name twenty-two ghc-* classes and carry no CSS at all (no stylesheet
+         in the package, no style injection in lib/client.js).
+
+         These rules are the host PluginCard chrome, rule for rule, on the
+         same --dsw-* tokens, so a shimmed card is indistinguishable from a
+         host-drawn one. Every selector is namespaced to the plugin's own
+         class prefix, so the sheet is inert for a layout that never renders a
+         .ghc-* node — which is also why it is safe to ship unconditionally
+         rather than probing the profile for the plugin.
+
+         Delete this block once the plugin ships its own chrome (fixed
+         upstream in @perrylink/dsh-github 0.7.9): the rules are identical by
+         construction, so the sheet simply becomes redundant. */
+      .ghc-card{list-style:none;display:flex;flex-direction:column;border:.5px solid var(--dsw-alias-border-l4);border-radius:16px;background:var(--dsw-alias-bg-layer-3);transition:border-color .16s,background .16s}
+      .ghc-card:hover{border-color:var(--dsw-alias-label-dimmed)}
+      .ghc-cardOpen{border-color:var(--dsw-alias-label-dimmed);background:var(--dsw-alias-bg-layer-2)}
+      .ghc-header{appearance:none;display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border:0;border-radius:12px;background:0 0;cursor:pointer;text-align:left;font:inherit;color:inherit}
+      .ghc-header:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}
+      .ghc-headText{display:flex;flex-direction:column;flex:1;gap:4px;min-width:0}
+      .ghc-name{color:var(--dsw-alias-label-primary);font-size:15px;font-weight:600;line-height:1.4}
+      .ghc-description{color:var(--dsw-alias-label-tertiary);font-size:13px;line-height:1.5}
+      .ghc-pending{flex:none;white-space:nowrap;border-radius:999px;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-secondary);padding:1px 8px;font-size:11px;font-weight:500;line-height:17px}
+      .ghc-chevron{flex:none;color:var(--dsw-alias-label-tertiary);transition:transform .16s}
+      .ghc-chevronOpen{transform:rotate(180deg)}
+      .ghc-body{display:flex;flex-direction:column;margin:0 16px;padding-bottom:8px;border-top:.5px solid var(--dsw-alias-border-l2)}
+      .ghc-readOnly{margin:12px 0 0;color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:1.5}
+      .ghc-field{display:flex;flex-direction:column;gap:6px;padding:12px 0}
+      .ghc-field+.ghc-field{border-top:.5px solid var(--dsw-alias-border-l2)}
+      .ghc-head{display:flex;align-items:center;gap:8px}
+      .ghc-label{flex:1;min-width:0;color:var(--dsw-alias-label-primary);font-size:13px;font-weight:500;line-height:1.5}
+      .ghc-badges{display:inline-flex;align-items:center;gap:8px}
+      .ghc-badge{white-space:nowrap;border-radius:999px;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-secondary);padding:1px 8px;font-size:11px;font-weight:500;line-height:17px}
+      .ghc-badgeMuted{white-space:nowrap;border-radius:999px;color:var(--dsw-alias-label-tertiary);padding:1px 8px;font-size:11px;line-height:17px}
+      .ghc-input{height:34px;padding:0 12px;border:.5px solid var(--dsw-alias-border-l4);border-radius:8px;background:var(--dsw-alias-bg-layer-3);color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;line-height:1.5}
+      .ghc-input:focus-visible{border-color:var(--dsw-alias-brand-primary);outline:none}
+      .ghc-input:disabled{color:var(--dsw-alias-label-tertiary);cursor:default}
+      .ghc-hint{margin:0;color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:1.5}
+      .ghc-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 0 4px;border-top:.5px solid var(--dsw-alias-border-l2)}
+      .ghc-failed{flex:1;min-width:0;margin:0;color:var(--dsw-alias-label-error);font-size:12px;line-height:1.5}
+      .ghc-spin{display:inline-flex;animation:ghc-spin 1s linear infinite}
+      @keyframes ghc-spin{to{transform:rotate(360deg)}}
+      @media (prefers-reduced-motion:reduce){.ghc-spin{animation:none}.ghc-card,.ghc-chevron{transition:none}}
     `
 
     function installStyles() {
