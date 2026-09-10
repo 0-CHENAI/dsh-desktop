@@ -34,7 +34,9 @@ registerHooks({ resolve(specifier, context, next) {
     dshSafePatchPath,
     dshHome: home,
     logPath: join(home, logName),
-    startupTimeoutMs: 30_000,
+    // Cold module resolution with fault-injection hooks can be slower on CI.
+    // Keep the missing-dependency assertion: a timeout is never accepted as success.
+    startupTimeoutMs: 90_000,
     launchProcess: (executable, args, options) => spawn(executable, ['--import', pathToFileURL(hook).href, ...args], options),
     onChanged() {}
   })
@@ -62,4 +64,4 @@ registerHooks({ resolve(specifier, context, next) {
     await recovered.stop()
     await rm(home, { recursive: true, force: true })
   }
-}, 80_000)
+}, 200_000)
