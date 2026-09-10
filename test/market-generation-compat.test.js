@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { adaptMarketGenerationSource } from '../build/market-generation-compat.mjs'
 
@@ -9,6 +10,17 @@ function update(...args) {
 }
 
 describe('market generation update compatibility', () => {
+  it('keeps the bundled Node CJS/ESM dependency graph loadable', () => {
+    const node = join('node_modules', 'node', 'bin', process.platform === 'win32' ? 'node.exe' : 'node')
+    const script = `
+      import { installMarketGenerationCompatibility } from './build/market-generation-compat.mjs';
+      installMarketGenerationCompatibility();
+      await import('jsdom');
+      console.log('loaded');
+    `
+    expect(execFileSync(node, ['--input-type=module', '-e', script], { encoding: 'utf8' }).trim()).toBe('loaded')
+  })
+
   it('reproduces exit=0 STALE against the unadapted market route', () => {
     const result = update('--unpatched')
     expect(result.status).toBe(502)

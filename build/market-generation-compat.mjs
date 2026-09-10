@@ -45,19 +45,31 @@ export function adaptMarketGenerationSource(source, moduleName) {
 }
 
 export function installMarketGenerationCompatibility() {
+  const adapted = new Map()
   return registerHooks({
-    load(url, context, nextLoad) {
-      const loaded = nextLoad(url, context)
-      if (!url.startsWith('file:') || !/\/dshmarket\/lib\/(dsh-cli|routes)\.js$/u.test(url)) return loaded
+    resolve(specifier, context, nextResolve) {
+      const resolved = nextResolve(specifier, context)
+      const { url } = resolved
+      if (!url.startsWith('file:') || !/\/dshmarket\/lib\/(dsh-cli|routes)\.js$/u.test(url)) return resolved
+      if (adapted.has(url)) return adapted.get(url)
       const path = fileURLToPath(url)
       const manifest = JSON.parse(readFileSync(join(dirname(path), '..', 'package.json'), 'utf8'))
-      if (manifest.name !== 'dshmarket') return loaded
-      const source = typeof loaded.source === 'string' ? loaded.source : Buffer.from(loaded.source).toString('utf8')
+      if (manifest.name !== 'dshmarket') return resolved
+      const source = readFileSync(path, 'utf8')
       try {
-        return { ...loaded, source: adaptMarketGenerationSource(source, url.endsWith('/routes.js') ? 'routes.js' : 'dsh-cli.js') }
+        let patched = adaptMarketGenerationSource(source, url.endsWith('/routes.js') ? 'routes.js' : 'dsh-cli.js')
+        // A global load hook changes Node 24.9's CJS/ESM linking even for
+        // unrelated modules (jsdom fails with "module is not linked"). Only
+        // redirect the two market modules; retain their original import base.
+        patched = patched.replace(/^import\s+([\s\S]*?)\s+from\s+(['"])([^'"]+)\2/gmu,
+          (_match, bindings, _quote, target) => `import ${bindings} from ${JSON.stringify(nextResolve(target, { ...context, parentURL: url }).url)}`)
+          .replaceAll('import.meta.url', JSON.stringify(url))
+        const result = { url: `data:text/javascript;base64,${Buffer.from(patched).toString('base64')}`, format: 'module', shortCircuit: true }
+        adapted.set(url, result)
+        return result
       } catch (error) {
         process.stderr.write(`[desktop] market generation compatibility unavailable (${manifest.version}): ${error.message}\n`)
-        return loaded
+        return resolved
       }
     }
   })
