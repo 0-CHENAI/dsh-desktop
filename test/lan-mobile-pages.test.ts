@@ -219,6 +219,13 @@ describe('LAN mobile page', () => {
     expect(desktop).toContain('--bg:#141416')
     expect(desktop).toContain('.qr{display:inline-flex;background:#fff')
     expect(desktop).toContain('Creating a global network link')
+    expect(desktop).toContain('Copied')
+    expect(desktop).not.toContain('Link copied')
+    expect(desktop).not.toContain('id="copyToast"')
+    expect(desktop).toContain('id="copyBtn" class="copy"')
+    expect(desktop).toContain('id="copyTip"')
+    expect(desktop).toContain('class="copy-icon"')
+    expect(desktop).toContain('async function copyUrl()')
     expect(desktop).toContain('Switching to WiFi connection mode')
     expect(desktop).toContain('class="mode-panel"')
     expect(desktop).toContain('class="tunnel-progress" aria-hidden="true"')
@@ -226,8 +233,12 @@ describe('LAN mobile page', () => {
     expect(desktop).toContain('id="tunnelProgressBar"')
     expect(desktop).toContain('</div></div><div class="url-row">')
     expect(desktop).toContain(
-      '.has-request .qr,.has-request .url-row,.has-request .expires{display:none}'
+      '.has-request .qr,.has-request .url-row,.has-request .expires,.has-request .fallback-link{display:none}'
     )
+    expect(desktop).toContain("Can't open? Try another link")
+    expect(desktop).toContain('id="fallbackLink" class="fallback-link hide"')
+    expect(desktop).toContain("fetch('/desktop/tunnel/fallback'")
+    expect(desktop).toContain('async function switchFallback()')
     expect(desktop).toContain("document.body.classList.toggle('has-request',!!pendingId)")
     expect(desktop).toContain('duration=enableTunnel?4500:800')
     expect(desktop).toContain('Math.min(99,(Date.now()-tunnelProgressStartedAt)/duration*100)')
@@ -430,6 +441,13 @@ describe('LAN mobile page', () => {
     expect(desktop).toContain('断开连接')
     expect(desktop).toContain('现在可以关闭此窗口。')
     expect(desktop).toContain('onclick="window.close()">完成</button>')
+    expect(desktop).toContain('已复制')
+    expect(desktop).not.toContain('链接已复制')
+    expect(desktop).toContain('扫码打不开？换一条线路')
+    expect(desktop).toContain('正在切换备用线路')
+    expect(desktop).toContain('id="copyBtn"')
+    expect(desktop).toContain('id="copyTip"')
+    expect(desktop).not.toContain('id="copyToast"')
     expect(phone).toContain('请在 DSH Desktop 中确认连接请求。')
     expect(phone).toContain('再次发起申请')
     expect(phone).toContain('暂时无法连接桌面端，请先启动 DSH Desktop。')
@@ -454,6 +472,31 @@ describe('LAN mobile page', () => {
       'onclick="switchMode(true)" disabled>Internet Connection Mode</button>'
     )
     expect(desktop).toContain('.mode-btn:disabled{cursor:not-allowed;opacity:.5}')
+    expect(desktop).toContain('id="fallbackLink" class="fallback-link hide"')
+  })
+
+  it('shows the backup-link action only for an active Cloudflare tunnel', () => {
+    const cloudflare = renderDesktopPairingPage({
+      qrSvg: '<svg></svg>',
+      pairingUrl: 'https://primary.trycloudflare.com/pair?token=test',
+      expiresAt: Date.now() + 60_000,
+      locale: 'en',
+      connected: false,
+      tunnelActive: true,
+      tunnelProvider: 'cloudflare'
+    })
+    const pinggy = renderDesktopPairingPage({
+      qrSvg: '<svg></svg>',
+      pairingUrl: 'https://fallback.a.pinggy.link/pair?token=test',
+      expiresAt: Date.now() + 60_000,
+      locale: 'en',
+      connected: false,
+      tunnelActive: true,
+      tunnelProvider: 'pinggy'
+    })
+    expect(cloudflare).toContain('id="fallbackLink" class="fallback-link"')
+    expect(cloudflare).not.toContain('id="fallbackLink" class="fallback-link hide"')
+    expect(pinggy).toContain('id="fallbackLink" class="fallback-link hide"')
   })
 })
 describe('desktop pairing page QR expiry self-healing', () => {

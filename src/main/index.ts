@@ -2615,6 +2615,7 @@ async function bootstrap(): Promise<void> {
     nodeExecutablePath: bundledNodePath(),
     nodeEntryPath: harnessNodeEntryPath(),
     dshPatchPath: desktopResourcePath('dsh-desktop.patch.yml'),
+    dshSafePatchPath: desktopResourcePath('dsh-desktop-safe.patch.yml'),
     dshHome: join(app.getPath('userData'), 'harness'),
     logPath: join(app.getPath('logs'), 'harness.log'),
     launchProcess: (executablePath, args, options) =>

@@ -1,6 +1,10 @@
 # PPT 来源与模板替换建议
 
-审查日期：2026-09-06。当前开发 worktree 基线：`9d4502f`；当前核心包为 `dsh-ppt`，插件为 `dsh-ppt-composer`。下文保留清理前的来源审查和历史包名；最新处理结果如下。
+审查日期：2026-09-06。当时的开发 worktree 基线：`9d4502f`；当前核心包为 `dsh-ppt`，插件为 `dsh-ppt-composer`。下文保留清理前的来源审查和历史包名；最新处理结果如下。
+
+## 发布状态（2026-09-08 更新）
+
+下述命名调整、模板清理与扩展、版式精修和校验反馈优化，已通过 [PR #328](https://github.com/dataelement/dsh-desktop/pull/328) 和 [PR #332](https://github.com/dataelement/dsh-desktop/pull/332) 合并，并包含在 [0.8.0-rc.3](https://github.com/dataelement/dsh-desktop/releases/tag/0.8.0-rc.3) 中。当前维护说明见 [PPT runtime README](../packages/ppt-runtime/README.md)。以下测试数字和未验证项保留为各阶段的历史记录。
 
 ## 后续：命名与十套模板接入
 
@@ -21,7 +25,7 @@
 - 可维护分发源码、模板源文件、来源和哈希清单已纳入 `packages/ppt-runtime/`；附重建脚本，避免依赖临时 `node_modules` 修改。
 - 720 项测试、类型检查和构建通过；54 页均通过源检查，6 个 PPTX 已成功导出并确认含可编辑元素。开发版界面已实测只显示六套模板且选择正常；Keynote 实测工程蓝图的中文封面、流程页显示正常，文字仍为可编辑文本框。尚未验证 Windows 原生包及 PowerPoint。
 
-本次完成的是当前开发分支的模板/文档清理，未发布或合并；没有重写历史 Git/Release，也不将本轮工程检查称为整个引擎或全部历史分发已获得法律确认。
+该阶段完成时，模板/文档清理尚未发布或合并（后续发布状态见上文）；没有重写历史 Git/Release，也不将本轮工程检查称为整个引擎或全部历史分发已获得法律确认。
 
 ## 清理前审查结论
 
