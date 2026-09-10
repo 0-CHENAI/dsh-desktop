@@ -28,6 +28,8 @@ DSH Desktop 把本地 DeepSeek Harness 封装为可安装的桌面应用。它�
 
 ## 下载安装
 
+> **本 fork 下载渠道：** 当前仓库为 `0-CHENAI/dsh-desktop`。本 fork 的安装包请从[本仓库 Releases](https://github.com/0-CHENAI/dsh-desktop/releases) 获取，打包应用使用本 fork 的更新源。下文的官网及稳定版、预览版说明属于上游 `dataelement/dsh-desktop` 项目。
+
 我们提供稳定版和预览版：**稳定版**可在[官网](https://dshdesktop.com/zh/)下载，推荐日常使用；**预览版**可在 [GitHub Releases](https://github.com/dataelement/dsh-desktop/releases) 中选择标记为 **Pre-release** 的版本。
 
 预览版除了包含我们的新增功能，还会积极跟进 DeepSeek Harness 官方最新版本，可能与社区插件不兼容，**不建议普通用户使用**。欢迎愿意尝鲜的用户体验并在社区反馈；经尝鲜用户验证后，我们才会向全体社区用户推送。

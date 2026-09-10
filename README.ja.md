@@ -28,6 +28,8 @@ DSH Desktop は、ローカルの DeepSeek Harness をインストール可能�
 
 ## ダウンロード
 
+> **このフォークのダウンロード先：** このリポジトリは `0-CHENAI/dsh-desktop` です。このフォークのビルドは[このリポジトリの Releases](https://github.com/0-CHENAI/dsh-desktop/releases)から取得してください。パッケージ版もこのフォークの更新元を使用します。以下の公式サイトとリリースチャンネルの説明は、上流の `dataelement/dsh-desktop` に関するものです。
+
 安定版とプレビュー版を提供しています。日常利用におすすめの**安定版**は[公式サイト](https://www.dshdesktop.com/#download)からダウンロードできます。**プレビュー版**を試す場合は、[GitHub Releases](https://github.com/dataelement/dsh-desktop/releases) で **Pre-release** と表示されたバージョンを選んでください。
 
 プレビュー版には新機能に加え、DeepSeek Harness 公式の最新バージョンを積極的に取り込みます。コミュニティのプラグインと互換性がない場合があるため、**一般ユーザーにはおすすめしません**。いち早く試したい方は、ぜひコミュニティにフィードバックをお寄せください。先行ユーザーによる検証を経てから、コミュニティ全体に更新を配信します。

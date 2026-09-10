@@ -29,6 +29,8 @@ DSH Desktop convierte la experiencia local de DeepSeek Harness en una aplicació
 
 ## Descarga
 
+> **Canal de descarga de este fork:** Este repositorio es `0-CHENAI/dsh-desktop`. Descargue sus compilaciones desde [sus Releases](https://github.com/0-CHENAI/dsh-desktop/releases); la aplicación empaquetada utiliza la fuente de actualizaciones de este fork. El sitio web y los canales descritos a continuación pertenecen al proyecto original `dataelement/dsh-desktop`.
+
 Ofrecemos versiones estables y preliminares: la **versión estable**, recomendada para el uso diario, se descarga desde el [sitio web oficial](https://www.dshdesktop.com/#download). Para probar una **versión preliminar**, elige una versión marcada como **Pre-release** en [GitHub Releases](https://github.com/dataelement/dsh-desktop/releases).
 
 Las versiones preliminares incluyen nuestras nuevas funciones y adoptan con rapidez las últimas versiones oficiales de DeepSeek Harness. Pueden ser incompatibles con los plugins de la comunidad y **no se recomiendan para usuarios generales**. Invitamos a quienes quieran probar las novedades antes que nadie a compartir sus comentarios en la comunidad; solo distribuimos las actualizaciones a toda la comunidad después de que estos usuarios las hayan validado.
