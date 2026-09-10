@@ -29,7 +29,9 @@ DSH Desktop packages the local DeepSeek Harness experience as an installed deskt
 
 ## Download
 
-Download DSH Desktop for macOS and Windows from the [official website](https://www.dshdesktop.com/#download).
+We offer stable and preview releases: download the **stable release**, recommended for everyday use, from our [official website](https://www.dshdesktop.com/#download). To try a **preview release**, choose a version marked **Pre-release** on [GitHub Releases](https://github.com/dataelement/dsh-desktop/releases).
+
+Preview releases include our newest features and closely track the latest official DeepSeek Harness versions. They may be incompatible with community plugins and are **not recommended for general users**. Early adopters are welcome to try them and share feedback in our community; we roll out updates to the wider community only after validation by early adopters.
 
 Installed builds check for updates shortly after startup and every six hours. When a new version is available, DSH Desktop asks before downloading it; installation begins only after you choose **Restart and install**. You can also check manually from the application menu or skip one version without hiding future releases.
 
@@ -57,17 +59,27 @@ DeepSeek Harness already provides the Agent runtime and Web UI. DSH Desktop adds
 - Checks for desktop updates and keeps download and installation under user control
 - Adapts native menus, titlebar behavior, window focus, theme, and application branding for macOS and Windows
 
+## PPT generation
+
+Enable the **PPT** button, choose a template, and describe the deck you need. The built-in catalog includes **16 templates and 192 layouts** with editable PPTX output. Previews use English; decks can use English or Chinese, with corresponding font settings. Preview language does not determine output language.
+
+PPT is preinstalled, and its automatic instructions apply only to sessions where the PPT button is enabled. See the [PPT runtime guide](packages/ppt-runtime/README.md) for templates, validation, and source acknowledgments.
+
 ## Phone access
 
 Choose **Connect Phone…** from the `Harness` menu and scan the pairing code. The desktop asks you to approve the connection before the phone can access sessions.
 
 Harness itself remains on a random `127.0.0.1` port. Phone access uses a separate paired bridge. It can stay on the local network or, when you choose remote access, use a temporary Cloudflare Quick Tunnel. Disconnecting the phone from the desktop invalidates the mobile session.
 
+If Cloudflare fails to start, the app tries Pinggy. If a Cloudflare pairing link appears but your phone cannot open it, choose **Can’t open? Try another link** to switch to Pinggy.
+
 ## Safe Mode and recovery
 
 If a third-party plugin interferes with startup or rendering, DSH Desktop can identify the implicated plugin from runtime and frontend evidence and open a guided recovery surface.
 
 Choose **Restart as Safe Mode…** from the `Harness` menu to start an isolated profile containing only official core bundles. The Agent, sessions, model settings, and workspaces remain available while third-party plugins from the normal profile stay blocked. You can remove selected plugins or return to a normal launch from the Safe Mode banner.
+
+Recovery screens check for compatible plugin updates. When available, you can upgrade an affected plugin; Safe Mode also offers batch upgrades. For help, hover over **WeChat group** to display its QR code, or click **Discord** to open the community.
 
 If the normal interface cannot be reached, start DSH Desktop with `--safe-mode`. On macOS:
 
