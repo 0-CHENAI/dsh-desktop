@@ -329,6 +329,10 @@
     ],
     "extraResources": [
       {
+        "from": "build/market-generation-compat.mjs",
+        "to": "market-generation-compat.mjs"
+      },
+      {
         "from": "build/app-icon.png",
         "to": "icon.png"
       },

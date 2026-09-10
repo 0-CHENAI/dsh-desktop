@@ -48,7 +48,7 @@ describe('the market install boundary', () => {
     handle.stderr.on('data', (chunk) => {
       stderr += chunk.toString()
     })
-    return handle.done.then(({ exitCode }) => ({ exitCode, stdout, stderr }))
+    return handle.done.then((outcome) => ({ ...outcome, stdout, stderr }))
   }
 
   /** A stub that populates a staging node_modules the way pnpm would. */
@@ -198,8 +198,9 @@ describe('the market install boundary', () => {
     const link = join(home, 'profiles', 'web', 'node_modules', 'widget')
     const firstTarget = await readlink(link)
 
-    await drainHandle(
-      service(home, stubGenerationInstall('widget', '2.0.0')).runExternalMarketPluginInstall(
+    const updatingService = service(home, stubGenerationInstall('widget', '2.0.0'))
+    const result = await drainHandle(
+      updatingService.runExternalMarketPluginInstall(
         ['add', 'widget@2.0.0'],
         join(home, 'profiles', 'web')
       )
@@ -208,9 +209,16 @@ describe('the market install boundary', () => {
     expect(await readlink(link)).toBe(firstTarget)
     const staged = JSON.parse(await readFile(join(home, 'profiles', 'web', 'package.json'), 'utf8'))
     expect(staged.dependencies.widget).toBe('2.0.0')
+    const candidate = JSON.parse(await readFile(join(result.validationProfileDir, 'node_modules', 'widget', 'package.json'), 'utf8'))
+    expect(candidate.version).toBe('2.0.0')
+    expect(JSON.parse(await readFile(join(link, 'package.json'), 'utf8')).version).toBe('1.0.0')
+    const validationManifest = JSON.parse(await readFile(join(result.validationProfileDir, 'package.json'), 'utf8'))
+    expect(validationManifest.dsh.profile.bundles).toContain('widget')
 
     await projectGenerations(home)
     expect(await readlink(link)).not.toBe(firstTarget)
+    await updatingService.dispose()
+    await expect(lstat(result.validationProfileDir)).rejects.toMatchObject({ code: 'ENOENT' })
   })
 
   it('replaces an earlier generation of the same plugin', async () => {
