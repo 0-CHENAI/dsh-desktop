@@ -1,9 +1,9 @@
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { runInNewContext } from 'node:vm'
 import { Context } from '@deepseek-ai/cordis'
-import SessionStore, { SESSION_FORMAT_VERSION, SessionId, SessionSeq } from '@deepseek-ai/dsh-session'
+import SessionStore, { SESSION_FORMAT_VERSION, SessionId } from '@deepseek-ai/dsh-session'
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
 import { describe, expect, it } from 'vitest'
 
@@ -13,49 +13,49 @@ const projectRoot = path.resolve(import.meta.dirname, '..')
 const patchedPackages = [
   {
     name: 'dsh-session-persistence',
-    version: '0.1.2-rc.1',
+    version: '0.1.5-rc.1',
     file: 'lib/index.js',
-    markers: ['assertDeletable(id)', 'async delete(id)', 'await this.backend.deleteStored(id)']
+    markers: ['delete(_id)', 'this session persistence backend does not support deletion']
   },
   {
     name: 'dsh-session-persistence-jsonl',
-    version: '0.1.2-rc.1',
+    version: '0.1.5-rc.1',
     file: 'lib/index.js',
-    markers: ['delete(id) {', 'return this.coordinator.delete(id)', 'async deleteStored(id)']
+    markers: ['async delete(id)', 'this.tracker.claimWrite(id)', 'await this.acquireLease(id, void 0, dir)']
   },
   {
     name: 'dsh-workspace',
-    version: '0.1.2-rc.1',
+    version: '0.1.5-rc.1',
     file: 'lib/index.js',
     markers: ['forgetSession(sessionId)', 'archivedSessionIds: state.archivedSessionIds.filter']
   },
   {
     name: 'dsh-api-session-controller',
-    version: '0.1.2-rc.1',
+    version: '0.1.5-rc.1',
     file: 'lib/index.js',
     markers: ['disposeOwned(sessionId)', 'await persistence.delete(request.sessionId)', 'workspaceRegistry.forgetSession(request.sessionId)']
   },
   {
     name: 'dsh-api-session-controller',
-    version: '0.1.2-rc.1',
+    version: '0.1.5-rc.1',
     file: 'lib/client.js',
     markers: ['SessionDeleteError', 'this.remote.session.delete({ sessionId })', 'if (this.watched === sessionId) this.watched = void 0']
   },
   {
     name: 'dsh-api-session-controller',
-    version: '0.1.2-rc.1',
+    version: '0.1.5-rc.1',
     file: 'lib/typert.host.js',
     markers: ["id: '@deepseek-ai/dsh-api-session-controller#session/delete'", "method: 'delete'"]
   },
   {
     name: 'dsh-api-remotes',
-    version: '0.1.2-rc.1',
+    version: '0.1.5-rc.1',
     file: 'lib/client.js',
     markers: ['#session/delete', 'SessionDeleteRequest', 'SessionDeleteValue']
   },
   {
     name: 'dsh-client-ui-workspace',
-    version: '0.1.2-rc.1',
+    version: '0.1.5-rc.1',
     file: 'lib/client.js',
     markers: ['delete.session', 'danger: true', 'Workspace files are kept', 'await sessions.delete(sessionId)']
   }
@@ -140,18 +140,35 @@ describe('permanent session deletion dependency patches', () => {
     }
     const removed = SessionId('desktop-delete-removed')
     const kept = SessionId('desktop-delete-kept')
-    const event = [{ type: 'turn/start', seq: SessionSeq(0), time: 1, data: { turn: 1 } }] as const
 
     try {
-      await persistence.create({ version: SESSION_FORMAT_VERSION, id: removed, createdAt: 1, isSeeded: false })
-      await persistence.append(removed, event)
-      await persistence.create({ version: SESSION_FORMAT_VERSION, id: kept, createdAt: 2, isSeeded: false })
-      await persistence.append(kept, event)
+      const removedHandle = await persistence.create({ version: SESSION_FORMAT_VERSION, id: removed, createdAt: 1, isSeeded: false })
+      await removedHandle.flush()
+      await expect(persistence.delete(removed)).rejects.toThrow(/owned/i)
+      const other = new Context()
+      await other.plugin(SessionStore)
+      const otherFiber = await other.plugin(JsonlSessionPersistence, { root, compression: 'none' })
+      try {
+        await expect(other.sessionPersistence.delete(removed)).rejects.toThrow(/owned/i)
+      } finally {
+        await otherFiber.dispose()
+      }
+      await removedHandle.close()
+      // An older generation must not make a deleted session reappear on cold read.
+      const currentLog = (await readdir(root, { recursive: true })).find(file => file.endsWith(`session.v${SESSION_FORMAT_VERSION}.jsonl`))!
+      const oldGeneration = path.join(root, path.dirname(currentLog), 'session.jsonl')
+      await writeFile(oldGeneration, 'historical generation retained by migration\n')
+      const keptHandle = await persistence.create({ version: SESSION_FORMAT_VERSION, id: kept, createdAt: 2, isSeeded: false })
+      await keptHandle.flush()
+      await keptHandle.close()
 
       expect(await persistence.delete(removed)).toBe(true)
-      expect((await persistence.list()).map((header) => header.id)).toEqual([kept])
-      await expect(persistence.load(removed)).rejects.toThrow(/not found/i)
-      expect((await persistence.load(kept)).meta.id).toBe(kept)
+      await expect(readFile(oldGeneration)).rejects.toMatchObject({ code: 'ENOENT' })
+      expect((await persistence.list()).map((snapshot) => snapshot.header.id)).toEqual([kept])
+      await expect(persistence.open(removed, 'read')).rejects.toThrow(/not found/i)
+      const reader = await persistence.open(kept, 'read')
+      expect(reader.header.id).toBe(kept)
+      await reader.close()
       expect(await persistence.delete(SessionId('desktop-delete-missing'))).toBe(false)
     } finally {
       await fiber.dispose()

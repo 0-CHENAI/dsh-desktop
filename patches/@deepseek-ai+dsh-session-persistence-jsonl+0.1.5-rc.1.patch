@@ -1,0 +1,46 @@
+diff --git a/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/index.js b/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/index.js
+--- a/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/index.js
++++ b/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/index.js
+@@ -2310,6 +2310,31 @@ var JsonlSessionPersistence = class extends SessionPersistence {
+ 			path: logPath(this.root, meta.cwd, meta.id, this.compression)
+ 		};
+ 	}
++	/** Delete all stored generations under the same ownership lock as writers. */
++	async delete(id) {
++		await this.ensureRootEncoding();
++		if (this.ctx.sessions.get(id) !== void 0) throw new Error(`cannot delete session "${id}" while it is live`);
++		this.tracker.claimWrite(id);
++		let lease;
++		try {
++			const selected = await this.findLog(id);
++			if (selected === void 0) return false;
++			const dir = dirname(selected.currentPath);
++			lease = await this.acquireLease(id, void 0, dir);
++			const generations = (await readdir(dir)).map((name) => ({ name, version: parseGenerationLogFilename(name, this.compression) })).filter((entry) => entry.version !== void 0).sort((a, b) => a.version - b.version);
++			for (const entry of generations) await rm(join(dir, entry.name));
++			this.coldLogMemo.delete(id);
++			this.migrationPreparations.delete(id);
++			if (process.platform !== "win32") {
++				const directory = await open(dir, "r");
++				try { await directory.sync(); } finally { await directory.close(); }
++			}
++			return generations.length > 0;
++		} finally {
++			try { await lease?.release(); } finally { this.tracker.releaseClaim(id); }
++		}
++	}
++
+ 	/**
+ 	* Create a new stored session and take its write ownership. The session is
+ 	* visible to this process immediately; the physical artifact appears on the
+diff --git a/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/types/index.d.ts b/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/types/index.d.ts
+--- a/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/types/index.d.ts
++++ b/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/types/index.d.ts
+@@ -88,6 +88,7 @@ declare class JsonlSessionPersistence extends SessionPersistence {
+      * @param options - optional cancellation.
+      * @returns the owned write handle.
+      */
++    delete(id: SessionId): Promise<boolean>;
+     create(header: SessionHeader, options?: SessionPersistenceCreateOptions): Promise<SessionHandle>;
+     /**
+      * Open an existing stored session for `read` or single-writer `write`.

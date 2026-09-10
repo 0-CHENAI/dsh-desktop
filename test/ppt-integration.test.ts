@@ -188,15 +188,15 @@ describe('DSH PPT built-in plugin', () => {
     const patch = await readFile(path.join(
       projectRoot,
       'patches',
-      '@deepseek-ai+dsh-client-ui-conversation+0.1.2-rc.1.patch'
+      '@deepseek-ai+dsh-client-ui-conversation+0.1.5-rc.1.patch'
     ), 'utf8')
 
     expect(patch).toContain(
       '[data-slot=conversation\\\\.hero\\\\.agentPreset]>span{width:max-content!important;min-width:0!important',
     )
-    expect(patch).toContain('._8JRpoa_heroModeCluster{width:max-content')
-    expect(patch).not.toContain('._8JRpoa_heroModeCluster{margin-left:auto')
-    expect(patch).toContain('._8JRpoa_heroModeCluster button{')
+    expect(patch).toContain('.wSkVaW_heroModeCluster{width:max-content')
+    expect(patch).not.toContain('.wSkVaW_heroModeCluster{margin-left:auto')
+    expect(patch).toContain('.wSkVaW_heroModeCluster button{')
     expect(patch).toContain('height:28px')
     expect(patch).toContain('border:0!important')
     expect(patch).toContain('color:var(--dsw-alias-label-primary)!important')

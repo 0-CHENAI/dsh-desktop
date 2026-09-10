@@ -204,7 +204,7 @@ describe('agent preset package transfer', () => {
         format: 'dsh-preset',
         version: 1,
         id: sourceId,
-        sourceDshVersion: '0.1.2-rc.1'
+        sourceDshVersion: '0.1.5-rc.1'
       })
       expect(exportedManifest.exportedAt).toEqual(expect.any(String))
       expect(exportedManifest.dshVersion).toBeUndefined()
@@ -466,13 +466,12 @@ describe('agent preset package transfer', () => {
       'utf8'
     )
 
-    // rc.1 renamed the upstream CSS-module hash to aThYWW.  The preceding
-    // version of this patch carried its old eWkxHa map forward, so the page
-    // rendered with classes that had no matching selectors at all.
-    expect(patch).not.toContain('eWkxHa_')
-    expect(patch).toContain('"section": "aThYWW_section"')
-    expect(patch).toContain('"card": "aThYWW_card"')
-    expect(patch).toContain('"dialog": "aThYWW_dialog"')
+    const installed = await readFile(path.join(projectRoot, 'node_modules/@deepseek-ai/dsh-client-ui-agent-preset/lib/client.js'), 'utf8')
+    for (const key of ['section', 'card', 'dialog']) {
+      const className = installed.match(new RegExp(`"${key}": "([^" ]+)"`))?.[1]
+      expect(className).toBeDefined()
+      expect(installed).toContain(`.${className}{`)
+    }
     expect(patch).toContain('.rtSEdW_importSecurity{')
     expect(patch).toContain('.rtSEdW_importSummary{')
     expect(patch).toContain('.rtSEdW_importWarnings{')

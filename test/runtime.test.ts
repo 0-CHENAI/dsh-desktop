@@ -51,6 +51,7 @@ describe('Harness launch contract', () => {
 
   it('binds the web server to a random loopback port', () => {
     expect(buildHarnessArguments(43127)).toEqual([
+      '--profile',
       'web',
       '--no-open',
       '--host',
@@ -66,6 +67,7 @@ describe('Harness launch contract', () => {
 
   it('applies the desktop composition patch before web arguments', () => {
     expect(buildHarnessArguments(43127, 'C:\\app\\dsh-desktop.patch.yml')).toEqual([
+      '--profile',
       'web',
       '--patch',
       'C:\\app\\dsh-desktop.patch.yml',
@@ -165,6 +167,7 @@ describe('Harness launch contract', () => {
       '--expose-internals',
       'C:\\app\\harness-node-entry.mjs',
       'C:\\app\\dsh\\lib\\bin.js',
+      '--profile',
       'web',
       '--patch',
       'C:\\app\\dsh-desktop.patch.yml',
@@ -194,7 +197,8 @@ describe('Harness launch contract', () => {
       modulePath: '/Applications/DSH Desktop.app/Contents/Resources/harness-node-entry.mjs',
       args: [
         '/Applications/DSH Desktop.app/Contents/Resources/app/node_modules/@deepseek-ai/dsh/lib/bin.js',
-        'web',
+        '--profile',
+      'web',
         '--patch',
         '/Applications/DSH Desktop.app/Contents/Resources/dsh-desktop.patch.yml',
         '--no-open',

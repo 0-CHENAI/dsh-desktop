@@ -1,0 +1,63 @@
+diff --git a/node_modules/@deepseek-ai/dsh-persona/lib/index.js b/node_modules/@deepseek-ai/dsh-persona/lib/index.js
+--- a/node_modules/@deepseek-ai/dsh-persona/lib/index.js
++++ b/node_modules/@deepseek-ai/dsh-persona/lib/index.js
+@@ -20,12 +20,17 @@ const name = "persona";
+ /** The prompt registry this row contributes to. */
+ const inject = ["systemPrompt"];
+ /** Runtime schema for the persona row. */
+-const Config = z.object({
+-	prefix: z.string().required(),
+-	suffix: z.string().default(""),
+-	complete: z.boolean().default(false),
+-	includeRuntimeContext: z.boolean().default(true)
+-});
++const Config = z.intersect([
++	z.union([
++		z.object({ prefix: z.string().required(), text: z.string() }),
++		z.object({ prefix: z.string(), text: z.string().required() })
++	]),
++	z.object({
++		suffix: z.string().default(""),
++		complete: z.boolean().default(false),
++		includeRuntimeContext: z.boolean().default(true)
++	})
++]);
+ /**
+ * Register the persona prefix and suffix sections for the mounting context's scope.
+ * @param ctx - an agent scope context; an unscoped context collides with the
+@@ -33,10 +38,11 @@ const Config = z.object({
+ * @param config - the prefix, suffix, and complete-prompt policy.
+ */
+ function apply(ctx, config) {
++	if (typeof (config.prefix ?? config.text) !== "string") throw new TypeError("persona requires prefix (or legacy text)");
+ 	ctx.effect(() => ctx.systemPrompt.section({
+ 		name: PERSONA_PREFIX_SECTION,
+ 		order: ctx.systemPrompt.getSectionOrder("DEPLOYMENT_PERSONA_PREFIX"),
+-		text: config.prefix,
++		text: config.prefix ?? config.text,
+ 		...config.complete ? { complete: true } : {}
+ 	}), "persona.section()");
+ 	ctx.effect(() => ctx.systemPrompt.section({
+diff --git a/node_modules/@deepseek-ai/dsh-persona/lib/types/index.d.ts b/node_modules/@deepseek-ai/dsh-persona/lib/types/index.d.ts
+--- a/node_modules/@deepseek-ai/dsh-persona/lib/types/index.d.ts
++++ b/node_modules/@deepseek-ai/dsh-persona/lib/types/index.d.ts
+@@ -20,14 +20,11 @@ export { PERSONA_PREFIX_SECTION, PERSONA_SUFFIX_SECTION };
+ export declare const name = "persona";
+ /** The prompt registry this row contributes to. */
+ export declare const inject: string[];
+-/** Plugin config: the persona text this composition contributes. */
+-export interface Config {
+-    /**
+-     * Persona prose rendered as the `deployment:persona-prefix` section. A template:
+-     * complete `{{…}}` groups interpolate strictly against registered prompt
+-     * variables. Empty text drops the section at render, matching the registry.
+-     */
+-    prefix: string;
++/** Plugin config: prefix takes precedence over the legacy text field, including an empty prefix. */
++export type Config = (
++    { /** Persona prefix template. Complete `{{…}}` groups interpolate prompt variables. */ prefix: string; text?: string }
++    | { prefix?: undefined; /** Legacy persona prefix template. */ text: string }
++) & {
+     /**
+      * Persona suffix template rendered after first-party guidance. Omitted or empty
+      * text shadows the deployment suffix away; interpolation is strict.

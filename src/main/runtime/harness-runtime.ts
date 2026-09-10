@@ -187,7 +187,7 @@ export function buildHarnessArguments(
   profile = 'web'
 ): string[] {
   return [
-    ...(profile === 'web' ? ['web'] : ['--profile', profile]),
+    '--profile', profile,
     ...(patchPath ? ['--patch', patchPath] : []),
     // The desktop window is the only intended surface. Without this, Harness
     // hands the same loopback URL to the system browser on every launch.

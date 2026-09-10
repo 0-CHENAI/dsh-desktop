@@ -1,0 +1,27 @@
+diff --git a/node_modules/@deepseek-ai/dsh-session-persistence/lib/index.js b/node_modules/@deepseek-ai/dsh-session-persistence/lib/index.js
+--- a/node_modules/@deepseek-ai/dsh-session-persistence/lib/index.js
++++ b/node_modules/@deepseek-ai/dsh-session-persistence/lib/index.js
+@@ -259,6 +259,11 @@ function assertContiguous(id, events, cursor) {
+ * on this backend instance observe at least that prefix.
+ */
+ var SessionPersistence = class extends Service {
++	/** Permanently delete a cold Session when the backend supports it. */
++	delete(_id) {
++		return Promise.reject(new Error("this session persistence backend does not support deletion"));
++	}
++
+ 	constructor(ctx) {
+ 		super(ctx, "sessionPersistence");
+ 	}
+diff --git a/node_modules/@deepseek-ai/dsh-session-persistence/lib/types/index.d.ts b/node_modules/@deepseek-ai/dsh-session-persistence/lib/types/index.d.ts
+--- a/node_modules/@deepseek-ai/dsh-session-persistence/lib/types/index.d.ts
++++ b/node_modules/@deepseek-ai/dsh-session-persistence/lib/types/index.d.ts
+@@ -98,6 +98,8 @@ declare module '@deepseek-ai/cordis' {
+  */
+ export declare abstract class SessionPersistence extends Service {
+     constructor(ctx: Context);
++    /** Permanently delete a cold Session when the backend supports it. */
++    delete(id: SessionId): Promise<boolean>;
+     /**
+      * Create a new stored session and take its write ownership.
+      * @param header - the immutable header (id, version, cwd, lineage) to store.
