@@ -76,5 +76,7 @@ describe('skipping one update', () => {
     expect(manager).toContain("ipcMain.handle('updates:download'")
     expect(preload).toContain("'同意更新'")
     expect(preload).toContain("ipcRenderer.invoke('updates:download')")
+    expect(preload).toContain("'打开下载页'")
+    expect(preload).toContain('status.canInstall !== false')
   })
 })
