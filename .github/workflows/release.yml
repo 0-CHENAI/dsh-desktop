@@ -825,12 +825,7 @@ jobs:
 
   publish-main:
     name: Publish GitHub Release from main
-    if: >-
-      always() &&
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main' &&
-      needs.macos-apple-silicon.result == 'success' &&
-      needs.windows-x64.result == 'success'
+    if: false
     needs:
       - macos-apple-silicon
       - windows-x64
