@@ -386,7 +386,8 @@ describe('GitHub release contract', () => {
     )
     expect(main).toContain("app.setPath('userData', join(app.getPath('appData'), 'dsh-desktop-dev'))")
     expect(main).toContain("app.setPath('userData', join(app.getPath('appData'), 'dsh-desktop'))")
-    expect(main).toContain('if (!developmentBuild)')
+    expect(main).toContain('startUpdateManager({')
+    expect(main).not.toContain('if (!developmentBuild) {\n    startUpdateManager')
     expect(targetVerifier).toContain("resolve('node_modules', 'node', 'bin', executable)")
     expect(targetVerifier).toContain('Bundled Node.js runtime was not found or is not executable')
     expect(targetVerifier).toContain('spawnSync')
@@ -430,30 +431,18 @@ describe('GitHub release contract', () => {
     ).toHaveLength(2)
   })
 
-  it('publishes unsigned installers to GitHub Releases on push to main', async () => {
+  it('does not publish unsigned installers as latest on push to main', async () => {
     const workflow = (
       await readFile(
         path.join(projectRoot, '.github', 'workflows', 'release.yml'),
         'utf8'
       )
     ).replace(/\r\n/g, '\n')
+    const publishMain = workflow.slice(workflow.indexOf('\n  publish-main:'))
 
     expect(workflow).toMatch(/push:\n[ \t]+branches:\n[ \t]+- main\n/)
-    expect(workflow).toContain('github.ref == \'refs/heads/main\'')
-    expect(workflow).toMatch(
-      /macos-apple-silicon:\n(?:[ \t]+[^\n]+\n)*?[ \t]+if: >-\n(?:[ \t]+[^\n]+\n)*?[ \t]+github\.event_name == 'pull_request'/
-    )
     expect(workflow).toContain('name: Publish GitHub Release from main')
-    expect(workflow).toContain('name: Generate GitHub release note from main')
-    expect(workflow).toContain('name: macos-apple-silicon-dev')
-    expect(workflow).toContain('dist-dev/latest-mac.yml')
-    expect(workflow).toContain('name: windows-x64-dev')
-    expect(workflow).toContain('gh release create')
-    expect(workflow).toContain('--latest')
-    expect(workflow).toMatch(
-      /Generate GitHub release note from main[\s\S]*github_release_notes\.py generate-fallback/
-    )
-    expect(workflow).not.toContain("git log -1 --pretty=format:'- %s'")
+    expect(publishMain).toMatch(/\n    if: false\n/)
     expect(workflow).toContain('scripts/next-release-version.mjs --apply')
     expect(workflow.match(/Set app version from next patch release/g)).toHaveLength(2)
     expect(workflow).toContain('RELEASE_VERSION_OVERRIDE')

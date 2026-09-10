@@ -2839,17 +2839,15 @@ async function bootstrap(): Promise<void> {
   } else {
     await launchHarness()
   }
-  if (!developmentBuild) {
-    startUpdateManager({
-      prepareToInstall: async () => {
-        await runtime.stop()
-        const dshHome = join(app.getPath('userData'), 'harness')
-        await quarantineInstalledLaunchAgentsForUpdate(dshHome)
-        quitting = true
-        stopUpdateManager()
-      }
-    })
-  }
+  startUpdateManager({
+    prepareToInstall: async () => {
+      await runtime.stop()
+      const dshHome = join(app.getPath('userData'), 'harness')
+      await quarantineInstalledLaunchAgentsForUpdate(dshHome)
+      quitting = true
+      stopUpdateManager()
+    }
+  })
 }
 
 if (isDaemonLaunch(process.env, process.platform)) {

@@ -32,6 +32,12 @@ describe('desktop update policy', () => {
     expect(supportsAutoUpdates(false, 'darwin')).toBe(false)
   })
 
+  it('starts the update manager for packaged development builds too', async () => {
+    const main = await readFile(path.join(projectRoot, 'src/main/index.ts'), 'utf8')
+    expect(main).toContain('startUpdateManager({')
+    expect(main).not.toContain('if (!developmentBuild) {\n    startUpdateManager')
+  })
+
   it('checks after resume only when the interval has elapsed', () => {
     const now = 20_000_000
     expect(shouldCheckAfterResume(now - UPDATE_CHECK_INTERVAL_MS, now)).toBe(true)
