@@ -1,0 +1,582 @@
+diff --git a/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js
+--- a/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js
++++ b/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js
+@@ -198,7 +198,8 @@ window.__ModuleLoader__.load({
+ 					orderBy: "updated",
+ 					groupExpansion: {},
+ 					sessionOrderByAccount: {},
+-					sessionUpdatedAtByAccount: {}
++					sessionUpdatedAtByAccount: {},
++					unreadSessionIds: []
+ 				}),
+ 				persist: "dsh.workspace.view.v5",
+ 				actions: {
+@@ -223,6 +224,13 @@ window.__ModuleLoader__.load({
+ 					},
+ 					setSessionOrder: (d, accountKey, order) => {
+ 						d.sessionOrderByAccount[accountKey] = order;
++					},
++					markSessionUnread: (d, sessionId) => {
++						const unread = d.unreadSessionIds ?? (d.unreadSessionIds = []);
++						if (!unread.includes(sessionId)) unread.push(sessionId);
++					},
++					markSessionRead: (d, sessionId) => {
++						d.unreadSessionIds = (d.unreadSessionIds ?? []).filter((id) => id !== sessionId);
+ 					}
+ 				}
+ 			});
+@@ -552,7 +560,7 @@ window.__ModuleLoader__.load({
+ 		}
+ 		//#endregion
+ 		//#region \0dsh-css:/home/runner/work/deepseek-harness/deepseek-harness/packages/client/ui-workspace/src/client/rows/Rows.module.css.mjs
+-		const css$2 = ".YDXeBa_projectRow,.YDXeBa_sessionRow{cursor:pointer;user-select:none;color:var(--dsw-alias-label-primary);border-radius:8px;align-items:center;gap:6px;padding:0 8px;display:flex}.YDXeBa_projectRow:hover,.YDXeBa_sessionRow:hover,.YDXeBa_sessionRow.YDXeBa_selected{background:var(--dsw-alias-interactive-bg-hover)}.YDXeBa_searchResultRow{box-sizing:border-box;cursor:pointer;text-align:left;width:100%;min-height:48px;color:var(--dsw-alias-label-primary);background:0 0;border:none;border-radius:8px;flex-direction:column;align-items:stretch;padding:4px 8px;display:flex}.YDXeBa_searchResultRow:hover,.YDXeBa_searchResultRow.YDXeBa_selected{background:var(--dsw-alias-interactive-bg-hover)}.YDXeBa_searchResultHeading{align-items:center;min-width:0;display:flex}.YDXeBa_searchResultTitle{text-overflow:ellipsis;white-space:nowrap;flex:0 auto;min-width:0;margin-left:4px;font-size:14px;line-height:20px;overflow:hidden}.YDXeBa_searchResultMeta{align-items:center;gap:6px;min-width:0;margin-left:20px;display:flex}.YDXeBa_searchResultWorkspace,.YDXeBa_searchResultSnippet{text-overflow:ellipsis;white-space:nowrap;font-size:12px;line-height:17px;overflow:hidden}.YDXeBa_searchResultWorkspace{max-width:40%;color:var(--dsw-alias-label-tertiary);flex:none}.YDXeBa_searchResultSnippet{min-width:0;color:var(--dsw-alias-label-secondary);flex:1}.YDXeBa_projectRow{box-sizing:border-box;align-items:center;height:34px}.YDXeBa_projectRow .YDXeBa_rowActions{height:20px}.YDXeBa_sessionRow{height:32px;animation:YDXeBa_row-in .15s var(--ds-ease-in-out);gap:0}.YDXeBa_sessionRow .YDXeBa_title{margin:0 6px 0 4px}.YDXeBa_flatSessionRowWithoutStatus .YDXeBa_title{margin-left:0}@keyframes YDXeBa_row-in{0%{opacity:0}}.YDXeBa_slot{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;display:inline-flex}.YDXeBa_visuallyHidden{clip:rect(0 0 0 0);white-space:nowrap;width:1px;height:1px;position:absolute;overflow:hidden}.YDXeBa_folderActive{color:var(--dsw-alias-state-business-primary)}.YDXeBa_projectRow .YDXeBa_chevron{display:none}.YDXeBa_projectRow:hover .YDXeBa_chevron{display:inline-flex}.YDXeBa_projectRow:hover .YDXeBa_folder{display:none}.YDXeBa_arrow{transition:transform .15s var(--ds-ease-in-out)}.YDXeBa_arrowOpen{transform:rotate(90deg)}.YDXeBa_projectText{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.YDXeBa_title{text-overflow:ellipsis;white-space:nowrap;min-width:0;font-size:14px;line-height:20px;overflow:hidden}.YDXeBa_renameInput{border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-button-elevated-fill);min-width:0;color:inherit;border-radius:4px;outline:none;padding:0 2px;font-size:14px;line-height:20px}.YDXeBa_sessionRow .YDXeBa_title{flex:1}.YDXeBa_meta{text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:20px;overflow:hidden}.YDXeBa_time{color:var(--dsw-alias-label-tertiary);flex:none;font-size:12px;line-height:20px}.YDXeBa_scheduleIndicator{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;margin-right:6px;display:inline-flex}.YDXeBa_searchScheduleIndicator{margin-left:4px;margin-right:0}.YDXeBa_dot{flex:none}.YDXeBa_rowActions{flex:none;align-items:center;gap:12px;display:none}.YDXeBa_projectRow:hover .YDXeBa_rowActions,.YDXeBa_sessionRow:hover .YDXeBa_rowActions,.YDXeBa_projectRow.YDXeBa_menuOpen .YDXeBa_rowActions,.YDXeBa_sessionRow.YDXeBa_menuOpen .YDXeBa_rowActions{display:inline-flex}.YDXeBa_sessionRow:hover .YDXeBa_time,.YDXeBa_sessionRow.YDXeBa_menuOpen .YDXeBa_time{display:none}.YDXeBa_projectRow.YDXeBa_menuOpen,.YDXeBa_sessionRow.YDXeBa_menuOpen{background:var(--dsw-alias-interactive-bg-hover)}.YDXeBa_sessionRow.YDXeBa_dropBefore,.YDXeBa_sessionRow.YDXeBa_dropAfter{position:relative}.YDXeBa_sessionRow.YDXeBa_dropBefore:before,.YDXeBa_sessionRow.YDXeBa_dropAfter:after{content:\"\";z-index:1;background:linear-gradient(55deg, transparent calc(50% - 1px), var(--dsw-alias-state-business-primary) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)) 0 0 / 5px 7px no-repeat, linear-gradient(125deg, transparent calc(50% - 1px), var(--dsw-alias-state-business-primary) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)) 0 5px / 5px 7px no-repeat, linear-gradient(var(--dsw-alias-state-business-primary) 0 0) 4px 5px / calc(100% - 4px) 2px no-repeat;pointer-events:none;height:12px;position:absolute;left:0;right:4px}.YDXeBa_sessionRow.YDXeBa_dropBefore:before{top:-7px}.YDXeBa_sessionRow.YDXeBa_dropAfter:after{bottom:-7px}.YDXeBa_hoverContent{flex-direction:column;gap:8px;display:flex}.YDXeBa_hoverTitle{color:#fff;overflow-wrap:break-word;font-size:14px;line-height:20px}.YDXeBa_hoverPath{color:#cfd3d6;word-break:break-all;font-size:12px;line-height:16px}.YDXeBa_hoverTime{color:#cfd3d6;font-size:12px;line-height:16px}.YDXeBa_hoverStatus{color:#adb2b8;align-items:center;gap:8px;font-size:12px;line-height:20px;display:flex}.YDXeBa_iconButton{cursor:pointer;width:16px;height:16px;color:var(--dsw-alias-label-tertiary);background:0 0;border:none;border-radius:4px;flex:none;justify-content:center;align-items:center;padding:0;display:inline-flex}.YDXeBa_iconButton:hover{color:var(--dsw-alias-label-primary)}.YDXeBa_chevron{color:var(--dsw-alias-label-caption)}@media (prefers-reduced-motion:reduce){.YDXeBa_sessionRow,.YDXeBa_arrow{transition:none;animation:none}}";
++		const css$2 = ".YDXeBa_projectRow,.YDXeBa_sessionRow{cursor:pointer;user-select:none;color:var(--dsw-alias-label-primary);border-radius:8px;align-items:center;gap:6px;padding:0 8px;display:flex}.YDXeBa_projectRow:hover,.YDXeBa_sessionRow:hover,.YDXeBa_sessionRow.YDXeBa_selected{background:var(--dsw-alias-interactive-bg-hover)}.YDXeBa_searchResultRow{box-sizing:border-box;cursor:pointer;text-align:left;width:100%;min-height:48px;color:var(--dsw-alias-label-primary);background:0 0;border:none;border-radius:8px;flex-direction:column;align-items:stretch;padding:4px 8px;display:flex}.YDXeBa_searchResultRow:hover,.YDXeBa_searchResultRow.YDXeBa_selected{background:var(--dsw-alias-interactive-bg-hover)}.YDXeBa_searchResultHeading{align-items:center;min-width:0;display:flex}.YDXeBa_searchResultTitle{text-overflow:ellipsis;white-space:nowrap;flex:0 auto;min-width:0;margin-left:4px;font-size:14px;line-height:20px;overflow:hidden}.YDXeBa_searchResultMeta{align-items:center;gap:6px;min-width:0;margin-left:20px;display:flex}.YDXeBa_searchResultWorkspace,.YDXeBa_searchResultSnippet{text-overflow:ellipsis;white-space:nowrap;font-size:12px;line-height:17px;overflow:hidden}.YDXeBa_searchResultWorkspace{max-width:40%;color:var(--dsw-alias-label-tertiary);flex:none}.YDXeBa_searchResultSnippet{min-width:0;color:var(--dsw-alias-label-secondary);flex:1}.YDXeBa_projectRow{box-sizing:border-box;align-items:center;height:34px}.YDXeBa_projectRow .YDXeBa_rowActions{height:20px}.YDXeBa_sessionRow{height:32px;animation:YDXeBa_row-in .15s var(--ds-ease-in-out);gap:0}.YDXeBa_sessionRow .YDXeBa_title{flex:1}.YDXeBa_flatSessionRowWithoutStatus .YDXeBa_title{margin-left:0}@keyframes YDXeBa_row-in{0%{opacity:0}}.YDXeBa_slot{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;display:inline-flex}.YDXeBa_visuallyHidden{clip:rect(0 0 0 0);white-space:nowrap;width:1px;height:1px;position:absolute;overflow:hidden}.YDXeBa_folderActive{color:var(--dsw-alias-state-business-primary)}.YDXeBa_projectRow .YDXeBa_chevron{display:none}.YDXeBa_projectRow:hover .YDXeBa_chevron{display:inline-flex}.YDXeBa_projectRow:hover .YDXeBa_folder{display:none}.YDXeBa_arrow{transition:transform .15s var(--ds-ease-in-out)}.YDXeBa_arrowOpen{transform:rotate(90deg)}.YDXeBa_projectText{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.YDXeBa_title{text-overflow:ellipsis;white-space:nowrap;min-width:0;font-size:14px;line-height:20px;overflow:hidden}.YDXeBa_renameInput{border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-button-elevated-fill);min-width:0;color:inherit;border-radius:4px;outline:none;padding:0 2px;font-size:14px;line-height:20px}.YDXeBa_sessionRow .YDXeBa_title{flex:1}.YDXeBa_meta{text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:20px;overflow:hidden}.YDXeBa_time{color:var(--dsw-alias-label-tertiary);flex:none;font-size:12px;line-height:20px}.YDXeBa_scheduleIndicator{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;margin-right:6px;display:inline-flex}.YDXeBa_searchScheduleIndicator{margin-left:4px;margin-right:0}.YDXeBa_dot{flex:none}.YDXeBa_rowActions{flex:none;align-items:center;gap:12px;display:none}.YDXeBa_projectRow:hover .YDXeBa_rowActions,.YDXeBa_sessionRow:hover .YDXeBa_rowActions,.YDXeBa_projectRow.YDXeBa_menuOpen .YDXeBa_rowActions,.YDXeBa_sessionRow.YDXeBa_menuOpen .YDXeBa_rowActions{display:inline-flex}.YDXeBa_sessionRow:hover .YDXeBa_time,.YDXeBa_sessionRow.YDXeBa_menuOpen .YDXeBa_time{display:none}.YDXeBa_projectRow.YDXeBa_menuOpen,.YDXeBa_sessionRow.YDXeBa_menuOpen{background:var(--dsw-alias-interactive-bg-hover)}.YDXeBa_sessionRow.YDXeBa_dropBefore,.YDXeBa_sessionRow.YDXeBa_dropAfter{position:relative}.YDXeBa_sessionRow.YDXeBa_dropBefore:before,.YDXeBa_sessionRow.YDXeBa_dropAfter:after{content:\"\";z-index:1;background:linear-gradient(55deg, transparent calc(50% - 1px), var(--dsw-alias-state-business-primary) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)) 0 0 / 5px 7px no-repeat, linear-gradient(125deg, transparent calc(50% - 1px), var(--dsw-alias-state-business-primary) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)) 0 5px / 5px 7px no-repeat, linear-gradient(var(--dsw-alias-state-business-primary) 0 0) 4px 5px / calc(100% - 4px) 2px no-repeat;pointer-events:none;height:12px;position:absolute;left:0;right:4px}.YDXeBa_sessionRow.YDXeBa_dropBefore:before{top:-7px}.YDXeBa_sessionRow.YDXeBa_dropAfter:after{bottom:-7px}.YDXeBa_hoverContent{flex-direction:column;gap:8px;display:flex}.YDXeBa_hoverTitle{color:#fff;overflow-wrap:break-word;font-size:14px;line-height:20px}.YDXeBa_hoverPath{color:#cfd3d6;word-break:break-all;font-size:12px;line-height:16px}.YDXeBa_hoverTime{color:#cfd3d6;font-size:12px;line-height:16px}.YDXeBa_hoverStatus{color:#adb2b8;align-items:center;gap:8px;font-size:12px;line-height:20px;display:flex}.YDXeBa_iconButton{cursor:pointer;width:16px;height:16px;color:var(--dsw-alias-label-tertiary);background:0 0;border:none;border-radius:4px;flex:none;justify-content:center;align-items:center;padding:0;display:inline-flex}.YDXeBa_iconButton:hover{color:var(--dsw-alias-label-primary)}.YDXeBa_chevron{color:var(--dsw-alias-label-caption)}@media (prefers-reduced-motion:reduce){.YDXeBa_sessionRow,.YDXeBa_arrow{transition:none;animation:none}}.YDXeBa_unreadTitle{font-weight:600}.YDXeBa_unreadDot,.YDXeBa_unreadMenuIcon{box-sizing:border-box;background:var(--dsw-alias-state-business-primary);border-radius:50%;display:inline-block}.YDXeBa_unreadDot{width:7px;height:7px}.YDXeBa_unreadMenuIcon{border:2px solid var(--dsw-specific-menu);width:9px;height:9px;box-shadow:0 0 0 1px var(--dsw-alias-state-business-primary)}";
+ 		const tagId$2 = "@deepseek-ai/dsh-client-ui-workspace/Rows.module.css";
+ 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$2) + "]") === null) {
+ 			const tag = document.createElement("style");
+@@ -597,7 +605,10 @@ window.__ModuleLoader__.load({
+ 			"slot": "YDXeBa_slot",
+ 			"time": "YDXeBa_time",
+ 			"title": "YDXeBa_title",
+-			"visuallyHidden": "YDXeBa_visuallyHidden"
++			"visuallyHidden": "YDXeBa_visuallyHidden",
++			"unreadDot": "YDXeBa_unreadDot",
++			"unreadMenuIcon": "YDXeBa_unreadMenuIcon",
++			"unreadTitle": "YDXeBa_unreadTitle"
+ 		};
+ 		//#endregion
+ 		//#region lib/types/client/rows/Rows.js
+@@ -605,7 +616,7 @@ window.__ModuleLoader__.load({
+ 		* Workspace browser tree row components (figma Cell set 14:3080): pure presentational —
+ 		* all data and callbacks arrive via props. Hover swaps (folder->chevron,
+ 		* time->ellipsis, action buttons) are CSS-only. Row ... menus are visual-only
+-		* except workspace Rename/Delete and session Rename/Fork/Archive; the session
++		* except workspace Rename/Delete and session Rename/Fork/Archive/Delete; the session
+ 		* and workspace hover cards are suppressed while a menu is open.
+ 		*/
+ 		/** Row display title: blank rows show the localized New Session label. */
+@@ -679,7 +690,14 @@ window.__ModuleLoader__.load({
+ 			const label = row.workspaceId === void 0 ? t("group.ungrouped") : row.label;
+ 			const active = group.expanded && group.containsCurrent;
+ 			const [menuOpen, setMenuOpen] = (0, react.useState)(false);
+-			const workspaceMenuItems = [{
++			const canOpenInFinder = typeof window !== "undefined" && typeof window.dshDesktop?.openInFinder === "function";
++			const workspaceMenuItems = [];
++			if (canOpenInFinder) workspaceMenuItems.push({
++				id: "openInFinder",
++				label: t("menu.openInFinder"),
++				icon: (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconFolderOpen16, {})
++			});
++			workspaceMenuItems.push({
+ 				id: "rename",
+ 				label: t("rename"),
+ 				icon: (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconEditOutline16, {})
+@@ -688,7 +706,7 @@ window.__ModuleLoader__.load({
+ 				label: t("delete.workspace"),
+ 				icon: (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconTrashOutline16, {}),
+ 				danger: true
+-			}];
++			});
+ 			const ownRow = (0, react_jsx_runtime.jsxs)("div", {
+ 				className: clsx(Rows_module_css_default.projectRow, menuOpen && Rows_module_css_default.menuOpen),
+ 				role: "treeitem",
+@@ -727,7 +745,13 @@ window.__ModuleLoader__.load({
+ 							items: workspaceMenuItems,
+ 							onSelect: (id) => {
+ 								setMenuOpen(false);
+-								/* v8 ignore next -- Menu can emit only the rename and delete rows supplied above. */
++								if (id === "openInFinder") {
++									if (row.cwd !== void 0 && typeof window.dshDesktop?.openInFinder === "function") window.dshDesktop.openInFinder(row.cwd).catch((reason) => {
++										console.warn("open in finder rejected:", reason);
++									});
++									return;
++								}
++								/* v8 ignore next -- Menu can emit only the open, rename, and delete rows supplied above. */
+ 								if (id !== "rename" && id !== "delete") return;
+ 								if (id === "rename") actions.rename();
+ 								else actions.delete();
+@@ -927,12 +951,15 @@ window.__ModuleLoader__.load({
+ 		* @param props.onFork - fork a session at its last completed turn.
+ 		* @param props.onArchive - archive a session by id.
+ 		* @param props.onReveal - scroll this row into view after search navigation, then acknowledge it.
++		* @param props.onDelete - open the permanent-deletion confirmation dialog.
++		* @param props.unread - whether the Session was manually marked unread.
++		* @param props.onUnreadChange - toggle the Session's local unread marker.
+ 		* @param props.drag - optional draggable-row wiring.
+ 		* @param props.flat - omit the empty status slot in the hierarchy-free flat list.
+ 		* @param props.t - the browser root's locale seat.
+ 		* @returns the session row.
+ 		*/
+-		function SessionNodeItem({ node, currentId, now, onOpen, onRename, onFork, onArchive, onReveal, drag, flat = false, t }) {
++		function SessionNodeItem({ node, currentId, now, onOpen, onRename, onFork, onArchive, onDelete, unread = false, onUnreadChange = () => {}, onReveal, drag, flat = false, t }) {
+ 			const row = node;
+ 			const title = displayTitle(node, t);
+ 			const selected = node.id === currentId;
+@@ -956,21 +983,44 @@ window.__ModuleLoader__.load({
+ 					label: t("menu.fork"),
+ 					icon: (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconBranchOutline16, {})
+ 				},
++				{
++					id: unread ? "markRead" : "markUnread",
++					label: t(unread ? "menu.markRead" : "menu.markUnread"),
++					icon: (0, react_jsx_runtime.jsx)("span", {
++						className: Rows_module_css_default.unreadMenuIcon,
++						style: {
++							background: "transparent",
++							border: "1.5px solid currentColor",
++							boxShadow: "none"
++						}
++					})
++				},
+ 				{
+ 					id: "archive",
+ 					label: t("menu.archiveSession"),
+ 					icon: (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconArchiveOutline20, { size: 16 })
++				},
++				{
++					id: "delete",
++					label: t("delete.session"),
++					icon: (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconTrashOutline16, {}),
++					danger: true
+ 				}
+ 			];
+ 			return (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.HoverCard, {
+ 				anchor: (0, react_jsx_runtime.jsxs)("div", {
+ 					ref: rowRef,
+-					className: clsx(Rows_module_css_default.sessionRow, selected && Rows_module_css_default.selected, menuOpen && Rows_module_css_default.menuOpen, flat && !showStatus && Rows_module_css_default.flatSessionRowWithoutStatus, drag?.marker === "before" && Rows_module_css_default.dropBefore, drag?.marker === "after" && Rows_module_css_default.dropAfter),
++					className: clsx(Rows_module_css_default.sessionRow, selected && Rows_module_css_default.selected, menuOpen && Rows_module_css_default.menuOpen, flat && !showStatus && !unread && Rows_module_css_default.flatSessionRowWithoutStatus, drag?.marker === "before" && Rows_module_css_default.dropBefore, drag?.marker === "after" && Rows_module_css_default.dropAfter),
+ 					role: "treeitem",
+ 					"aria-selected": selected,
+ 					onClick: () => {
+ 						onOpen(node.id);
+ 					},
++					onContextMenu: (event) => {
++						event.preventDefault();
++						event.stopPropagation();
++						if (!row.blank) setMenuOpen(true);
++					},
+ 					draggable: drag !== void 0,
+ 					onDragStart: drag === void 0 ? void 0 : (e) => {
+ 						e.dataTransfer.effectAllowed = "move";
+@@ -990,12 +1040,15 @@ window.__ModuleLoader__.load({
+ 						drag.drop(rowHalf(e));
+ 					},
+ 					children: [
+-						(!flat || showStatus) && (0, react_jsx_runtime.jsx)("span", {
++						(!flat || showStatus || unread) && (0, react_jsx_runtime.jsx)("span", {
+ 							className: Rows_module_css_default.slot,
+-							children: showStatus && (0, react_jsx_runtime.jsx)(SessionStatusDots, { statuses })
++							children: showStatus ? (0, react_jsx_runtime.jsx)(SessionStatusDots, { statuses }) : unread ? (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: "done" }), (0, react_jsx_runtime.jsx)("span", {
++								className: Rows_module_css_default.visuallyHidden,
++								children: t("status.unread")
++							})] }) : null
+ 						}),
+ 						(0, react_jsx_runtime.jsx)("span", {
+-							className: Rows_module_css_default.title,
++							className: clsx(Rows_module_css_default.title, unread && Rows_module_css_default.unreadTitle),
+ 							children: title
+ 						}),
+ 						row.hasActiveSchedule && (0, react_jsx_runtime.jsx)(ActiveScheduleIndicator, { t }),
+@@ -1015,7 +1068,10 @@ window.__ModuleLoader__.load({
+ 									setMenuOpen(false);
+ 									if (id === "rename") onRename(node.id, row.title);
+ 									if (id === "fork") onFork(node.id);
++									if (id === "markUnread") onUnreadChange(node.id, true);
++									if (id === "markRead") onUnreadChange(node.id, false);
+ 									if (id === "archive") onArchive(node.id);
++									if (id === "delete") onDelete?.(node.id, row.title);
+ 								},
+ 								portal: true,
+ 								closeOnPointerLeave: true,
+@@ -1215,7 +1271,7 @@ window.__ModuleLoader__.load({
+ 			});
+ 		}
+ 		//#endregion
+-		//#region \0dsh-css:/home/runner/work/deepseek-harness/deepseek-harness/packages/client/ui-workspace/src/client/rows/WorkspaceBrowser.module.css.mjs
++		//#region \0dsh-css:/Users/alex/Documents/Code/AI/deepseek-harness/packages/client/ui-workspace/src/client/rows/WorkspaceBrowser.module.css.mjs
+ 		const css = ".bhn1Oq_root{--dsh-session-list-edge-inset:var(--dsh-sidebar-inline-padding);--dsh-session-list-scrollbar-width:8px;--dsh-session-list-scrollbar-offset:2px;box-sizing:border-box;min-height:0;padding-right:var(--dsh-session-list-edge-inset);flex-direction:column;flex:1;display:flex}.bhn1Oq_root.bhn1Oq_rail{padding-right:0}.bhn1Oq_iconButton{corner-shape:round;cursor:pointer;width:28px;height:28px;color:var(--dsw-alias-label-secondary);background:0 0;border:none;border-radius:50%;flex:none;justify-content:center;align-items:center;padding:0;display:inline-flex}.bhn1Oq_iconButton:hover{background:var(--dsw-alias-interactive-bg-hover)}.bhn1Oq_sectionHeader{box-sizing:border-box;height:36px;color:var(--dsw-alias-label-tertiary);border-radius:12px;flex:none;justify-content:flex-end;align-items:center;gap:4px;margin-bottom:4px;padding-left:4px;display:flex;overflow:hidden}.bhn1Oq_root:not(.bhn1Oq_rail) .bhn1Oq_sectionHeader{margin-top:2px;margin-right:-4px}.bhn1Oq_sectionLabel{white-space:nowrap;opacity:1;visibility:visible;min-width:0;max-width:45%;transition:max-width .18s var(--ds-ease-in-out), margin-right .18s var(--ds-ease-in-out), opacity .12s var(--ds-ease-in-out), transform .18s var(--ds-ease-in-out), visibility 0s linear;flex:none;line-height:20px;overflow:hidden}.bhn1Oq_sectionLabelHidden{opacity:0;visibility:hidden;max-width:0;margin-right:-4px;transition-delay:0s,0s,0s,0s,.18s;transform:translate(-4px)}.bhn1Oq_searchSlot{box-sizing:border-box;min-width:0;max-width:28px;transition:max-width .18s var(--ds-ease-in-out), padding-left .18s var(--ds-ease-in-out);flex:1;align-items:center;margin-left:auto;padding-left:0;display:flex}.bhn1Oq_searchSlotExpanded{max-width:100%;padding-left:0}.bhn1Oq_headerActions{opacity:1;visibility:visible;max-width:60px;transition:max-width .18s var(--ds-ease-in-out), opacity .12s var(--ds-ease-in-out), transform .18s var(--ds-ease-in-out), visibility 0s linear;flex:none;align-items:center;gap:4px;display:flex;overflow:hidden}.bhn1Oq_headerActionsHidden{opacity:0;visibility:hidden;pointer-events:none;max-width:0;transition-delay:0s,0s,0s,.18s;transform:translate(4px)}.bhn1Oq_search{box-sizing:border-box;corner-shape:round;cursor:text;width:100%;height:28px;color:var(--dsw-alias-label-secondary);transition:width .18s var(--ds-ease-in-out), padding .18s var(--ds-ease-in-out), border-color .18s var(--ds-ease-in-out), background-color .18s var(--ds-ease-in-out);background:0 0;border:none;border-radius:50%;flex:none;align-items:center;gap:0;margin:0;padding:0;display:flex;overflow:hidden}.bhn1Oq_searchExpanded{border:.5px solid var(--dsw-alias-border-l4);width:calc(100% + 4px);height:30px;color:var(--dsw-alias-label-caption);background:0 0;border-radius:10px;margin-inline:-2px;padding:0 4px 0 0}.bhn1Oq_searchButton{corner-shape:round;cursor:pointer;width:28px;height:28px;color:inherit;background:0 0;border:none;border-radius:50%;flex:none;justify-content:center;align-items:center;padding:0;display:inline-flex}.bhn1Oq_searchExpanded .bhn1Oq_searchButton{width:28px;height:30px}.bhn1Oq_searchButton:hover{background:var(--dsw-alias-interactive-bg-hover)}.bhn1Oq_searchExpanded .bhn1Oq_searchButton:hover{background:0 0}.bhn1Oq_searchInput{opacity:0;pointer-events:none;width:0;min-width:0;color:var(--dsw-alias-label-primary);transition:opacity .12s var(--ds-ease-in-out);background:0 0;border:none;outline:none;flex:1;font-size:13px;line-height:18px}.bhn1Oq_searchExpanded .bhn1Oq_searchInput{opacity:1;pointer-events:auto;margin-left:-2px}.bhn1Oq_searchInput::placeholder{color:var(--dsw-alias-label-tertiary)}.bhn1Oq_clearButton{corner-shape:round;cursor:pointer;width:24px;height:24px;color:var(--dsw-alias-label-secondary);background:0 0;border:none;border-radius:50%;flex:none;justify-content:center;align-items:center;padding:0;display:inline-flex}.bhn1Oq_clearButton:hover{background:var(--dsw-alias-interactive-bg-hover)}.bhn1Oq_rail .bhn1Oq_sectionHeader{justify-content:flex-start;gap:0;margin-bottom:12px;padding-left:0}.bhn1Oq_rail .bhn1Oq_headerActions{max-width:none}.bhn1Oq_rail .bhn1Oq_iconButton{width:36px;height:36px;color:var(--dsw-alias-label-primary)}.bhn1Oq_rail .bhn1Oq_search{background:0 0;border-color:#0000;gap:0;width:36px;height:36px;margin:0 0 12px;padding:0}.bhn1Oq_rail .bhn1Oq_searchButton{width:36px;height:36px;color:var(--dsw-alias-label-primary)}.bhn1Oq_rail .bhn1Oq_searchButton:hover{background:var(--dsw-alias-interactive-bg-hover)}.bhn1Oq_listArea{min-height:0;margin-left:-4px;margin-right:calc(-1 * var(--dsh-session-list-edge-inset));flex-direction:column;flex:1;padding-left:4px;display:flex;overflow:visible}.bhn1Oq_rail .bhn1Oq_listArea{margin-left:0;margin-right:0;padding-left:0}.bhn1Oq_treeBody{flex-direction:column;flex:1;min-height:0;display:flex;position:relative}.bhn1Oq_fade{left:0;right:var(--dsh-session-list-edge-inset);background:linear-gradient(to bottom, transparent, var(--dsw-specific-sidebar-fill));pointer-events:none;height:24px;position:absolute;bottom:0}.bhn1Oq_wide{animation:bhn1Oq_wide-in .2s var(--ds-ease-in-out)}@keyframes bhn1Oq_wide-in{0%{opacity:0}}.bhn1Oq_list{min-height:0;margin-left:-4px;margin-right:var(--dsh-session-list-scrollbar-offset);padding-left:4px;padding-right:calc(var(--dsh-session-list-edge-inset) - var(--dsh-session-list-scrollbar-width) - var(--dsh-session-list-scrollbar-offset));scrollbar-gutter:stable;flex:1;padding-bottom:16px;overflow-y:auto}.bhn1Oq_flatList>*+*,.bhn1Oq_searchTree>[role=treeitem]+[role=treeitem],.bhn1Oq_groupSection>*+*{margin-top:2px}.bhn1Oq_searchStatus,.bhn1Oq_searchWarning{color:var(--dsw-alias-label-tertiary);padding:10px 12px;font-size:12px;line-height:18px}.bhn1Oq_searchWarning{color:var(--dsw-alias-label-secondary)}.bhn1Oq_groupSection{position:relative}.bhn1Oq_groupSection+.bhn1Oq_groupSection{margin-top:4px}.bhn1Oq_listTopDropIndicator,.bhn1Oq_workspaceDropBefore:before,.bhn1Oq_workspaceDropAfter:after{content:\"\";z-index:1;background:linear-gradient(55deg, transparent calc(50% - 1px), var(--dsw-alias-state-business-primary) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)) 0 0 / 5px 7px no-repeat, linear-gradient(125deg, transparent calc(50% - 1px), var(--dsw-alias-state-business-primary) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)) 0 5px / 5px 7px no-repeat, linear-gradient(var(--dsw-alias-state-business-primary) 0 0) 4px 5px / calc(100% - 4px) 2px no-repeat;pointer-events:none;height:12px;position:absolute;left:0;right:0}.bhn1Oq_listTopDropIndicator{top:-8px;left:0;right:var(--dsh-session-list-edge-inset)}.bhn1Oq_listTopDropActive>.bhn1Oq_workspaceDropBefore:first-child:before{display:none}.bhn1Oq_workspaceDropBefore:before{top:-8px}.bhn1Oq_workspaceDropAfter:after{bottom:-8px}.bhn1Oq_sessionOverflowButton{cursor:pointer;text-align:left;width:100%;height:28px;color:var(--dsw-alias-label-tertiary);background:0 0;border:none;border-radius:8px;padding:0 12px 0 28px;font-size:12px}.bhn1Oq_groupSection>.bhn1Oq_sessionOverflowButton{margin-top:0}.bhn1Oq_sessionOverflowButton:hover{color:var(--dsw-alias-label-secondary);background:0 0}.bhn1Oq_empty{color:var(--dsw-alias-label-tertiary);padding:16px 12px;font-size:13px}.bhn1Oq_renameInput{box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l4);width:100%;height:44px;color:var(--dsw-alias-label-primary);background:0 0;border-radius:22px;outline:none;padding:7px 14px;font-size:14px;font-weight:400;line-height:22px}.bhn1Oq_renameInput:disabled{color:var(--dsw-alias-label-dimmed)}.bhn1Oq_renameError{color:var(--dsw-alias-state-error-primary);margin-top:8px;font-size:12px;line-height:18px}.bhn1Oq_deleteAction:not(:disabled){color:var(--dsw-alias-state-error-primary)}.bhn1Oq_deleteStatus{color:var(--dsw-alias-label-secondary);font-size:12px;line-height:18px}@media (prefers-reduced-motion:reduce){.bhn1Oq_wide{animation:none}.bhn1Oq_search,.bhn1Oq_sectionLabel,.bhn1Oq_searchSlot,.bhn1Oq_searchInput,.bhn1Oq_headerActions{transition:none}}";
+ 		const tagId = "@deepseek-ai/dsh-client-ui-workspace/WorkspaceBrowser.module.css";
+ 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId) + "]") === null) {
+@@ -1461,7 +1517,7 @@ window.__ModuleLoader__.load({
+ 			return e.clientY < rect.top + rect.height / 2 ? "before" : "after";
+ 		}
+ 		/** The scrolling session tree; unmounting drops the sessions subscription and expand-all state. */
+-		function SessionTree({ useSessions, useSessionPendingInteraction, startSession, open, forkSession, workspaces, archivedSessionIds, workspaceReady, usePanelInfo, onRenameRequest, onDeleteRequest, onSessionRename, onSessionArchive, insertWorkspaceBefore, insertSessionBefore, orderBy, groupExpansion, setGroupExpanded, sessionOrderByAccount, sessionUpdatedAtByAccount, syncSessionOrderAccount, setSessionOrder, home, t, revealSessionId, onSessionRevealed }) {
++		function SessionTree({ useSessions, useSessionPendingInteraction, startSession, open, forkSession, workspaces, archivedSessionIds, unreadSessionIds, onUnreadChange, onSessionDelete, workspaceReady, usePanelInfo, onRenameRequest, onDeleteRequest, onSessionRename, onSessionArchive, insertWorkspaceBefore, insertSessionBefore, orderBy, groupExpansion, setGroupExpanded, sessionOrderByAccount, sessionUpdatedAtByAccount, syncSessionOrderAccount, setSessionOrder, home, t, revealSessionId, onSessionRevealed }) {
+ 			const panelActive = usePanelInfo((info) => info.activePanelId !== null);
+ 			const list = useSessions((s) => s);
+ 			const pendingInteractions = useSessionPendingInteraction((s) => s);
+@@ -1760,6 +1816,9 @@ window.__ModuleLoader__.load({
+ 											onReveal: node.id === revealSessionId && group.key === revealGroup ? () => {
+ 												onSessionRevealed(node.id);
+ 											} : void 0,
++											onDelete: onSessionDelete,
++											unread: unreadSessionIds.includes(node.id),
++											onUnreadChange,
+ 											drag: dragProps,
+ 											t
+ 										}, node.id);
+@@ -1782,7 +1841,7 @@ window.__ModuleLoader__.load({
+ 			});
+ 		}
+ 		/** The flat "In one list" body: every session is one draggable top-level row. */
+-		function FlatList({ useSessions, useSessionPendingInteraction, open, forkSession, onSessionRename, onSessionArchive, archivedSessionIds, usePanelInfo, orderBy, sessionOrderByAccount, sessionUpdatedAtByAccount, syncSessionOrderAccount, setSessionOrder, revealSessionId, onSessionRevealed, t }) {
++		function FlatList({ useSessions, useSessionPendingInteraction, open, forkSession, onSessionRename, onSessionArchive, onSessionDelete, unreadSessionIds, onUnreadChange, archivedSessionIds, usePanelInfo, orderBy, sessionOrderByAccount, sessionUpdatedAtByAccount, syncSessionOrderAccount, setSessionOrder, revealSessionId, onSessionRevealed, t }) {
+ 			const panelActive = usePanelInfo((info) => info.activePanelId !== null);
+ 			const list = useSessions((s) => s);
+ 			const pendingInteractions = useSessionPendingInteraction((s) => s);
+@@ -1869,6 +1928,9 @@ window.__ModuleLoader__.load({
+ 							onReveal: node.id === revealSessionId ? () => {
+ 								onSessionRevealed(node.id);
+ 							} : void 0,
++							onDelete: onSessionDelete,
++							unread: unreadSessionIds.includes(node.id),
++							onUnreadChange,
+ 							flat: true,
+ 							drag: {
+ 								start: () => {
+@@ -1973,7 +2035,7 @@ window.__ModuleLoader__.load({
+ 		* @param props - composed slot props (shell owner share + store + injected actions).
+ 		* @returns the region element tree.
+ 		*/
+-		function WorkspaceBrowser({ wide, usePanelInfo, expandSidebar, useSessions, useSessionPendingInteraction, useWorkspaces, useStore, actions, startSession, open, renameSession, forkSession, renameWorkspace, deleteWorkspace, insertWorkspaceBefore, archiveSession, insertSessionBefore, createWorkspace, searchSessions, searchResultLimit, useDirectoryFlow, useHostInfo, renderSlot, t }) {
++		function WorkspaceBrowser({ wide, usePanelInfo, expandSidebar, useSessions, useSessionPendingInteraction, useWorkspaces, useStore, actions, startSession, open, renameSession, forkSession, deleteSession, renameWorkspace, deleteWorkspace, insertWorkspaceBefore, archiveSession, insertSessionBefore, createWorkspace, searchSessions, searchResultLimit, useDirectoryFlow, useHostInfo, renderSlot, t }) {
+ 			const home = useHostInfo((info) => info.home);
+ 			const workspaces = useWorkspaces((state) => state.items);
+ 			const workspacePhase = useWorkspaces((state) => state.phase);
+@@ -1985,6 +2047,15 @@ window.__ModuleLoader__.load({
+ 			const groupExpansion = useStore((s) => s.groupExpansion);
+ 			const sessionOrderByAccount = useStore((s) => s.sessionOrderByAccount);
+ 			const sessionUpdatedAtByAccount = useStore((s) => s.sessionUpdatedAtByAccount);
++			const unreadSessionIds = useStore((s) => s.unreadSessionIds ?? []);
++			const onUnreadChange = (sessionId, unread) => {
++				if (unread) actions.markSessionUnread(sessionId);
++				else actions.markSessionRead(sessionId);
++			};
++			const openSession = (sessionId) => {
++				actions.markSessionRead(sessionId);
++				open(sessionId);
++			};
+ 			const currentBlankSessionId = useSessions((state) => {
+ 				const current = state.current;
+ 				return current !== void 0 && state.byId[current]?.blank === true ? current : void 0;
+@@ -2043,7 +2114,7 @@ window.__ModuleLoader__.load({
+ 				setRevealSessionId(sessionId);
+ 				setQuery("");
+ 				setSearchExpanded(false);
+-				open(sessionId);
++				openSession(sessionId);
+ 			};
+ 			const acknowledgeSessionReveal = (sessionId) => {
+ 				setRevealSessionId((current) => current === sessionId ? void 0 : current);
+@@ -2185,7 +2256,35 @@ window.__ModuleLoader__.load({
+ 				setSessionRenameDraft(currentTitle);
+ 				setSessionRenameError(null);
+ 			};
++			const [sessionDeleteTarget, setSessionDeleteTarget] = (0, react.useState)(null);
++			const [sessionDeleting, setSessionDeleting] = (0, react.useState)(false);
++			const [sessionDeleteError, setSessionDeleteError] = (0, react.useState)(null);
++			const closeSessionDelete = () => {
++				if (sessionDeleting) return;
++				setSessionDeleteTarget(null);
++				setSessionDeleteError(null);
++			};
++			const confirmSessionDelete = () => {
++				if (sessionDeleting || sessionDeleteTarget === null) return;
++				setSessionDeleting(true);
++				setSessionDeleteError(null);
++				deleteSession(sessionDeleteTarget.sessionId).then(() => {
++					setSessionDeleting(false);
++					setSessionDeleteTarget(null);
++				}).catch((reason) => {
++					setSessionDeleting(false);
++					setSessionDeleteError(reason instanceof Error ? reason.message : String(reason));
++				});
++			};
++			const onSessionDelete = (sessionId, title) => {
++				setSessionDeleteTarget({
++					sessionId,
++					title
++				});
++				setSessionDeleteError(null);
++			};
+ 			const onSessionArchive = (sessionId) => {
++				actions.markSessionRead(sessionId);
+ 				archiveSession(sessionId).catch((reason) => {
+ 					console.warn("session archive rejected:", reason);
+ 				});
+@@ -2369,11 +2468,14 @@ window.__ModuleLoader__.load({
+ 							usePanelInfo,
+ 							useSessions,
+ 							useSessionPendingInteraction,
+-							open,
++							open: openSession,
+ 							forkSession,
+ 							onSessionRename,
+ 							onSessionArchive,
++							onSessionDelete,
+ 							archivedSessionIds,
++							unreadSessionIds,
++							onUnreadChange,
+ 							orderBy,
+ 							sessionOrderByAccount,
+ 							sessionUpdatedAtByAccount,
+@@ -2388,6 +2490,7 @@ window.__ModuleLoader__.load({
+ 							useSessionPendingInteraction,
+ 							onSessionRename,
+ 							onSessionArchive,
++							onSessionDelete,
+ 							forkSession,
+ 							workspaces,
+ 							workspaceReady: workspacePhase === "ready" && workspaceStreamState !== "loading",
+@@ -2398,8 +2501,10 @@ window.__ModuleLoader__.load({
+ 							syncSessionOrderAccount: actions.syncSessionOrderAccount,
+ 							setSessionOrder: actions.setSessionOrder,
+ 							archivedSessionIds,
++							unreadSessionIds,
++							onUnreadChange,
+ 							startSession,
+-							open,
++							open: openSession,
+ 							insertWorkspaceBefore,
+ 							insertSessionBefore,
+ 							orderBy,
+@@ -2526,6 +2631,34 @@ window.__ModuleLoader__.load({
+ 							children: sessionRenameError
+ 						})]
+ 					}),
++					(0, react_jsx_runtime.jsxs)(_deepseek_ai_dsh_client_ui_primitives.Modal, {
++						open: sessionDeleteTarget !== null,
++						onClose: closeSessionDelete,
++						closeLabel: t("close"),
++						title: t("delete.session"),
++						...sessionDeleteTarget === null ? {} : { description: t("delete.session.desc", { name: sessionDeleteTarget.title }) },
++						footer: (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
++							variant: "outline",
++							disabled: sessionDeleting,
++							onClick: closeSessionDelete,
++							children: t("cancel")
++						}), (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
++							variant: "outline",
++							className: WorkspaceBrowser_module_css_default.deleteAction,
++							disabled: sessionDeleting,
++							onClick: confirmSessionDelete,
++							children: t("delete.session")
++						})] }),
++						children: [sessionDeleting && (0, react_jsx_runtime.jsx)("div", {
++							className: WorkspaceBrowser_module_css_default.deleteStatus,
++							role: "status",
++							children: t("delete.session.pending")
++						}), sessionDeleteError !== null && (0, react_jsx_runtime.jsx)("div", {
++							className: WorkspaceBrowser_module_css_default.renameError,
++							role: "alert",
++							children: sessionDeleteError
++						})]
++					}),
+ 					(0, react_jsx_runtime.jsxs)(_deepseek_ai_dsh_client_ui_primitives.Modal, {
+ 						open: deleteTarget !== null,
+ 						onClose: closeDelete,
+@@ -2591,6 +2724,7 @@ window.__ModuleLoader__.load({
+ 			"search.noMatches": "无匹配会话",
+ 			"search.hasMore": "仅显示前 {n} 条结果，请缩小搜索范围。",
+ 			"menu.addWorkspace": "添加工作区…",
++			"menu.openInFinder": "在 Finder 中打开",
+ 			"picker.loading": "正在加载工作区…",
+ 			"conflict.named": "已存在名为“{name}”的工作区。",
+ 			"folderError.title": "无法打开文件夹",
+@@ -2603,7 +2737,12 @@ window.__ModuleLoader__.load({
+ 			"delete.workspace": "删除工作区",
+ 			"delete.desc": "将把“{name}”从工作区列表中移除。文件夹与会话记录会保留，其会话将显示在“未分组”下。",
+ 			"delete.pending": "正在删除工作区…",
++			"delete.session": "删除会话",
++			"delete.session.desc": "将永久删除“{name}”的会话记录与执行轨迹。工作区文件会保留。此操作无法撤销。",
++			"delete.session.pending": "正在删除会话…",
+ 			"menu.fork": "分叉会话",
++			"menu.markUnread": "标为未读",
++			"menu.markRead": "标为已读",
+ 			"menu.archiveSession": "归档会话",
+ 			"sessions.count.one": "{n} 个会话",
+ 			"sessions.count.other": "{n} 个会话",
+@@ -2618,6 +2757,7 @@ window.__ModuleLoader__.load({
+ 			"status.planReview": "计划待审",
+ 			"status.waitingAnswer": "等待回答",
+ 			"status.completed": "已完成",
++			"status.unread": "未读",
+ 			"schedule.active": "有活动定时任务",
+ 			"hover.created": "创建于 {time}",
+ 			"hover.copied": "已复制",
+@@ -2657,6 +2797,7 @@ window.__ModuleLoader__.load({
+ 			"search.noMatches": "No matching sessions",
+ 			"search.hasMore": "Showing the first {n} results. Narrow your search.",
+ 			"menu.addWorkspace": "Add workspace…",
++			"menu.openInFinder": "Open in Finder",
+ 			"picker.loading": "Loading workspaces…",
+ 			"conflict.named": "A workspace named “{name}” already exists.",
+ 			"folderError.title": "Couldn’t open folder",
+@@ -2669,7 +2810,12 @@ window.__ModuleLoader__.load({
+ 			"delete.workspace": "Delete workspace",
+ 			"delete.desc": "This removes “{name}” from the workspace list. The folder and session logs will be kept. Its sessions will appear under Ungrouped.",
+ 			"delete.pending": "Deleting workspace…",
++			"delete.session": "Delete session",
++			"delete.session.desc": "This permanently deletes the conversation history and execution trace for “{name}”. Workspace files are kept. This can’t be undone.",
++			"delete.session.pending": "Deleting session…",
+ 			"menu.fork": "Fork session",
++			"menu.markUnread": "Mark as unread",
++			"menu.markRead": "Mark as read",
+ 			"menu.archiveSession": "Archive session",
+ 			"sessions.count.one": "{n} session",
+ 			"sessions.count.other": "{n} sessions",
+@@ -2684,6 +2830,7 @@ window.__ModuleLoader__.load({
+ 			"status.planReview": "Plan awaiting review",
+ 			"status.waitingAnswer": "Waiting for answer",
+ 			"status.completed": "Completed",
++			"status.unread": "Unread",
+ 			"schedule.active": "Has active scheduled task",
+ 			"hover.created": "Created {time}",
+ 			"hover.copied": "Copied",
+@@ -2766,6 +2913,9 @@ window.__ModuleLoader__.load({
+ 				forkSession: (sessionId) => {
+ 					uiWorkspace.forkSession(sessionId).catch(() => {});
+ 				},
++				deleteSession: async (sessionId) => {
++					await sessions.delete(sessionId);
++				},
+ 				renameWorkspace: async (workspaceId, title) => {
+ 					await workspaces.rename(workspaceId, title);
+ 				},
+@@ -2818,4 +2968,4 @@ window.__ModuleLoader__.load({
+ 	}
+ });
+ 
+-//# sourceMappingURL=client.js.map
+\ No newline at end of file
++//# sourceMappingURL=client.js.map
+diff --git a/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/locales.d.ts b/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/locales.d.ts
+--- a/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/locales.d.ts
++++ b/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/locales.d.ts
+@@ -30,6 +30,7 @@ export declare const zh: {
+     'search.noMatches': string;
+     'search.hasMore': string;
+     'menu.addWorkspace': string;
++    'menu.openInFinder': string;
+     'picker.loading': string;
+     'conflict.named': string;
+     'folderError.title': string;
+@@ -42,7 +43,12 @@ export declare const zh: {
+     'delete.workspace': string;
+     'delete.desc': string;
+     'delete.pending': string;
++    'delete.session': string;
++    'delete.session.desc': string;
++    'delete.session.pending': string;
+     'menu.fork': string;
++    'menu.markUnread': string;
++    'menu.markRead': string;
+     'menu.archiveSession': string;
+     'sessions.count.one': string;
+     'sessions.count.other': string;
+@@ -57,6 +63,7 @@ export declare const zh: {
+     'status.planReview': string;
+     'status.waitingAnswer': string;
+     'status.completed': string;
++    'status.unread': string;
+     'schedule.active': string;
+     'hover.created': string;
+     'hover.copied': string;
+@@ -98,6 +105,7 @@ export declare const en: {
+     'search.noMatches': string;
+     'search.hasMore': string;
+     'menu.addWorkspace': string;
++    'menu.openInFinder': string;
+     'picker.loading': string;
+     'conflict.named': string;
+     'folderError.title': string;
+@@ -110,7 +118,12 @@ export declare const en: {
+     'delete.workspace': string;
+     'delete.desc': string;
+     'delete.pending': string;
++    'delete.session': string;
++    'delete.session.desc': string;
++    'delete.session.pending': string;
+     'menu.fork': string;
++    'menu.markUnread': string;
++    'menu.markRead': string;
+     'menu.archiveSession': string;
+     'sessions.count.one': string;
+     'sessions.count.other': string;
+@@ -125,6 +138,7 @@ export declare const en: {
+     'status.planReview': string;
+     'status.waitingAnswer': string;
+     'status.completed': string;
++    'status.unread': string;
+     'schedule.active': string;
+     'hover.created': string;
+     'hover.copied': string;
+diff --git a/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/contract/slots.d.ts b/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/contract/slots.d.ts
+--- a/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/contract/slots.d.ts
++++ b/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/contract/slots.d.ts
+@@ -115,6 +115,8 @@ export type WorkspaceBrowserInjected = {
+     renameSession: (sessionId: SessionId, title: string) => Promise<void>;
+     /** Fork a Session at its last completed turn and open the child. */
+     forkSession: (sessionId: SessionId) => void;
++    /** Permanently delete a Session while retaining its Workspace files. */
++    deleteSession: (sessionId: SessionId) => Promise<void>;
+     /** Rename a Host Workspace (rejects on name conflict; resolves on durability). */
+     renameWorkspace: (workspaceId: WorkspaceId, title: string) => Promise<void>;
+     /** Delete only a Host Workspace registration; directory and Session logs remain. */
+diff --git a/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/rows/Rows.d.ts b/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/rows/Rows.d.ts
+--- a/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/rows/Rows.d.ts
++++ b/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/rows/Rows.d.ts
+@@ -2,6 +2,13 @@ import type { WorkspaceBrowserProps } from '../contract/slots.ts';
+ import type { GroupNode, SearchResultNode, SessionNode } from '../tree.ts';
+ /** The standard locale seat, prop-passed from the browser root. */
+ type RowTranslate = WorkspaceBrowserProps['t'];
++declare global {
++    interface Window {
++        dshDesktop?: {
++            openInFinder?: (path: string) => Promise<void>;
++        };
++    }
++}
+ /**
+  * Row drag wiring supplied by the tree owner. `drop` reports the half of the
+  * row where the pointer released so the owner can resolve an insert anchor.
+@@ -78,12 +85,15 @@ export declare function SearchResultItem({ result, currentId, onOpen, t }: {
+  * @param props.onFork - fork a session at its last completed turn.
+  * @param props.onArchive - archive a session by id.
+  * @param props.onReveal - scroll this row into view after search navigation, then acknowledge it.
++ * @param props.onDelete - open the permanent-deletion confirmation dialog.
++ * @param props.unread - whether the Session was manually marked unread.
++ * @param props.onUnreadChange - toggle the Session's local unread marker.
+  * @param props.drag - optional draggable-row wiring.
+  * @param props.flat - omit the empty status slot in the hierarchy-free flat list.
+  * @param props.t - the browser root's locale seat.
+  * @returns the session row.
+  */
+-export declare function SessionNodeItem({ node, currentId, now, onOpen, onRename, onFork, onArchive, onReveal, drag, flat, t, }: {
++export declare function SessionNodeItem({ node, currentId, now, onOpen, onRename, onFork, onArchive, onDelete, unread, onUnreadChange, onReveal, drag, flat, t, }: {
+     node: SessionNode;
+     currentId: string | undefined;
+     now: number;
+@@ -96,6 +106,10 @@ export declare function SessionNodeItem({ node, currentId, now, onOpen, onRename
+     onArchive: (id: SessionNode['id']) => void;
+     /** Scroll this row into view after search navigation, then acknowledge it. */
+     onReveal?: (() => void) | undefined;
++    /** Open the permanent-deletion confirmation dialog. */
++    onDelete?: ((id: SessionNode['id'], currentTitle: string) => void) | undefined;
++    unread?: boolean | undefined;
++    onUnreadChange?: ((id: SessionNode['id'], unread: boolean) => void) | undefined;
+     /** Present only on draggable rows (workspace-group sessions outside search). */
+     drag?: RowDragProps | undefined;
+     /** The row is rendered without a parent Workspace header. */
+diff --git a/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/rows/WorkspaceBrowser.d.ts b/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/rows/WorkspaceBrowser.d.ts
+--- a/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/rows/WorkspaceBrowser.d.ts
++++ b/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/rows/WorkspaceBrowser.d.ts
+@@ -4,5 +4,5 @@ import type { WorkspaceBrowserProps } from '../contract/slots.ts';
+  * @param props - composed slot props (shell owner share + store + injected actions).
+  * @returns the region element tree.
+  */
+-export declare function WorkspaceBrowser({ wide, usePanelInfo, expandSidebar, useSessions, useSessionPendingInteraction, useWorkspaces, useStore, actions, startSession, open, renameSession, forkSession, renameWorkspace, deleteWorkspace, insertWorkspaceBefore, archiveSession, insertSessionBefore, createWorkspace, searchSessions, searchResultLimit, useDirectoryFlow, useHostInfo, renderSlot, t, }: WorkspaceBrowserProps): import("react").JSX.Element;
++export declare function WorkspaceBrowser({ wide, usePanelInfo, expandSidebar, useSessions, useSessionPendingInteraction, useWorkspaces, useStore, actions, startSession, open, renameSession, forkSession, deleteSession, renameWorkspace, deleteWorkspace, insertWorkspaceBefore, archiveSession, insertSessionBefore, createWorkspace, searchSessions, searchResultLimit, useDirectoryFlow, useHostInfo, renderSlot, t, }: WorkspaceBrowserProps): import("react").JSX.Element;
+ //# sourceMappingURL=WorkspaceBrowser.d.ts.map
+\ No newline at end of file

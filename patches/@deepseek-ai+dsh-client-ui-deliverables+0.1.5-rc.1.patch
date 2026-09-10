@@ -1,0 +1,50 @@
+diff --git a/node_modules/@deepseek-ai/dsh-client-ui-deliverables/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-deliverables/lib/client.js
+--- a/node_modules/@deepseek-ai/dsh-client-ui-deliverables/lib/client.js
++++ b/node_modules/@deepseek-ai/dsh-client-ui-deliverables/lib/client.js
+@@ -468,7 +468,7 @@ window.__ModuleLoader__.load({
+ 		*/
+ 		function producedFileMentions(paths, openFile, label) {
+ 			return { resolve(value) {
+-				const path = paths.includes(value) ? value : onlyPathWithBasename(paths, value);
++				const path = paths.includes(value) ? value : onlyPathWithBasename(paths, value) ?? localPathReference(value);
+ 				if (path === void 0) return void 0;
+ 				return {
+ 					open: () => {
+@@ -479,6 +479,28 @@ window.__ModuleLoader__.load({
+ 				};
+ 			} };
+ 		}
++		/**
++		* Resolve Codex-style local path references that were not produced by a tool
++		* in the current turn. Keep bare identifiers inert: without a slash, an
++		* absolute-path prefix, or a conventional filename suffix, inline code is
++		* much more likely to be a command, package, or symbol than a local path.
++		*
++		* A leading `@` plus a single slash is a scoped package name, and a bare
++		* `local@domain.tld` is an email address; both are far more common in
++		* assistant prose than files with those exact shapes, and neither is
++		* openable. An explicit `./@scope/pkg` still resolves as a path above.
++		*/
++		function localPathReference(value) {
++			const candidate = value.trim();
++			if (candidate === "" || /[\r\n]/.test(candidate) || /^(?:https?|data|javascript):/i.test(candidate)) return void 0;
++			const path = candidate.replace(/(?:#L\d+(?:C\d+)?|:\d+(?::\d+)?)$/, "");
++			if (/^(?:\/|~[\\/]|\.{1,2}[\\/]|[A-Za-z]:[\\/]|\\\\)/.test(path)) return path;
++			if (/^@[^\\/@\s]+\/[^\\/@\s]+$/.test(path)) return void 0;
++			if (/^[^@\s\\/]+@[^@\s\\/]+\.[A-Za-z]{2,}$/.test(path)) return void 0;
++			if (/[\\/]/.test(path) || /[\\/]$/.test(path)) return path;
++			if (/^[^\\/]+\.[A-Za-z0-9][A-Za-z0-9._-]{0,15}$/.test(path)) return path;
++			return void 0;
++		}
+ 		/** The single produced path whose basename is exactly `value`, else undefined. */
+ 		function onlyPathWithBasename(paths, value) {
+ 			const matches = paths.filter((path) => basename(path) === value);
+@@ -486,7 +508,7 @@ window.__ModuleLoader__.load({
+ 		}
+ 		//#endregion
+ 		//#region \0dsh-css:/home/runner/work/deepseek-harness/deepseek-harness/packages/client/ui-deliverables/src/client/ProducedFiles.module.css.mjs
+-		const css$1 = ".P4kPIW_root{grid-template-columns:max-content minmax(0,1fr);align-items:start;column-gap:8px;margin-top:16px;font-size:13px;line-height:22px;display:grid}.P4kPIW_label{color:var(--dsw-alias-label-tertiary);grid-area:1/1}.P4kPIW_lane{--produced-file-gap:8px;grid-area:1/2;row-gap:6px;min-width:0;display:grid;container-type:inline-size}.P4kPIW_row{align-items:center;gap:var(--produced-file-gap);flex-wrap:nowrap;min-width:0;display:flex;overflow:hidden}.P4kPIW_file{box-sizing:border-box;min-width:0;color:var(--dsw-alias-link);font:inherit;cursor:pointer;background:0 0;border:none;border-radius:4px;flex:0 auto;align-items:center;gap:5px;margin:0;padding:0;font-weight:500;text-decoration:none;display:inline-flex}.P4kPIW_fileIcon{flex:none;width:1.1em;height:1.1em;position:relative;top:1.2px}.P4kPIW_fileName{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.P4kPIW_file:hover,.P4kPIW_file:focus-visible{text-underline-offset:3px;text-decoration:underline dotted}.P4kPIW_file:focus-visible{box-shadow:inset 0 0 0 2px var(--dsw-alias-border-l3);outline:none}.P4kPIW_more{white-space:nowrap;color:var(--dsw-alias-label-tertiary);flex:none;display:none}.P4kPIW_more[data-shown=\"6\"]{display:inline}@container (width<=687px){.P4kPIW_file:nth-of-type(6),.P4kPIW_more[data-shown=\"6\"]{display:none}.P4kPIW_more[data-shown=\"5\"]{display:inline}}@container (width<=583px){.P4kPIW_file:nth-of-type(5),.P4kPIW_more[data-shown=\"5\"]{display:none}.P4kPIW_more[data-shown=\"4\"]{display:inline}}@container (width<=479px){.P4kPIW_file:nth-of-type(4),.P4kPIW_more[data-shown=\"4\"]{display:none}.P4kPIW_more[data-shown=\"3\"]{display:inline}}@container (width<=375px){.P4kPIW_file:nth-of-type(3),.P4kPIW_more[data-shown=\"3\"]{display:none}.P4kPIW_more[data-shown=\"2\"]{display:inline}}@container (width<=271px){.P4kPIW_file:nth-of-type(2),.P4kPIW_more[data-shown=\"2\"]{display:none}.P4kPIW_more[data-shown=\"1\"]{display:inline}}";
++		const css$1 = ".P4kPIW_root{grid-template-columns:max-content minmax(0,1fr);align-items:start;column-gap:8px;margin-top:16px;font-size:13px;line-height:22px;display:grid}.P4kPIW_label{color:var(--dsw-alias-label-tertiary);grid-area:1/1}.P4kPIW_lane{--produced-file-gap:8px;grid-area:1/2;row-gap:6px;min-width:0;display:grid;container-type:inline-size}.P4kPIW_row{align-items:center;gap:var(--produced-file-gap);flex-wrap:nowrap;min-width:0;display:flex;overflow:hidden}.P4kPIW_file{box-sizing:border-box;min-width:0;color:var(--dsw-alias-link);font:inherit;cursor:pointer;background:0 0;border:none;border-radius:4px;flex:0 auto;align-items:center;gap:5px;margin:0;padding:0;font-weight:500;text-decoration:none;display:inline-flex}.P4kPIW_fileIcon{flex:none;width:1.1em;height:1.1em;position:relative;top:1.2px}.P4kPIW_fileName{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.P4kPIW_file:hover,.P4kPIW_file:focus-visible{text-underline-offset:3px;text-decoration:underline dotted}.P4kPIW_file:focus-visible{box-shadow:inset 0 0 0 2px var(--dsw-alias-border-l3);outline:none}.P4kPIW_more{white-space:nowrap;color:var(--dsw-alias-label-tertiary);flex:none;display:none}.P4kPIW_more[data-shown=\"6\"]{display:inline}@container (width<=687px){.P4kPIW_file:nth-of-type(6),.P4kPIW_more[data-shown=\"6\"]{display:none}.P4kPIW_more[data-shown=\"5\"]{display:inline}}@container (width<=583px){.P4kPIW_file:nth-of-type(5),.P4kPIW_more[data-shown=\"5\"]{display:none}.P4kPIW_more[data-shown=\"4\"]{display:inline}}@container (width<=479px){.P4kPIW_file:nth-of-type(4),.P4kPIW_more[data-shown=\"4\"]{display:none}.P4kPIW_more[data-shown=\"3\"]{display:inline}}@container (width<=375px){.P4kPIW_file:nth-of-type(3),.P4kPIW_more[data-shown=\"3\"]{display:none}.P4kPIW_more[data-shown=\"2\"]{display:inline}}@container (width<=271px){.P4kPIW_file:nth-of-type(2),.P4kPIW_more[data-shown=\"2\"]{display:none}.P4kPIW_more[data-shown=\"1\"]{display:inline}}.P4kPIW_showFolder{color:var(--dsw-alias-label-tertiary);font:inherit;cursor:pointer;background:0 0;border:none;border-radius:4px;justify-self:start;margin:0;padding:0 2px;line-height:20px}";
+ 		const tagId$1 = "@deepseek-ai/dsh-client-ui-deliverables/ProducedFiles.module.css";
+ 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$1) + "]") === null) {
+ 			const tag = document.createElement("style");

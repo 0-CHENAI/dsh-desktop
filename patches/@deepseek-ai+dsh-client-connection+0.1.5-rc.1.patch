@@ -1,0 +1,42 @@
+diff --git a/node_modules/@deepseek-ai/dsh-client-connection/lib/index.js b/node_modules/@deepseek-ai/dsh-client-connection/lib/index.js
+--- a/node_modules/@deepseek-ai/dsh-client-connection/lib/index.js
++++ b/node_modules/@deepseek-ai/dsh-client-connection/lib/index.js
+@@ -2,7 +2,7 @@ import z from "@deepseek-ai/schemastery";
+ import { Readable } from "node:stream";
+ import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+ import { credentialKey } from "@deepseek-ai/dsh-credentials";
+-import { Service } from "@deepseek-ai/cordis";
++import { Service, getTraceable } from "@deepseek-ai/cordis";
+ import { z as z$1 } from "zod";
+ //#region lib/types/api-path.js
+ /**
+@@ -538,7 +538,7 @@ var HostConnectionService = class extends Service {
+ 	}
+ 	/** Generic channel registry scoped to the Context reading this service. */
+ 	get rpc() {
+-		const owner = this.ctx;
++		const owner = getTraceable(this.ctx, this.ctx);
+ 		return {
+ 			handle: (channel, handler) => this.register(owner, channel, handler),
+ 			intercept: (channel, matches, handler) => this.registerInterceptor(owner, channel, matches, handler)
+@@ -546,7 +546,7 @@ var HostConnectionService = class extends Service {
+ 	}
+ 	/** Exact Fetch-route registry scoped to the Context reading this service. */
+ 	get fetch() {
+-		const owner = this.ctx;
++		const owner = getTraceable(this.ctx, this.ctx);
+ 		return { register: (route) => this.registerFetchRoute(owner, route) };
+ 	}
+ 	/** Apply the configured Host/Origin fence, then browser authentication. */
+@@ -615,7 +615,10 @@ var HostConnectionService = class extends Service {
+ 				await bridge(req, res, fetchHandler);
+ 			}
+ 		};
+-		return owner.effect(() => owner.webServer.register(route), `client-connection: ${channel} rpc channel`);
++		const fiber = owner.inject(["webServer"], (webCtx) => {
++			webCtx.effect(() => webCtx.webServer.register(route), `client-connection: ${channel} rpc channel`);
++		});
++		return () => fiber.dispose();
+ 	}
+ 	registerInterceptor(owner, channel, matches, handler) {
+ 		if (channel !== "/api") throw new Error(`connection: invalid shared RPC channel ${JSON.stringify(channel)}`);
