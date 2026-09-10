@@ -330,8 +330,9 @@ export async function sweepRegistry(dshHome) {
     }
   }
 
-  for (const dir of [layout.staging, layout.trash]) {
-    const label = dir === layout.staging ? 'staging' : 'trash'
+  const profiles = join(dshHome, 'profiles')
+  for (const dir of [layout.staging, layout.trash, profiles]) {
+    const label = dir === layout.staging ? 'staging' : dir === layout.trash ? 'trash' : 'validation'
     let entries = []
     try {
       entries = await readdir(dir)
@@ -339,6 +340,7 @@ export async function sweepRegistry(dshHome) {
       continue
     }
     for (const name of entries) {
+      if (dir === profiles && !/^\.market-validation-[A-Za-z0-9]{6}$/u.test(name)) continue
       try {
         await rm(join(dir, name), { recursive: true, force: true })
         removed.push(`${label}/${name}`)
