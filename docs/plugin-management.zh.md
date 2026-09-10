@@ -192,6 +192,10 @@ Slot 的完整关系是：
 
 Slot 有 `single`、`list`、`keyed`、`chain` 等种类。`single` 只能有一个 occupant；`keyed` 需要唯一 key；父组件被卸载时，子 Slot 的声明和 occupant 也随生命周期撤销。Slot 冲突是 UI 层冲突，不等同于 npm 版本冲突。
 
+Slot 只约定**位置**，不约定**外观**：`settings.plugin.item` 这类卡片 Slot 由宿主铺好 flex 列并派发，容器里的样式完全属于插件。因此一个只写类名、不带样式表的插件会以浏览器默认样式渲染——它自己的 `<button>` 会读成一个细边框输入框，标题和描述挤在同一行，紧挨着宿主画好的卡片。这类缺陷既不会被构建发现，也不会被启动期兼容性检查发现（插件是加载成功的，只是不好看）。
+
+DSH Desktop 的处理方式是在自己的 Client Module（`packages/dsh-desktop-client-ui`）里为**已知的**这类插件补上宿主 `PluginCard` 的同款 chrome：规则逐条对齐 `--dsw-*` token，选择器全部限定在插件自己的类名前缀下，因此不渲染该插件时样式表完全惰性、也绝不碰宿主 UI。补丁只在插件尚未自带样式时才有意义，插件发版补齐后应删除对应规则块（`test/plugin-card-chrome.test.ts` 守住这份契约：每个类都有规则、几何与宿主一致、选择器不越界）。
+
 ## 4. 插件之间的依赖关系与相互影响
 
 | 关系层 | 表达方式 | 典型影响 | 当前管理方式 |
