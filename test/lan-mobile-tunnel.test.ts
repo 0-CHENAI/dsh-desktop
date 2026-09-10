@@ -233,16 +233,112 @@ describe('LanMobileBridge tunnel state and endpoints', () => {
     const toggleOffJson = await toggleOffRes.json()
     expect(toggleOffJson.active).toBe(false)
   })
+
+  it('starts Pinggy and stops Cloudflare when the user asks for a backup link', async () => {
+    const stopped: string[] = []
+    const bridge = new LanMobileBridge({
+      harnessUrl: () => 'http://127.0.0.1:3000',
+      port: 0,
+      createCloudflareTunnel: async () =>
+        fakeTunnel('cloudflare', 'https://primary.trycloudflare.com', () =>
+          stopped.push('cloudflare')
+        ),
+      createPinggyTunnel: async () => fakeTunnel('pinggy', 'https://fallback.a.pinggy.link')
+    })
+    bridges.push(bridge)
+    const snapshot = await bridge.start()
+    await bridge.toggleTunnel(true)
+    expect(bridge.snapshot().tunnelProvider).toBe('cloudflare')
+
+    const response = await fetch(`http://127.0.0.1:${snapshot.port}/desktop/tunnel/fallback`, {
+      method: 'POST'
+    })
+    expect(response.status).toBe(200)
+    const body = await response.json()
+    expect(body.ok).toBe(true)
+    expect(body.active).toBe(true)
+    expect(body.provider).toBe('pinggy')
+    expect(body.url).toBe('https://fallback.a.pinggy.link')
+    expect(body.pairingUrl).toContain('https://fallback.a.pinggy.link/pair?token=')
+    expect(stopped).toEqual(['cloudflare'])
+  })
+
+  it('keeps Cloudflare when the Pinggy backup link cannot start', async () => {
+    const stopped: string[] = []
+    const bridge = new LanMobileBridge({
+      harnessUrl: () => 'http://127.0.0.1:3000',
+      port: 0,
+      createCloudflareTunnel: async () =>
+        fakeTunnel('cloudflare', 'https://primary.trycloudflare.com', () =>
+          stopped.push('cloudflare')
+        ),
+      createPinggyTunnel: async () => {
+        throw new Error('OpenSSH missing')
+      }
+    })
+    bridges.push(bridge)
+    await bridge.start()
+    await bridge.toggleTunnel(true)
+
+    const snapshot = await bridge.fallbackToPinggy()
+    expect(snapshot.tunnelActive).toBe(true)
+    expect(snapshot.tunnelProvider).toBe('cloudflare')
+    expect(snapshot.tunnelUrl).toBe('https://primary.trycloudflare.com')
+    expect(snapshot.tunnelError).toBe('OpenSSH missing')
+    expect(stopped).toEqual([])
+  })
+
+  it('rejects backup-link fallback unless an unconnected Cloudflare tunnel is active', async () => {
+    const bridge = new LanMobileBridge({
+      harnessUrl: () => 'http://127.0.0.1:3000',
+      port: 0,
+      forceCloudflareFailure: true,
+      createPinggyTunnel: async () => fakeTunnel('pinggy', 'https://forced.a.pinggy.link')
+    })
+    bridges.push(bridge)
+    const snapshot = await bridge.start()
+
+    const lanRes = await fetch(`http://127.0.0.1:${snapshot.port}/desktop/tunnel/fallback`, {
+      method: 'POST'
+    })
+    expect(lanRes.status).toBe(400)
+
+    await bridge.toggleTunnel(true)
+    expect(bridge.snapshot().tunnelProvider).toBe('pinggy')
+    const pinggyRes = await fetch(`http://127.0.0.1:${snapshot.port}/desktop/tunnel/fallback`, {
+      method: 'POST'
+    })
+    expect(pinggyRes.status).toBe(400)
+
+    await bridge.toggleTunnel(false)
+    const reconnect = await fetch(`http://127.0.0.1:${snapshot.port}/reconnect`)
+    const pairingId = /let id="([^"]+)"/.exec(await reconnect.text())?.[1]
+    expect(pairingId).toBeTruthy()
+    await fetch(`http://127.0.0.1:${snapshot.port}/desktop/decide`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id: pairingId, approved: true })
+    })
+    await fetch(`http://127.0.0.1:${snapshot.port}/pair/status?id=${pairingId}`)
+
+    const connectedRes = await fetch(`http://127.0.0.1:${snapshot.port}/desktop/tunnel/fallback`, {
+      method: 'POST'
+    })
+    expect(connectedRes.status).toBe(409)
+  })
 })
 function fakeTunnel(
   provider: InternetTunnelInstance['provider'],
-  url: string
+  url: string,
+  onStop?: () => void
 ): InternetTunnelInstance {
   return {
     provider,
     url,
     process: {} as InternetTunnelInstance['process'],
-    stop: async () => undefined
+    stop: async () => {
+      onStop?.()
+    }
   }
 }
 

@@ -29,7 +29,11 @@ O DSH Desktop transforma a experiência local do DeepSeek Harness em um aplicati
 
 ## Download
 
-Baixe o DSH Desktop para macOS e Windows no [site oficial](https://www.dshdesktop.com/#download).
+> **Canal de download deste fork:** Este repositório é `0-CHENAI/dsh-desktop`. Baixe as compilações deste fork em [seus Releases](https://github.com/0-CHENAI/dsh-desktop/releases); o aplicativo empacotado usa a fonte de atualizações deste fork. O site e os canais descritos abaixo pertencem ao projeto original `dataelement/dsh-desktop`.
+
+Oferecemos versões estáveis e de prévia: a **versão estável**, recomendada para o uso diário, está disponível no [site oficial](https://www.dshdesktop.com/#download). Para experimentar uma **versão de prévia**, escolha uma versão marcada como **Pre-release** no [GitHub Releases](https://github.com/dataelement/dsh-desktop/releases).
+
+As versões de prévia incluem nossos novos recursos e adotam rapidamente as versões oficiais mais recentes do DeepSeek Harness. Elas podem ser incompatíveis com plugins da comunidade e **não são recomendadas para usuários em geral**. Quem quiser experimentar as novidades antecipadamente é bem-vindo a compartilhar comentários na comunidade; só distribuímos as atualizações para toda a comunidade após a validação desses usuários.
 
 As versões instaladas verificam atualizações logo após a inicialização e a cada seis horas. Quando há uma nova versão, o DSH Desktop pede confirmação antes do download; a instalação só começa ao escolher **Restart and install**. Também é possível verificar manualmente ou ignorar uma versão sem ocultar lançamentos futuros.
 
@@ -57,17 +61,27 @@ O DeepSeek Harness já fornece o Agent Runtime e a Web UI. O DSH Desktop acresce
 - Verifica atualizações do aplicativo e mantém download e instalação sob controle do usuário
 - Adapta menus, barra de título, foco da janela, tema e marca para macOS e Windows
 
+## Criação de PPT
+
+Ative o botão **PPT**, escolha um modelo e descreva a apresentação desejada. O catálogo inclui **16 modelos e 192 layouts**, com exportação para PPTX editável. As prévias são em inglês; as apresentações podem ser geradas em inglês ou chinês, com configurações de fontes para ambos. O idioma da prévia não determina o idioma do resultado.
+
+O PPT vem pré-instalado e suas instruções automáticas se aplicam apenas às sessões com o botão PPT ativado. Consulte o [guia de PPT](packages/ppt-runtime/README.md) para detalhes sobre modelos, validação e fontes de referência.
+
 ## Acesso pelo celular
 
 Selecione **Connect Phone…** no menu `Harness` e leia o código. O desktop precisa aprovar explicitamente a conexão antes que o celular acesse as sessões.
 
 O Harness permanece em uma porta aleatória de `127.0.0.1`. O celular usa um Bridge separado e pareado: ele pode ficar restrito à rede local ou ativar um Cloudflare Quick Tunnel temporário para acesso remoto.
 
+Se o Cloudflare não iniciar, o aplicativo tenta usar o Pinggy. Se o link do Cloudflare aparecer, mas o celular não conseguir abri-lo, selecione **Can’t open? Try another link** para mudar para o Pinggy.
+
 ## Modo de segurança e recuperação
 
 Se um plugin de terceiros impedir a inicialização ou a renderização, o DSH Desktop relaciona as evidências do Runtime e do frontend aos plugins instalados e abre uma recuperação guiada.
 
 Selecione **Restart as Safe Mode…** no menu `Harness` para iniciar um Profile isolado apenas com os Bundle oficiais principais. Os plugins externos do Profile normal ficam bloqueados, mas o Agent, as sessões, as configurações de modelos e os espaços de trabalho continuam disponíveis.
+
+A tela de recuperação verifica se há atualizações compatíveis dos plugins e permite instalá-las quando disponíveis. O Modo de segurança também permite atualizar vários plugins de uma vez. Para obter ajuda, passe o cursor sobre **WeChat group** para exibir o QR code ou clique em **Discord** para abrir a comunidade.
 
 Se a interface normal não abrir, inicie o aplicativo com `--safe-mode`. No macOS:
 
