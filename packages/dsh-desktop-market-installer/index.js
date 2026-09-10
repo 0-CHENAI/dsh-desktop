@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { PassThrough } from 'node:stream'
 
 import { installGeneration } from './generations/installer.mjs'
+import { createMarketValidationProfile } from './generations/market-validation.mjs'
 import {
   exposeMissingGenerationLinks,
   publishGenerationManifest
@@ -432,6 +433,7 @@ export function createDesktopPnpmService(options) {
   } = options
   let active
   let closed = false
+  const validationProfiles = new Set()
 
   const pnpmEntryPath = resolvePnpmEntry()
 
@@ -449,12 +451,12 @@ export function createDesktopPnpmService(options) {
     }
     const done = (async () => {
       try {
-        const { exitCode, message } = await task({
+        const { exitCode, message, validationProfileDir } = await task({
           write: (line) => stdout.write(`${line}\n`),
           isCancelled: () => cancelled
         })
         if (message) stderr.write(message)
-        return { exitCode, signal: null }
+        return { exitCode, signal: null, ...(validationProfileDir ? { validationProfileDir } : {}) }
       } catch (error) {
         stderr.write(error instanceof Error ? error.message : String(error))
         return { exitCode: 1, signal: null }
@@ -516,7 +518,9 @@ export function createDesktopPnpmService(options) {
         if (exposed.length > 0) write(`available for validation: ${exposed.join(', ')}`)
         write(`staged for next restart: ${published.plugins.join(', ')}`)
         write(`bundles: ${JSON.stringify(published.bundles)}`)
-        return { exitCode: 0 }
+        const validationProfileDir = await createMarketValidationProfile(home)
+        validationProfiles.add(validationProfileDir)
+        return { exitCode: 0, validationProfileDir }
       })
     )
     active = handle
@@ -606,9 +610,12 @@ export function createDesktopPnpmService(options) {
     async dispose() {
       closed = true
       const operation = active
-      if (!operation) return
-      operation.cancel()
-      await operation.done.catch(() => undefined)
+      if (operation) {
+        operation.cancel()
+        await operation.done.catch(() => undefined)
+      }
+      await Promise.all([...validationProfiles].map(directory => rm(directory, { recursive: true, force: true })))
+      validationProfiles.clear()
     }
   })
 }

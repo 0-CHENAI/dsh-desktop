@@ -2,6 +2,9 @@ import childProcess from 'node:child_process'
 import { syncBuiltinESMExports } from 'node:module'
 import { pathToFileURL } from 'node:url'
 import { enforceWindowsChildProcessHide } from './windows-child-process-hide.mjs'
+import { installMarketGenerationCompatibility } from './market-generation-compat.mjs'
+
+installMarketGenerationCompatibility()
 
 // On macOS Harness runs inside an Electron utility process (TCC responsibility
 // isolation), so `process.execPath` and `argv0` point at the Electron helper

@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -26,6 +26,18 @@ describe('the plugin generation registry', () => {
     homes.push(home)
     return home
   }
+
+  it('sweeps crashed market validation views without touching real profiles', async () => {
+    const home = await freshHome()
+    await ensureRegistryDirectories(home)
+    for (const name of ['web', '.market-validation-abc123', '.market-validation-user-profile']) {
+      await mkdir(join(home, 'profiles', name))
+    }
+    const result = await sweepRegistry(home)
+    expect(result.removed).toContain('validation/.market-validation-abc123')
+    expect(await readdir(join(home, 'profiles'))).toEqual(expect.arrayContaining(['web', '.market-validation-user-profile']))
+    expect(await readdir(join(home, 'profiles'))).not.toContain('.market-validation-abc123')
+  })
 
   async function fakeGeneration(
     home: string,
