@@ -825,7 +825,12 @@ jobs:
 
   publish-main:
     name: Publish GitHub Release from main
-    if: false
+    if: >-
+      always() &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      needs.macos-apple-silicon.result == 'success' &&
+      needs.windows-x64.result == 'success'
     needs:
       - macos-apple-silicon
       - windows-x64
@@ -843,13 +848,15 @@ jobs:
           name: windows-x64-dev
           path: release-assets
       - name: Generate GitHub release note from main
+        id: main-release
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.MODELS_TOKEN }}
         run: |
           set -euo pipefail
           git fetch --force --tags
-          version="$(node scripts/next-release-version.mjs)"
+          version="$(node scripts/read-release-artifact-version.mjs release-assets)"
           tag="v${version}"
+          printf 'tag=%s\n' "$tag" >> "$GITHUB_OUTPUT"
           mkdir -p .github/release-artifacts
           out=.github/release-artifacts/github-release-notes.md
           if [ -n "${COPILOT_GITHUB_TOKEN:-}" ]; then
@@ -875,12 +882,18 @@ jobs:
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.main-release.outputs.tag }}
         run: |
           set -euo pipefail
           git fetch --force --tags
-          version="$(node scripts/next-release-version.mjs)"
-          tag="v${version}"
+          tag="$RELEASE_TAG"
           notes=.github/release-artifacts/github-release-notes.md
+          if git rev-parse --verify "refs/tags/$tag" >/dev/null 2>&1; then
+            test "$(git rev-parse "refs/tags/$tag^{commit}")" = "$GITHUB_SHA" || {
+              echo "Release tag $tag belongs to another commit; refusing to overwrite it."
+              exit 1
+            }
+          fi
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$tag" release-assets/* --clobber --repo "$GITHUB_REPOSITORY"
             gh release edit "$tag" --notes-file "$notes" --latest --repo "$GITHUB_REPOSITORY"

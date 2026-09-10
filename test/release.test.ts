@@ -435,7 +435,7 @@ describe('GitHub release contract', () => {
     ).toHaveLength(2)
   })
 
-  it('does not publish unsigned installers as latest on push to main', async () => {
+  it('publishes main builds only after both platforms pass and uses their artifact version', async () => {
     const workflow = (
       await readFile(
         path.join(projectRoot, '.github', 'workflows', 'release.yml'),
@@ -446,7 +446,17 @@ describe('GitHub release contract', () => {
 
     expect(workflow).toMatch(/push:\n[ \t]+branches:\n[ \t]+- main\n/)
     expect(workflow).toContain('name: Publish GitHub Release from main')
-    expect(publishMain).toMatch(/\n    if: false\n/)
+    expect(publishMain).toContain("github.event_name == 'push'")
+    expect(publishMain).toContain("github.ref == 'refs/heads/main'")
+    expect(publishMain).toContain("needs.macos-apple-silicon.result == 'success'")
+    expect(publishMain).toContain("needs.windows-x64.result == 'success'")
+    expect(publishMain).toContain('scripts/read-release-artifact-version.mjs release-assets')
+    expect(publishMain).not.toContain('scripts/next-release-version.mjs')
+    expect(publishMain).toContain('steps.main-release.outputs.tag')
+    expect(publishMain).toContain('--target "$GITHUB_SHA"')
+    expect(publishMain).toContain('--latest')
+    expect(publishMain).toContain('refusing to overwrite it')
+    expect(publishMain).toContain('未签名 Dev 包')
     expect(workflow).toContain('scripts/next-release-version.mjs --apply')
     expect(workflow.match(/Set app version from next patch release/g)).toHaveLength(2)
     expect(workflow).toContain('RELEASE_VERSION_OVERRIDE')
