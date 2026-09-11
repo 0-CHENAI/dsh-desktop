@@ -1,10 +1,10 @@
 import { ipcRenderer } from 'electron'
+import type { DesktopMenuCommand } from '../shared/desktop-menu'
 import {
-  formatZoomPercentage,
-  WINDOWS_MENU_BUTTON_WIDTH,
-  WINDOWS_TITLEBAR_HEIGHT,
-  type DesktopMenuCommand
-} from '../shared/desktop-menu'
+  formatWindowsMenuZoomPercentage,
+  WINDOWS_MENU_PRELOAD_BUTTON_WIDTH,
+  WINDOWS_MENU_PRELOAD_TITLEBAR_HEIGHT
+} from './windows-menu-model'
 
 type MenuEntry =
   | { kind: 'command'; command: DesktopMenuCommand; label: string; shortcut?: string }
@@ -40,7 +40,7 @@ function mountWindowsMenu(): void {
   const applyZoomState = (result: unknown): void => {
     const zoomFactor = readZoomFactor(result)
     if (zoomFactor !== undefined && zoomDisplay) {
-      zoomDisplay.textContent = formatZoomPercentage(zoomFactor)
+      zoomDisplay.textContent = formatWindowsMenuZoomPercentage(zoomFactor)
     }
   }
   const refreshZoomState = (): void => {
@@ -235,7 +235,7 @@ const menuStyles = `
   html, body { width:100%; height:100%; margin:0; overflow:hidden; background:transparent; }
   body { color:var(--label-primary); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; user-select:none; }
   .bar { position:relative; width:100%; height:100%; display:flex; justify-content:flex-end; align-items:flex-start; background:var(--chrome-surface); border-left:1px solid var(--chrome-divider); }
-  .menuButton { appearance:none; flex:none; width:${WINDOWS_MENU_BUTTON_WIDTH}px; height:${WINDOWS_TITLEBAR_HEIGHT}px; display:grid; place-items:center; padding:0; color:var(--label-secondary); background:transparent; border:0; cursor:pointer; }
+  .menuButton { appearance:none; flex:none; width:${WINDOWS_MENU_PRELOAD_BUTTON_WIDTH}px; height:${WINDOWS_MENU_PRELOAD_TITLEBAR_HEIGHT}px; display:grid; place-items:center; padding:0; color:var(--label-secondary); background:transparent; border:0; cursor:pointer; }
   .menuButton:hover, .menuButton.isOpen { color:var(--label-primary); background:var(--hover); }
   .menuButton:focus-visible { outline:2px solid #4d6bfe; outline-offset:-3px; }
   .menu { position:absolute; top:43px; right:0; width:304px; max-height:calc(100vh - 56px); overflow:auto; padding:7px; color:var(--label-primary); background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:0 14px 36px rgba(0,0,0,.2); scrollbar-width:thin; }

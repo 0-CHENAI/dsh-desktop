@@ -1,8 +1,18 @@
 import { build } from 'esbuild'
 import electron from 'electron'
-import { mkdirSync } from 'node:fs'
+import { mkdirSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
+
+const preloadOutput = join(process.cwd(), 'out', 'preload')
+for (const entry of readdirSync(preloadOutput).filter((name) => name.endsWith('.cjs'))) {
+  const source = readFileSync(join(preloadOutput, entry), 'utf8')
+  if (/require\(["']\.\//.test(source)) {
+    throw new Error(
+      `Sandboxed preload ${entry} is not self-contained; local CommonJS imports cannot be loaded by Electron`
+    )
+  }
+}
 
 const output = join(process.cwd(), 'artifacts', 'recovery-ui')
 mkdirSync(output, { recursive: true })
