@@ -4,8 +4,10 @@ import { createWriteStream, existsSync, mkdirSync, type WriteStream } from 'node
 import { mkdir } from 'node:fs/promises'
 import { createServer } from 'node:net'
 import { dirname, join } from 'node:path'
+import { StringDecoder } from 'node:string_decoder'
 import type { RuntimePhase, RuntimeSnapshot } from '../../shared/contracts'
 import { SAFE_MODE_PROFILE } from '../state/safe-mode-profile'
+import { parsePluginStartupFailures, type PluginStartupFailure } from '../../shared/plugin-startup-failure'
 
 export interface HarnessRuntimeOptions {
   dshEntryPath: string
@@ -329,6 +331,8 @@ export class HarnessRuntime {
   private url?: string
   private launchToken?: string
   private readonly logLines: string[] = []
+  private pluginFailures: PluginStartupFailure[] = []
+  private logDecoders = { stdout: new StringDecoder('utf8'), stderr: new StringDecoder('utf8') }
   private readonly logRemainders: Record<'stdout' | 'stderr', string> = {
     stdout: '',
     stderr: ''
@@ -343,14 +347,21 @@ export class HarnessRuntime {
       launchDirectory: this.launchDirectory,
       url: this.url,
       authToken: this.launchToken,
+      pluginFailures: structuredClone(this.pluginFailures),
       logs: [...this.logLines]
     }
   }
 
+  private launchAttempts = 0
+  get launchAttemptId(): number { return this.launchAttempts }
+
   async start(launchDirectory: string, profile = 'web'): Promise<void> {
     await this.stop()
+    this.launchAttempts++
     this.logRemainders.stdout = ''
     this.logRemainders.stderr = ''
+    this.pluginFailures = []
+    this.logDecoders = { stdout: new StringDecoder('utf8'), stderr: new StringDecoder('utf8') }
     this.launchDirectory = launchDirectory
     this.url = undefined
     this.launchToken = undefined
@@ -420,8 +431,11 @@ export class HarnessRuntime {
     }
     this.child = child
 
-    child.stdout.on('data', (chunk: Buffer) => this.writeChunk('stdout', chunk))
+    child.stdout.on('data', (chunk: Buffer) => {
+      if (this.child === child) this.writeChunk('stdout', chunk)
+    })
     child.stderr.on('data', (chunk: Buffer) => {
+      if (this.child !== child) return
       this.writeChunk('stderr', chunk)
       if (this.child !== child || this.phase !== 'starting') return
 
@@ -541,10 +555,14 @@ ${cause}`
   }
 
   private writeChunk(source: 'stdout' | 'stderr', chunk: Buffer): void {
-    const lines = `${this.logRemainders[source]}${chunk.toString('utf8')}`.split(/\r?\n/)
+    const lines = `${this.logRemainders[source]}${this.logDecoders[source].write(chunk)}`.split(/\r?\n/)
     this.logRemainders[source] = lines.pop() ?? ''
     for (const line of lines) {
       if (line.length === 0) continue
+      if (source === 'stderr' && this.phase === 'starting') {
+        const failures = parsePluginStartupFailures(line)
+        if (failures) this.pluginFailures.push(...failures)
+      }
       this.writeLog(`[${source}] ${line}`)
       this.launchToken ??= extractLaunchToken(line)
     }
@@ -552,7 +570,7 @@ ${cause}`
 
   private flushLogRemainders(): void {
     for (const source of ['stdout', 'stderr'] as const) {
-      const line = this.logRemainders[source]
+      const line = this.logRemainders[source] + this.logDecoders[source].end()
       this.logRemainders[source] = ''
       if (line.length > 0) this.writeLog(`[${source}] ${line}`)
     }
