@@ -456,7 +456,7 @@ describe('GitHub release contract', () => {
     expect(publishMain).toContain('--target "$GITHUB_SHA"')
     expect(publishMain).toContain('--latest')
     expect(publishMain).toContain('refusing to overwrite it')
-    expect(publishMain).toContain('macOS 包已完成 Developer ID 签名与 Apple 公证')
+    expect(publishMain).toContain('macOS 包未进行 Developer ID 签名与 Apple 公证')
     expect(publishMain).toContain('Windows Dev 包未使用 UKey 签名')
     expect(workflow).toContain('scripts/next-release-version.mjs --apply')
     expect(workflow.match(/Set app version from next patch release/g)).toHaveLength(2)
@@ -464,38 +464,24 @@ describe('GitHub release contract', () => {
     expect(workflow).toContain('description: Override the next version')
   })
 
-  it('signs and notarizes Apple Silicon tag and main releases', async () => {
+  it('builds macOS releases without Apple credentials or notarization', async () => {
     const workflow = await readFile(
       path.join(projectRoot, '.github', 'workflows', 'release.yml'),
       'utf8'
     )
-
-    for (const secret of [
-      'DESKTOP_CSC_LINK',
-      'DESKTOP_CSC_KEY_PASSWORD',
-      'DESKTOP_APPLE_API_KEY',
-      'DESKTOP_APPLE_API_KEY_ID',
-      'DESKTOP_APPLE_API_ISSUER',
-      'DESKTOP_APPLE_TEAM_ID'
-    ]) {
-      expect(workflow).toContain(`secrets.${secret}`)
-    }
-    expect(workflow.match(/Prepare macOS signing keychain/g)).toHaveLength(1)
-    expect(workflow.match(/xcrun stapler validate/g)).toHaveLength(4)
-    expect(workflow.match(/xcrun notarytool submit/g)).toHaveLength(2)
-    expect(workflow.match(/CSC_IDENTITY_AUTO_DISCOVERY: 'false'/g)).toHaveLength(1)
-    expect(workflow).toContain('Build signed Apple Silicon development package')
-    expect(workflow).toContain("github.event_name == 'push' && github.ref == 'refs/heads/main'")
-    expect(workflow).toContain('dist-dev/mac-arm64/DSH Desktop Dev.app')
-    expect(workflow).toContain('dist-dev/dsh-desktop-dev-mac-arm64.dmg')
-    expect(workflow).not.toContain("CSC_LINK: ''")
-    expect(workflow).toMatch(
-      /macos-apple-silicon:\r?\n\s+name: macOS Apple Silicon\r?\n(?:[\s\S]*?)runs-on: macos-15\r?\n\s+steps:/
-    )
+    const macos = workflow.slice(workflow.indexOf('  macos-apple-silicon:'), workflow.indexOf('  windows-x64:'))
+    expect(macos).not.toContain('secrets.DESKTOP_')
+    expect(macos).not.toContain('signing_keychain')
+    expect(macos).not.toContain('notarytool')
+    expect(macos).not.toContain('stapler')
+    expect(macos).not.toContain('spctl')
+    expect(macos.match(/CSC_IDENTITY_AUTO_DISCOVERY: 'false'/g)).toHaveLength(2)
+    expect(macos).toContain('run: npm run package:mac:arm64')
+    expect(macos).toContain('run: npm run package:dev:mac:arm64')
+    expect(macos).toContain("!startsWith(github.ref, 'refs/tags/v') && inputs.prerelease_tag == ''")
+    expect(macos).toContain('dist/latest-mac-arm64.yml')
+    expect(macos).toContain('dist-dev/latest-mac.yml')
     expect(workflow).not.toContain('macos-intel:')
-    expect(workflow).toMatch(
-      /windows-x64:\r?\n\s+name: Windows x64\r?\n(?:[\s\S]*?)runs-on: windows-2022\r?\n\s+steps:/
-    )
   })
 
   it('signs Windows installers on the local UKey runner before publishing', async () => {
