@@ -40,7 +40,9 @@ let resetTimer: NodeJS.Timeout | undefined
 let checkPromise: Promise<unknown> | undefined
 let lastCheckedAt = 0
 let installing = false
+let preparingInstallation = false
 let downloading = false
+let autoInstallVersion: string | undefined
 let started = false
 let handlersRegistered = false
 let skippedVersion: string | undefined
@@ -59,7 +61,10 @@ export function registerUpdateHandlers(): void {
   ipcMain.handle('updates:check', () => checkForUpdates(true))
   ipcMain.handle('updates:install', () => installDownloadedUpdate())
   ipcMain.handle('updates:skip', (_event, version: unknown) => skipUpdate(version))
-  ipcMain.handle('updates:download', () => downloadAvailableUpdate())
+  ipcMain.handle('updates:download', () => downloadAvailableUpdate(true))
+  ipcMain.handle('updates:dismiss', (_event, version: unknown) => {
+    if (version === autoInstallVersion) autoInstallVersion = undefined
+  })
   ipcMain.handle('updates:list-versions', () => fetchAvailableReleases(app.getVersion()))
   ipcMain.handle('updates:install-version', (_event, version: unknown) =>
     installSpecificVersion(version)
@@ -85,7 +90,8 @@ function currentSkippedVersion(): string | undefined {
  * version they skipped.
  */
 export function skipUpdate(version: unknown): UpdateStatus {
-  if (typeof version !== 'string' || !version) return getUpdateStatus()
+  if (typeof version !== 'string' || !version || installing || preparingInstallation || version !== status.availableVersion) return getUpdateStatus()
+  if (version === autoInstallVersion) autoInstallVersion = undefined
   skippedVersion = version
   skipLoaded = true
   writeSkippedVersion(skipFile(), version)
@@ -110,7 +116,7 @@ export function startUpdateManager(options: { prepareToInstall: () => Promise<vo
 }
 
 export async function checkForUpdates(manual = false): Promise<UpdateStatus> {
-  if (checkPromise || ['available', 'downloading', 'downloaded'].includes(status.phase)) {
+  if (checkPromise || downloading || installing || preparingInstallation || ['available', 'downloading', 'downloaded'].includes(status.phase)) {
     return getUpdateStatus()
   }
 
@@ -147,25 +153,27 @@ async function checkGitHubRelease(): Promise<void> {
 }
 
 /**
- * Start the download the user just accepted. Consent and download are one
- * action — an update sits at `available` until it is taken.
+ * Download the offered update. The banner authorizes automatic installation;
+ * the historical version picker leaves installation for a separate confirmation.
  */
-export async function downloadAvailableUpdate(): Promise<UpdateStatus> {
-  if (status.phase !== 'available' || downloading) return getUpdateStatus()
+export async function downloadAvailableUpdate(autoInstall = false): Promise<UpdateStatus> {
+  if (status.phase !== 'available' || downloading || installing || preparingInstallation) return getUpdateStatus()
   if (!supportsUpdates()) {
     await shell.openExternal(githubLatestReleasePage())
     transition({ type: 'reset' })
     return getUpdateStatus()
   }
   downloading = true
+  autoInstallVersion = autoInstall ? status.availableVersion : undefined
+  transition({ type: 'progress', percent: 0 }, true)
 
   try {
     await autoUpdater.downloadUpdate()
   } catch (error) {
-    transition({ type: 'error', message: errorMessage(error) })
-    if (status.manual) scheduleReset()
+    reportUpdateError(error)
   } finally {
     downloading = false
+    autoInstallVersion = undefined
   }
 
   return getUpdateStatus()
@@ -180,7 +188,7 @@ export async function downloadAvailableUpdate(): Promise<UpdateStatus> {
 export async function installSpecificVersion(version: unknown): Promise<UpdateStatus> {
   if (typeof version !== 'string' || !version) return getUpdateStatus()
   if (!supportsUpdates()) return getUpdateStatus()
-  if (checkPromise || ['checking', 'downloading', 'downloaded'].includes(status.phase)) {
+  if (checkPromise || downloading || installing || preparingInstallation || ['checking', 'downloading', 'downloaded'].includes(status.phase)) {
     return getUpdateStatus()
   }
 
@@ -214,16 +222,20 @@ export async function installSpecificVersion(version: unknown): Promise<UpdateSt
 }
 
 export async function installDownloadedUpdate(): Promise<void> {
-  if (status.phase !== 'downloaded' || installing) return
+  if (status.phase !== 'downloaded' || installing || preparingInstallation) return
   installing = true
+  autoInstallVersion = undefined
+  transition({ type: 'installing' })
 
+  preparingInstallation = true
   try {
     await prepareToInstall?.()
-    autoUpdater.quitAndInstall(false, true)
+    // An updater error during shutdown preparation invalidates this attempt.
+    if (status.installing) autoUpdater.quitAndInstall(false, true)
   } catch (error) {
-    installing = false
-    transition({ type: 'error', message: errorMessage(error) }, true)
-    scheduleReset()
+    reportUpdateError(error, true)
+  } finally {
+    preparingInstallation = false
   }
 }
 
@@ -267,20 +279,28 @@ function configureUpdater(): void {
     // the update, which is the same click that starts the download.
     transition({ type: 'available', version: info.version })
   })
-  autoUpdater.on('download-progress', (progress) =>
-    transition({ type: 'progress', percent: progress.percent })
-  )
+  autoUpdater.on('download-progress', (progress) => {
+    if (status.phase === 'downloading') transition({ type: 'progress', percent: progress.percent })
+  })
   autoUpdater.on('update-not-available', () => {
     transition({ type: 'not-available' })
     scheduleReset()
   })
-  autoUpdater.on('update-downloaded', (info) =>
+  autoUpdater.on('update-downloaded', (info) => {
+    if (status.phase !== 'downloading' || status.availableVersion !== info.version) return
+    const autoInstall = autoInstallVersion === info.version
+    autoInstallVersion = undefined
     transition({ type: 'downloaded', version: info.version })
-  )
-  autoUpdater.on('error', (error) => {
-    transition({ type: 'error', message: errorMessage(error) })
-    if (status.manual) scheduleReset()
+    if (autoInstall) void installDownloadedUpdate()
   })
+  autoUpdater.on('error', (error) => reportUpdateError(error))
+}
+
+function reportUpdateError(error: unknown, manual = status.manual || installing): void {
+  autoInstallVersion = undefined
+  installing = false
+  transition({ type: 'error', message: errorMessage(error) }, manual)
+  if (manual) scheduleReset()
 }
 
 function transition(event: UpdateStateEvent, manualOverride?: boolean): void {
