@@ -69,146 +69,19 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run typecheck
-      - name: Validate Apple release secrets
-        if: >-
-          startsWith(github.ref, 'refs/tags/v') ||
-          inputs.prerelease_tag != '' ||
-          (github.event_name == 'push' && github.ref == 'refs/heads/main')
-        env:
-          CSC_LINK: ${{ secrets.DESKTOP_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.DESKTOP_CSC_KEY_PASSWORD }}
-          APPLE_API_KEY_CONTENT: ${{ secrets.DESKTOP_APPLE_API_KEY }}
-          APPLE_API_KEY_ID: ${{ secrets.DESKTOP_APPLE_API_KEY_ID }}
-          APPLE_API_ISSUER: ${{ secrets.DESKTOP_APPLE_API_ISSUER }}
-          APPLE_TEAM_ID: ${{ secrets.DESKTOP_APPLE_TEAM_ID }}
-        run: |
-          required=(CSC_LINK CSC_KEY_PASSWORD APPLE_API_KEY_CONTENT APPLE_API_KEY_ID APPLE_API_ISSUER APPLE_TEAM_ID)
-          for name in "${required[@]}"; do
-            test -n "${!name}" || { echo "::error::Missing required secret: $name"; exit 1; }
-          done
-      - name: Prepare Apple notarization key
-        if: >-
-          startsWith(github.ref, 'refs/tags/v') ||
-          inputs.prerelease_tag != '' ||
-          (github.event_name == 'push' && github.ref == 'refs/heads/main')
-        env:
-          APPLE_API_KEY_CONTENT: ${{ secrets.DESKTOP_APPLE_API_KEY }}
-          APPLE_API_KEY_ID: ${{ secrets.DESKTOP_APPLE_API_KEY_ID }}
-          APPLE_API_ISSUER: ${{ secrets.DESKTOP_APPLE_API_ISSUER }}
-          APPLE_TEAM_ID: ${{ secrets.DESKTOP_APPLE_TEAM_ID }}
-        run: |
-          key_path="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY_ID}.p8"
-          printf '%s' "$APPLE_API_KEY_CONTENT" > "$key_path"
-          chmod 600 "$key_path"
-          echo "APPLE_API_KEY=$key_path" >> "$GITHUB_ENV"
-          echo "APPLE_API_KEY_ID=$APPLE_API_KEY_ID" >> "$GITHUB_ENV"
-          echo "APPLE_API_ISSUER=$APPLE_API_ISSUER" >> "$GITHUB_ENV"
-          echo "APPLE_TEAM_ID=$APPLE_TEAM_ID" >> "$GITHUB_ENV"
-      - name: Prepare macOS signing keychain
-        if: >-
-          startsWith(github.ref, 'refs/tags/v') ||
-          inputs.prerelease_tag != '' ||
-          (github.event_name == 'push' && github.ref == 'refs/heads/main')
-        id: signing_keychain
-        env:
-          CSC_LINK: ${{ secrets.DESKTOP_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.DESKTOP_CSC_KEY_PASSWORD }}
-        run: node scripts/prepare-macos-signing-keychain.mjs
-      - name: Build signed Apple Silicon package
+      - name: Build unsigned Apple Silicon release package
         if: startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != ''
         env:
-          CSC_KEYCHAIN: ${{ steps.signing_keychain.outputs.keychain }}
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
         run: npm run package:mac:arm64
-      - name: Build signed Apple Silicon development package
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          CSC_KEYCHAIN: ${{ steps.signing_keychain.outputs.keychain }}
-        run: npm run package:dev:mac:arm64
-      - name: Build isolated Apple Silicon development package
-        if: >-
-          !startsWith(github.ref, 'refs/tags/v') &&
-          inputs.prerelease_tag == '' &&
-          (github.event_name != 'push' || github.ref != 'refs/heads/main')
+      - name: Build unsigned Apple Silicon development package
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') && inputs.prerelease_tag == '' }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
         run: npm run package:dev:mac:arm64
       - name: Preserve Apple Silicon update metadata
         if: startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != ''
         run: mv dist/latest-mac.yml dist/latest-mac-arm64.yml
-      - name: Sign, notarize, and staple Apple Silicon release DMG
-        if: startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != ''
-        env:
-          CSC_KEYCHAIN: ${{ steps.signing_keychain.outputs.keychain }}
-        run: |
-          dmg_path="dist/dsh-desktop-mac-arm64.dmg"
-          identity="$(security find-identity -v -p codesigning "$CSC_KEYCHAIN" | awk '/Developer ID Application/ { print $2; exit }')"
-          test -n "$identity" || { echo "::error::Developer ID Application identity not found"; exit 1; }
-          codesign --keychain "$CSC_KEYCHAIN" --sign "$identity" --timestamp --force "$dmg_path"
-          xcrun notarytool submit "$dmg_path" \
-            --key "$APPLE_API_KEY" \
-            --key-id "$APPLE_API_KEY_ID" \
-            --issuer "$APPLE_API_ISSUER" \
-            --wait \
-            --no-s3-acceleration
-          xcrun stapler staple "$dmg_path"
-      - name: Sign, notarize, and staple Apple Silicon development DMG
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          CSC_KEYCHAIN: ${{ steps.signing_keychain.outputs.keychain }}
-        run: |
-          dmg_path="dist-dev/dsh-desktop-dev-mac-arm64.dmg"
-          identity="$(security find-identity -v -p codesigning "$CSC_KEYCHAIN" | awk '/Developer ID Application/ { print $2; exit }')"
-          test -n "$identity" || { echo "::error::Developer ID Application identity not found"; exit 1; }
-          codesign --keychain "$CSC_KEYCHAIN" --sign "$identity" --timestamp --force "$dmg_path"
-          xcrun notarytool submit "$dmg_path" \
-            --key "$APPLE_API_KEY" \
-            --key-id "$APPLE_API_KEY_ID" \
-            --issuer "$APPLE_API_ISSUER" \
-            --wait \
-            --no-s3-acceleration
-          xcrun stapler staple "$dmg_path"
-      - name: Remove temporary signing keychain
-        if: >-
-          always() &&
-          (startsWith(github.ref, 'refs/tags/v') ||
-          inputs.prerelease_tag != '' ||
-          (github.event_name == 'push' && github.ref == 'refs/heads/main'))
-        env:
-          SIGNING_KEYCHAIN: ${{ steps.signing_keychain.outputs.keychain }}
-          SIGNING_CERTIFICATE: ${{ steps.signing_keychain.outputs.certificate }}
-          SIGNING_KEYCHAIN_LIST: ${{ steps.signing_keychain.outputs.keychain_list }}
-        run: |
-          if [ -n "$SIGNING_KEYCHAIN_LIST" ] && [ -f "$SIGNING_KEYCHAIN_LIST" ]; then
-            keychains=()
-            while IFS= read -r keychain; do
-              test -z "$keychain" || keychains+=("$keychain")
-            done < "$SIGNING_KEYCHAIN_LIST"
-            security list-keychains -d user -s "${keychains[@]}"
-            rm -f "$SIGNING_KEYCHAIN_LIST"
-          fi
-          test -z "$SIGNING_KEYCHAIN" || security delete-keychain "$SIGNING_KEYCHAIN" || rm -f "$SIGNING_KEYCHAIN"
-          test -z "$SIGNING_CERTIFICATE" || rm -f "$SIGNING_CERTIFICATE"
-          test -z "$APPLE_API_KEY" || rm -f "$APPLE_API_KEY"
-      - name: Verify signed and notarized Apple Silicon release
-        if: startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != ''
-        run: |
-          app_path="dist/mac-arm64/DSH Desktop.app"
-          codesign --verify --deep --strict --verbose=2 "$app_path"
-          spctl --assess --type execute --verbose=4 "$app_path"
-          xcrun stapler validate "$app_path"
-          codesign --verify --verbose=2 dist/dsh-desktop-mac-arm64.dmg
-          spctl --assess --type open --context context:primary-signature --verbose=4 dist/dsh-desktop-mac-arm64.dmg
-          xcrun stapler validate dist/dsh-desktop-mac-arm64.dmg
-      - name: Verify signed and notarized Apple Silicon development release
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          app_path="dist-dev/mac-arm64/DSH Desktop Dev.app"
-          codesign --verify --deep --strict --verbose=2 "$app_path"
-          spctl --assess --type execute --verbose=4 "$app_path"
-          xcrun stapler validate "$app_path"
-          codesign --verify --verbose=2 dist-dev/dsh-desktop-dev-mac-arm64.dmg
-          spctl --assess --type open --context context:primary-signature --verbose=4 dist-dev/dsh-desktop-dev-mac-arm64.dmg
-          xcrun stapler validate dist-dev/dsh-desktop-dev-mac-arm64.dmg
       - uses: actions/upload-artifact@v4
         if: startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != ''
         with:
@@ -924,7 +797,7 @@ jobs:
             echo "MODELS_TOKEN not set; using the deterministic GitHub release note."
             python3 .github/scripts/github_release_notes.py generate-fallback --tag "$tag" --output "$out"
           fi
-          printf '%s\n' '- macOS 包已完成 Developer ID 签名与 Apple 公证；Windows Dev 包未使用 UKey 签名。' >> "$out"
+          printf '%s\n' '- macOS 包未进行 Developer ID 签名与 Apple 公证，更新需手动下载安装；Windows Dev 包未使用 UKey 签名。' >> "$out"
           python3 .github/scripts/github_release_notes.py validate --tag "$tag" --input "$out"
       - name: Publish GitHub Release
         env:
