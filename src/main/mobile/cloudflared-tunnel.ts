@@ -13,6 +13,8 @@ import type { InternetTunnelInstance } from './internet-tunnel'
 const execFileAsync = promisify(execFile)
 
 export const CLOUDFLARED_VERSION = '2026.8.2'
+export const CLOUDFLARED_DOWNLOAD_ATTEMPTS = 3
+export const CLOUDFLARED_DOWNLOAD_TIMEOUT_MS = 30_000
 
 export interface CloudflareAssetSpec {
   asset: string
@@ -124,7 +126,7 @@ export async function ensureCloudflaredBinary(options: {
   const tempDownloadPath = join(options.cacheDir, `.download-${Date.now()}-${target.spec.asset}`)
 
   try {
-    const download = options.download ?? downloadFileWithRedirects
+    const download = options.download ?? downloadCloudflaredWithRetry
     await download(downloadUrl, tempDownloadPath)
 
     const actualSha256 = await sha256OfFile(tempDownloadPath)
@@ -155,11 +157,48 @@ export async function ensureCloudflaredBinary(options: {
   }
 }
 
+export function isRetryableDownloadError(error: unknown): boolean {
+  const code =
+    error && typeof error === 'object' && 'code' in error
+      ? String((error as { code?: unknown }).code ?? '')
+      : ''
+  if (code === 'ECONNRESET' || code === 'ECONNREFUSED' || code === 'ETIMEDOUT') return true
+  const message = error instanceof Error ? error.message : String(error)
+  return /ECONNRESET|ECONNREFUSED|ETIMEDOUT/.test(message)
+}
+
+export async function downloadCloudflaredWithRetry(
+  url: string,
+  destination: string,
+  options?: {
+    download?: (url: string, destination: string) => Promise<void>
+    attempts?: number
+    sleep?: (ms: number) => Promise<void>
+  }
+): Promise<void> {
+  const download = options?.download ?? downloadFileWithRedirects
+  const attempts = options?.attempts ?? CLOUDFLARED_DOWNLOAD_ATTEMPTS
+  const sleep = options?.sleep ?? ((ms: number) => new Promise((resolve) => setTimeout(resolve, ms)))
+  let lastError: unknown
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      await download(url, destination)
+      return
+    } catch (error) {
+      lastError = error
+      await rm(destination, { force: true }).catch(() => undefined)
+      if (attempt === attempts || !isRetryableDownloadError(error)) throw error
+      await sleep(200 * 2 ** (attempt - 1))
+    }
+  }
+  throw lastError
+}
+
 export function downloadFileWithRedirects(
   url: string,
   destination: string,
   maxRedirects = 5,
-  timeoutMs = 30_000
+  timeoutMs = CLOUDFLARED_DOWNLOAD_TIMEOUT_MS
 ): Promise<void> {
   return new Promise((resolvePromise, rejectPromise) => {
     if (maxRedirects <= 0) {
@@ -183,12 +222,18 @@ export function downloadFileWithRedirects(
       // as destination errors. A plain pipe only observed the file stream, so
       // a reset after the HTTP 200 headers left this promise pending forever.
       res.once('aborted', () => {
-        fileStream.destroy(new Error('cloudflared download response was aborted'))
+        fileStream.destroy(
+          Object.assign(new Error('cloudflared download response was aborted'), { code: 'ECONNRESET' })
+        )
       })
       void pipeline(res, fileStream).then(() => resolvePromise(), rejectPromise)
     })
     request.setTimeout(timeoutMs, () => {
-      request.destroy(new Error(`cloudflared download timed out after ${timeoutMs / 1000}s`))
+      request.destroy(
+        Object.assign(new Error(`cloudflared download timed out after ${timeoutMs / 1000}s`), {
+          code: 'ETIMEDOUT'
+        })
+      )
     })
     request.once('error', rejectPromise)
   })

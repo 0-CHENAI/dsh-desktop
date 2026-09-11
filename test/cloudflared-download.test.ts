@@ -13,7 +13,7 @@ vi.mock('node:https', async (importOriginal) => ({
   get: httpsMocks.get
 }))
 
-import { downloadFileWithRedirects } from '../src/main/mobile/cloudflared-tunnel'
+import { downloadFileWithRedirects, isRetryableDownloadError } from '../src/main/mobile/cloudflared-tunnel'
 
 const tempDirs: string[] = []
 
@@ -38,7 +38,9 @@ describe('cloudflared download lifecycle', () => {
     response.write('partial download')
     response.emit('aborted')
 
-    await expect(download).rejects.toThrow()
+    const error = await download.catch((reason: unknown) => reason)
+    expect(error).toBeInstanceOf(Error)
+    expect(isRetryableDownloadError(error)).toBe(true)
   })
 
   it('aborts an idle request at the configured timeout', async () => {
@@ -50,9 +52,11 @@ describe('cloudflared download lifecycle', () => {
     httpsMocks.get.mockReturnValue(request as unknown as ClientRequest)
     const destination = await tempDestination()
 
-    await expect(
-      downloadFileWithRedirects('https://example.test/cloudflared', destination, 5, 25)
-    ).rejects.toThrow('cloudflared download timed out after 0.025s')
+    const error = await downloadFileWithRedirects('https://example.test/cloudflared', destination, 5, 25).catch(
+      (reason: unknown) => reason
+    )
+    expect((error as Error).message).toBe('cloudflared download timed out after 0.025s')
+    expect(isRetryableDownloadError(error)).toBe(true)
     expect(request.destroy).toHaveBeenCalledOnce()
   })
 })
