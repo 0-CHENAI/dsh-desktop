@@ -1,25 +1,37 @@
 diff --git a/node_modules/@deepseek-ai/dsh-client-ui-trajectory/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-trajectory/lib/client.js
 --- a/node_modules/@deepseek-ai/dsh-client-ui-trajectory/lib/client.js
 +++ b/node_modules/@deepseek-ai/dsh-client-ui-trajectory/lib/client.js
-@@ -196,6 +196,8 @@ window.__ModuleLoader__.load({
+@@ -196,6 +196,14 @@
  			"details.subtoolCalls": "子工具调用",
  			"details.error": "错误",
  			"details.failure.auth": "API 密钥无效",
++			"details.failure.server": "模型服务暂时不可用，请稍后重试。",
++			"details.failure.transport": "连接模型服务时中断，请检查网络后重试。",
++			"details.failure.timeout": "模型请求超时，请稍后重试。",
++			"details.failure.invalid": "模型服务拒绝了请求参数，请检查模型设置或附件。",
++			"details.failure.rateLimit": "请求过于频繁，请稍后重试。",
++			"details.failure.unknown": "模型服务返回未知错误；若问题持续，请检查服务商状态。可尝试重新发送。",
 +			"details.failure.quota": "账户额度或余额不足，请充值或检查服务商的用量限制。",
 +			"details.failure.forbidden": "模型服务商拒绝了本次请求，请检查账号权限、地区限制或模型开通情况。",
  			"details.retry": "重试",
  			"details.scheduled": "已计划",
  			"details.retryDelay": "重试延迟",
-@@ -374,6 +376,8 @@ window.__ModuleLoader__.load({
+@@ -374,6 +382,14 @@
  			"details.subtoolCalls": "Subtool calls",
  			"details.error": "Error",
  			"details.failure.auth": "API key is invalid",
++			"details.failure.server": "The model service is temporarily unavailable. Please retry later.",
++			"details.failure.transport": "The connection to the model service was interrupted. Check your network and retry.",
++			"details.failure.timeout": "The model request timed out. Please retry later.",
++			"details.failure.invalid": "The model service rejected the request. Check the model settings or attachments.",
++			"details.failure.rateLimit": "Too many requests. Please retry later.",
++			"details.failure.unknown": "The model service returned an unknown error. Check provider status if it persists, or try sending again.",
 +			"details.failure.quota": "Your account has insufficient quota or balance. Add credits or check your provider's usage limits.",
 +			"details.failure.forbidden": "The model provider denied this request. Check your account permissions, region, or model access.",
  			"details.retry": "Retry",
  			"details.scheduled": "Scheduled",
  			"details.retryDelay": "Retry delay",
-@@ -3658,7 +3662,7 @@ window.__ModuleLoader__.load({
+@@ -3658,7 +3674,7 @@
  		}
  		//#endregion
  		//#region \0dsh-css:/home/runner/work/deepseek-harness/deepseek-harness/packages/client/ui-trajectory/src/client/TrajectoryTable.module.css.mjs
@@ -28,12 +40,18 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-trajectory/lib/client.js b/
  		const tagId$3 = "@deepseek-ai/dsh-client-ui-trajectory/TrajectoryTable.module.css";
  		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$3) + "]") === null) {
  			const tag = document.createElement("style");
-@@ -4241,6 +4245,8 @@ window.__ModuleLoader__.load({
+@@ -4241,8 +4257,13 @@
  		}
  		function requestErrorMessage(request, t) {
  			if (request.errorCode === "AUTH") return t("details.failure.auth");
 +			if (request.errorCode === "QUOTA") return t("details.failure.quota");
 +			if (request.errorCode === "FORBIDDEN") return t("details.failure.forbidden");
  			if (request.error === "trajectory.compaction-interrupted") return t("layout.compactionInterrupted");
- 			return request.error;
+-			return request.error;
++			const key = ({ SERVER: "server", TRANSPORT: "transport", TIMEOUT: "timeout",
++                INVALID_REQUEST: "invalid", RATE_LIMIT: "rateLimit",
++                PI_AI_ERROR: "unknown", PI_AI_EMPTY_ERROR: "unknown" })[request.errorCode];
++            return t("details.failure." + (key ?? "unknown"));
  		}
+ 		function TokenRows({ cell, t }) {
+ 			const content = cell.output !== void 0 && cell.think !== void 0 ? Math.max(0, cell.output - cell.think) : void 0;
