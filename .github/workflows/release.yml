@@ -139,6 +139,8 @@ jobs:
       - run: npm run build
       - name: Check recovery UI on native Windows at three display scales
         run: node scripts/check-recovery-ui.mjs
+      - name: Check Windows titlebar layout and button clicks
+        run: node scripts/check-windows-titlebar-layout.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
