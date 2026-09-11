@@ -1,4 +1,4 @@
-import type { UpdateStatus } from '../../shared/contracts'
+import type { ManualUpdateReason, UpdateStatus } from '../../shared/contracts'
 
 export type UpdateStateEvent =
   | { type: 'check'; manual: boolean }
@@ -13,9 +13,16 @@ export type UpdateStateEvent =
 
 export function initialUpdateStatus(
   currentVersion: string,
-  canInstall = true
+  canInstall = true,
+  manualUpdateReason?: ManualUpdateReason
 ): UpdateStatus {
-  return { phase: 'idle', currentVersion, manual: false, canInstall }
+  return {
+    phase: 'idle',
+    currentVersion,
+    manual: false,
+    canInstall,
+    ...(manualUpdateReason ? { manualUpdateReason } : {})
+  }
 }
 
 export function reduceUpdateStatus(
@@ -26,7 +33,8 @@ export function reduceUpdateStatus(
     currentVersion: current.currentVersion,
     manual: current.manual,
     downgrade: current.downgrade,
-    canInstall: current.canInstall
+    canInstall: current.canInstall,
+    ...(current.manualUpdateReason ? { manualUpdateReason: current.manualUpdateReason } : {})
   }
 
   switch (event.type) {
@@ -47,7 +55,11 @@ export function reduceUpdateStatus(
     case 'unsupported':
       return { ...base, phase: 'unsupported', message: event.message }
     case 'reset':
-      return initialUpdateStatus(current.currentVersion, current.canInstall)
+      return initialUpdateStatus(
+        current.currentVersion,
+        current.canInstall,
+        current.manualUpdateReason
+      )
   }
 }
 

@@ -28,11 +28,24 @@ import {
   fetchLatestPublishedVersion,
   STABLE_FEED_URL
 } from './version-catalog'
+import { macOSUpdateSupport } from './macos-update-support'
 
 const { autoUpdater } = electronUpdater
 const TRANSIENT_STATUS_MS = 8_000
+const macOSSupport = process.platform === 'darwin'
+  ? macOSUpdateSupport({
+      isPackaged: app.isPackaged,
+      platform: process.platform,
+      execPath: process.execPath
+    })
+  : undefined
+const canInstallUpdates = supportsAutoUpdates(
+  app.isPackaged,
+  process.platform,
+  macOSSupport?.supported ?? true
+)
 
-let status = initialUpdateStatus(app.getVersion(), supportsUpdates())
+let status = initialUpdateStatus(app.getVersion(), canInstallUpdates, macOSSupport?.reason)
 let prepareToInstall: (() => Promise<void>) | undefined
 let recoverFromInstallFailure: (() => Promise<void>) | undefined
 let startupTimer: NodeJS.Timeout | undefined
@@ -361,7 +374,7 @@ function checkAfterResume(): void {
 }
 
 function supportsUpdates(): boolean {
-  return supportsAutoUpdates(app.isPackaged, process.platform)
+  return canInstallUpdates
 }
 
 function errorMessage(error: unknown): string {
