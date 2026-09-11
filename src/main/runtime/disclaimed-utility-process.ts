@@ -70,6 +70,10 @@ function definedEnvironment(environment: NodeJS.ProcessEnv | undefined): Record<
 }
 
 class UtilityProcessAdapter extends EventEmitter implements HarnessChildProcess {
+  get pid(): number | undefined {
+    return this.child.pid
+  }
+
   readonly stdout: NodeJS.ReadableStream
   readonly stderr: NodeJS.ReadableStream
   exitCode: number | null = null

@@ -456,14 +456,15 @@ describe('GitHub release contract', () => {
     expect(publishMain).toContain('--target "$GITHUB_SHA"')
     expect(publishMain).toContain('--latest')
     expect(publishMain).toContain('refusing to overwrite it')
-    expect(publishMain).toContain('未签名 Dev 包')
+    expect(publishMain).toContain('macOS 包已完成 Developer ID 签名与 Apple 公证')
+    expect(publishMain).toContain('Windows Dev 包未使用 UKey 签名')
     expect(workflow).toContain('scripts/next-release-version.mjs --apply')
     expect(workflow.match(/Set app version from next patch release/g)).toHaveLength(2)
     expect(workflow).toContain('RELEASE_VERSION_OVERRIDE')
     expect(workflow).toContain('description: Override the next version')
   })
 
-  it('signs and notarizes Apple Silicon on tag releases', async () => {
+  it('signs and notarizes Apple Silicon tag and main releases', async () => {
     const workflow = await readFile(
       path.join(projectRoot, '.github', 'workflows', 'release.yml'),
       'utf8'
@@ -480,9 +481,13 @@ describe('GitHub release contract', () => {
       expect(workflow).toContain(`secrets.${secret}`)
     }
     expect(workflow.match(/Prepare macOS signing keychain/g)).toHaveLength(1)
-    expect(workflow.match(/xcrun stapler validate/g)).toHaveLength(2)
-    expect(workflow.match(/xcrun notarytool submit/g)).toHaveLength(1)
+    expect(workflow.match(/xcrun stapler validate/g)).toHaveLength(4)
+    expect(workflow.match(/xcrun notarytool submit/g)).toHaveLength(2)
     expect(workflow.match(/CSC_IDENTITY_AUTO_DISCOVERY: 'false'/g)).toHaveLength(1)
+    expect(workflow).toContain('Build signed Apple Silicon development package')
+    expect(workflow).toContain("github.event_name == 'push' && github.ref == 'refs/heads/main'")
+    expect(workflow).toContain('dist-dev/mac-arm64/DSH Desktop Dev.app')
+    expect(workflow).toContain('dist-dev/dsh-desktop-dev-mac-arm64.dmg')
     expect(workflow).not.toContain("CSC_LINK: ''")
     expect(workflow).toMatch(
       /macos-apple-silicon:\r?\n\s+name: macOS Apple Silicon\r?\n(?:[\s\S]*?)runs-on: macos-15\r?\n\s+steps:/

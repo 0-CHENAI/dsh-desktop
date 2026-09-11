@@ -1,5 +1,10 @@
 import { ipcRenderer } from 'electron'
-import { formatZoomPercentage, type DesktopMenuCommand } from '../shared/desktop-menu'
+import {
+  formatZoomPercentage,
+  WINDOWS_MENU_BUTTON_WIDTH,
+  WINDOWS_TITLEBAR_HEIGHT,
+  type DesktopMenuCommand
+} from '../shared/desktop-menu'
 
 type MenuEntry =
   | { kind: 'command'; command: DesktopMenuCommand; label: string; shortcut?: string }
@@ -23,7 +28,7 @@ function mountWindowsMenu(): void {
   menuButton.setAttribute('aria-expanded', 'false')
   menuButton.setAttribute('aria-label', locale === 'zh' ? '打开应用菜单' : 'Open application menu')
   menuButton.title = locale === 'zh' ? '应用菜单' : 'Application menu'
-  menuButton.innerHTML = chevronIcon
+  menuButton.innerHTML = applicationMenuIcon
 
   const menu = document.createElement('div')
   menu.className = 'menu'
@@ -209,7 +214,7 @@ function menuEntries(locale: 'en' | 'zh'): MenuEntry[] {
   ]
 }
 
-const chevronIcon = `<svg viewBox="0 0 20 20" width="17" height="17" fill="none" aria-hidden="true"><path d="m6.5 8 3.5 3.5L13.5 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+const applicationMenuIcon = `<svg viewBox="0 0 20 20" width="17" height="17" fill="none" aria-hidden="true"><path d="M4 5.5h12M4 10h12M4 14.5h12" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/></svg>`
 
 const menuStyles = `
   :root {
@@ -217,18 +222,20 @@ const menuStyles = `
     --label-primary: #202124; --label-secondary: #61666b; --label-tertiary: #81858c;
     --hover: rgba(32,33,36,.08); --surface: #fff; --border: rgba(32,33,36,.13);
     --separator: rgba(32,33,36,.09); --layer: rgba(32,33,36,.06); --danger: #d93025;
+    --chrome-surface: #fff; --chrome-divider: rgba(32,33,36,.12);
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
     --label-primary: #f3f4f6; --label-secondary: #b5b7bd; --label-tertiary: #92959b;
     --hover: rgba(255,255,255,.09); --surface: #28282b; --border: rgba(255,255,255,.12);
     --separator: rgba(255,255,255,.09); --layer: rgba(255,255,255,.07); --danger: #ee7772;
+    --chrome-surface: #141416; --chrome-divider: rgba(255,255,255,.12);
   }
   * { box-sizing: border-box; }
   html, body { width:100%; height:100%; margin:0; overflow:hidden; background:transparent; }
   body { color:var(--label-primary); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; user-select:none; }
-  .bar { position:relative; width:100%; height:100%; display:flex; justify-content:flex-end; align-items:flex-start; }
-  .menuButton { appearance:none; flex:none; width:44px; height:36px; display:grid; place-items:center; padding:0; color:var(--label-secondary); background:transparent; border:0; cursor:pointer; }
+  .bar { position:relative; width:100%; height:100%; display:flex; justify-content:flex-end; align-items:flex-start; background:var(--chrome-surface); border-left:1px solid var(--chrome-divider); }
+  .menuButton { appearance:none; flex:none; width:${WINDOWS_MENU_BUTTON_WIDTH}px; height:${WINDOWS_TITLEBAR_HEIGHT}px; display:grid; place-items:center; padding:0; color:var(--label-secondary); background:transparent; border:0; cursor:pointer; }
   .menuButton:hover, .menuButton.isOpen { color:var(--label-primary); background:var(--hover); }
   .menuButton:focus-visible { outline:2px solid #4d6bfe; outline-offset:-3px; }
   .menu { position:absolute; top:43px; right:0; width:304px; max-height:calc(100vh - 56px); overflow:auto; padding:7px; color:var(--label-primary); background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:0 14px 36px rgba(0,0,0,.2); scrollbar-width:thin; }

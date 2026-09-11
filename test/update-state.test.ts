@@ -48,11 +48,14 @@ describe('desktop update state', () => {
   })
 
   it('keeps whether this build can install an update in-app', () => {
-    const status = initialUpdateStatus('1.0.0', false)
-    expect(reduceUpdateStatus(status, { type: 'available', version: '1.1.0' }).canInstall).toBe(
-      false
-    )
-    expect(reduceUpdateStatus(status, { type: 'reset' }).canInstall).toBe(false)
+    const status = initialUpdateStatus('1.0.0', false, 'unsigned-macos')
+    const available = reduceUpdateStatus(status, { type: 'available', version: '1.1.0' })
+    expect(available.canInstall).toBe(false)
+    expect(available.manualUpdateReason).toBe('unsigned-macos')
+    expect(reduceUpdateStatus(status, { type: 'reset' })).toMatchObject({
+      canInstall: false,
+      manualUpdateReason: 'unsigned-macos'
+    })
   })
 
   it('clamps invalid download percentages', () => {
