@@ -4,6 +4,7 @@ import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs
 import { parse } from 'yaml'
 import {
   app,
+  autoUpdater as nativeAutoUpdater,
   BrowserWindow,
   dialog,
   ipcMain,
@@ -418,7 +419,7 @@ function installMainWindowRendererRecovery(window: BrowserWindow): void {
 
 function windowsTitleBarOverlay(isDark: boolean): Electron.TitleBarOverlayOptions {
   return {
-    color: '#00000000',
+    color: isDark ? '#141416' : '#ffffff',
     symbolColor: isDark ? '#f3f4f6' : '#202124',
     height: WINDOWS_TITLEBAR_HEIGHT
   }
@@ -2878,12 +2879,36 @@ async function bootstrap(): Promise<void> {
   }
   startUpdateManager({
     prepareToInstall: async () => {
-      await runtime.stop()
+      // Every process launched from the installation directory must be gone
+      // before NSIS replaces it. In particular, the mobile bridge may own a
+      // bundled cloudflared process even after Harness itself has stopped.
+      const stopResults = await Promise.allSettled([runtime.stop(), mobileBridge?.stop()])
+      const stopFailure = stopResults.find(
+        (result): result is PromiseRejectedResult => result.status === 'rejected'
+      )
+      if (stopFailure) throw stopFailure.reason
       const dshHome = join(app.getPath('userData'), 'harness')
       await quarantineInstalledLaunchAgentsForUpdate(dshHome)
-      quitting = true
-      stopUpdateManager()
+      desktopStorageManager?.flushSync()
+    },
+    recoverFromInstallFailure: async () => {
+      try {
+        await launchHarness()
+        if (runtime.snapshot().phase === 'ready') await mobileBridge?.start()
+      } catch (error) {
+        console.error('[updater] failed to restore services after install failure', error)
+      }
     }
+  })
+  nativeAutoUpdater.once('before-quit-for-update', () => {
+    // electron-updater emits this only after the installer process has
+    // successfully spawned. Commit the irreversible desktop shutdown here so
+    // a spawn failure can still restore a fully usable application.
+    desktopStorageManager?.flushSync()
+    if (tray && !tray.isDestroyed()) tray.destroy()
+    tray = undefined
+    quitting = true
+    stopUpdateManager()
   })
 }
 

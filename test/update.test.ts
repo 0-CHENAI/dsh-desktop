@@ -48,10 +48,19 @@ describe('desktop update policy', () => {
     const main = await readFile(path.join(projectRoot, 'src/main/index.ts'), 'utf8')
     const prepare = main.slice(main.indexOf('prepareToInstall: async () => {'))
 
-    expect(prepare.indexOf('await runtime.stop()')).toBeLessThan(
+    expect(prepare).toContain('await Promise.allSettled([runtime.stop(), mobileBridge?.stop()])')
+    expect(prepare.indexOf('await Promise.allSettled([runtime.stop(), mobileBridge?.stop()])')).toBeLessThan(
       prepare.indexOf('await quarantineInstalledLaunchAgentsForUpdate(dshHome)')
     )
     expect(prepare.indexOf('await quarantineInstalledLaunchAgentsForUpdate(dshHome)')).toBeLessThan(
+      prepare.indexOf('recoverFromInstallFailure: async () => {')
+    )
+    expect(prepare).toContain("nativeAutoUpdater.once('before-quit-for-update'")
+    expect(prepare).toContain('recoverFromInstallFailure: async () => {')
+    expect(prepare.indexOf('await launchHarness()')).toBeLessThan(
+      prepare.indexOf('await mobileBridge?.start()')
+    )
+    expect(prepare.indexOf("nativeAutoUpdater.once('before-quit-for-update'")).toBeLessThan(
       prepare.indexOf('quitting = true')
     )
   })

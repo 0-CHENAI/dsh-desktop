@@ -1,4 +1,4 @@
-import { execFileSync, type SpawnOptionsWithoutStdio } from 'node:child_process'
+import { execFile, execFileSync, type SpawnOptionsWithoutStdio } from 'node:child_process'
 import type { EventEmitter } from 'node:events'
 import { createWriteStream, existsSync, mkdirSync, type WriteStream } from 'node:fs'
 import { mkdir } from 'node:fs/promises'
@@ -25,6 +25,7 @@ export interface HarnessRuntimeOptions {
 }
 
 export interface HarnessChildProcess extends EventEmitter {
+  readonly pid?: number
   readonly stdout: NodeJS.ReadableStream
   readonly stderr: NodeJS.ReadableStream
   readonly exitCode: number | null
@@ -512,6 +513,19 @@ ${cause}`
     const exitPromise = new Promise<boolean>((resolve) =>
       child.once('exit', () => resolve(true))
     )
+    if (process.platform === 'win32' && child.pid !== undefined) {
+      // Harness is detached on Windows so tools can never share or terminate
+      // the desktop process. The corresponding shutdown must therefore kill
+      // the whole tree; child.kill() only terminates the direct bundled Node
+      // process and can leave descendants locking resources/app during NSIS.
+      await terminateWindowsProcessTree(child.pid)
+      const exited = child.exitCode !== null || await Promise.race([
+        exitPromise,
+        new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 1_000))
+      ])
+      if (!exited && child.exitCode === null) child.kill('SIGKILL')
+      return
+    }
     child.kill('SIGTERM')
     const exited = await Promise.race([
       exitPromise,
@@ -571,6 +585,24 @@ ${cause}`
     this.logStream?.end()
     this.logStream = undefined
   }
+}
+
+export function windowsProcessTreeKillArguments(pid: number): string[] {
+  if (!Number.isSafeInteger(pid) || pid <= 0) {
+    throw new Error(`Invalid Windows process id: ${pid}`)
+  }
+  return ['/pid', String(pid), '/t', '/f']
+}
+
+function terminateWindowsProcessTree(pid: number): Promise<void> {
+  return new Promise((resolve) => {
+    execFile(
+      'taskkill',
+      windowsProcessTreeKillArguments(pid),
+      { windowsHide: true },
+      () => resolve()
+    )
+  })
 }
 
 function latestHarnessAttemptLogs(logLines: readonly string[]): readonly string[] {

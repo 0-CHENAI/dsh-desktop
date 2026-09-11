@@ -1,4 +1,7 @@
 export const WINDOWS_TITLEBAR_HEIGHT = 36
+export const WINDOWS_CAPTION_CONTROLS_WIDTH = 140
+export const WINDOWS_MENU_BUTTON_WIDTH = 44
+export const WINDOWS_HEADER_ACTIONS_GAP = 16
 
 export const desktopMenuCommands = [
   'connect-phone',

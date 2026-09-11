@@ -1,8 +1,14 @@
 import type { Rectangle } from 'electron'
-import { WINDOWS_TITLEBAR_HEIGHT } from '../shared/desktop-menu'
+import {
+  WINDOWS_CAPTION_CONTROLS_WIDTH,
+  WINDOWS_MENU_BUTTON_WIDTH,
+  WINDOWS_TITLEBAR_HEIGHT
+} from '../shared/desktop-menu'
 
-export const WINDOWS_CAPTION_CONTROLS_WIDTH = 140
-export const WINDOWS_MENU_BUTTON_WIDTH = 44
+export {
+  WINDOWS_CAPTION_CONTROLS_WIDTH,
+  WINDOWS_MENU_BUTTON_WIDTH
+} from '../shared/desktop-menu'
 export const WINDOWS_MENU_PANEL_WIDTH = 304
 export const WINDOWS_MENU_PANEL_MAX_HEIGHT = 760
 
