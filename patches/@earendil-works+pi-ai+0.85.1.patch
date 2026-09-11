@@ -1,0 +1,33 @@
+diff --git a/node_modules/@earendil-works/pi-ai/dist/api/openai-completions.js b/node_modules/@earendil-works/pi-ai/dist/api/openai-completions.js
+--- a/node_modules/@earendil-works/pi-ai/dist/api/openai-completions.js
++++ b/node_modules/@earendil-works/pi-ai/dist/api/openai-completions.js
+@@ -187,6 +187,7 @@
+         };
+         // `reasoning_details` are replay metadata, not user-visible stream deltas.
+         // Keep them in memory during streaming and serialize once when the block is finalized.
++        let responseRequestId;
+         let streamedReasoningDetails;
+         const applyStreamedReasoningDetails = (block) => {
+             if (streamedReasoningDetails !== undefined) {
+@@ -215,6 +216,7 @@
+                 maxRetryDelayMs: options?.maxRetryDelayMs,
+                 signal: options?.signal,
+             });
++            responseRequestId = response.headers.get("x-request-id");
+             await options?.onResponse?.({ status: response.status, headers: headersToRecord(response.headers) }, model);
+             stream.push({ type: "start", partial: output });
+             let textBlock = null;
+@@ -516,6 +518,13 @@
+             }
+             output.stopReason = options?.signal?.aborted ? "aborted" : "error";
+             output.errorMessage = formatProviderError(normalizeProviderError(error));
++            // Preserve only allowlisted diagnostics, never the response body or headers.
++            const status = error?.status ?? error?.statusCode;
++            const requestId = error?.request_id ?? error?.requestId ?? error?.headers?.get?.("x-request-id") ?? responseRequestId;
++            output.errorDetails = {
++                ...(Number.isInteger(status) && status >= 400 && status <= 599 ? { status } : {}),
++                ...(typeof requestId === "string" && /^[a-zA-Z0-9_.:-]{1,200}$/.test(requestId) ? { requestId } : {})
++            };
+             // Some providers via OpenRouter give additional information in this field.
+             // normalizeProviderError already stringifies the parsed body (error.error)
+             // into errorMessage, so only append the raw metadata when it is not already
