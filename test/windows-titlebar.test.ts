@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { describe, expect, it } from 'vitest'
 import {
+  WINDOWS_HEADER_ACTIONS_GAP,
   WINDOWS_TITLEBAR_HEIGHT,
   desktopMenuCommands,
   formatZoomPercentage,
@@ -12,6 +13,11 @@ import {
   WINDOWS_MENU_PANEL_WIDTH,
   windowsMenuViewBounds
 } from '../src/main/windows-menu-view'
+import {
+  formatWindowsMenuZoomPercentage,
+  WINDOWS_MENU_PRELOAD_BUTTON_WIDTH,
+  WINDOWS_MENU_PRELOAD_TITLEBAR_HEIGHT
+} from '../src/preload/windows-menu-model'
 
 describe('Windows titlebar menu', () => {
   it('uses a Windows-only overlay while preserving the macOS frame behavior', async () => {
@@ -31,21 +37,25 @@ describe('Windows titlebar menu', () => {
     const preload = await readFile('src/preload/windows-titlebar.ts', 'utf8')
 
     expect(WINDOWS_TITLEBAR_HEIGHT).toBe(36)
-    expect(main).toContain("color: '#00000000'")
+    expect(main).toContain("color: isDark ? '#141416' : '#ffffff'")
     expect(preload).not.toContain(`padding-top: \${WINDOWS_TITLEBAR_HEIGHT}px !important`)
     expect(preload).toContain('padding-top: 0 !important')
     expect(preload).toContain('[data-dsh-sidebar-root][data-dsh-sidebar-wide="true"]')
     expect(preload).toContain('padding-top: 6px !important')
     expect(preload).toContain('trackSidebarLayout(document)')
     expect(preload).toContain("document.documentElement.style.setProperty(SIDEBAR_WIDTH_PROPERTY")
-    expect(preload).not.toContain("installDragRegion")
+    expect(preload).not.toContain('installDragRegion')
     expect(preload).toContain('-webkit-app-region: drag')
     expect(preload).toContain('body.dsh-desktop-windows-titlebar-layout > #root')
     expect(preload).not.toContain('position: fixed')
     expect(preload).not.toContain('pointer-events: none')
     expect(preload).toContain('body.dsh-desktop-windows-titlebar-layout button')
     expect(preload).toContain('-webkit-app-region: no-drag !important')
+    expect(preload).toContain(':not(:has([data-sidebar-right-open]))')
+    expect(preload).toContain('[data-sidebar-right-panel]')
     expect(preload).toContain("document.documentElement.style.setProperty(SIDEBAR_WIDTH_PROPERTY, '0px')")
+    expect(preload).toContain('header[data-slot="conversation.session.header"]')
+    expect(WINDOWS_HEADER_ACTIONS_GAP).toBe(16)
   })
 
   it('accepts only the fixed menu command allowlist', async () => {
@@ -77,13 +87,21 @@ describe('Windows titlebar menu', () => {
     expect(formatZoomPercentage(1)).toBe('100%')
     expect(formatZoomPercentage(Math.sqrt(1.2))).toBe('110%')
     expect(formatZoomPercentage(1 / Math.sqrt(1.2))).toBe('91%')
+    expect(formatWindowsMenuZoomPercentage(1)).toBe(formatZoomPercentage(1))
+    expect(formatWindowsMenuZoomPercentage(Math.sqrt(1.2))).toBe(
+      formatZoomPercentage(Math.sqrt(1.2))
+    )
+    expect(WINDOWS_MENU_PRELOAD_BUTTON_WIDTH).toBe(WINDOWS_MENU_BUTTON_WIDTH)
+    expect(WINDOWS_MENU_PRELOAD_TITLEBAR_HEIGHT).toBe(WINDOWS_TITLEBAR_HEIGHT)
     expect(main).toContain('contents.getZoomFactor()')
     expect(main).toContain('new WebContentsView')
     expect(main).toContain('window.contentView.addChildView(menuView)')
     expect(main).toContain('menuView.webContents.setZoomFactor(1)')
     expect(main).toContain("preload: join(import.meta.dirname, '../preload/windows-menu.cjs')")
     expect(menuPreload).toContain("ipcRenderer.invoke('desktop-menu:get-zoom-factor')")
-    expect(menuPreload).toContain('formatZoomPercentage(zoomFactor)')
+    expect(menuPreload).toContain('formatWindowsMenuZoomPercentage(zoomFactor)')
+    expect(menuPreload).toContain('applicationMenuIcon')
+    expect(menuPreload).toContain('border-left:1px solid var(--chrome-divider)')
     expect(layoutPreload).not.toContain('INVERSE_ZOOM_PROPERTY')
     expect(layoutPreload).not.toContain('menuButton')
     expect(viteConfig).toContain("'windows-menu': resolve('src/preload/windows-menu.ts')")

@@ -115,6 +115,33 @@ describe('accepting an update is what starts the download', () => {
     expect(updateHeadline(available, 'en').description).toContain('cannot install updates in-app')
     expect(updateMessage(available, 'en')).toContain('Download the installer yourself')
   })
+
+  it('explains the one-time migration from an unsigned macOS build', () => {
+    const available: UpdateStatus = {
+      phase: 'available',
+      currentVersion: '0.2.2',
+      availableVersion: '0.2.3',
+      manual: false,
+      canInstall: false,
+      manualUpdateReason: 'unsigned-macos'
+    }
+    expect(updateHeadline(available, 'zh').description).toContain('Developer ID')
+    expect(updateHeadline(available, 'zh').description).toContain('手动安装一次')
+    expect(updateMessage(available, 'en')).toContain('enable future automatic updates')
+  })
+
+  it('tells a macOS user to leave a disk image before updating', () => {
+    const available: UpdateStatus = {
+      phase: 'available',
+      currentVersion: '0.2.2',
+      availableVersion: '0.2.3',
+      manual: false,
+      canInstall: false,
+      manualUpdateReason: 'readonly-macos'
+    }
+    expect(updateHeadline(available, 'zh').description).toContain('应用程序')
+    expect(updateMessage(available, 'en')).toContain('Move it to Applications')
+  })
 })
 
 describe('about dialog and version selection wiring', () => {

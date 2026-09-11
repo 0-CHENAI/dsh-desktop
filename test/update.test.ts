@@ -27,6 +27,7 @@ describe('desktop update policy', () => {
 
   it('only enables updates for installed macOS and Windows builds', () => {
     expect(supportsAutoUpdates(true, 'darwin')).toBe(true)
+    expect(supportsAutoUpdates(true, 'darwin', false)).toBe(false)
     expect(supportsAutoUpdates(true, 'win32')).toBe(true)
     expect(supportsAutoUpdates(true, 'linux')).toBe(false)
     expect(supportsAutoUpdates(false, 'darwin')).toBe(false)
@@ -48,10 +49,19 @@ describe('desktop update policy', () => {
     const main = await readFile(path.join(projectRoot, 'src/main/index.ts'), 'utf8')
     const prepare = main.slice(main.indexOf('prepareToInstall: async () => {'))
 
-    expect(prepare.indexOf('await runtime.stop()')).toBeLessThan(
+    expect(prepare).toContain('await Promise.allSettled([runtime.stop(), mobileBridge?.stop()])')
+    expect(prepare.indexOf('await Promise.allSettled([runtime.stop(), mobileBridge?.stop()])')).toBeLessThan(
       prepare.indexOf('await quarantineInstalledLaunchAgentsForUpdate(dshHome)')
     )
     expect(prepare.indexOf('await quarantineInstalledLaunchAgentsForUpdate(dshHome)')).toBeLessThan(
+      prepare.indexOf('recoverFromInstallFailure: async () => {')
+    )
+    expect(prepare).toContain("nativeAutoUpdater.once('before-quit-for-update'")
+    expect(prepare).toContain('recoverFromInstallFailure: async () => {')
+    expect(prepare.indexOf('await launchHarness()')).toBeLessThan(
+      prepare.indexOf('await mobileBridge?.start()')
+    )
+    expect(prepare.indexOf("nativeAutoUpdater.once('before-quit-for-update'")).toBeLessThan(
       prepare.indexOf('quitting = true')
     )
   })
@@ -125,7 +135,9 @@ describe('unpackaged update checks', () => {
     expect(manager).toContain('fetchLatestPublishedVersion()')
     expect(manager).toContain('shell.openExternal(githubLatestReleasePage())')
     expect(manager).toContain('if (supportsUpdates()) {\n    configureUpdater()')
-    expect(manager).toContain('initialUpdateStatus(app.getVersion(), supportsUpdates())')
+    expect(manager).toContain('initialUpdateStatus(app.getVersion(), canInstallUpdates, macOSSupport?.reason)')
+    expect(manager).toContain("process.platform === 'darwin'")
+    expect(manager).toContain('macOSUpdateSupport({')
   })
 
   it('labels a GitHub-only offer as a download page, not an in-app install', async () => {

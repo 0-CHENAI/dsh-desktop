@@ -157,8 +157,11 @@ async function main(): Promise<void> {
     }
   }
   // Save a native-window thumbnail as well as renderer captures where the runner supports it.
+  // Resolve the id before desktop capture yields; the OS may tear down a hidden or
+  // uncapturable window while getSources is waiting.
+  const parentMediaSourceId = parent.getMediaSourceId()
   const sources = await desktopCapturer.getSources({ types: ['window'], thumbnailSize: { width: 1280, height: 800 } })
-  const source = sources.find(item => item.id === parent.getMediaSourceId())
+  const source = sources.find(item => item.id === parentMediaSourceId)
   if (source && !source.thumbnail.isEmpty()) writeFileSync(join(output, 'native-window.png'), source.thumbnail.toPNG())
   const overlay = new SafeModeOverlay(parent, preload, () => { closed++ })
   parent.destroy(); await delay(60)

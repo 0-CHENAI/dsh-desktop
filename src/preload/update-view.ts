@@ -58,9 +58,7 @@ export function updateHeadline(status: UpdateStatus, locale: UpdateLocale): Upda
       return {
         title: zh ? '有可用更新' : 'Update available',
         description: status.canInstall === false
-          ? zh
-            ? `${version} 已发布。当前构建不能在应用内安装，请手动下载安装包。`
-            : `${version} is out. This build cannot install updates in-app; download the installer yourself.`
+          ? manualInstallDescription(status, locale, version)
           : zh
             ? `${version} 已发布，同意后下载并自动重启安装。`
             : `${version} will download and automatically restart to install.`
@@ -119,9 +117,7 @@ export function updateMessage(status: UpdateStatus, locale: UpdateLocale): strin
       return zh ? '正在检查更新…' : 'Checking for updates…'
     case 'available':
       return status.canInstall === false
-        ? zh
-          ? `发现新版本${version}，请手动下载安装包。`
-          : `DSH Desktop${version} is available. Download the installer yourself.`
+        ? manualInstallMessage(status, locale, version)
         : zh
           ? `发现新版本${version}，是否更新？`
           : `DSH Desktop${version} is available. Update now?`
@@ -140,4 +136,46 @@ export function updateMessage(status: UpdateStatus, locale: UpdateLocale): strin
     case 'idle':
       return ''
   }
+}
+
+function manualInstallDescription(
+  status: UpdateStatus,
+  locale: UpdateLocale,
+  version: string
+): string {
+  const zh = locale === 'zh'
+  if (status.manualUpdateReason === 'unsigned-macos') {
+    return zh
+      ? `${version} 已发布。当前 macOS 版本未使用 Developer ID 签名，请手动安装一次；后续版本即可自动更新。`
+      : `${version} is out. This macOS build is not Developer ID signed; install it manually once to enable future automatic updates.`
+  }
+  if (status.manualUpdateReason === 'readonly-macos') {
+    return zh
+      ? `${version} 已发布。请将应用移入“应用程序”并手动安装一次，不能从磁盘映像或隔离位置原地更新。`
+      : `${version} is out. Move the app to Applications and install it manually once; it cannot update from a disk image or translocated location.`
+  }
+  return zh
+    ? `${version} 已发布。当前构建不能在应用内安装，请手动下载安装包。`
+    : `${version} is out. This build cannot install updates in-app; download the installer yourself.`
+}
+
+function manualInstallMessage(
+  status: UpdateStatus,
+  locale: UpdateLocale,
+  version: string
+): string {
+  const zh = locale === 'zh'
+  if (status.manualUpdateReason === 'unsigned-macos') {
+    return zh
+      ? `发现新版本${version}，请手动安装一次以启用后续自动更新。`
+      : `DSH Desktop${version} is available. Install it manually once to enable future automatic updates.`
+  }
+  if (status.manualUpdateReason === 'readonly-macos') {
+    return zh
+      ? `发现新版本${version}，请移入“应用程序”并手动安装。`
+      : `DSH Desktop${version} is available. Move it to Applications and install manually.`
+  }
+  return zh
+    ? `发现新版本${version}，请手动下载安装包。`
+    : `DSH Desktop${version} is available. Download the installer yourself.`
 }
