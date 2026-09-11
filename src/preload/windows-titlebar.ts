@@ -1,7 +1,6 @@
 import type { IpcRenderer } from 'electron'
 
 const LAYOUT_STYLE_ID = 'dsh-desktop-windows-titlebar-layout-style'
-const DRAG_REGION_ID = 'dsh-desktop-windows-drag-region'
 const SIDEBAR_WIDTH_PROPERTY = '--dsh-desktop-windows-sidebar-width'
 const CAPTION_WIDTH_PROPERTY = '--dsh-desktop-windows-caption-width'
 
@@ -15,7 +14,6 @@ export function mountWindowsTitlebarLayout(options: TitlebarLayoutMountOptions):
   if (!document.body) return
 
   installLayout(document)
-  installDragRegion(document)
   trackSidebarLayout(document)
 
   document.addEventListener('pointerdown', () => {
@@ -57,7 +55,14 @@ function installLayout(document: Document): void {
       padding-top: 6px !important;
     }
     body.dsh-desktop-windows-titlebar-layout [data-slot="conversation.session.header"] > header {
+      -webkit-app-region: drag;
+    }
+    body.dsh-desktop-windows-titlebar-layout:not(:has([data-sidebar-right-open])) [data-slot="conversation.session.header"] > header {
       padding-right: calc(var(${CAPTION_WIDTH_PROPERTY}, 140px) + 52px) !important;
+    }
+    body.dsh-desktop-windows-titlebar-layout [data-sidebar-right-panel] {
+      box-sizing: border-box;
+      padding-top: env(titlebar-area-height, 36px);
     }
     body.dsh-desktop-windows-titlebar-layout button,
     body.dsh-desktop-windows-titlebar-layout a,
@@ -65,31 +70,14 @@ function installLayout(document: Document): void {
     body.dsh-desktop-windows-titlebar-layout select,
     body.dsh-desktop-windows-titlebar-layout textarea,
     body.dsh-desktop-windows-titlebar-layout [role="button"],
+    body.dsh-desktop-windows-titlebar-layout [role="tab"],
+    body.dsh-desktop-windows-titlebar-layout summary,
+    body.dsh-desktop-windows-titlebar-layout [contenteditable="true"],
     body.dsh-desktop-windows-titlebar-layout [data-dsh-no-drag] {
       -webkit-app-region: no-drag !important;
     }
-    #${DRAG_REGION_ID} {
-      position: fixed;
-      z-index: 2147483644;
-      top: 0;
-      left: 0;
-      right: calc(var(${CAPTION_WIDTH_PROPERTY}, 140px) + 44px);
-      height: 36px;
-      background: transparent;
-      pointer-events: none;
-      user-select: none;
-      -webkit-app-region: drag;
-    }
   `
   document.head.appendChild(style)
-}
-
-function installDragRegion(document: Document): void {
-  if (document.getElementById(DRAG_REGION_ID)) return
-  const dragRegion = document.createElement('div')
-  dragRegion.id = DRAG_REGION_ID
-  dragRegion.setAttribute('aria-hidden', 'true')
-  document.body.appendChild(dragRegion)
 }
 
 function trackSidebarLayout(document: Document): void {
