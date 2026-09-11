@@ -13,6 +13,11 @@ import {
   WINDOWS_MENU_PANEL_WIDTH,
   windowsMenuViewBounds
 } from '../src/main/windows-menu-view'
+import {
+  formatWindowsMenuZoomPercentage,
+  WINDOWS_MENU_PRELOAD_BUTTON_WIDTH,
+  WINDOWS_MENU_PRELOAD_TITLEBAR_HEIGHT
+} from '../src/preload/windows-menu-model'
 
 describe('Windows titlebar menu', () => {
   it('uses a Windows-only overlay while preserving the macOS frame behavior', async () => {
@@ -82,13 +87,19 @@ describe('Windows titlebar menu', () => {
     expect(formatZoomPercentage(1)).toBe('100%')
     expect(formatZoomPercentage(Math.sqrt(1.2))).toBe('110%')
     expect(formatZoomPercentage(1 / Math.sqrt(1.2))).toBe('91%')
+    expect(formatWindowsMenuZoomPercentage(1)).toBe(formatZoomPercentage(1))
+    expect(formatWindowsMenuZoomPercentage(Math.sqrt(1.2))).toBe(
+      formatZoomPercentage(Math.sqrt(1.2))
+    )
+    expect(WINDOWS_MENU_PRELOAD_BUTTON_WIDTH).toBe(WINDOWS_MENU_BUTTON_WIDTH)
+    expect(WINDOWS_MENU_PRELOAD_TITLEBAR_HEIGHT).toBe(WINDOWS_TITLEBAR_HEIGHT)
     expect(main).toContain('contents.getZoomFactor()')
     expect(main).toContain('new WebContentsView')
     expect(main).toContain('window.contentView.addChildView(menuView)')
     expect(main).toContain('menuView.webContents.setZoomFactor(1)')
     expect(main).toContain("preload: join(import.meta.dirname, '../preload/windows-menu.cjs')")
     expect(menuPreload).toContain("ipcRenderer.invoke('desktop-menu:get-zoom-factor')")
-    expect(menuPreload).toContain('formatZoomPercentage(zoomFactor)')
+    expect(menuPreload).toContain('formatWindowsMenuZoomPercentage(zoomFactor)')
     expect(menuPreload).toContain('applicationMenuIcon')
     expect(menuPreload).toContain('border-left:1px solid var(--chrome-divider)')
     expect(layoutPreload).not.toContain('INVERSE_ZOOM_PROPERTY')
