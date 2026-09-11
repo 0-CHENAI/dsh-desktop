@@ -98,7 +98,7 @@ describe('accepting an update is what starts the download', () => {
     }
     expect(updateMessage(available, 'zh')).toBe('发现新版本 0.4.4，是否更新？')
     expect(updateMessage(available, 'en')).toBe('DSH Desktop 0.4.4 is available. Update now?')
-    expect(updateHeadline(available, 'zh').description).toBe('v0.4.4 已发布，同意后开始下载。')
+    expect(updateHeadline(available, 'zh').description).toBe('v0.4.4 已发布，同意后下载并自动重启安装。')
   })
 
   it('does not promise an in-app download when this build cannot install', () => {
