@@ -433,7 +433,7 @@ function applyStatus(status: UpdateStatus): void {
     host.dataset.updatePhase = status.phase
     host.dataset.updateManual = String(status.manual)
   }
-  if (status.phase === 'error') installing = false
+  installing = status.installing === true
   if (['error', 'downloading', 'downloaded', 'up-to-date'].includes(status.phase)) {
     installingVersion = null
   }
@@ -455,7 +455,20 @@ function render(): void {
 
   host.style.display = 'block'
   const status = currentStatus
+  // Keep the spinner and action nodes alive across progress broadcasts.
+  if (
+    status.phase === 'downloading' &&
+    content.querySelector<HTMLElement>('.card')?.dataset.version === status.availableVersion &&
+    content.querySelector('.progress')
+  ) {
+    content.querySelector('.description')!.textContent = updateHeadline(status, locale).description
+    content.querySelector('.progress')!.setAttribute('aria-valuenow', String(Math.round(status.percent ?? 0)))
+    const value = content.querySelector<HTMLElement>('.progressValue')!
+    value.style.width = `${status.percent ?? 0}%`
+    return
+  }
   const card = element('aside', 'card')
+  card.dataset.version = status.availableVersion ?? ''
   card.setAttribute('aria-live', 'polite')
   card.setAttribute('aria-label', locale === 'zh' ? 'DSH Desktop 更新' : 'DSH Desktop update')
 
@@ -541,7 +554,8 @@ function render(): void {
         render()
       })
     })
-    actions.append(install, skipButton(status))
+    actions.appendChild(install)
+    if (!installing) actions.appendChild(skipButton(status))
     body.appendChild(actions)
   }
 
@@ -549,6 +563,7 @@ function render(): void {
 
   const close = button('×', 'close')
   close.setAttribute('aria-label', locale === 'zh' ? '关闭' : 'Close')
+  close.disabled = installing
   close.addEventListener('click', dismissCurrent)
   row.appendChild(close)
 
@@ -837,7 +852,10 @@ function selectVersionFromAbout(release: AvailableRelease, currentVersion: strin
 }
 
 function dismissCurrent(): void {
-  if (!currentStatus) return
+  if (!currentStatus || installing) return
+  void ipcRenderer.invoke('updates:dismiss', currentStatus.availableVersion).catch((error: unknown) => {
+    console.error('[updater] unable to cancel automatic installation', error)
+  })
   if (currentStatus.availableVersion) {
     dismissedVersion = currentStatus.availableVersion
   } else {

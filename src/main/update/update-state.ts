@@ -5,6 +5,7 @@ export type UpdateStateEvent =
   | { type: 'available'; version: string }
   | { type: 'progress'; percent: number }
   | { type: 'downloaded'; version: string }
+  | { type: 'installing' }
   | { type: 'not-available' }
   | { type: 'error'; message: string }
   | { type: 'unsupported'; message: string }
@@ -37,6 +38,8 @@ export function reduceUpdateStatus(
       return { ...current, phase: 'downloading', percent: clampPercent(event.percent) }
     case 'downloaded':
       return { ...base, phase: 'downloaded', availableVersion: event.version }
+    case 'installing':
+      return { ...current, installing: true }
     case 'not-available':
       return { ...base, phase: 'up-to-date' }
     case 'error':

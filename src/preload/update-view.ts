@@ -32,6 +32,13 @@ export function updateHeadline(status: UpdateStatus, locale: UpdateLocale): Upda
   const zh = locale === 'zh'
   const version = status.availableVersion ? `v${status.availableVersion}` : ''
 
+  if (status.installing) {
+    return {
+      title: zh ? '正在重启…' : 'Restarting…',
+      description: zh ? `正在安装 ${version}` : `Installing ${version}`
+    }
+  }
+
   if (status.downgrade && status.availableVersion) {
     return {
       title: zh ? `正在降级到 ${version}` : `Downgrading to ${version}`,
@@ -55,8 +62,8 @@ export function updateHeadline(status: UpdateStatus, locale: UpdateLocale): Upda
             ? `${version} 已发布。当前构建不能在应用内安装，请手动下载安装包。`
             : `${version} is out. This build cannot install updates in-app; download the installer yourself.`
           : zh
-            ? `${version} 已发布，同意后开始下载。`
-            : `${version} is ready to download.`
+            ? `${version} 已发布，同意后下载并自动重启安装。`
+            : `${version} will download and automatically restart to install.`
       }
     case 'downloading':
       return {

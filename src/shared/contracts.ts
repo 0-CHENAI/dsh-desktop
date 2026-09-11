@@ -29,6 +29,7 @@ export interface UpdateStatus {
   phase: UpdatePhase
   currentVersion: string
   availableVersion?: string
+  installing?: boolean
   percent?: number
   message?: string
   manual: boolean
