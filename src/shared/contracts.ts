@@ -25,6 +25,8 @@ export type UpdatePhase =
   | 'error'
   | 'unsupported'
 
+export type ManualUpdateReason = 'unsigned-macos' | 'readonly-macos'
+
 export interface UpdateStatus {
   phase: UpdatePhase
   currentVersion: string
@@ -36,10 +38,12 @@ export interface UpdateStatus {
   /** Set while an explicitly chosen older version is being installed. */
   downgrade?: boolean
   /**
-   * False when this build can only open a download page. Packaged macOS and
-   * Windows installs download and apply the update in-app.
+   * False when this build can only open a download page. Signed macOS and
+   * installed Windows builds download and apply the update in-app.
    */
   canInstall?: boolean
+  /** Why an installed build requires a one-time manual update. */
+  manualUpdateReason?: ManualUpdateReason
 }
 
 /** One past release the user may install or roll back to, from the update index. */

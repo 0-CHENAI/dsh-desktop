@@ -27,6 +27,7 @@ describe('desktop update policy', () => {
 
   it('only enables updates for installed macOS and Windows builds', () => {
     expect(supportsAutoUpdates(true, 'darwin')).toBe(true)
+    expect(supportsAutoUpdates(true, 'darwin', false)).toBe(false)
     expect(supportsAutoUpdates(true, 'win32')).toBe(true)
     expect(supportsAutoUpdates(true, 'linux')).toBe(false)
     expect(supportsAutoUpdates(false, 'darwin')).toBe(false)
@@ -134,7 +135,9 @@ describe('unpackaged update checks', () => {
     expect(manager).toContain('fetchLatestPublishedVersion()')
     expect(manager).toContain('shell.openExternal(githubLatestReleasePage())')
     expect(manager).toContain('if (supportsUpdates()) {\n    configureUpdater()')
-    expect(manager).toContain('initialUpdateStatus(app.getVersion(), supportsUpdates())')
+    expect(manager).toContain('initialUpdateStatus(app.getVersion(), canInstallUpdates, macOSSupport?.reason)')
+    expect(manager).toContain("process.platform === 'darwin'")
+    expect(manager).toContain('macOSUpdateSupport({')
   })
 
   it('labels a GitHub-only offer as a download page, not an in-app install', async () => {
