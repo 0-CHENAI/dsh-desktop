@@ -25,8 +25,7 @@
   "scripts": {
     "postinstall": "patch-package && node scripts/install-brand-assets.mjs && install-electron --no",
     "dev": "electron-vite dev",
-    "build": "npm run build:market && electron-vite build",
-    "build:market": "tsc -p packages/dshmarket/tsconfig.json",
+    "build": "electron-vite build",
     "icons:generate": "node scripts/generate-app-icons.mjs",
     "splash:generate": "node scripts/generate-splash-loader.mjs",
     "version:next": "node scripts/next-release-version.mjs",
@@ -296,7 +295,7 @@
     "dsh-desktop-preset-transfer": "file:packages/dsh-desktop-preset-transfer",
     "dsh-ppt": "file:packages/ppt-bundles/dsh-ppt-0.1.1-rc.2-desktop-20260906.tgz",
     "dsh-ppt-composer": "file:packages/ppt-bundles/dsh-ppt-composer-0.1.1-rc.2-desktop-20260906.tgz",
-    "dshmarket": "file:packages/dshmarket",
+    "dshmarket": "1.45.1",
     "electron-updater": "^6.8.9",
     "node": "24.9.0",
     "pnpm": "10.34.5",
@@ -318,7 +317,10 @@
     "yaml": "^2.8.3"
   },
   "overrides": {
-    "koffi": "3.1.5"
+    "koffi": "3.1.5",
+    "dshmarket": {
+      "@deepseek-ai/dsh-settings": "$@deepseek-ai/dsh-settings"
+    }
   },
   "build": {
     "appId": "io.dsh.desktop",

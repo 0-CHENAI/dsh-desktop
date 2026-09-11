@@ -21,25 +21,24 @@ describe('market generation update compatibility', () => {
     expect(execFileSync(node, ['--input-type=module', '-e', script], { encoding: 'utf8' }).trim()).toBe('loaded')
   })
 
-  it('reproduces exit=0 STALE against the unadapted market route', () => {
+  it('lets the published market observe the installed version without the adapter', () => {
     const result = update('--unpatched')
-    expect(result.status).toBe(502)
-    expect(result.payload).toMatchObject({ ok: false, stale: true, exitCode: 0 })
+    expect(result.status).toBe(200)
+    expect(result.payload).toMatchObject({ ok: true, installed: { widget: '2.0.0' }, exitCode: 0 })
   })
 
-  it('validates the new bytes and reports restart without replacing the running link', () => {
+  it('validates the published version and reports that loaded code needs a restart', () => {
     const result = update()
     expect(result.status).toBe(200)
     expect(result.payload).toMatchObject({ ok: true, installed: { widget: '2.0.0' }, activation: { widget: { state: 'restart', hot: false } } })
     expect(result.payload.stale).toBeUndefined()
-    expect(result.activeVersion).toBe('1.0.0')
-    expect(result.linkUnchanged).toBe(true)
+    expect(result.activeVersion).toBe('2.0.0')
+    expect(result.linkUnchanged).toBe(false)
   })
 
   it.each([
     ['--broken', '缺少入口文件'],
     ['--invalid-patch', '组合无法启动'],
-    ['--mismatch', '实际安装为 v1.5.0'],
   ])('still rejects and rolls back an invalid candidate: %s', (flag, error) => {
     const result = update(flag)
     expect(result.status).toBe(502)
@@ -50,8 +49,17 @@ describe('market generation update compatibility', () => {
     expect(result.linkUnchanged).toBe(true)
   })
 
+  it('rejects a mismatched version before publishing the generation', () => {
+    const result = update('--mismatch')
+    expect(result.status).toBe(502)
+    expect(result.payload).toMatchObject({ ok: false, exitCode: 1, installed: { widget: '1.0.0' } })
+    expect(result.payload.stderr).toContain('ERR_RESOLVED_VERSION_MISMATCH')
+    expect(result.activeVersion).toBe('1.0.0')
+    expect(result.linkUnchanged).toBe(true)
+  })
+
   it('leaves the active-profile rollback path intact and is idempotent', () => {
-    const source = readFileSync('packages/dshmarket/lib/routes.js', 'utf8')
+    const source = readFileSync('node_modules/dshmarket/lib/routes.js', 'utf8')
     const patched = adaptMarketGenerationSource(source, 'routes.js')
     expect(patched).toContain('restoreProfileManifest(config.profile, manifestBefore, activeProfileDir)')
     expect(adaptMarketGenerationSource(patched, 'routes.js')).toBe(patched)
