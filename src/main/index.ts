@@ -18,7 +18,12 @@ import {
   type IpcMainInvokeEvent,
   type MessageBoxOptions
 } from 'electron'
-import { extractFailureCause, HarnessRuntime } from './runtime/harness-runtime'
+import { clearStaleLoopbackHttpCache } from './cache-maintenance'
+import {
+  DEFAULT_HARNESS_PORT,
+  extractFailureCause,
+  HarnessRuntime
+} from './runtime/harness-runtime'
 import { launchDisclaimedUtilityProcess } from './runtime/disclaimed-utility-process'
 import {
   installProfileDependenciesWithDsh,
@@ -996,6 +1001,12 @@ async function openHarness(
     const navigationVersion = ++mainWindowNavigationVersion
     rendererPluginFailureLogs = []
     window.webContents.stop()
+    await clearStaleLoopbackHttpCache(
+      window.webContents.session,
+      join(app.getPath('userData'), 'http-cache-origin'),
+      new URL(url).origin,
+      (line) => runtime.note(line)
+    )
     const clearedCookies = await clearStaleHarnessAuthCookies(
       window.webContents.session.cookies,
       rendererUrl,
@@ -2678,6 +2689,9 @@ async function bootstrap(): Promise<void> {
     dshSafePatchPath: desktopResourcePath('dsh-desktop-safe.patch.yml'),
     dshHome: join(app.getPath('userData'), 'harness'),
     logPath: join(app.getPath('logs'), 'harness.log'),
+    // Keep the Harness origin stable across launches. These ports are separate
+    // from the production/development mobile bridge ports (43127/43128).
+    preferredPort: DEFAULT_HARNESS_PORT + (developmentBuild ? 1 : 0),
     launchProcess: (executablePath, args, options) =>
       process.platform === 'darwin'
         ? launchDisclaimedUtilityProcess(utilityProcess, args, options, {
