@@ -26,6 +26,7 @@ vi.mock('../src/main/update/skipped-version', () => ({
 let manager: typeof import('../src/main/update/update-manager')
 let finish: () => void
 let prepare = vi.fn(async () => {})
+let recover = vi.fn(async () => {})
 beforeEach(async () => {
   vi.resetModules()
   mocks.handlers.clear()
@@ -37,8 +38,12 @@ beforeEach(async () => {
   })
   manager = await import('../src/main/update/update-manager')
   prepare = vi.fn(async () => {})
+  recover = vi.fn(async () => {})
   manager.registerUpdateHandlers()
-  manager.startUpdateManager({ prepareToInstall: prepare })
+  manager.startUpdateManager({
+    prepareToInstall: prepare,
+    recoverFromInstallFailure: recover
+  })
 })
 afterEach(() => manager.stopUpdateManager())
 
@@ -64,7 +69,7 @@ it('installs an accepted update once, after preparation, including a cached down
   expect(prepare).toHaveBeenCalledTimes(1)
   ready()
   await download
-  expect(mocks.updater.quitAndInstall).toHaveBeenCalledExactlyOnceWith(false, true)
+  expect(mocks.updater.quitAndInstall).toHaveBeenCalledExactlyOnceWith(true, true)
 })
 it.each(['updates:dismiss', 'updates:skip'])('revokes automatic installation on %s', async (channel) => {
   const { download } = await accept()
@@ -93,6 +98,7 @@ it('reports preparation failure instead of quitting', async () => {
   await download
   expect(manager.getUpdateStatus()).toMatchObject({ phase: 'error', message: 'stop failed' })
   expect(mocks.updater.quitAndInstall).not.toHaveBeenCalled()
+  expect(recover).toHaveBeenCalledOnce()
 })
 
 it('does not install a completion event without acceptance or for another version', async () => {
@@ -138,6 +144,7 @@ it('unlocks the manager when the installer emits an asynchronous error', async (
   await download
   mocks.updater.emit('error', new Error('installer failed'))
   expect(manager.getUpdateStatus()).toMatchObject({ phase: 'error', manual: true })
+  await vi.waitFor(() => expect(recover).toHaveBeenCalledOnce())
   await manager.checkForUpdates(true)
   expect(mocks.updater.checkForUpdates).toHaveBeenCalledOnce()
 })
@@ -152,6 +159,8 @@ it('does not quit or allow another update when an error interrupts preparation',
   ready()
   await download
   expect(mocks.updater.quitAndInstall).not.toHaveBeenCalled()
+  await vi.waitFor(() => expect(recover).toHaveBeenCalledOnce())
+  await new Promise<void>((resolve) => setImmediate(resolve))
   await manager.checkForUpdates(true)
   expect(mocks.updater.checkForUpdates).toHaveBeenCalledOnce()
 })

@@ -34,6 +34,7 @@ const TRANSIENT_STATUS_MS = 8_000
 
 let status = initialUpdateStatus(app.getVersion(), supportsUpdates())
 let prepareToInstall: (() => Promise<void>) | undefined
+let recoverFromInstallFailure: (() => Promise<void>) | undefined
 let startupTimer: NodeJS.Timeout | undefined
 let intervalTimer: NodeJS.Timeout | undefined
 let resetTimer: NodeJS.Timeout | undefined
@@ -49,6 +50,8 @@ let skippedVersion: string | undefined
 let skipLoaded = false
 let manualCheck = false
 let pendingDowngrade = false
+let installationPrepared = false
+let recoveryPromise: Promise<void> | undefined
 
 export function getUpdateStatus(): UpdateStatus {
   return { ...status }
@@ -99,8 +102,12 @@ export function skipUpdate(version: unknown): UpdateStatus {
   return getUpdateStatus()
 }
 
-export function startUpdateManager(options: { prepareToInstall: () => Promise<void> }): void {
+export function startUpdateManager(options: {
+  prepareToInstall: () => Promise<void>
+  recoverFromInstallFailure?: () => Promise<void>
+}): void {
   prepareToInstall = options.prepareToInstall
+  recoverFromInstallFailure = options.recoverFromInstallFailure
   if (started) return
   started = true
 
@@ -230,10 +237,20 @@ export async function installDownloadedUpdate(): Promise<void> {
   preparingInstallation = true
   try {
     await prepareToInstall?.()
+    installationPrepared = true
     // An updater error during shutdown preparation invalidates this attempt.
-    if (status.installing) autoUpdater.quitAndInstall(false, true)
+    // An accepted in-app update must reuse the existing install directory and
+    // must not drop the user into the assisted NSIS wizard. The visible wizard
+    // can start unpacking before every app-owned process has released its files
+    // and appears frozen; silent update mode is the updater-supported path.
+    if (status.installing) {
+      autoUpdater.quitAndInstall(true, true)
+    } else {
+      await recoverPreparedInstallation()
+    }
   } catch (error) {
     reportUpdateError(error, true)
+    await recoverPreparedInstallation(true)
   } finally {
     preparingInstallation = false
   }
@@ -297,10 +314,24 @@ function configureUpdater(): void {
 }
 
 function reportUpdateError(error: unknown, manual = status.manual || installing): void {
+  const shouldRecover = installationPrepared
   autoInstallVersion = undefined
   installing = false
   transition({ type: 'error', message: errorMessage(error) }, manual)
+  if (shouldRecover) void recoverPreparedInstallation()
   if (manual) scheduleReset()
+}
+
+async function recoverPreparedInstallation(force = false): Promise<void> {
+  if (!installationPrepared && !force) return
+  installationPrepared = false
+  if (!recoverFromInstallFailure) return
+  recoveryPromise ??= recoverFromInstallFailure()
+    .catch((error) => console.error('[updater] unable to recover after install failure', error))
+    .finally(() => {
+      recoveryPromise = undefined
+    })
+  await recoveryPromise
 }
 
 function transition(event: UpdateStateEvent, manualOverride?: boolean): void {
