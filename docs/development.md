@@ -106,9 +106,9 @@ npm run package:win
 
 Do not invoke `electron-builder --win` from macOS or Linux for a distributable Windows package. The target verification scripts intentionally reject host/target mismatches.
 
-For local unsigned development packages, use the corresponding `package:dev:*` command. Before handing off a Windows installer, verify that `resources/app/node_modules/node/bin/node.exe` exists in `win-unpacked` and require the packaged Windows Harness smoke test to pass.
+For isolated development-channel packages, use the corresponding `package:dev:*` command. macOS packages are ad-hoc signed because this fork has no Apple Developer Program credentials; run `scripts/verify-macos-package.mjs` against the unpacked app, ZIP, and DMG before handing one off. Before handing off a Windows installer, verify that `resources/app/node_modules/node/bin/node.exe` exists in `win-unpacked` and require the packaged Windows Harness smoke test to pass.
 
-Formal release artifacts are built, signed, and published by the tag workflow. A local build or pull-request check is not formal release evidence.
+Formal release artifacts are built, package-verified, and published by the tag workflow. Windows installers use the configured UKey signature. macOS packages use ad-hoc signatures and require one-time approval in System Settings because they are not Apple-notarized. A local build or pull-request check is not formal release evidence.
 
 ## Contribution hygiene
 

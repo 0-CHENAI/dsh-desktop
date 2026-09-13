@@ -24,7 +24,7 @@
 DSH Desktop は、ローカルの DeepSeek Harness をインストール可能なデスクトップアプリとして提供します。Harness を自動起動し、Profile、プラグイン、ワークスペース、モデル設定、セッションをアプリ本体とは別の場所に保存し、ローカル Runtime の準備が整うと完全な Harness 画面を開きます。
 
 > [!IMPORTANT]
-> DSH Desktop は、急速に進化している `@deepseek-ai/dsh@0.1.5-rc.1` を基盤とする早期プレビューです。macOS 版はコード署名と Apple 公証済みです。Windows x64 インストーラーもコード署名済みですが、発行元のダウンロード・インストール実績が蓄積されるまでは Windows のセキュリティ警告が表示される場合があります。
+> DSH Desktop は、急速に進化している `@deepseek-ai/dsh@0.1.5-rc.1` を基盤とする早期プレビューです。この fork には Apple Developer Program の資格情報がないため、macOS パッケージは ad-hoc 署名のみで Apple 公証されていません。Windows x64 インストーラーはコード署名済みです。macOS で初回起動がブロックされた後は、「システム設定 → プライバシーとセキュリティ → このまま開く」を選択してください。`xattr` の実行や Gatekeeper の無効化は不要です。
 
 ## ダウンロード
 
@@ -100,8 +100,8 @@ open -a "DSH Desktop" --args --safe-mode
 
 | プラットフォーム | 配布形式 | 状態 |
 | --- | --- | --- |
-| macOS Apple Silicon | 署名・公証済み DMG/ZIP | 対応 |
-| macOS Intel | 署名・公証済み DMG/ZIP | 対応 |
+| macOS Apple Silicon | ad-hoc 署名・未公証の DMG/ZIP | プレビュー；初回のみ手動承認が必要 |
+| macOS Intel | ad-hoc 署名・未公証の DMG/ZIP | プレビュー；初回のみ手動承認が必要 |
 | Windows x64 | コード署名済み NSIS インストーラー | 対応 |
 | Windows ARM64 | — | 未対応 |
 | Linux | — | 未対応 |
