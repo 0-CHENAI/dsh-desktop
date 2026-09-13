@@ -12,6 +12,10 @@
   disabled: true
 
 - insert:
+    # Account sign-in flows share the credentials service and cancellation lifecycle.
+    - id: authorization
+      name: '@deepseek-ai/dsh-authorization'
+
     - id: dsh-desktop-client-ui
       name: dsh-desktop-client-ui
 

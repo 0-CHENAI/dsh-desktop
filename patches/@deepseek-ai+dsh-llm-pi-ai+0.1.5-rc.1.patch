@@ -1,7 +1,23 @@
 diff --git a/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js b/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js
 --- a/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js
 +++ b/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js
-@@ -1363,12 +1363,18 @@
+@@ -981,6 +981,7 @@
+ /** A {@link modelProfile} whose id lives in the `modelOverrides` dict key. */
+ const modelOverride = z.object(modelFields);
+ const profile = z.object({
++	authFlow: z.string(),
+ 	apiKeyEnv: z.string().role("credential-ref"),
+ 	displayName: z.string(),
+ 	api: z.union(supportedProtocols()),
+@@ -1097,6 +1098,7 @@
+ 			if (validation === "strict" || !(error instanceof PiAiCatalogError)) throw error;
+ 			catalogError ??= error.message;
+ 		}
++		if (source.authFlow !== void 0 && source.authFlow !== recordKeyFor(provider)) throw new LlmError(`llm-pi-ai: authFlow must address this provider (${recordKeyFor(provider)})`, "INVALID_AUTH_FLOW");
+ 		const { apiKeyEnv, retryPolicy, models: _models, displayName: _displayName, ...rest } = source;
+ 		resolved.set(provider, {
+ 			...rest,
+@@ -1363,12 +1365,18 @@
  		...usage.cacheWrite > 0 ? { cacheWriteTokens: usage.cacheWrite } : {}
  	};
  }
@@ -23,7 +39,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js b/node_modules
  	if (/\b5\d\d\b/.test(message)) return "SERVER";
  	if (/\btime(?:d)?\s*out\b|timeout/i.test(message)) return "TIMEOUT";
  	if (/stream ended (?:before|without)\b/i.test(message)) return "TRANSPORT";
-@@ -1385,7 +1391,7 @@
+@@ -1385,7 +1393,7 @@
  *   `EMPTY_RESPONSE` error, while terminal `pending` and `deferred` states map
  *   to non-retryable `PI_AI_ERROR` failures.
  */
@@ -32,7 +48,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js b/node_modules
  	const piAiOverflow = isContextOverflow(message, contextWindow);
  	const harnessOverflow = message.stopReason === "error" && message.errorMessage !== void 0 && isContextWindowExceededError(message.errorMessage);
  	if (piAiOverflow || harnessOverflow) return {
-@@ -1430,11 +1436,20 @@
+@@ -1430,11 +1438,20 @@
  		};
  		case "error": {
  			const text = message.errorMessage ?? "pi-ai stream error";
@@ -54,7 +70,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js b/node_modules
  				}
  			};
  		}
-@@ -1454,7 +1469,10 @@
+@@ -1454,7 +1471,10 @@
  */
  async function* toStreamChunks(events, contextWindow, callerSignal, requestedModel) {
  	const toolIds = /* @__PURE__ */ new Map();
@@ -66,7 +82,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js b/node_modules
  		case "start": break;
  		case "text_start":
  			yield {
-@@ -1563,9 +1581,10 @@
+@@ -1563,9 +1583,10 @@
  				reason: mapStopReason(callerSignal?.aborted ? {
  					...event.error,
  					stopReason: "aborted"
@@ -78,3 +94,41 @@ diff --git a/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js b/node_modules
  	}
  	throw new LlmError("pi-ai event stream ended without done/error", "STREAM_CLOSED");
  }
+@@ -2453,7 +2474,7 @@
+ 		}
+ 		ctx.authorization.registerFlow({
+ 			key: recordKeyFor(providerId),
+-			label: provider.name,
++			label: provider.id === "openai-codex" ? "ChatGPT" : provider.name,
+ 			methods: [first, ...rest],
+ 			async run(session) {
+ 				const models = createModels(auth);
+@@ -2561,6 +2582,7 @@
+ 			settingsNs: NS,
+ 			settingsPath: ["providers", provider],
+ 			declared: !catalog.has(provider),
++			...(profiles.get(provider)?.authFlow !== void 0 ? { authFlow: profiles.get(provider).authFlow } : ["openai-codex", "kimi-coding"].includes(provider) && catalogProvider(provider)?.auth.oauth !== void 0 ? { authFlow: recordKeyFor(provider) } : {}),
+ 			...error === void 0 ? {} : { error }
+ 		});
+ 	};
+@@ -2597,6 +2619,8 @@
+ 		const credentials = ctx.get("credentials");
+ 		const hit = credentials !== void 0 ? (await credentials.resolve(ref))?.value : launchEnvironmentOf(ctx).get(ref)?.value;
+ 		if (hit !== void 0 && hit.length > 0) return assertUsableApiKey(hit, "llm-pi-ai", ref);
++		const flow = profile.authFlow ?? (["openai-codex", "kimi-coding"].includes(provider) ? recordKeyFor(provider) : void 0);
++		if (flow !== void 0 && (await credentials?.describeRecord(flow))?.configured === true) return void 0;
+ 		throw new LlmError(`llm-pi-ai: no credential for provider route "${provider}"; its profile resolves ${ref}, which is not set — store ${ref} through the credentials service (the web Models page writes it) or export it, and remove apiKeyEnv only if this provider should authenticate from pi-ai's own environment discovery`, "MISSING_CREDENTIAL");
+ 	};
+ 	const auth = {
+diff --git a/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/types/config.d.ts b/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/types/config.d.ts
+--- a/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/types/config.d.ts
++++ b/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/types/config.d.ts
+@@ -51,6 +51,8 @@
+ export type { PiAiCompatProfile, PiAiModality, PiAiModelOverride, PiAiModelProfile, PiAiReasoningEfforts, PiAiThinkingFormat, } from './catalog.ts';
+ /** Configuration for one pi-ai provider route; the `providers` dict key IS the route. */
+ export interface PiAiProviderProfile {
++    /** The registered flow must use llm-pi-ai/<provider> so the adapter reads its record. */
++    authFlow?: string;
+     /** Credential reference (environment-variable name) resolved per request through `ctx.credentials`. */
+     apiKeyEnv?: string;
+     /** Name shown by configuration surfaces; defaults to the route key. */
