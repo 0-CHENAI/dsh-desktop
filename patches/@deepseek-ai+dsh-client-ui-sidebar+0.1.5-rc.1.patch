@@ -13,7 +13,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-sidebar/lib/client.js b/nod
  			tag.dataset.plugin = "@deepseek-ai/dsh-client-ui-sidebar";
  			tag.dataset.pluginCss = tagId;
 -			tag.textContent = css;
-+			tag.textContent = css + "[data-dsh-sidebar-root][data-dsh-sidebar-wide=\"true\"]{padding-top:32px}[data-dsh-sidebar-brand-identity]{gap:4px}" + (navigator.userAgent.includes("Macintosh") ? "[data-dsh-sidebar-root][data-dsh-sidebar-wide=\"true\"]{padding-top:28px}[data-dsh-sidebar-root][data-dsh-sidebar-wide=\"false\"]{padding:32px 22px 6px}" : "");
++			tag.textContent = css + "[data-dsh-sidebar-root][data-dsh-sidebar-wide=\"true\"]{padding-top:32px}[data-dsh-sidebar-brand-identity]{gap:4px}.hHd-Xa_newSession svg{shape-rendering:geometricPrecision}" + (navigator.userAgent.includes("Macintosh") ? "[data-dsh-sidebar-root][data-dsh-sidebar-wide=\"true\"]{padding-top:28px}[data-dsh-sidebar-root][data-dsh-sidebar-wide=\"false\"]{padding:32px 22px 6px}" : "");
  			document.head.appendChild(tag);
  		}
  		var SidebarRoot_module_css_default = {
@@ -34,6 +34,15 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-sidebar/lib/client.js b/nod
  								"aria-hidden": "true",
  								children: [(0, react_jsx_runtime.jsx)("span", {
  									className: SidebarRoot_module_css_default.brandMark,
+@@ -264,7 +265,7 @@ window.__ModuleLoader__.load({
+ 							onClick: () => {
+ 								startSession();
+ 							},
+-							children: [(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconNewChatOutline16, { size: wide ? 14 : 18 }), wide && (0, react_jsx_runtime.jsx)("span", {
++							children: [(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconNewChatOutline16, { size: wide ? 16 : 18 }), wide && (0, react_jsx_runtime.jsx)("span", {
+ 								className: clsx(SidebarRoot_module_css_default.newSessionLabel, SidebarRoot_module_css_default.wide),
+ 								children: t("session.new")
+ 							})]
 @@ -295,6 +298,7 @@ window.__ModuleLoader__.load({
  							className: SidebarRoot_module_css_default.footerActions,
  							children: renderSlot("sidebar.footer.action", { wide })
