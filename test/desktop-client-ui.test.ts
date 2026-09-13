@@ -112,9 +112,18 @@ describe('DSH Desktop client slot occupants', () => {
     expect(sidebarName.type).toBe(BrandWordmark)
     expect(sidebarName.props.includeMark).toBe(false)
 
-    expect(
-      registrations.find(({ config }) => config.name === 'sidebar.brand.mark')!.component
-    ).toBe(FishLogo)
+    const sidebarMark = registrations.find(
+      ({ config }) => config.name === 'sidebar.brand.mark'
+    )!.component({ size: 24 }) as { type: unknown; props: Record<string, unknown> }
+    expect(sidebarMark.type).toBe('svg')
+    expect(sidebarMark.props.height).toBe(17)
+    const [markPath] = sidebarMark.props.children as Array<{
+      type: unknown
+      props: Record<string, unknown>
+    }>
+    if (!markPath) throw new Error('Expected the sidebar brand SVG path')
+    expect(markPath.type).toBe('path')
+    expect(markPath.props.fill).toBe('currentColor')
     expect(
       registrations.find(({ config }) => config.name === 'conversation.hero.brand.mark')!
         .component

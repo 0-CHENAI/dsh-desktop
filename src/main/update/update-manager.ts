@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, powerMonitor, shell } from 'electron'
+import { isPrereleaseVersion, isVersion } from '../desktop-service/service'
 import electronUpdater from 'electron-updater'
 import type { UpdateStatus } from '../../shared/contracts'
 import {
@@ -65,6 +66,7 @@ let manualCheck = false
 let pendingDowngrade = false
 let installationPrepared = false
 let recoveryPromise: Promise<void> | undefined
+let selectedUpdateVersion: string | undefined
 
 export function getUpdateStatus(): UpdateStatus {
   return { ...status }
@@ -143,6 +145,7 @@ export async function checkForUpdates(manual = false): Promise<UpdateStatus> {
   transition({ type: 'check', manual })
   manualCheck = manual
   lastCheckedAt = Date.now()
+  selectedUpdateVersion = undefined
   checkPromise = supportsUpdates() ? autoUpdater.checkForUpdates() : checkGitHubRelease()
 
   try {
@@ -206,15 +209,17 @@ export async function downloadAvailableUpdate(autoInstall = false): Promise<Upda
  * — there is no version pinning.
  */
 export async function installSpecificVersion(version: unknown): Promise<UpdateStatus> {
-  if (typeof version !== 'string' || !version) return getUpdateStatus()
+  if (!isVersion(version)) return getUpdateStatus()
   if (!supportsUpdates()) return getUpdateStatus()
   if (checkPromise || downloading || installing || preparingInstallation || ['checking', 'downloading', 'downloaded'].includes(status.phase)) {
     return getUpdateStatus()
   }
 
+  selectedUpdateVersion = version
   pendingDowngrade = compareVersions(version, app.getVersion()) < 0
   autoUpdater.setFeedURL({ provider: 'generic', url: archiveFeedUrl(version) })
   autoUpdater.allowDowngrade = true
+  autoUpdater.allowPrerelease = isPrereleaseVersion(version)
   manualCheck = true
   transition({ type: 'check', manual: true })
   lastCheckedAt = Date.now()
@@ -236,6 +241,7 @@ export async function installSpecificVersion(version: unknown): Promise<UpdateSt
     autoUpdater.setFeedURL({ provider: 'generic', url: STABLE_FEED_URL })
     autoUpdater.allowDowngrade = false
     pendingDowngrade = false
+    autoUpdater.allowPrerelease = false
   }
 
   return getUpdateStatus()
@@ -300,6 +306,11 @@ function configureUpdater(): void {
     transition({ type: 'check', manual: status.manual })
   )
   autoUpdater.on('update-available', (info) => {
+    if (selectedUpdateVersion !== undefined && info.version !== selectedUpdateVersion) {
+      transition({ type: 'error', message: 'Update archive does not match the selected version' })
+      return
+    }
+    selectedUpdateVersion = info.version
     if (!shouldOfferUpdate(info.version, currentSkippedVersion(), manualCheck)) {
       console.info('[updater] skipping', info.version, 'at the user’s request')
       transition({ type: 'reset' })
