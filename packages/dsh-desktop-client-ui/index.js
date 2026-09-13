@@ -1,2 +1,4 @@
-/** Host half for the browser-only DSH Desktop UI occupants. */
-export function apply() {}
+import { registerAuthorization } from './authorization.js'
+
+/** Desktop UI occupants and the authenticated provider sign-in bridge. */
+export function apply(ctx) { registerAuthorization(ctx) }

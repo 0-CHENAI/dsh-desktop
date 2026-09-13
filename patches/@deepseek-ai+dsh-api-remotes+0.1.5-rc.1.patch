@@ -1,11 +1,18 @@
 diff --git a/node_modules/@deepseek-ai/dsh-api-remotes/lib/client.js b/node_modules/@deepseek-ai/dsh-api-remotes/lib/client.js
 --- a/node_modules/@deepseek-ai/dsh-api-remotes/lib/client.js
 +++ b/node_modules/@deepseek-ai/dsh-api-remotes/lib/client.js
-@@ -8723,6 +8723,28 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
- 						"column": 3
+@@ -5725,6 +5725,7 @@
+ 			"maxTokens": number().optional()
+ 		}));
+ 		const _deepseek_ai_dsh_llm_llm_listConfigurableProviders_result$schema = array(object({
++			authFlow: string().optional(),
+ 			"provider": string(),
+ 			"displayName": string(),
+ 			"settingsNs": string(),
+@@ -8724,6 +8725,28 @@
  					}
  				},
-+				{
+ 				{
 +					id: "@deepseek-ai/dsh-api-session-controller#session/delete",
 +					service: "sessionController",
 +					namespace: "session",
@@ -27,6 +34,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-api-remotes/lib/client.js b/node_modu
 +						schema: object({ "deleted": literal(true).readonly() })
 +					}
 +				},
- 				{
++				{
  					id: "@deepseek-ai/dsh-api-session-controller#session/rename",
  					service: "sessionController",
+ 					namespace: "session",
