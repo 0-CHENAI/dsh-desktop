@@ -1,18 +1,25 @@
 diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js
+index aa8ef80..38c64f1 100644
 --- a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js
 +++ b/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js
-@@ -62,6 +62,38 @@
- 			tag.dataset.plugin = "@deepseek-ai/dsh-client-ui-settings-models";
- 			tag.dataset.pluginCss = tagId$3;
+@@ -64,6 +64,46 @@ window.__ModuleLoader__.load({
  			tag.textContent = css$3;
-+			document.head.appendChild(tag);
-+		}
+ 			document.head.appendChild(tag);
+ 		}
 +		const providerPickerTagId = "@deepseek-ai/dsh-client-ui-settings-models/ProviderPicker";
 +		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(providerPickerTagId) + "]") === null) {
 +			const tag = document.createElement("style");
 +			tag.dataset.plugin = "@deepseek-ai/dsh-client-ui-settings-models";
 +			tag.dataset.pluginCss = providerPickerTagId;
 +			tag.textContent = ".dshAuthorization{display:flex;flex-direction:column;gap:10px;overflow-wrap:anywhere}.dshAuthorization p{margin:0}.dshAuthorization code{display:block;font-size:20px;letter-spacing:2px;user-select:all}.dshAuthorization a{color:var(--dsw-alias-brand-primary)}.dshAuthorization button,.dshAuthorization input,.dshAuthorization select{font:inherit;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l2);border-radius:8px;padding:8px 12px;max-width:100%;box-sizing:border-box}.dshAuthorization button{cursor:pointer;align-self:flex-start;transition:background .15s ease-out}.dshAuthorization button:hover{background:var(--dsw-alias-interactive-bg-hover)}.dshAuthorization button:disabled{opacity:.5;cursor:default}.dshAuthorizationPrompt label{display:flex;flex-direction:column;gap:6px}.dshAuthorizationPrompt{display:flex;flex-direction:column;gap:8px}@media(prefers-reduced-motion:reduce){.dshAuthorization button{transition:none}}.dshProviderPicker{flex-direction:column;gap:10px;display:flex}.dshProviderSearch{box-sizing:border-box;border:1px solid var(--dsw-alias-border-l2);width:100%;height:36px;font:inherit;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);border-radius:8px;padding:0 11px;font-size:13px}.dshProviderSearch:focus{border-color:var(--dsw-alias-border-l1);outline:none}.dshProviderSearch::placeholder{color:var(--dsw-alias-label-dimmed)}.dshProviderGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;display:grid}.dshProviderCard{box-sizing:border-box;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l2);border-radius:8px;flex-direction:column;align-items:flex-start;min-height:58px;padding:10px 12px;display:flex;cursor:pointer;text-align:left;font:inherit}.dshProviderCard:hover{background:var(--dsw-alias-interactive-bg-hover)}.dshProviderCard[aria-pressed=true]{border-color:var(--dsw-alias-border-l1);background:var(--dsw-alias-interactive-bg-hover)}.dshProviderCard:focus-visible{outline:none;box-shadow:0 0 0 2px var(--dsw-alias-border-l3)}.dshProviderName{font-size:14px;font-weight:500;line-height:20px}.dshProviderRoute{color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:16px}.dshProviderSummary{box-sizing:border-box;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);border-radius:8px;align-items:center;gap:12px;min-height:52px;padding:8px 10px 8px 12px;display:flex}.dshProviderSummaryText{flex-direction:column;min-width:0;display:flex}.dshProviderChange{color:var(--dsw-alias-label-secondary);background:transparent;border:1px solid var(--dsw-alias-border-l2);border-radius:14px;margin-left:auto;padding:4px 10px;font:inherit;font-size:12px;cursor:pointer}.dshProviderChange:hover{background:var(--dsw-alias-interactive-bg-hover)}@media (width<=620px){.dshProviderGrid{grid-template-columns:1fr}}";
++			document.head.appendChild(tag);
++		}
++		const providerIdentityTagId = "@deepseek-ai/dsh-client-ui-settings-models/ProviderIdentity";
++		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(providerIdentityTagId) + "]") === null) {
++			const tag = document.createElement("style");
++			tag.dataset.plugin = "@deepseek-ai/dsh-client-ui-settings-models";
++			tag.dataset.pluginCss = providerIdentityTagId;
++			tag.textContent = ".dshProviderCard{position:relative;min-width:0;flex-direction:row;align-items:center;gap:10px}.dshProviderIcon{--dsh-provider-icon:none;display:inline-block;flex:none;width:28px;height:28px;background:var(--dsw-alias-label-primary);-webkit-mask:var(--dsh-provider-icon) center/contain no-repeat;mask:var(--dsh-provider-icon) center/contain no-repeat}.dshProviderCardBody{display:flex;flex:1;min-width:0;flex-direction:column}.dshProviderName,.dshProviderRoute{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dshProviderAuthBadge{flex:none;border:1px solid var(--dsw-alias-border-l2);border-radius:999px;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-secondary);padding:1px 7px;font-size:10px;font-weight:500;line-height:16px;white-space:nowrap}.dshProviderSummary .dshProviderIcon{width:24px;height:24px}.dshProviderSummaryText{flex:1}.dshProviderCard:hover .dshProviderIcon,.dshProviderCard:focus-visible .dshProviderIcon{background:var(--dsw-alias-brand-primary)}";
 +			document.head.appendChild(tag);
 +		}
 +		const modelModalityTagId = "@deepseek-ai/dsh-client-ui-settings-models/ModelModalityToggle";
@@ -37,10 +44,12 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
 +			tag.dataset.plugin = "@deepseek-ai/dsh-client-ui-settings-models";
 +			tag.dataset.pluginCss = modelReasoningTagId;
 +			tag.textContent = ".dshModelReasoningField{grid-column:1/-1;flex-direction:column;gap:6px;display:flex}.dshModelReasoningHint{color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:16px}";
- 			document.head.appendChild(tag);
- 		}
++			document.head.appendChild(tag);
++		}
  		var ModelsSection_module_css_default = {
-@@ -158,6 +190,233 @@
+ 			"addActions": "zGbnIq_addActions",
+ 			"addBlock": "zGbnIq_addBlock",
+@@ -158,6 +198,233 @@ window.__ModuleLoader__.load({
  			});
  		}
  		//#endregion
@@ -274,7 +283,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  		//#region lib/types/client/DeepSeekModelsEditor.js
  		/**
  		* Curated editor for the direct DeepSeek adapter's advisory model catalog.
-@@ -259,6 +518,7 @@
+@@ -259,6 +526,7 @@ window.__ModuleLoader__.load({
  		function DeepSeekModelsEditor(props) {
  			const [editing, setEditing] = (0, react.useState)(() => /* @__PURE__ */ new Map());
  			const [expanded, setExpanded] = (0, react.useState)(() => /* @__PURE__ */ new Set());
@@ -282,7 +291,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			const update = (index, key, value) => {
  				const next = props.models.map((model, at) => {
  					const copy = { ...model };
-@@ -367,12 +627,20 @@
+@@ -367,12 +635,20 @@ window.__ModuleLoader__.load({
  							children: props.t("resetModels")
  						}) : null]
  					}),
@@ -304,7 +313,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  							className: ModelsSection_module_css_default["modelEntry"],
  							children: [(0, react_jsx_runtime.jsxs)("div", {
  								className: ModelsSection_module_css_default["modelRow"],
-@@ -398,12 +666,23 @@
+@@ -398,12 +674,23 @@ window.__ModuleLoader__.load({
  										value: typeof model["name"] === "string" ? model["name"] : "",
  										placeholder: props.t("modelName"),
  										"aria-label": `${props.t("modelName")} ${String(index + 1)}`,
@@ -334,7 +343,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  										type: "button",
  										className: ModelsSection_module_css_default["iconButton"],
  										"aria-label": `${props.t("modelAdvanced")} ${String(index + 1)}`,
-@@ -428,18 +707,9 @@
+@@ -428,18 +715,9 @@ window.__ModuleLoader__.load({
  								]
  							}), expanded.has(index) ? (0, react_jsx_runtime.jsxs)("div", {
  								className: ModelsSection_module_css_default["modelAdvanced"],
@@ -354,7 +363,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  					})
  				]
  			});
-@@ -557,6 +827,7 @@
+@@ -557,6 +835,7 @@ window.__ModuleLoader__.load({
  			const [candidateQuery, setCandidateQuery] = (0, react.useState)("");
  			const [expanded, setExpanded] = (0, react.useState)(/* @__PURE__ */ new Set());
  			const [editing, setEditing] = (0, react.useState)(/* @__PURE__ */ new Map());
@@ -362,7 +371,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			/** Buffer key for one capacity field; the row half moves when rows do. */
  			const bufferKey = (index, field) => `${String(index)}:${field}`;
  			const editCapacity = (index, field, text) => {
-@@ -691,11 +962,19 @@
+@@ -691,11 +970,19 @@ window.__ModuleLoader__.load({
  							})
  						]
  					}),
@@ -383,7 +392,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  						className: ModelsSection_module_css_default["modelEntry"],
  						children: [(0, react_jsx_runtime.jsxs)("div", {
  							className: ModelsSection_module_css_default["modelRow"],
-@@ -717,12 +996,23 @@
+@@ -717,12 +1004,23 @@ window.__ModuleLoader__.load({
  									value: textOf(model, "name"),
  									placeholder: t("modelName"),
  									"aria-label": `${t("modelName")} ${index + 1}`,
@@ -413,7 +422,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  									type: "button",
  									className: ModelsSection_module_css_default["iconButton"],
  									"aria-label": `${t("modelAdvanced")} ${index + 1}`,
-@@ -788,18 +1078,17 @@
+@@ -788,18 +1086,17 @@ window.__ModuleLoader__.load({
  										editCapacity(index, "maxTokens", event.target.value);
  									}
  								})]
@@ -440,7 +449,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  					failure !== void 0 ? (0, react_jsx_runtime.jsx)("p", {
  						className: ModelsSection_module_css_default["error"],
  						children: failure
-@@ -895,6 +1184,7 @@
+@@ -895,6 +1192,7 @@ window.__ModuleLoader__.load({
  				settingsNs: entry.settingsNs,
  				settingsPath: [...entry.settingsPath],
  				active: active.has(entry.provider),
@@ -448,7 +457,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  				...entry.declared === void 0 ? {} : { declared: entry.declared },
  				...entry.error === void 0 ? {} : { error: entry.error }
  			}));
-@@ -1020,6 +1310,8 @@
+@@ -1020,6 +1318,8 @@ window.__ModuleLoader__.load({
  						credential: void 0
  					};
  				});
@@ -457,7 +466,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  				const refs = [...new Set(rows.map((row) => row.apiKeyEnv ?? deriveKeyRef(row.entry.provider)))];
  				let credentials = {};
  				let credentialError = null;
-@@ -1039,6 +1331,7 @@
+@@ -1039,6 +1339,7 @@ window.__ModuleLoader__.load({
  						const derived = row.apiKeyEnv !== void 0 ? void 0 : credentials[deriveKeyRef(row.entry.provider)];
  						return {
  							...row,
@@ -465,7 +474,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  							...named === void 0 ? {} : { credential: named },
  							...derived === void 0 ? {} : { derivedCredential: derived }
  						};
-@@ -1067,8 +1360,8 @@
+@@ -1067,8 +1368,8 @@ window.__ModuleLoader__.load({
  		*/
  		function providerUsable(row) {
  			if (!row.entry.active) return false;
@@ -476,7 +485,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  		}
  		/**
  		* Project first-run readiness from the provider/settings/credential join used
-@@ -1164,6 +1457,7 @@
+@@ -1164,6 +1465,7 @@ window.__ModuleLoader__.load({
  			const [protocol, setProtocol] = (0, react.useState)(protocols[0] ?? "");
  			const [keyDraft, setKeyDraft] = (0, react.useState)("");
  			const [models, setModels] = (0, react.useState)([]);
@@ -484,19 +493,19 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			const [busy, setBusy] = (0, react.useState)(false);
  			const [failure, setFailure] = (0, react.useState)(void 0);
  			/**
-@@ -1222,6 +1516,11 @@
- 				} finally {
+@@ -1223,6 +1525,11 @@ window.__ModuleLoader__.load({
  					setBusy(false);
  				}
-+			};
+ 			};
 +			/** Add an explicit model row to the custom-provider draft. */
 +			const addModel = () => {
 +				setModels((current) => [...current.map((model) => ({ ...model })), { id: "" }]);
 +				setModelQuery("");
- 			};
++			};
  			return (0, react_jsx_runtime.jsxs)("div", {
  				className: ModelsSection_module_css_default["editor"],
-@@ -1343,6 +1642,8 @@
+ 				children: [
+@@ -1343,6 +1650,8 @@ window.__ModuleLoader__.load({
  					(0, react_jsx_runtime.jsx)(ModelListEditor, {
  						models,
  						onChange: setModels,
@@ -505,7 +514,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  						probe: {
  							settingsNs: NS$1,
  							baseURL: normalizedBaseURL,
-@@ -1362,18 +1663,27 @@
+@@ -1362,18 +1671,27 @@ window.__ModuleLoader__.load({
  						className: ModelsSection_module_css_default["advancedHint"],
  						children: hint
  					}),
@@ -545,7 +554,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  					})
  				]
  			});
-@@ -1454,6 +1764,75 @@
+@@ -1454,6 +1772,75 @@ window.__ModuleLoader__.load({
  		* @param props - the addressed profile plus wire faces and copy.
  		* @returns the editor card.
  		*/
@@ -621,7 +630,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  		function ProviderEditor(props) {
  			const { namespace, schema, settingsPath, operations, t } = props;
  			const [draft, setDraft] = (0, react.useState)(() => draftAt(schema, namespace, settingsPath));
-@@ -1461,6 +1840,8 @@
+@@ -1461,6 +1848,8 @@ window.__ModuleLoader__.load({
  			const [keyState, setKeyState] = (0, react.useState)(void 0);
  			const [busy, setBusy] = (0, react.useState)(false);
  			const [failure, setFailure] = (0, react.useState)(void 0);
@@ -630,7 +639,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			const [committedOriginal, setCommittedOriginal] = (0, react.useState)(() => schema.getPath(namespace.user, settingsPath));
  			const [expectedRevision, setExpectedRevision] = (0, react.useState)(() => namespace.revision);
  			const root = (0, react.useMemo)(() => schema.rehydrate(namespace.schema), [namespace.schema, schema]);
-@@ -1518,7 +1899,8 @@
+@@ -1518,7 +1907,8 @@ window.__ModuleLoader__.load({
  			*/
  			const applyOnce = async () => {
  				const ns = namespace.ns;
@@ -640,7 +649,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  				if (props.credentialOnly !== true) {
  					const failure = validateDeepSeekModels(schema.getPath(next, ["models"]));
  					/* v8 ignore next 3 -- unreachable from the card: the same failure disables submit */
-@@ -1581,6 +1963,15 @@
+@@ -1581,6 +1971,15 @@ window.__ModuleLoader__.load({
  			const inheritedModels = () => {
  				return schema.getPath(namespace.base, [...settingsPath, "models"]) ?? schema.nodeAtPath(root, [...settingsPath, "models"])?.meta.default;
  			};
@@ -656,7 +665,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			/**
  			* The curated fields of one known adapter family. The family arrives
  			* narrowed so the per-family branches below are total: an unknown namespace
-@@ -1598,6 +1989,8 @@
+@@ -1598,6 +1997,8 @@ window.__ModuleLoader__.load({
  				const catalogProps = {
  					models,
  					overridden: modelsOverridden,
@@ -665,7 +674,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  					t,
  					disabled,
  					onChange: (next) => {
-@@ -1607,7 +2000,7 @@
+@@ -1607,7 +2008,7 @@ window.__ModuleLoader__.load({
  						setDraft((current) => schema.deletePath(current, ["models"]));
  					}
  				};
@@ -674,7 +683,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  					className: ModelsSection_module_css_default["field"],
  					children: [
  						(0, react_jsx_runtime.jsx)("span", {
-@@ -1636,6 +2029,10 @@
+@@ -1636,6 +2037,10 @@ window.__ModuleLoader__.load({
  					]
  				}), props.credentialOnly === true ? null : (0, react_jsx_runtime.jsxs)("details", {
  					className: ModelsSection_module_css_default["customized"],
@@ -685,7 +694,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  					children: [(0, react_jsx_runtime.jsx)("summary", {
  						className: ModelsSection_module_css_default["customizedSummary"],
  						children: t("customized")
-@@ -1712,8 +2109,22 @@
+@@ -1712,8 +2117,22 @@ window.__ModuleLoader__.load({
  					})]
  				})] });
  			};
@@ -709,7 +718,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  				children: [
  					props.hideTitle === true ? null : (0, react_jsx_runtime.jsxs)("div", {
  						className: ModelsSection_module_css_default["editorHeader"],
-@@ -1737,19 +2148,15 @@
+@@ -1737,19 +2156,15 @@ window.__ModuleLoader__.load({
  						className: ModelsSection_module_css_default["advancedHint"],
  						children: `${t("model")} ${String(modelFailure.index + 1)}: ${t(modelFailure.key)}`
  					}),
@@ -738,7 +747,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  					})
  				]
  			});
-@@ -1775,6 +2182,7 @@
+@@ -1775,6 +2190,7 @@ window.__ModuleLoader__.load({
  				provider: target.provider,
  				displayName: target.displayName,
  				settingsPath: target.settingsPath,
@@ -746,7 +755,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  				...target.declared === true ? { declared: true } : {},
  				...props
  			});
-@@ -1824,6 +2232,7 @@
+@@ -1824,6 +2240,7 @@ window.__ModuleLoader__.load({
  		* add-provider draft, whose dormant row names no reference yet.
  		*/
  		function keyConfiguredOf(row) {
@@ -754,7 +763,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			return row.apiKeyEnv !== void 0 ? row.credential?.configured === true : row.derivedCredential?.configured === true;
  		}
  		function targetOf(row) {
-@@ -1833,6 +2242,7 @@
+@@ -1833,6 +2250,7 @@ window.__ModuleLoader__.load({
  				provider: row.entry.provider,
  				displayName: row.entry.displayName,
  				settingsNs: row.entry.settingsNs,
@@ -762,34 +771,18 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  				settingsPath: row.entry.settingsPath,
  				...credentialRef === void 0 ? {} : { credentialRef },
  				...row.entry.declared === true ? { declared: true } : {}
-@@ -1846,6 +2256,26 @@
+@@ -1846,6 +2264,10 @@ window.__ModuleLoader__.load({
  		function providerCopy(template, target) {
  			return template.replace("{provider}", () => providerTargetLabel(target));
  		}
-+		/** Common providers first; specialized routes follow alphabetically. */
-+		const SETTINGS_PROVIDER_PRIORITY = [
-+			"deepseek-official",
-+			"deepseek",
-+			"openai",
-+			"anthropic",
-+			"google",
-+			"openrouter",
-+			"xai",
-+			"moonshotai-cn",
-+			"moonshotai",
-+			"minimax-cn",
-+			"minimax",
-+			"zai-coding-cn",
-+			"zai",
-+			"mistral",
-+			"groq",
-+			"together"
-+		];
-+		const SETTINGS_PROVIDER_RANK = new Map(SETTINGS_PROVIDER_PRIORITY.map((provider, index) => [provider, index]));
++		/** Sort visible provider identities alphabetically, with a stable route tie-breaker. */
++		const compareProviders = (left, right) => left.entry.displayName.localeCompare(right.entry.displayName, "en", { sensitivity: "base", numeric: true }) || left.entry.provider.localeCompare(right.entry.provider, "en", { sensitivity: "base", numeric: true });
++		const providerSupportsOAuth = (row) => row.authorization?.methods.some((method) => method.id === "oauth") === true;
++		const providerIconUrl = (provider) => `/api/desktop.provider-icon?provider=${encodeURIComponent(provider)}`;
  		/**
  		* Render the Models section content column.
  		* @param props - slot-delivered injected dependencies.
-@@ -1875,6 +2305,8 @@
+@@ -1875,6 +2297,8 @@ window.__ModuleLoader__.load({
  			const [deleteFailure, setDeleteFailure] = (0, react.useState)(void 0);
  			const [savedTarget, setSavedTarget] = (0, react.useState)(void 0);
  			const [declaring, setDeclaring] = (0, react.useState)(false);
@@ -798,26 +791,25 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			const [dismissedSetup, setDismissedSetup] = (0, react.useState)(() => /* @__PURE__ */ new Set());
  			const announceSaved = (target) => {
  				controller.load().then(() => {
-@@ -1945,11 +2377,17 @@
+@@ -1943,13 +2367,15 @@ window.__ModuleLoader__.load({
+ 				displayName: savedRow.entry.displayName
+ 			};
  			const anyUsable = state.rows.some(providerUsable);
- 			const configured = state.rows.filter((row) => row.configured);
+-			const configured = state.rows.filter((row) => row.configured);
++			const configured = state.rows.filter((row) => row.configured).sort(compareProviders);
  			const configurable = state.rows.filter((row) => state.namespaces.has(row.entry.settingsNs));
 -			const addable = configurable.filter((row) => !row.configured);
-+			const addable = configurable.filter((row) => !row.configured).sort((left, right) => {
-+				const leftRank = SETTINGS_PROVIDER_RANK.get(left.entry.provider) ?? Number.MAX_SAFE_INTEGER;
-+				const rightRank = SETTINGS_PROVIDER_RANK.get(right.entry.provider) ?? Number.MAX_SAFE_INTEGER;
-+				return leftRank - rightRank || left.entry.displayName.localeCompare(right.entry.displayName);
-+			});
++			const addable = configurable.filter((row) => !row.configured).sort(compareProviders);
  			const addTarget = adding ? editing : void 0;
  			const addNamespace = addTarget === void 0 ? void 0 : state.namespaces.get(addTarget.settingsNs);
  			const addRow = addTarget === void 0 ? void 0 : state.rows.find((row) => row.entry.provider === addTarget.provider);
  			const protocols = protocolChoices(state.namespaces.get("llm-pi-ai"), schema);
 +			const normalizedProviderQuery = providerQuery.trim().toLowerCase();
-+			const visibleAddable = normalizedProviderQuery.length === 0 ? addable : addable.filter((row) => `${row.entry.displayName} ${row.entry.provider}`.toLowerCase().includes(normalizedProviderQuery));
++			const visibleAddable = normalizedProviderQuery.length === 0 ? addable : addable.filter((row) => `${row.entry.displayName} ${row.entry.provider} ${providerSupportsOAuth(row) ? `oauth ${t("oauthProviderBadge")}` : ""}`.toLowerCase().includes(normalizedProviderQuery));
  			return (0, react_jsx_runtime.jsxs)("div", {
  				className: ModelsSection_module_css_default["section"],
  				children: [
-@@ -2006,8 +2444,8 @@
+@@ -2006,8 +2432,8 @@ window.__ModuleLoader__.load({
  								]
  							}, row.entry.provider);
  							const open = !adding && editing?.provider === row.entry.provider;
@@ -828,7 +820,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  							return (0, react_jsx_runtime.jsxs)("li", {
  								className: ModelsSection_module_css_default["rowCard"],
  								children: [
-@@ -2027,13 +2465,13 @@
+@@ -2027,13 +2453,13 @@ window.__ModuleLoader__.load({
  												credentialConfigured ? (0, react_jsx_runtime.jsx)("span", {
  													className: `${ModelsSection_module_css_default["credentialDot"]} ${ModelsSection_module_css_default["credentialDotConfigured"]}`,
  													role: "img",
@@ -846,7 +838,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  												}) : null
  											]
  										}), (0, react_jsx_runtime.jsxs)("span", {
-@@ -2094,24 +2532,67 @@
+@@ -2094,24 +2520,84 @@ window.__ModuleLoader__.load({
  									children: [(0, react_jsx_runtime.jsx)("span", {
  										className: ModelsSection_module_css_default["fieldLabel"],
  										children: t("provider")
@@ -891,28 +883,45 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
 +														setProviderPickerOpen(false);
 +														setProviderQuery("");
 +													},
-+													children: [(0, react_jsx_runtime.jsx)("span", {
-+														className: "dshProviderName",
-+														children: row.entry.displayName
-+													}), (0, react_jsx_runtime.jsx)("span", {
-+														className: "dshProviderRoute",
-+														children: row.entry.provider
-+													})]
++											children: [(0, react_jsx_runtime.jsx)("span", {
++												className: "dshProviderIcon",
++												style: { "--dsh-provider-icon": `url("${providerIconUrl(row.entry.provider)}")` },
++												"aria-hidden": "true"
++											}), (0, react_jsx_runtime.jsxs)("span", {
++												className: "dshProviderCardBody",
++												children: [(0, react_jsx_runtime.jsx)("span", {
++													className: "dshProviderName",
++													children: row.entry.displayName
++												}), (0, react_jsx_runtime.jsx)("span", {
++													className: "dshProviderRoute",
++													children: row.entry.provider
++												})]
++											}), providerSupportsOAuth(row) ? (0, react_jsx_runtime.jsx)("span", {
++												className: "dshProviderAuthBadge",
++												children: t("oauthProviderBadge")
++											}) : null]
 +												}, row.entry.provider);
 +											})
 +										})]
 +									}) : (0, react_jsx_runtime.jsxs)("div", {
 +										className: "dshProviderSummary",
-+										children: [(0, react_jsx_runtime.jsxs)("span", {
-+											className: "dshProviderSummaryText",
++									children: [(0, react_jsx_runtime.jsx)("span", {
++										className: "dshProviderIcon",
++										style: { "--dsh-provider-icon": `url("${providerIconUrl(addTarget.provider)}")` },
++										"aria-hidden": "true"
++									}), (0, react_jsx_runtime.jsxs)("span", {
++										className: "dshProviderSummaryText",
 +											children: [(0, react_jsx_runtime.jsx)("span", {
 +												className: "dshProviderName",
 +												children: addTarget.displayName
 +											}), (0, react_jsx_runtime.jsx)("span", {
 +												className: "dshProviderRoute",
 +												children: addTarget.provider
-+											})]
-+										}), (0, react_jsx_runtime.jsx)("button", {
++										})]
++									}), addRow !== void 0 && providerSupportsOAuth(addRow) ? (0, react_jsx_runtime.jsx)("span", {
++										className: "dshProviderAuthBadge",
++										children: t("oauthProviderBadge")
++									}) : null, (0, react_jsx_runtime.jsx)("button", {
 +											type: "button",
 +											className: "dshProviderChange",
 +											onClick: () => {
@@ -928,7 +937,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  									displayName: addTarget.displayName,
  									hideTitle: true,
  									namespace: addNamespace,
-@@ -2159,6 +2640,8 @@
+@@ -2159,6 +2645,8 @@ window.__ModuleLoader__.load({
  									setDeclaring(false);
  									setAdding(true);
  									setEditing(targetOf(first));
@@ -937,13 +946,10 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  								},
  								children: [(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconPlusOutline16, { size: 14 }), t("add")]
  							}), state.namespaces.has("llm-pi-ai") && (0, react_jsx_runtime.jsxs)("button", {
-@@ -2294,35 +2777,50 @@
+@@ -2294,35 +2782,50 @@ window.__ModuleLoader__.load({
  		function assertNever$1(_value) {
  			throw new Error("unexpected DeepSeek onboarding state");
  		}
--		/**
--		* Prompt a first-run user for the official DeepSeek credential while no
--		* provider can serve requests and that credential is writable.
 +		/** Mainstream catalog routes exposed during first-run setup. */
 +		const ONBOARDING_PROVIDERS = [
 +			{ provider: "deepseek-official", displayName: "DeepSeek", kind: "onboardingManufacturer" },
@@ -959,7 +965,9 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
 +			{ provider: "groq", displayName: "Groq", kind: "onboardingInference" },
 +			{ provider: "together", displayName: "Together AI", kind: "onboardingInference" }
 +		];
-+		/**
+ 		/**
+-		* Prompt a first-run user for the official DeepSeek credential while no
+-		* provider can serve requests and that credential is writable.
 +		* Prompt a first-run user to choose a supported mainstream provider and store
 +		* its credential while no configured route can serve requests.
  		* @param props - settings-shell owner state and Models feature dependencies.
@@ -1007,7 +1015,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			const finishCredential = (changed) => {
  				if (!changed) {
  					complete();
-@@ -2648,7 +3146,7 @@
+@@ -2648,7 +3151,7 @@ window.__ModuleLoader__.load({
  		const en = {
  			nav: "Models",
  			title: "Models",
@@ -1016,16 +1024,17 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			edit: "Edit",
  			editProvider: "Edit {provider}",
  			remove: "Delete",
-@@ -2660,6 +3158,8 @@
+@@ -2660,6 +3163,9 @@ window.__ModuleLoader__.load({
  			deleting: "Deleting {provider}…",
  			add: "Add provider",
  			provider: "Provider",
 +			providerSearch: "Search providers",
++			oauthProviderBadge: "OAuth",
 +			changeProvider: "Change",
  			close: "Close",
  			cancel: "Cancel",
  			apply: "Apply",
-@@ -2672,6 +3172,7 @@
+@@ -2672,6 +3178,7 @@ window.__ModuleLoader__.load({
  			conflict: "Someone else changed these settings while this card was open. Close it and reopen to edit the current values.",
  			retry: "Retry",
  			keyInput: "API key",
@@ -1033,7 +1042,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			keyPlaceholder: "Enter your API key",
  			keyPlaceholderNative: "Enter an API key, or leave blank to use environment authentication",
  			keyStored: "Configured — enter a new value to replace",
-@@ -2691,7 +3192,15 @@
+@@ -2691,7 +3198,15 @@ window.__ModuleLoader__.load({
  			contextWindowPlaceholder: "Uses the provider default",
  			maxTokens: "Max output tokens",
  			maxTokensPlaceholder: "Uses the provider default",
@@ -1050,7 +1059,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			addModel: "Add model",
  			removeModel: "Delete model",
  			modelsEmpty: "No models will be shown in the selector. Unlisted IDs can still be sent directly.",
-@@ -2740,10 +3249,14 @@
+@@ -2740,10 +3255,14 @@ window.__ModuleLoader__.load({
  			welcomeBody: "DeepSeek Harness 0.1 remains in testing for Harness developers. Many areas need further improvement, and we welcome feedback from the developer community. DeepSeek Harness's core plugins and foundational APIs will continue to evolve rapidly over the coming months.\n\nWe look forward to exploring the limits of intelligence with developers around the world, building on open-source, open, reusable, and composable infrastructure. We welcome Harness developers everywhere to join the DSH plugin ecosystem.",
  			welcomeContinue: "Continue",
  			welcomeError: "The acknowledgement could not be saved. Please try again.",
@@ -1068,7 +1077,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			onboardingSaving: "Saving…",
  			keyRequired: "Enter an API key to continue."
  		};
-@@ -2751,7 +3264,7 @@
+@@ -2751,7 +3270,7 @@ window.__ModuleLoader__.load({
  		const zh = {
  			nav: "模型",
  			title: "模型",
@@ -1077,16 +1086,17 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			edit: "编辑",
  			editProvider: "编辑 {provider}",
  			remove: "删除",
-@@ -2763,6 +3276,8 @@
+@@ -2763,6 +3282,9 @@ window.__ModuleLoader__.load({
  			deleting: "正在删除 {provider}…",
  			add: "添加提供方",
  			provider: "提供方",
 +			providerSearch: "搜索提供方",
++			oauthProviderBadge: "OAuth",
 +			changeProvider: "更换",
  			close: "关闭",
  			cancel: "取消",
  			apply: "保存",
-@@ -2775,6 +3290,7 @@
+@@ -2775,6 +3297,7 @@ window.__ModuleLoader__.load({
  			conflict: "这张卡片打开期间，这些设置已被其他地方改动。请关闭后重新打开，在当前值上编辑。",
  			retry: "重试",
  			keyInput: "API 密钥",
@@ -1094,7 +1104,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			keyPlaceholder: "输入 API 密钥",
  			keyPlaceholderNative: "输入 API 密钥，或留空使用环境认证",
  			keyStored: "已配置——输入新值可替换",
-@@ -2794,7 +3310,15 @@
+@@ -2794,7 +3317,15 @@ window.__ModuleLoader__.load({
  			contextWindowPlaceholder: "使用提供方默认值",
  			maxTokens: "最大输出 token 数",
  			maxTokensPlaceholder: "使用提供方默认值",
@@ -1111,7 +1121,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			addModel: "添加模型",
  			removeModel: "删除模型",
  			modelsEmpty: "模型选择器中将不显示任何模型；目录外 ID 仍可直接发送。",
-@@ -2843,10 +3367,14 @@
+@@ -2843,10 +3374,14 @@ window.__ModuleLoader__.load({
  			welcomeBody: "DeepSeek Harness 目前的 0.1 版本仍处在面向 Harness 开发者进行测试的阶段，还有许多地方需要持续改进和打磨，希望听取广大开发者的反馈建议。预计 DeepSeek Harness 的核心插件以及基础 API 都会在接下来的一段时间内快速迭代、持续演化。\n\n我们期待与全球开发者一起，在开源、开放、可复用、可组合的基础设施之上，共同探索智能上限。欢迎全球 Harness 开发者加入 DSH 插件生态。",
  			welcomeContinue: "继续",
  			welcomeError: "暂时无法保存确认状态，请重试。",
@@ -1129,21 +1139,21 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			onboardingSaving: "保存中…",
  			keyRequired: "请输入 API 密钥后继续。"
  		};
-@@ -2896,13 +3424,6 @@
- 			const injected = () => ({
- 				controller,
- 				hooks: { snapshot: controller.store },
+@@ -2900,13 +3435,6 @@ window.__ModuleLoader__.load({
+ 				schema,
+ 				t
+ 			});
+-			const deepSeekOnboardingInjected = () => ({
+-				controller,
+-				hooks: { models: controller.store },
 -				operations,
 -				schema,
 -				t
 -			});
--			const deepSeekOnboardingInjected = () => ({
--				controller,
--				hooks: { models: controller.store },
- 				operations,
- 				schema,
- 				t
-@@ -2956,12 +3477,6 @@
+ 			const welcomeController = new WelcomeNoticeStore(ctx.settingsScope.bind({
+ 				namespace: WELCOME_NOTICE_SETTINGS_NAMESPACE,
+ 				decode: decodeWelcomeSection
+@@ -2956,12 +3484,6 @@ window.__ModuleLoader__.load({
  				order: -100,
  				inject: welcomeInjected
  			}, WelcomeNotice));
@@ -1156,7 +1166,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  		}
  		//#endregion
  		exports.apply = apply;
-@@ -2971,4 +3486,4 @@
+@@ -2971,4 +3493,4 @@ window.__ModuleLoader__.load({
  	}
  });
  
