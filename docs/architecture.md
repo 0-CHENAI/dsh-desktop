@@ -91,7 +91,7 @@ The public tunnel is optional and forwards only the paired mobile surface; it do
 
 Installed macOS and Windows builds use `electron-updater`. The app checks shortly after startup, every six hours, and after a long system resume. A newly available version is offered before download. Download begins only after user consent, and installation begins only when the user chooses to restart and install. Users can skip one version without suppressing later releases.
 
-Update metadata and artifacts are produced by the native release workflow. macOS arm64 and x64 metadata is merged for the generic provider; the signed Windows installer has its blockmap and metadata regenerated after signing.
+Update metadata and artifacts are produced by the native release workflow. macOS packages are ad-hoc signed and their unpacked, ZIP, and DMG copies are verified on the native runner; because the fork has no Apple notarization, macOS updates remain manual. The signed Windows installer has its blockmap and metadata regenerated after signing.
 
 ## Desktop customization boundary
 

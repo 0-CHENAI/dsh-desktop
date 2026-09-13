@@ -24,7 +24,7 @@
 DSH Desktop 把本地 DeepSeek Harness 封装为可安装的桌面应用。它会自动启动 Harness，把 Profile、插件、工作区、模型配置和会话保存在应用安装目录之外，并在本地 Runtime 就绪后直接进入完整 Harness 界面。
 
 > [!IMPORTANT]
-> DSH Desktop 当前处于早期预览阶段，基于仍在快速迭代的 `@deepseek-ai/dsh@0.1.5-rc.1`。macOS 正式包已完成代码签名并通过 Apple 公证；Windows x64 安装包也已完成代码签名。随着下载量、安装量和发行者信誉逐步积累，Windows 安全提示会逐渐减少，但不会立即消失。
+> DSH Desktop 当前处于早期预览阶段，基于仍在快速迭代的 `@deepseek-ai/dsh@0.1.5-rc.1`。本 fork 没有 Apple Developer Program 凭据，因此 macOS 包仅使用 ad-hoc 签名且未通过 Apple 公证；Windows x64 安装包已完成代码签名。首次打开 macOS 包被拦截后，请前往“系统设置 → 隐私与安全性”点击“仍要打开”，不需要执行 `xattr` 或关闭 Gatekeeper。
 
 ## 下载安装
 
@@ -101,8 +101,8 @@ open -a "DSH Desktop" --args --safe-mode
 
 | 平台 | 分发形式 | 状态 |
 | --- | --- | --- |
-| macOS Apple Silicon | 已签名并通过公证的 DMG/ZIP | 支持 |
-| macOS Intel | 已签名并通过公证的 DMG/ZIP | 支持 |
+| macOS Apple Silicon | ad-hoc 签名、未公证的 DMG/ZIP | 预览；首次打开需手动批准 |
+| macOS Intel | ad-hoc 签名、未公证的 DMG/ZIP | 预览；首次打开需手动批准 |
 | Windows x64 | 已完成代码签名的 NSIS 安装包 | 支持 |
 | Windows ARM64 | — | 当前不支持 |
 | Linux | — | 当前不支持 |
