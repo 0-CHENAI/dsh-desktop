@@ -1,3 +1,4 @@
+import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { macPackagePaths } from '../scripts/verify-macos-package.mjs'
 
@@ -6,9 +7,9 @@ describe('macOS package verification paths', () => {
     expect(
       macPackagePaths('dist-dev', 'DSH Desktop Dev', 'dsh-desktop-dev-mac-arm64', 'arm64')
     ).toEqual({
-      app: expect.stringMatching(/dist-dev\/mac-arm64\/DSH Desktop Dev\.app$/),
-      dmg: expect.stringMatching(/dist-dev\/dsh-desktop-dev-mac-arm64\.dmg$/),
-      zip: expect.stringMatching(/dist-dev\/dsh-desktop-dev-mac-arm64\.zip$/)
+      app: path.resolve('dist-dev', 'mac-arm64', 'DSH Desktop Dev.app'),
+      dmg: path.resolve('dist-dev', 'dsh-desktop-dev-mac-arm64.dmg'),
+      zip: path.resolve('dist-dev', 'dsh-desktop-dev-mac-arm64.zip')
     })
   })
 
