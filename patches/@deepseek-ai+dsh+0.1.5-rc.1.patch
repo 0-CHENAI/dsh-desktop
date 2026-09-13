@@ -13,3 +13,13 @@ diff --git a/node_modules/@deepseek-ai/dsh/package.json b/node_modules/@deepseek
      "commander": "^15.0.0",
      "js-yaml": "^4.2.0",
      "node-addon-require-builtin": "^0.1.4",
+@@ -99,7 +104,8 @@
+     "@deepseek-ai/dsh-http-proxy": "^0.1.5-rc.1",
+     "@deepseek-ai/dsh-tool-bash-persistent": "^0.1.5-rc.1",
+     "@deepseek-ai/dsh-webhook-github": "^0.1.5-rc.1",
+-    "@deepseek-ai/dsh-webhook": "^0.1.5-rc.1"
++    "@deepseek-ai/dsh-webhook": "^0.1.5-rc.1",
++    "@deepseek-ai/dsh-authorization": "0.1.5-rc.1"
+   },
+   "devDependencies": {
+     "@agentclientprotocol/sdk": "1.4.0",

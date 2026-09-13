@@ -1,16 +1,18 @@
 diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js
 --- a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js
 +++ b/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js
-@@ -64,6 +64,38 @@ window.__ModuleLoader__.load({
+@@ -62,6 +62,38 @@
+ 			tag.dataset.plugin = "@deepseek-ai/dsh-client-ui-settings-models";
+ 			tag.dataset.pluginCss = tagId$3;
  			tag.textContent = css$3;
- 			document.head.appendChild(tag);
- 		}
++			document.head.appendChild(tag);
++		}
 +		const providerPickerTagId = "@deepseek-ai/dsh-client-ui-settings-models/ProviderPicker";
 +		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(providerPickerTagId) + "]") === null) {
 +			const tag = document.createElement("style");
 +			tag.dataset.plugin = "@deepseek-ai/dsh-client-ui-settings-models";
 +			tag.dataset.pluginCss = providerPickerTagId;
-+			tag.textContent = ".dshProviderPicker{flex-direction:column;gap:10px;display:flex}.dshProviderSearch{box-sizing:border-box;border:1px solid var(--dsw-alias-border-l2);width:100%;height:36px;font:inherit;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);border-radius:8px;padding:0 11px;font-size:13px}.dshProviderSearch:focus{border-color:var(--dsw-alias-border-l1);outline:none}.dshProviderSearch::placeholder{color:var(--dsw-alias-label-dimmed)}.dshProviderGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;display:grid}.dshProviderCard{box-sizing:border-box;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l2);border-radius:8px;flex-direction:column;align-items:flex-start;min-height:58px;padding:10px 12px;display:flex;cursor:pointer;text-align:left;font:inherit}.dshProviderCard:hover{background:var(--dsw-alias-interactive-bg-hover)}.dshProviderCard[aria-pressed=true]{border-color:var(--dsw-alias-border-l1);background:var(--dsw-alias-interactive-bg-hover)}.dshProviderCard:focus-visible{outline:none;box-shadow:0 0 0 2px var(--dsw-alias-border-l3)}.dshProviderName{font-size:14px;font-weight:500;line-height:20px}.dshProviderRoute{color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:16px}.dshProviderSummary{box-sizing:border-box;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);border-radius:8px;align-items:center;gap:12px;min-height:52px;padding:8px 10px 8px 12px;display:flex}.dshProviderSummaryText{flex-direction:column;min-width:0;display:flex}.dshProviderChange{color:var(--dsw-alias-label-secondary);background:transparent;border:1px solid var(--dsw-alias-border-l2);border-radius:14px;margin-left:auto;padding:4px 10px;font:inherit;font-size:12px;cursor:pointer}.dshProviderChange:hover{background:var(--dsw-alias-interactive-bg-hover)}@media (width<=620px){.dshProviderGrid{grid-template-columns:1fr}}";
++			tag.textContent = ".dshAuthorization{display:flex;flex-direction:column;gap:10px;overflow-wrap:anywhere}.dshAuthorization p{margin:0}.dshAuthorization code{display:block;font-size:20px;letter-spacing:2px;user-select:all}.dshAuthorization a{color:var(--dsw-alias-brand-primary)}.dshAuthorization button,.dshAuthorization input,.dshAuthorization select{font:inherit;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l2);border-radius:8px;padding:8px 12px;max-width:100%;box-sizing:border-box}.dshAuthorization button{cursor:pointer;align-self:flex-start;transition:background .15s ease-out}.dshAuthorization button:hover{background:var(--dsw-alias-interactive-bg-hover)}.dshAuthorization button:disabled{opacity:.5;cursor:default}.dshAuthorizationPrompt label{display:flex;flex-direction:column;gap:6px}.dshAuthorizationPrompt{display:flex;flex-direction:column;gap:8px}@media(prefers-reduced-motion:reduce){.dshAuthorization button{transition:none}}.dshProviderPicker{flex-direction:column;gap:10px;display:flex}.dshProviderSearch{box-sizing:border-box;border:1px solid var(--dsw-alias-border-l2);width:100%;height:36px;font:inherit;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);border-radius:8px;padding:0 11px;font-size:13px}.dshProviderSearch:focus{border-color:var(--dsw-alias-border-l1);outline:none}.dshProviderSearch::placeholder{color:var(--dsw-alias-label-dimmed)}.dshProviderGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;display:grid}.dshProviderCard{box-sizing:border-box;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l2);border-radius:8px;flex-direction:column;align-items:flex-start;min-height:58px;padding:10px 12px;display:flex;cursor:pointer;text-align:left;font:inherit}.dshProviderCard:hover{background:var(--dsw-alias-interactive-bg-hover)}.dshProviderCard[aria-pressed=true]{border-color:var(--dsw-alias-border-l1);background:var(--dsw-alias-interactive-bg-hover)}.dshProviderCard:focus-visible{outline:none;box-shadow:0 0 0 2px var(--dsw-alias-border-l3)}.dshProviderName{font-size:14px;font-weight:500;line-height:20px}.dshProviderRoute{color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:16px}.dshProviderSummary{box-sizing:border-box;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);border-radius:8px;align-items:center;gap:12px;min-height:52px;padding:8px 10px 8px 12px;display:flex}.dshProviderSummaryText{flex-direction:column;min-width:0;display:flex}.dshProviderChange{color:var(--dsw-alias-label-secondary);background:transparent;border:1px solid var(--dsw-alias-border-l2);border-radius:14px;margin-left:auto;padding:4px 10px;font:inherit;font-size:12px;cursor:pointer}.dshProviderChange:hover{background:var(--dsw-alias-interactive-bg-hover)}@media (width<=620px){.dshProviderGrid{grid-template-columns:1fr}}";
 +			document.head.appendChild(tag);
 +		}
 +		const modelModalityTagId = "@deepseek-ai/dsh-client-ui-settings-models/ModelModalityToggle";
@@ -35,12 +37,10 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
 +			tag.dataset.plugin = "@deepseek-ai/dsh-client-ui-settings-models";
 +			tag.dataset.pluginCss = modelReasoningTagId;
 +			tag.textContent = ".dshModelReasoningField{grid-column:1/-1;flex-direction:column;gap:6px;display:flex}.dshModelReasoningHint{color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:16px}";
-+			document.head.appendChild(tag);
-+		}
+ 			document.head.appendChild(tag);
+ 		}
  		var ModelsSection_module_css_default = {
- 			"addActions": "zGbnIq_addActions",
- 			"addBlock": "zGbnIq_addBlock",
-@@ -158,6 +190,233 @@ window.__ModuleLoader__.load({
+@@ -158,6 +190,233 @@
  			});
  		}
  		//#endregion
@@ -274,7 +274,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  		//#region lib/types/client/DeepSeekModelsEditor.js
  		/**
  		* Curated editor for the direct DeepSeek adapter's advisory model catalog.
-@@ -259,6 +518,7 @@ window.__ModuleLoader__.load({
+@@ -259,6 +518,7 @@
  		function DeepSeekModelsEditor(props) {
  			const [editing, setEditing] = (0, react.useState)(() => /* @__PURE__ */ new Map());
  			const [expanded, setExpanded] = (0, react.useState)(() => /* @__PURE__ */ new Set());
@@ -282,7 +282,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			const update = (index, key, value) => {
  				const next = props.models.map((model, at) => {
  					const copy = { ...model };
-@@ -367,12 +627,20 @@ window.__ModuleLoader__.load({
+@@ -367,12 +627,20 @@
  							children: props.t("resetModels")
  						}) : null]
  					}),
@@ -304,7 +304,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  							className: ModelsSection_module_css_default["modelEntry"],
  							children: [(0, react_jsx_runtime.jsxs)("div", {
  								className: ModelsSection_module_css_default["modelRow"],
-@@ -398,12 +666,23 @@ window.__ModuleLoader__.load({
+@@ -398,12 +666,23 @@
  										value: typeof model["name"] === "string" ? model["name"] : "",
  										placeholder: props.t("modelName"),
  										"aria-label": `${props.t("modelName")} ${String(index + 1)}`,
@@ -334,7 +334,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  										type: "button",
  										className: ModelsSection_module_css_default["iconButton"],
  										"aria-label": `${props.t("modelAdvanced")} ${String(index + 1)}`,
-@@ -428,18 +707,9 @@ window.__ModuleLoader__.load({
+@@ -428,18 +707,9 @@
  								]
  							}), expanded.has(index) ? (0, react_jsx_runtime.jsxs)("div", {
  								className: ModelsSection_module_css_default["modelAdvanced"],
@@ -354,7 +354,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  					})
  				]
  			});
-@@ -557,6 +827,7 @@ window.__ModuleLoader__.load({
+@@ -557,6 +827,7 @@
  			const [candidateQuery, setCandidateQuery] = (0, react.useState)("");
  			const [expanded, setExpanded] = (0, react.useState)(/* @__PURE__ */ new Set());
  			const [editing, setEditing] = (0, react.useState)(/* @__PURE__ */ new Map());
@@ -362,7 +362,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			/** Buffer key for one capacity field; the row half moves when rows do. */
  			const bufferKey = (index, field) => `${String(index)}:${field}`;
  			const editCapacity = (index, field, text) => {
-@@ -691,11 +962,19 @@ window.__ModuleLoader__.load({
+@@ -691,11 +962,19 @@
  							})
  						]
  					}),
@@ -383,7 +383,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  						className: ModelsSection_module_css_default["modelEntry"],
  						children: [(0, react_jsx_runtime.jsxs)("div", {
  							className: ModelsSection_module_css_default["modelRow"],
-@@ -717,12 +996,23 @@ window.__ModuleLoader__.load({
+@@ -717,12 +996,23 @@
  									value: textOf(model, "name"),
  									placeholder: t("modelName"),
  									"aria-label": `${t("modelName")} ${index + 1}`,
@@ -413,7 +413,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  									type: "button",
  									className: ModelsSection_module_css_default["iconButton"],
  									"aria-label": `${t("modelAdvanced")} ${index + 1}`,
-@@ -788,18 +1078,17 @@ window.__ModuleLoader__.load({
+@@ -788,18 +1078,17 @@
  										editCapacity(index, "maxTokens", event.target.value);
  									}
  								})]
@@ -440,7 +440,43 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  					failure !== void 0 ? (0, react_jsx_runtime.jsx)("p", {
  						className: ModelsSection_module_css_default["error"],
  						children: failure
-@@ -1164,6 +1453,7 @@ window.__ModuleLoader__.load({
+@@ -895,6 +1184,7 @@
+ 				settingsNs: entry.settingsNs,
+ 				settingsPath: [...entry.settingsPath],
+ 				active: active.has(entry.provider),
++				...entry.authFlow === void 0 ? {} : { authFlow: entry.authFlow },
+ 				...entry.declared === void 0 ? {} : { declared: entry.declared },
+ 				...entry.error === void 0 ? {} : { error: entry.error }
+ 			}));
+@@ -1020,6 +1310,8 @@
+ 						credential: void 0
+ 					};
+ 				});
++				let authorizations = [];
++				if (rows.some(row => row.entry.authFlow)) { try { authorizations = await authorizationRequest(); } catch { /* Unknown login state is not usable. */ } }
+ 				const refs = [...new Set(rows.map((row) => row.apiKeyEnv ?? deriveKeyRef(row.entry.provider)))];
+ 				let credentials = {};
+ 				let credentialError = null;
+@@ -1039,6 +1331,7 @@
+ 						const derived = row.apiKeyEnv !== void 0 ? void 0 : credentials[deriveKeyRef(row.entry.provider)];
+ 						return {
+ 							...row,
++							authorization: authorizations.find(flow => flow.key === row.entry.authFlow),
+ 							...named === void 0 ? {} : { credential: named },
+ 							...derived === void 0 ? {} : { derivedCredential: derived }
+ 						};
+@@ -1067,8 +1360,8 @@
+ 		*/
+ 		function providerUsable(row) {
+ 			if (!row.entry.active) return false;
+-			if (row.apiKeyEnv === void 0) return true;
+-			return row.credential?.configured === true;
++			if (row.credential?.configured === true || row.authorization?.configured === true) return true;
++			return row.apiKeyEnv === void 0 && row.entry.authFlow === void 0;
+ 		}
+ 		/**
+ 		* Project first-run readiness from the provider/settings/credential join used
+@@ -1164,6 +1457,7 @@
  			const [protocol, setProtocol] = (0, react.useState)(protocols[0] ?? "");
  			const [keyDraft, setKeyDraft] = (0, react.useState)("");
  			const [models, setModels] = (0, react.useState)([]);
@@ -448,19 +484,19 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			const [busy, setBusy] = (0, react.useState)(false);
  			const [failure, setFailure] = (0, react.useState)(void 0);
  			/**
-@@ -1223,6 +1513,11 @@ window.__ModuleLoader__.load({
+@@ -1222,6 +1516,11 @@
+ 				} finally {
  					setBusy(false);
  				}
- 			};
++			};
 +			/** Add an explicit model row to the custom-provider draft. */
 +			const addModel = () => {
 +				setModels((current) => [...current.map((model) => ({ ...model })), { id: "" }]);
 +				setModelQuery("");
-+			};
+ 			};
  			return (0, react_jsx_runtime.jsxs)("div", {
  				className: ModelsSection_module_css_default["editor"],
- 				children: [
-@@ -1343,6 +1638,8 @@ window.__ModuleLoader__.load({
+@@ -1343,6 +1642,8 @@
  					(0, react_jsx_runtime.jsx)(ModelListEditor, {
  						models,
  						onChange: setModels,
@@ -469,7 +505,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  						probe: {
  							settingsNs: NS$1,
  							baseURL: normalizedBaseURL,
-@@ -1362,18 +1659,27 @@ window.__ModuleLoader__.load({
+@@ -1362,18 +1663,27 @@
  						className: ModelsSection_module_css_default["advancedHint"],
  						children: hint
  					}),
@@ -509,7 +545,83 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  					})
  				]
  			});
-@@ -1461,6 +1767,8 @@ window.__ModuleLoader__.load({
+@@ -1454,6 +1764,75 @@
+ 		* @param props - the addressed profile plus wire faces and copy.
+ 		* @returns the editor card.
+ 		*/
++		/** Shared account sign-in UI; provider protocols remain on the host. */
++		async function authorizationRequest(body) {
++			const response = await fetch('/api/desktop.authorization', body === undefined ? { cache: 'no-store' } : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), cache: 'no-store' });
++			const value = await response.json();
++			if (!response.ok) throw new Error(value.error || 'Authorization unavailable');
++			return value;
++		}
++		function AuthorizationInteraction({ flowKey, t, disabled, onAuthorized }) {
++			const [flow, setFlow] = react.useState();
++			const [reload, setReload] = react.useState(0);
++			const [attempt, setAttempt] = react.useState();
++			const [method, setMethod] = react.useState('');
++			const [failure, setFailure] = react.useState(false);
++			const [starting, setStarting] = react.useState(false);
++			const current = react.useRef();
++			const callback = react.useRef(onAuthorized); callback.current = onAuthorized;
++			react.useEffect(() => {
++				let alive = true, timer;
++				const cancel = id => authorizationRequest({ action: 'cancel', id }).catch(() => {});
++				const load = async () => {
++					try { const flows = await authorizationRequest(); if (alive) { const found = flows.find(f => f.key === flowKey); setFlow(found); setMethod(found?.methods[0]?.id ?? ''); } }
++					catch { if (alive) setFailure(true); }
++				};
++				load();
++				const owner = { alive: true, id: undefined, cancel, async start(method) {
++					setStarting(true); setFailure(false);
++					try {
++						const initial = await authorizationRequest({ action: 'start', key: flowKey, method });
++						owner.id = initial.id;
++						if (!alive) { cancel(initial.id); return; }
++						setAttempt(initial);
++						const poll = async () => {
++							try {
++								const next = await authorizationRequest({ action: 'poll', id: owner.id });
++								if (!alive) return;
++								setAttempt(next);
++								if (next.status === 'running') timer = setTimeout(poll, 700);
++								else { owner.id = undefined; if (next.status === 'authorized') await callback.current(); }
++							} catch { if (alive) { setFailure(true); setAttempt(undefined); if (owner.id) cancel(owner.id); owner.id = undefined; } }
++						};
++						timer = setTimeout(poll, 0);
++					} catch { if (alive) setFailure(true); }
++					finally { if (alive) setStarting(false); }
++				} };
++				current.current = owner;
++				return () => { alive = false; owner.alive = false; clearTimeout(timer); if (owner.id) cancel(owner.id); };
++			}, [flowKey, reload]);
++			const h = react.createElement;
++			const running = starting || attempt?.status === 'running';
++			return h('div', { className: 'dshAuthorization', 'aria-busy': running },
++				flow?.configured && !running ? h('p', { role: 'status' }, t('authConfigured')) : null,
++				failure || attempt?.status === 'failed' ? h('p', { role: 'alert' }, t('authFailed')) : null,
++				failure && !method ? h('button', { type: 'button', onClick: () => { setFailure(false); setReload(n => n + 1); } }, t('authRetry')) : null,
++				attempt?.status === 'cancelled' ? h('p', { role: 'status' }, t('authCancelled')) : null,
++				flow?.methods.length > 1 && !running ? h('select', { value: method, 'aria-label': t('authMethod'), disabled, onChange: e => setMethod(e.target.value) }, ...flow.methods.map(m => h('option', { key: m.id, value: m.id }, m.label))) : null,
++				!running ? h('button', { type: 'button', disabled: disabled || !method, onClick: () => current.current?.start(method) }, t('authLogin').replace('{provider}', flow?.label ?? '')) : null,
++				running ? h('div', { role: 'status', 'aria-live': 'polite' }, ...(attempt?.notices ?? []).map((n, i) => h('div', { key: i }, h('p', null, n.message), n.code ? h('code', null, n.code) : null, n.url && /^https?:\/\//.test(n.url) ? h('a', { href: n.url, target: '_blank', rel: 'noopener noreferrer' }, t('authOpen')) : null))) : null,
++				...(attempt?.prompts ?? []).map(p => h(AuthorizationPrompt, { key: p.id, prompt: p, t, onAnswer: async value => { try { await authorizationRequest({ action: 'answer', id: attempt.id, promptId: p.id, value }); } catch { setFailure(true); } } })),
++				running ? h('button', { type: 'button', onClick: async () => { if (current.current?.id) { try { const next = await authorizationRequest({ action: 'cancel', id: current.current.id }); setAttempt(next); } catch { setFailure(true); } } } }, t('cancel')) : null);
++		}
++		function AuthorizationPrompt({ prompt, t, onAnswer }) {
++			const [value, setValue] = react.useState('');
++			const [sent, setSent] = react.useState(false);
++			const h = react.createElement;
++			return h('div', { className: 'dshAuthorizationPrompt' }, h('label', null, prompt.message,
++				prompt.kind === 'select' ? h('select', { value, disabled: sent, onChange: e => setValue(e.target.value) }, h('option', { value: '' }, t('authChoose')), ...prompt.options.map(o => h('option', { key: o.id, value: o.id }, o.label))) : h('input', { type: prompt.kind === 'secret' ? 'password' : 'text', value, autoComplete: 'off', placeholder: prompt.placeholder, disabled: sent, onChange: e => setValue(e.target.value) })),
++				h('button', { type: 'button', disabled: sent || (prompt.kind === 'select' && !value), onClick: async () => { setSent(true); await onAnswer(value); setValue(''); setSent(false); } }, t('authContinue')));
++		}
++
+ 		function ProviderEditor(props) {
+ 			const { namespace, schema, settingsPath, operations, t } = props;
+ 			const [draft, setDraft] = (0, react.useState)(() => draftAt(schema, namespace, settingsPath));
+@@ -1461,6 +1840,8 @@
  			const [keyState, setKeyState] = (0, react.useState)(void 0);
  			const [busy, setBusy] = (0, react.useState)(false);
  			const [failure, setFailure] = (0, react.useState)(void 0);
@@ -518,7 +630,17 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			const [committedOriginal, setCommittedOriginal] = (0, react.useState)(() => schema.getPath(namespace.user, settingsPath));
  			const [expectedRevision, setExpectedRevision] = (0, react.useState)(() => namespace.revision);
  			const root = (0, react.useMemo)(() => schema.rehydrate(namespace.schema), [namespace.schema, schema]);
-@@ -1581,6 +1889,15 @@ window.__ModuleLoader__.load({
+@@ -1518,7 +1899,8 @@
+ 			*/
+ 			const applyOnce = async () => {
+ 				const ns = namespace.ns;
+-				const next = layout === "pi-ai" && stringAt(draft, "apiKeyEnv") === void 0 && stringAt(fallback, "apiKeyEnv") === void 0 && keyValue.length > 0 ? schema.setPath(draft, ["apiKeyEnv"], keyRef) : draft;
++				let next = layout === "pi-ai" && stringAt(draft, "apiKeyEnv") === void 0 && stringAt(fallback, "apiKeyEnv") === void 0 && keyValue.length > 0 ? schema.setPath(draft, ["apiKeyEnv"], keyRef) : draft;
++				if (props.authFlow && keyValue.length === 0 && layout === "pi-ai") next = schema.setPath(next, ["authFlow"], props.authFlow);
+ 				if (props.credentialOnly !== true) {
+ 					const failure = validateDeepSeekModels(schema.getPath(next, ["models"]));
+ 					/* v8 ignore next 3 -- unreachable from the card: the same failure disables submit */
+@@ -1581,6 +1963,15 @@
  			const inheritedModels = () => {
  				return schema.getPath(namespace.base, [...settingsPath, "models"]) ?? schema.nodeAtPath(root, [...settingsPath, "models"])?.meta.default;
  			};
@@ -534,7 +656,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			/**
  			* The curated fields of one known adapter family. The family arrives
  			* narrowed so the per-family branches below are total: an unknown namespace
-@@ -1598,6 +1915,8 @@ window.__ModuleLoader__.load({
+@@ -1598,6 +1989,8 @@
  				const catalogProps = {
  					models,
  					overridden: modelsOverridden,
@@ -543,7 +665,16 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  					t,
  					disabled,
  					onChange: (next) => {
-@@ -1636,6 +1955,10 @@ window.__ModuleLoader__.load({
+@@ -1607,7 +2000,7 @@
+ 						setDraft((current) => schema.deletePath(current, ["models"]));
+ 					}
+ 				};
+-				return (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [(0, react_jsx_runtime.jsxs)("div", {
++				return (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [props.authFlow && keyState?.configured !== true ? (0, react_jsx_runtime.jsx)(AuthorizationInteraction, { flowKey: props.authFlow, t, disabled, onAuthorized: apply }) : (0, react_jsx_runtime.jsxs)("div", {
+ 					className: ModelsSection_module_css_default["field"],
+ 					children: [
+ 						(0, react_jsx_runtime.jsx)("span", {
+@@ -1636,6 +2029,10 @@
  					]
  				}), props.credentialOnly === true ? null : (0, react_jsx_runtime.jsxs)("details", {
  					className: ModelsSection_module_css_default["customized"],
@@ -554,7 +685,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  					children: [(0, react_jsx_runtime.jsx)("summary", {
  						className: ModelsSection_module_css_default["customizedSummary"],
  						children: t("customized")
-@@ -1712,8 +2035,22 @@ window.__ModuleLoader__.load({
+@@ -1712,8 +2109,22 @@
  					})]
  				})] });
  			};
@@ -578,7 +709,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  				children: [
  					props.hideTitle === true ? null : (0, react_jsx_runtime.jsxs)("div", {
  						className: ModelsSection_module_css_default["editorHeader"],
-@@ -1737,19 +2074,15 @@ window.__ModuleLoader__.load({
+@@ -1737,19 +2148,15 @@
  						className: ModelsSection_module_css_default["advancedHint"],
  						children: `${t("model")} ${String(modelFailure.index + 1)}: ${t(modelFailure.key)}`
  					}),
@@ -607,7 +738,31 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  					})
  				]
  			});
-@@ -1846,6 +2179,26 @@ window.__ModuleLoader__.load({
+@@ -1775,6 +2182,7 @@
+ 				provider: target.provider,
+ 				displayName: target.displayName,
+ 				settingsPath: target.settingsPath,
++				authFlow: target.authFlow,
+ 				...target.declared === true ? { declared: true } : {},
+ 				...props
+ 			});
+@@ -1824,6 +2232,7 @@
+ 		* add-provider draft, whose dormant row names no reference yet.
+ 		*/
+ 		function keyConfiguredOf(row) {
++			if (row.authorization?.configured === true) return true;
+ 			return row.apiKeyEnv !== void 0 ? row.credential?.configured === true : row.derivedCredential?.configured === true;
+ 		}
+ 		function targetOf(row) {
+@@ -1833,6 +2242,7 @@
+ 				provider: row.entry.provider,
+ 				displayName: row.entry.displayName,
+ 				settingsNs: row.entry.settingsNs,
++				...row.entry.authFlow === void 0 ? {} : { authFlow: row.entry.authFlow },
+ 				settingsPath: row.entry.settingsPath,
+ 				...credentialRef === void 0 ? {} : { credentialRef },
+ 				...row.entry.declared === true ? { declared: true } : {}
+@@ -1846,6 +2256,26 @@
  		function providerCopy(template, target) {
  			return template.replace("{provider}", () => providerTargetLabel(target));
  		}
@@ -634,7 +789,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  		/**
  		* Render the Models section content column.
  		* @param props - slot-delivered injected dependencies.
-@@ -1875,6 +2228,8 @@ window.__ModuleLoader__.load({
+@@ -1875,6 +2305,8 @@
  			const [deleteFailure, setDeleteFailure] = (0, react.useState)(void 0);
  			const [savedTarget, setSavedTarget] = (0, react.useState)(void 0);
  			const [declaring, setDeclaring] = (0, react.useState)(false);
@@ -643,7 +798,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			const [dismissedSetup, setDismissedSetup] = (0, react.useState)(() => /* @__PURE__ */ new Set());
  			const announceSaved = (target) => {
  				controller.load().then(() => {
-@@ -1945,11 +2300,17 @@ window.__ModuleLoader__.load({
+@@ -1945,11 +2377,17 @@
  			const anyUsable = state.rows.some(providerUsable);
  			const configured = state.rows.filter((row) => row.configured);
  			const configurable = state.rows.filter((row) => state.namespaces.has(row.entry.settingsNs));
@@ -662,7 +817,36 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			return (0, react_jsx_runtime.jsxs)("div", {
  				className: ModelsSection_module_css_default["section"],
  				children: [
-@@ -2094,20 +2455,62 @@ window.__ModuleLoader__.load({
+@@ -2006,8 +2444,8 @@
+ 								]
+ 							}, row.entry.provider);
+ 							const open = !adding && editing?.provider === row.entry.provider;
+-							const credentialConfigured = row.credential?.configured === true;
+-							const credentialMissing = !credentialConfigured && row.apiKeyEnv !== void 0 && row.credential?.configured === false;
++							const credentialConfigured = row.credential?.configured === true || row.authorization?.configured === true;
++							const credentialMissing = !credentialConfigured && (row.entry.authFlow !== void 0 || (row.apiKeyEnv !== void 0 && row.credential?.configured === false));
+ 							return (0, react_jsx_runtime.jsxs)("li", {
+ 								className: ModelsSection_module_css_default["rowCard"],
+ 								children: [
+@@ -2027,13 +2465,13 @@
+ 												credentialConfigured ? (0, react_jsx_runtime.jsx)("span", {
+ 													className: `${ModelsSection_module_css_default["credentialDot"]} ${ModelsSection_module_css_default["credentialDotConfigured"]}`,
+ 													role: "img",
+-													"aria-label": t("credentialConfigured"),
+-													title: t("credentialConfigured")
++													"aria-label": t(row.authorization?.configured === true ? "authConfigured" : "credentialConfigured"),
++													title: t(row.authorization?.configured === true ? "authConfigured" : "credentialConfigured")
+ 												}) : credentialMissing ? (0, react_jsx_runtime.jsx)("span", {
+ 													className: `${ModelsSection_module_css_default["credentialDot"]} ${ModelsSection_module_css_default["credentialDotMissing"]}`,
+ 													role: "img",
+-													"aria-label": t("credentialMissing"),
+-													title: t("credentialMissing")
++													"aria-label": t(row.entry.authFlow ? "authMissing" : "credentialMissing"),
++													title: t(row.entry.authFlow ? "authMissing" : "credentialMissing")
+ 												}) : null
+ 											]
+ 										}), (0, react_jsx_runtime.jsxs)("span", {
+@@ -2094,24 +2532,67 @@
  									children: [(0, react_jsx_runtime.jsx)("span", {
  										className: ModelsSection_module_css_default["fieldLabel"],
  										children: t("provider")
@@ -739,7 +923,12 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  									})]
  								}),
  								(0, react_jsx_runtime.jsx)(ProviderEditor, {
-@@ -2159,6 +2562,8 @@ window.__ModuleLoader__.load({
+ 									provider: addTarget.provider,
++									authFlow: addTarget.authFlow,
+ 									displayName: addTarget.displayName,
+ 									hideTitle: true,
+ 									namespace: addNamespace,
+@@ -2159,6 +2640,8 @@
  									setDeclaring(false);
  									setAdding(true);
  									setEditing(targetOf(first));
@@ -748,10 +937,13 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  								},
  								children: [(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconPlusOutline16, { size: 14 }), t("add")]
  							}), state.namespaces.has("llm-pi-ai") && (0, react_jsx_runtime.jsxs)("button", {
-@@ -2294,35 +2699,50 @@ window.__ModuleLoader__.load({
+@@ -2294,35 +2777,50 @@
  		function assertNever$1(_value) {
  			throw new Error("unexpected DeepSeek onboarding state");
  		}
+-		/**
+-		* Prompt a first-run user for the official DeepSeek credential while no
+-		* provider can serve requests and that credential is writable.
 +		/** Mainstream catalog routes exposed during first-run setup. */
 +		const ONBOARDING_PROVIDERS = [
 +			{ provider: "deepseek-official", displayName: "DeepSeek", kind: "onboardingManufacturer" },
@@ -767,9 +959,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
 +			{ provider: "groq", displayName: "Groq", kind: "onboardingInference" },
 +			{ provider: "together", displayName: "Together AI", kind: "onboardingInference" }
 +		];
- 		/**
--		* Prompt a first-run user for the official DeepSeek credential while no
--		* provider can serve requests and that credential is writable.
++		/**
 +		* Prompt a first-run user to choose a supported mainstream provider and store
 +		* its credential while no configured route can serve requests.
  		* @param props - settings-shell owner state and Models feature dependencies.
@@ -817,7 +1007,16 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			const finishCredential = (changed) => {
  				if (!changed) {
  					complete();
-@@ -2660,6 +3080,8 @@ window.__ModuleLoader__.load({
+@@ -2648,7 +3146,7 @@
+ 		const en = {
+ 			nav: "Models",
+ 			title: "Models",
+-			intro: "Enter your API keys to use models from the following providers.",
++			intro: "Sign in to your provider account or enter an API key to use its models.",
+ 			edit: "Edit",
+ 			editProvider: "Edit {provider}",
+ 			remove: "Delete",
+@@ -2660,6 +3158,8 @@
  			deleting: "Deleting {provider}…",
  			add: "Add provider",
  			provider: "Provider",
@@ -826,7 +1025,15 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			close: "Close",
  			cancel: "Cancel",
  			apply: "Apply",
-@@ -2691,7 +3113,15 @@ window.__ModuleLoader__.load({
+@@ -2672,6 +3172,7 @@
+ 			conflict: "Someone else changed these settings while this card was open. Close it and reopen to edit the current values.",
+ 			retry: "Retry",
+ 			keyInput: "API key",
++			authMissing: "Not signed in", authRetry: "Retry", authConfigured: "Signed in", authFailed: "Sign-in failed. Please try again.", authCancelled: "Sign-in cancelled", authMethod: "Sign-in method", authLogin: "Sign in to {provider}", authOpen: "Open sign-in page", authChoose: "Choose an option", authContinue: "Continue",
+ 			keyPlaceholder: "Enter your API key",
+ 			keyPlaceholderNative: "Enter an API key, or leave blank to use environment authentication",
+ 			keyStored: "Configured — enter a new value to replace",
+@@ -2691,7 +3192,15 @@
  			contextWindowPlaceholder: "Uses the provider default",
  			maxTokens: "Max output tokens",
  			maxTokensPlaceholder: "Uses the provider default",
@@ -843,7 +1050,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			addModel: "Add model",
  			removeModel: "Delete model",
  			modelsEmpty: "No models will be shown in the selector. Unlisted IDs can still be sent directly.",
-@@ -2740,10 +3170,14 @@ window.__ModuleLoader__.load({
+@@ -2740,10 +3249,14 @@
  			welcomeBody: "DeepSeek Harness 0.1 remains in testing for Harness developers. Many areas need further improvement, and we welcome feedback from the developer community. DeepSeek Harness's core plugins and foundational APIs will continue to evolve rapidly over the coming months.\n\nWe look forward to exploring the limits of intelligence with developers around the world, building on open-source, open, reusable, and composable infrastructure. We welcome Harness developers everywhere to join the DSH plugin ecosystem.",
  			welcomeContinue: "Continue",
  			welcomeError: "The acknowledgement could not be saved. Please try again.",
@@ -861,7 +1068,16 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			onboardingSaving: "Saving…",
  			keyRequired: "Enter an API key to continue."
  		};
-@@ -2763,6 +3197,8 @@ window.__ModuleLoader__.load({
+@@ -2751,7 +3264,7 @@
+ 		const zh = {
+ 			nav: "模型",
+ 			title: "模型",
+-			intro: "填入各提供方的 API 密钥即可使用其模型。",
++			intro: "登录供应商账号或输入 API 密钥，即可使用对应模型。",
+ 			edit: "编辑",
+ 			editProvider: "编辑 {provider}",
+ 			remove: "删除",
+@@ -2763,6 +3276,8 @@
  			deleting: "正在删除 {provider}…",
  			add: "添加提供方",
  			provider: "提供方",
@@ -870,7 +1086,15 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			close: "关闭",
  			cancel: "取消",
  			apply: "保存",
-@@ -2794,7 +3230,15 @@ window.__ModuleLoader__.load({
+@@ -2775,6 +3290,7 @@
+ 			conflict: "这张卡片打开期间，这些设置已被其他地方改动。请关闭后重新打开，在当前值上编辑。",
+ 			retry: "重试",
+ 			keyInput: "API 密钥",
++			authMissing: "未登录", authRetry: "重试", authConfigured: "已登录", authFailed: "登录失败，请重试。", authCancelled: "已取消登录", authMethod: "登录方式", authLogin: "登录 {provider}", authOpen: "打开登录页面", authChoose: "请选择", authContinue: "继续",
+ 			keyPlaceholder: "输入 API 密钥",
+ 			keyPlaceholderNative: "输入 API 密钥，或留空使用环境认证",
+ 			keyStored: "已配置——输入新值可替换",
+@@ -2794,7 +3310,15 @@
  			contextWindowPlaceholder: "使用提供方默认值",
  			maxTokens: "最大输出 token 数",
  			maxTokensPlaceholder: "使用提供方默认值",
@@ -887,7 +1111,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			addModel: "添加模型",
  			removeModel: "删除模型",
  			modelsEmpty: "模型选择器中将不显示任何模型；目录外 ID 仍可直接发送。",
-@@ -2843,10 +3287,14 @@ window.__ModuleLoader__.load({
+@@ -2843,10 +3367,14 @@
  			welcomeBody: "DeepSeek Harness 目前的 0.1 版本仍处在面向 Harness 开发者进行测试的阶段，还有许多地方需要持续改进和打磨，希望听取广大开发者的反馈建议。预计 DeepSeek Harness 的核心插件以及基础 API 都会在接下来的一段时间内快速迭代、持续演化。\n\n我们期待与全球开发者一起，在开源、开放、可复用、可组合的基础设施之上，共同探索智能上限。欢迎全球 Harness 开发者加入 DSH 插件生态。",
  			welcomeContinue: "继续",
  			welcomeError: "暂时无法保存确认状态，请重试。",
@@ -905,21 +1129,21 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  			onboardingSaving: "保存中…",
  			keyRequired: "请输入 API 密钥后继续。"
  		};
-@@ -2900,13 +3348,6 @@ window.__ModuleLoader__.load({
- 				schema,
- 				t
- 			});
--			const deepSeekOnboardingInjected = () => ({
--				controller,
--				hooks: { models: controller.store },
+@@ -2896,13 +3424,6 @@
+ 			const injected = () => ({
+ 				controller,
+ 				hooks: { snapshot: controller.store },
 -				operations,
 -				schema,
 -				t
 -			});
- 			const welcomeController = new WelcomeNoticeStore(ctx.settingsScope.bind({
- 				namespace: WELCOME_NOTICE_SETTINGS_NAMESPACE,
- 				decode: decodeWelcomeSection
-@@ -2956,12 +3397,6 @@ window.__ModuleLoader__.load({
+-			const deepSeekOnboardingInjected = () => ({
+-				controller,
+-				hooks: { models: controller.store },
+ 				operations,
+ 				schema,
+ 				t
+@@ -2956,12 +3477,6 @@
  				order: -100,
  				inject: welcomeInjected
  			}, WelcomeNotice));
@@ -932,7 +1156,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.
  		}
  		//#endregion
  		exports.apply = apply;
-@@ -2971,4 +3406,4 @@ window.__ModuleLoader__.load({
+@@ -2971,4 +3486,4 @@
  	}
  });
  
