@@ -456,7 +456,8 @@ describe('GitHub release contract', () => {
     expect(publishMain).toContain('--target "$GITHUB_SHA"')
     expect(publishMain).toContain('--latest')
     expect(publishMain).toContain('refusing to overwrite it')
-    expect(publishMain).toContain('macOS 包未进行 Developer ID 签名与 Apple 公证')
+    expect(publishMain).toContain('macOS 包使用 ad-hoc 代码签名但未通过 Apple 公证')
+    expect(publishMain).toContain('系统设置 > 隐私与安全性')
     expect(publishMain).toContain('Windows Dev 包未使用 UKey 签名')
     expect(workflow).toContain('scripts/next-release-version.mjs --apply')
     expect(workflow.match(/Set app version from next patch release/g)).toHaveLength(2)
@@ -464,24 +465,32 @@ describe('GitHub release contract', () => {
     expect(workflow).toContain('description: Override the next version')
   })
 
-  it('builds macOS releases without Apple credentials or notarization', async () => {
+  it('ad-hoc signs and verifies macOS releases without Apple credentials or notarization', async () => {
     const workflow = await readFile(
       path.join(projectRoot, '.github', 'workflows', 'release.yml'),
       'utf8'
     )
     const macos = workflow.slice(workflow.indexOf('  macos-apple-silicon:'), workflow.indexOf('  windows-x64:'))
+    const packageJson = JSON.parse(
+      await readFile(path.join(projectRoot, 'package.json'), 'utf8')
+    ) as { build: { mac: { identity?: string; hardenedRuntime?: boolean } } }
     expect(macos).not.toContain('secrets.DESKTOP_')
     expect(macos).not.toContain('signing_keychain')
     expect(macos).not.toContain('notarytool')
     expect(macos).not.toContain('stapler')
-    expect(macos).not.toContain('spctl')
     expect(macos.match(/CSC_IDENTITY_AUTO_DISCOVERY: 'false'/g)).toHaveLength(2)
+    expect(packageJson.build.mac.identity).toBe('-')
+    expect(packageJson.build.mac.hardenedRuntime).toBe(false)
     expect(macos).toContain('run: npm run package:mac:arm64')
     expect(macos).toContain('run: npm run package:dev:mac:arm64')
+    expect(macos.match(/scripts\/verify-macos-package\.mjs/g)).toHaveLength(2)
+    expect(macos).toContain("'DSH Desktop Dev'")
     expect(macos).toContain("!startsWith(github.ref, 'refs/tags/v') && inputs.prerelease_tag == ''")
     expect(macos).toContain('dist/latest-mac-arm64.yml')
     expect(macos).toContain('dist-dev/latest-mac.yml')
     expect(workflow).not.toContain('macos-intel:')
+    expect(workflow.match(/macOS 包使用 ad-hoc 代码签名但未通过 Apple 公证/g)).toHaveLength(3)
+    expect(workflow).toContain('不需要执行 `xattr` 或关闭 Gatekeeper')
   })
 
   it('signs Windows installers on the local UKey runner before publishing', async () => {
