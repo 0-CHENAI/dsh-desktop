@@ -479,6 +479,7 @@ describe('GitHub release contract', () => {
     expect(macos).not.toContain('notarytool')
     expect(macos).not.toContain('stapler')
     expect(macos.match(/CSC_IDENTITY_AUTO_DISCOVERY: 'false'/g)).toHaveLength(2)
+    expect(macos.match(/CSC_FOR_PULL_REQUEST: 'true'/g)).toHaveLength(2)
     expect(packageJson.build.mac.identity).toBe('-')
     expect(packageJson.build.mac.hardenedRuntime).toBe(false)
     expect(macos).toContain('run: npm run package:mac:arm64')
