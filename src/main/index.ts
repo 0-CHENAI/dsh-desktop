@@ -1,3 +1,4 @@
+import { initializeDesktopService, desktopDiagnostics } from './desktop-service'
 import { checkBlockingPluginUpdates, selectPluginRecoveryTarget, PluginRecoveryEvidence, planPluginRecovery, runPluginRecoveryPlan, type PluginRecoveryCheck } from './plugin-recovery-market'
 import { spawn } from 'node:child_process'
 import { join } from 'node:path'
@@ -19,7 +20,12 @@ import {
   type IpcMainInvokeEvent,
   type MessageBoxOptions
 } from 'electron'
-import { extractFailureCause, HarnessRuntime } from './runtime/harness-runtime'
+import { clearStaleLoopbackHttpCache } from './cache-maintenance'
+import {
+  DEFAULT_HARNESS_PORT,
+  extractFailureCause,
+  HarnessRuntime
+} from './runtime/harness-runtime'
 import { launchDisclaimedUtilityProcess } from './runtime/disclaimed-utility-process'
 import {
   installProfileDependenciesWithDsh,
@@ -815,6 +821,7 @@ function respondToGpuFallbackSignal(
   if (!plan.relaunch) return false
   gpuFallbackRelaunching = true
   app.relaunch()
+  desktopDiagnostics?.markCleanExit()
   app.exit(0)
   return true
 }
@@ -998,6 +1005,12 @@ async function openHarness(
     const navigationVersion = ++mainWindowNavigationVersion
     rendererPluginFailureLogs = []
     window.webContents.stop()
+    await clearStaleLoopbackHttpCache(
+      window.webContents.session,
+      join(app.getPath('userData'), 'http-cache-origin'),
+      new URL(url).origin,
+      (line) => runtime.note(line)
+    )
     const clearedCookies = await clearStaleHarnessAuthCookies(
       window.webContents.session.cookies,
       rendererUrl,
@@ -2679,6 +2692,7 @@ async function showMobilePairing(): Promise<void> {
 }
 
 async function bootstrap(): Promise<void> {
+  desktopDiagnostics?.startSending()
   if (process.platform === 'darwin') app.dock?.setIcon(desktopIconPath())
   launchDirectory = await ensureLaunchRoot(app.getPath('userData'))
   registerUpdateHandlers()
@@ -2699,6 +2713,9 @@ async function bootstrap(): Promise<void> {
     dshSafePatchPath: desktopResourcePath('dsh-desktop-safe.patch.yml'),
     dshHome: join(app.getPath('userData'), 'harness'),
     logPath: join(app.getPath('logs'), 'harness.log'),
+    // Keep the Harness origin stable across launches. These ports are separate
+    // from the production/development mobile bridge ports (43127/43128).
+    preferredPort: DEFAULT_HARNESS_PORT + (developmentBuild ? 1 : 0),
     launchProcess: (executablePath, args, options) =>
       process.platform === 'darwin'
         ? launchDisclaimedUtilityProcess(utilityProcess, args, options, {
@@ -2706,6 +2723,7 @@ async function bootstrap(): Promise<void> {
         })
         : spawn(executablePath, args, options),
     onChanged: (snapshot) => {
+      desktopDiagnostics?.runtimeChanged(snapshot, () => runtime.flushLog(), runtime.launchAttemptId)
       if (snapshot.phase === 'ready' && snapshot.url) {
         void openHarness(snapshot.url).catch(showUnexpectedError)
       } else if (snapshot.phase === 'failed') {
@@ -2971,6 +2989,7 @@ if (isDaemonLaunch(process.env, process.platform)) {
   if (!singleInstance) {
     app.quit()
   } else {
+    initializeDesktopService()
     app.on('second-instance', (_event, argv) => {
       if (!isUserInitiatedInstance(argv)) return
       if (shouldStartInSafeMode(argv)) {
@@ -2983,6 +3002,7 @@ if (isDaemonLaunch(process.env, process.platform)) {
       }
     })
     app.whenReady().then(bootstrap).catch((error: unknown) => {
+      desktopDiagnostics?.startupFailed(error)
       showUnexpectedError(error)
       app.quit()
     })
