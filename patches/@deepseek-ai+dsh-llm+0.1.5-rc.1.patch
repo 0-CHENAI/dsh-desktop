@@ -1,0 +1,12 @@
+diff --git a/node_modules/@deepseek-ai/dsh-llm/lib/types/types.d.ts b/node_modules/@deepseek-ai/dsh-llm/lib/types/types.d.ts
+--- a/node_modules/@deepseek-ai/dsh-llm/lib/types/types.d.ts
++++ b/node_modules/@deepseek-ai/dsh-llm/lib/types/types.d.ts
+@@ -197,6 +197,8 @@
+  * provider alongside its live/dormant state.
+  */
+ export interface LlmConfigurableProvider {
++    /** Registered authorization flow and credential-record key for account sign-in. */
++    authFlow?: string;
+     /** Provider route key this entry activates when configured. */
+     provider: string;
+     /** Human-readable provider name for configuration surfaces. */
