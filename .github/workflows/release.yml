@@ -69,12 +69,12 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run typecheck
-      - name: Build unsigned Apple Silicon release package
+      - name: Build ad-hoc signed Apple Silicon release package
         if: startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != ''
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
         run: npm run package:mac:arm64
-      - name: Build unsigned Apple Silicon development package
+      - name: Build ad-hoc signed Apple Silicon development package
         if: ${{ !startsWith(github.ref, 'refs/tags/v') && inputs.prerelease_tag == '' }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
@@ -82,6 +82,22 @@ jobs:
       - name: Preserve Apple Silicon update metadata
         if: startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != ''
         run: mv dist/latest-mac.yml dist/latest-mac-arm64.yml
+      - name: Verify Apple Silicon release package signatures
+        if: startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != ''
+        run: >-
+          node scripts/verify-macos-package.mjs
+          dist
+          'DSH Desktop'
+          dsh-desktop-mac-arm64
+          arm64
+      - name: Verify Apple Silicon development package signatures
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') && inputs.prerelease_tag == '' }}
+        run: >-
+          node scripts/verify-macos-package.mjs
+          dist-dev
+          'DSH Desktop Dev'
+          dsh-desktop-dev-mac-arm64
+          arm64
       - uses: actions/upload-artifact@v4
         if: startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != ''
         with:
@@ -459,6 +475,7 @@ jobs:
             echo "MODELS_TOKEN not set; using the deterministic GitHub release note."
             python3 .github/scripts/github_release_notes.py generate-fallback --tag "$RELEASE_TAG" --output "$out"
           fi
+          printf '%s\n' '- macOS 包使用 ad-hoc 代码签名但未通过 Apple 公证；首次打开需在“系统设置 > 隐私与安全性”中选择“仍要打开”，不需要执行 `xattr` 或关闭 Gatekeeper。' >> "$out"
       - name: Create or update release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -654,6 +671,7 @@ jobs:
               --prerelease \
               --target "$GITHUB_SHA" \
               --generate-notes \
+              --notes 'macOS 包使用 ad-hoc 代码签名但未通过 Apple 公证；首次打开需在“系统设置 > 隐私与安全性”中选择“仍要打开”，不需要执行 `xattr` 或关闭 Gatekeeper。' \
               --title "DSH Desktop $RELEASE_TAG（预发布）" \
               --repo "$GITHUB_REPOSITORY"
           fi
@@ -799,7 +817,7 @@ jobs:
             echo "MODELS_TOKEN not set; using the deterministic GitHub release note."
             python3 .github/scripts/github_release_notes.py generate-fallback --tag "$tag" --output "$out"
           fi
-          printf '%s\n' '- macOS 包未进行 Developer ID 签名与 Apple 公证，更新需手动下载安装；Windows Dev 包未使用 UKey 签名。' >> "$out"
+          printf '%s\n' '- macOS 包使用 ad-hoc 代码签名但未通过 Apple 公证；首次打开需在“系统设置 > 隐私与安全性”中选择“仍要打开”，更新需手动下载安装；Windows Dev 包未使用 UKey 签名。' >> "$out"
           python3 .github/scripts/github_release_notes.py validate --tag "$tag" --input "$out"
       - name: Publish GitHub Release
         env:

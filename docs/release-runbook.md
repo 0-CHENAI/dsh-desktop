@@ -1,5 +1,13 @@
 # Desktop release runbook
 
+## macOS release without Apple Developer Program
+
+This fork does not have Apple Developer Program credentials. Its macOS configuration therefore sets `identity: "-"` for explicit ad-hoc signing and disables hardened runtime, which otherwise rejects Electron frameworks carrying a different Team ID. Ad-hoc signing gives every executable a coherent local code signature and prevents publishing an accidentally unsigned or structurally invalid app, but it does not establish a trusted publisher and cannot be submitted for Apple notarization.
+
+The native macOS job runs `scripts/verify-macos-package.mjs` before upload. The verifier runs strict deep `codesign` validation on the unpacked app, extracts the ZIP and validates its app, mounts the DMG read-only and validates its app, and invokes `spctl` to record Gatekeeper's result. An ad-hoc package is expected to be rejected by Gatekeeper; any malformed or missing signature fails the job and blocks publication.
+
+After the first blocked launch, a user who trusts the GitHub Release must choose **System Settings → Privacy & Security → Open Anyway**. Do not tell users to remove quarantine attributes with `xattr` or disable Gatekeeper. If Developer ID credentials become available later, replace ad-hoc signing with Developer ID signing and Apple notarization before describing the download as normally Gatekeeper-approved.
+
 ## Local Windows UKey signing runner
 
 Windows packaging and signing run as separate jobs. The GitHub-hosted Windows runner builds an unsigned NSIS installer and uploads a short-lived workflow artifact. A local macOS ARM64 runner downloads it, signs the installer with Jsign and the SafeNet UKey, regenerates the blockmap and `latest.yml`, and uploads the signed release set. The GitHub Release job cannot start unless signing succeeds.
