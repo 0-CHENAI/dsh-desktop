@@ -7,7 +7,7 @@ import Authorization from '@deepseek-ai/dsh-authorization'
 import Llm from '@deepseek-ai/dsh-llm'
 import * as Pi from '@deepseek-ai/dsh-llm-pi-ai'
 import { afterEach, expect, it } from 'vitest'
-import { createAuthorizationBridge } from '../packages/dsh-desktop-client-ui/authorization.js'
+import { createAuthorizationBridge, providerIconResponse, providerIconSlug } from '../packages/dsh-desktop-client-ui/authorization.js'
 
 const cleanup = []
 afterEach(async () => { for (const f of cleanup.splice(0).reverse()) await f() })
@@ -36,14 +36,47 @@ async function waitFor(request, id, predicate) {
   await expect.poll(async () => { result = (await request({ action: 'poll', id })).value; return predicate(result) }).toBe(true)
   return result
 }
-it('discovers the real Codex and Kimi flows without changing API-key providers', async () => {
+it('discovers every installed OAuth provider without changing API-key-only providers', async () => {
   const { ctx } = await fixture()
   const f = await ctx.plugin(Pi, { providers: {} }); cleanup.push(() => f.dispose())
   const directory = ctx.llm.listConfigurableProviders()
-  expect(directory.find(p => p.provider === 'openai-codex').authFlow).toBe('llm-pi-ai/openai-codex')
-  expect(directory.find(p => p.provider === 'kimi-coding').authFlow).toBe('llm-pi-ai/kimi-coding')
-  expect(directory.find(p => p.provider === 'anthropic').authFlow).toBeUndefined()
+  const oauthProviders = ['anthropic', 'github-copilot', 'kimi-coding', 'openai-codex', 'openrouter', 'xai']
+  for (const provider of oauthProviders) {
+    expect(directory.find(p => p.provider === provider).authFlow).toBe(`llm-pi-ai/${provider}`)
+  }
+  expect(directory.find(p => p.provider === 'google').authFlow).toBeUndefined()
   expect(ctx.authorization.describe('llm-pi-ai/openai-codex').label).toBe('ChatGPT')
+  for (const { provider } of directory) {
+    expect(providerIconSlug(provider)).toBeTypeOf('string')
+    const icon = await providerIconResponse(new Request(`http://localhost/api/desktop.provider-icon?provider=${encodeURIComponent(provider)}`))
+    expect(icon.status).toBe(200)
+    expect(await icon.text()).toContain('<svg')
+  }
+})
+
+it('serves bundled provider SVGs and a deterministic fallback without a remote request', async () => {
+  const hostSource = await readFile(new URL('../packages/dsh-desktop-client-ui/authorization.js', import.meta.url), 'utf8')
+  expect(hostSource).toContain("path: providerIconEndpoint, methods: ['GET'], requestBody: 'buffered'")
+  const known = await providerIconResponse(new Request('http://localhost/api/desktop.provider-icon?provider=openai-codex'))
+  expect(known.status).toBe(200)
+  expect(known.headers.get('content-type')).toContain('image/svg+xml')
+  expect(await known.text()).toContain('<svg')
+  const fallback = await providerIconResponse(new Request('http://localhost/api/desktop.provider-icon?provider=custom-route'))
+  expect(await fallback.text()).toContain('>C</text>')
+})
+
+it('sorts provider names alphabetically and exposes icon and OAuth affordances in the picker', async () => {
+  const source = await readFile(new URL('../node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js', import.meta.url), 'utf8')
+  const start = source.indexOf('const compareProviders =')
+  const end = source.indexOf('/**\n\t\t* Render the Models section', start)
+  const helpers = new Function(`${source.slice(start, end)}; return { compareProviders, providerSupportsOAuth, providerIconUrl };`)()
+  const rows = ['zai', 'Anthropic', 'openai-codex'].map(displayName => ({ entry: { displayName, provider: displayName.toLowerCase() } }))
+  expect(rows.sort(helpers.compareProviders).map(row => row.entry.displayName)).toEqual(['Anthropic', 'openai-codex', 'zai'])
+  expect(helpers.providerSupportsOAuth({ authorization: { methods: [{ id: 'oauth' }] } })).toBe(true)
+  expect(helpers.providerSupportsOAuth({ authorization: { methods: [{ id: 'api-key' }] } })).toBe(false)
+  expect(helpers.providerIconUrl('openai/codex')).toContain('openai%2Fcodex')
+  expect(source).toContain('dshProviderAuthBadge')
+  expect(source).toContain('oauthProviderBadge: "OAuth"')
 })
 it('relays device codes and prompts, and reports success only after the real credential store commits', async () => {
   const { request, key } = await fixture(async (s, ctx, key) => {
