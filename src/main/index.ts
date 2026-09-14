@@ -520,32 +520,10 @@ async function syncNativeTheme(window: BrowserWindow): Promise<void> {
 
   // The sidebar already reserves enough room for macOS traffic lights. Read
   // Harness's resolved theme before showing the window so the native surface
-  // matches the first rendered frame. The transparent drag strip restores the
-  // native window gesture without adding a visual titlebar or covering the
-  // traffic lights and right-side header actions.
+  // matches the first rendered frame. The drag strip and header inset live in
+  // the preload so they can track top-bar controls instead of covering them.
   const isDark = await window.webContents.executeJavaScript(
     `(() => {
-      if (${process.platform === 'darwin'}) {
-        let dragRegion = document.getElementById('dsh-desktop-drag-region')
-        if (!dragRegion) {
-          dragRegion = document.createElement('div')
-          dragRegion.id = 'dsh-desktop-drag-region'
-          dragRegion.setAttribute('aria-hidden', 'true')
-          Object.assign(dragRegion.style, {
-            position: 'fixed',
-            zIndex: '18',
-            top: '0',
-            left: '80px',
-            right: '220px',
-            height: '24px',
-            background: 'transparent',
-            pointerEvents: 'auto',
-            userSelect: 'none'
-          })
-          dragRegion.style.setProperty('-webkit-app-region', 'drag')
-          document.body.appendChild(dragRegion)
-        }
-      }
       if (document.body.hasAttribute('data-ds-dark-theme')) return true
       const color = getComputedStyle(document.body).backgroundColor
       const channels = color.match(/[\\d.]+/g)?.slice(0, 3).map(Number)

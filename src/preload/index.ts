@@ -9,6 +9,7 @@ import {
 } from './update-view'
 import { isPluginLoadError } from './plugin-error-view'
 import { findBootFailureText } from './boot-failure'
+import { mountMacosTitlebarLayout } from './macos-titlebar'
 import { mountWindowsTitlebarLayout } from './windows-titlebar'
 
 // Intercept and persist localStorage to disk storage before any page script executes
@@ -340,6 +341,8 @@ function blurFocusAfterEscapeDismiss(): void {
 function initializeUi(): void {
   if (process.platform === 'win32') {
     mountWindowsTitlebarLayout({ document, ipcRenderer })
+  } else if (process.platform === 'darwin') {
+    mountMacosTitlebarLayout(document)
   }
   mount()
   mountAbout()

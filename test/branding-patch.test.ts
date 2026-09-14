@@ -18,11 +18,7 @@ describe('DSH Desktop sidebar branding', () => {
     expect(main).not.toContain('dsh-desktop-titlebar-style')
     expect(main).not.toContain('--dsh-desktop-titlebar-height')
     expect(main).not.toContain('body { box-sizing: border-box; padding-top:')
-    expect(main).toContain("dragRegion.id = 'dsh-desktop-drag-region'")
-    expect(main).toContain("dragRegion.style.setProperty('-webkit-app-region', 'drag')")
-    expect(main).toContain("left: '80px'")
-    expect(main).toContain("right: '220px'")
-    expect(main).toContain("height: '24px'")
+    expect(main).not.toContain('dsh-desktop-drag-region')
   })
 
   it('fills the stock brand slots instead of replacing Sidebar structure', async () => {
