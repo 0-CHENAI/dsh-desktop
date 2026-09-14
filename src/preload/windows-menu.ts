@@ -234,7 +234,8 @@ const menuStyles = `
   * { box-sizing: border-box; }
   html, body { width:100%; height:100%; margin:0; overflow:hidden; background:transparent; }
   body { color:var(--label-primary); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; user-select:none; }
-  .bar { position:relative; width:100%; height:100%; display:flex; justify-content:flex-end; align-items:flex-start; background:var(--chrome-surface); border-left:1px solid var(--chrome-divider); }
+  .bar { position:relative; width:100%; height:${WINDOWS_MENU_PRELOAD_TITLEBAR_HEIGHT}px; display:flex; justify-content:flex-end; align-items:flex-start; background:var(--chrome-surface); border-bottom:1px solid var(--chrome-divider); -webkit-app-region:drag; }
+  button, .menu { -webkit-app-region:no-drag; }
   .menuButton { appearance:none; flex:none; width:${WINDOWS_MENU_PRELOAD_BUTTON_WIDTH}px; height:${WINDOWS_MENU_PRELOAD_TITLEBAR_HEIGHT}px; display:grid; place-items:center; padding:0; color:var(--label-secondary); background:transparent; border:0; cursor:pointer; }
   .menuButton:hover, .menuButton.isOpen { color:var(--label-primary); background:var(--hover); }
   .menuButton:focus-visible { outline:2px solid #4d6bfe; outline-offset:-3px; }

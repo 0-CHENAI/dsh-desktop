@@ -449,6 +449,13 @@ function updateWindowsMenuViewBounds(window: BrowserWindow): void {
   const contentSize = window.getContentSize()
   const width = contentSize[0] ?? 0
   const height = contentSize[1] ?? 0
+  const fullscreen = window.isFullScreen()
+  if (fullscreen) {
+    windowsMenuOpen = false
+    windowsMenuView.webContents.send('desktop-titlebar:close-menu')
+  }
+  windowsMenuView.setVisible(!fullscreen)
+  window.webContents.send('desktop-titlebar:fullscreen', fullscreen)
   windowsMenuView.setBounds(
     windowsMenuViewBounds({ width, height }, windowsMenuOpen, window.isFullScreen())
   )
@@ -490,6 +497,7 @@ function attachWindowsMenuView(window: BrowserWindow): void {
   window.on('resize', updateBounds)
   window.on('enter-full-screen', updateBounds)
   window.on('leave-full-screen', updateBounds)
+  window.webContents.on('did-finish-load', updateBounds)
   window.on('blur', () => setWindowsMenuOpen(window, false, true))
 
   void menuView.webContents.loadFile(desktopResourcePath('windows-menu.html'), {
@@ -1437,6 +1445,12 @@ function registerHarnessHandlers(): void {
       applyWindowChromeTheme(mainWindow, isDark)
     }
     return { ok: true }
+  })
+
+  ipcMain.removeHandler('desktop-titlebar:is-fullscreen')
+  ipcMain.handle('desktop-titlebar:is-fullscreen', (event) => {
+    assertTrustedMainWindowEvent(event)
+    return mainWindow?.isFullScreen() ?? false
   })
 
   ipcMain.removeHandler('desktop:about-info')

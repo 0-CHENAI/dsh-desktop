@@ -32,7 +32,7 @@ describe('Windows titlebar menu', () => {
     expect(main).toContain('Menu.setApplicationMenu(Menu.buildFromTemplate(template))')
   })
 
-  it('keeps the entire Windows app full-height without a visible titlebar band', async () => {
+  it('reserves a global titlebar and contains fixed overlays below it', async () => {
     const main = await readFile('src/main/index.ts', 'utf8')
     const preload = await readFile('src/preload/windows-titlebar.ts', 'utf8')
 
@@ -45,13 +45,14 @@ describe('Windows titlebar menu', () => {
     expect(preload).toContain('trackSidebarLayout(document)')
     expect(preload).toContain("document.documentElement.style.setProperty(SIDEBAR_WIDTH_PROPERTY")
     expect(preload).not.toContain('installDragRegion')
-    expect(preload).toContain('-webkit-app-region: drag')
+    expect(preload).toContain('transform: translateZ(0)')
     expect(preload).toContain('body.dsh-desktop-windows-titlebar-layout > #root')
     expect(preload).not.toContain('position: fixed')
     expect(preload).not.toContain('pointer-events: none')
     expect(preload).toContain('body.dsh-desktop-windows-titlebar-layout button')
     expect(preload).toContain('-webkit-app-region: no-drag !important')
-    expect(preload).toContain('padding-top: calc(env(titlebar-area-height, ${WINDOWS_TITLEBAR_HEIGHT}px) + 6px) !important')
+    expect(preload).toContain('height: calc(100% - var(--dsh-titlebar-inset))')
+    expect(preload).toContain('--dsh-titlebar-inset: 0px')
     expect(preload).not.toContain('padding-right: var(')
     expect(preload).toContain('[data-sidebar-right-panel]')
     expect(preload).toContain("document.documentElement.style.setProperty(SIDEBAR_WIDTH_PROPERTY, '0px')")
@@ -102,7 +103,9 @@ describe('Windows titlebar menu', () => {
     expect(menuPreload).toContain("ipcRenderer.invoke('desktop-menu:get-zoom-factor')")
     expect(menuPreload).toContain('formatWindowsMenuZoomPercentage(zoomFactor)')
     expect(menuPreload).toContain('applicationMenuIcon')
-    expect(menuPreload).toContain('border-left:1px solid var(--chrome-divider)')
+    expect(menuPreload).toContain('border-bottom:1px solid var(--chrome-divider)')
+    expect(menuPreload).toContain('-webkit-app-region:drag')
+    expect(menuPreload).toContain('button, .menu { -webkit-app-region:no-drag; }')
     expect(layoutPreload).not.toContain('INVERSE_ZOOM_PROPERTY')
     expect(layoutPreload).not.toContain('menuButton')
     expect(viteConfig).toContain("'windows-menu': resolve('src/preload/windows-menu.ts')")
@@ -115,7 +118,7 @@ describe('Windows titlebar menu', () => {
 
     const closedAt100Percent = windowsMenuViewBounds({ width: 1380, height: 900 }, false)
     const closedAt69Percent = windowsMenuViewBounds({ width: 1380, height: 900 }, false)
-    expect(closedAt100Percent).toEqual({ x: 1196, y: 0, width: 44, height: 36 })
+    expect(closedAt100Percent).toEqual({ x: 0, y: 0, width: 1240, height: 36 })
     expect(closedAt69Percent).toEqual(closedAt100Percent)
 
     expect(windowsMenuViewBounds({ width: 1380, height: 900 }, true)).toEqual({
@@ -125,10 +128,10 @@ describe('Windows titlebar menu', () => {
       height: 760
     })
     expect(windowsMenuViewBounds({ width: 900, height: 640 }, false, true)).toEqual({
-      x: 856,
+      x: 0,
       y: 0,
-      width: 44,
-      height: 36
+      width: 0,
+      height: 0
     })
   })
 
