@@ -116,6 +116,22 @@ describe('upgradeMarketInSharedTree', () => {
     expect(await readDesired(home)).toEqual(['other-plugin+1.0.0+cafebabe'])
   })
 
+  it('accepts a pnpm isolated-store symlink after a successful shared-tree install', async () => {
+    const { profile, market, options } = await fixture()
+    installMock.mockImplementation(async () => {
+      const store = join(profile, 'node_modules', '.pnpm', 'dshmarket@1.45.1', 'node_modules', 'dshmarket')
+      await mkdir(store, { recursive: true })
+      await writeFile(join(store, 'package.json'), JSON.stringify({ name: 'dshmarket', version: '1.45.1' }))
+      await rm(market, { recursive: true, force: true })
+      await symlink(store, market, 'junction')
+      return { ok: true }
+    })
+
+    expect(await upgradeMarketInSharedTree(options)).toEqual({ ok: true })
+    expect((await lstat(market)).isSymbolicLink()).toBe(true)
+    expect(await readFile(join(market, 'package.json'), 'utf8')).toContain('1.45.1')
+  })
+
   it('restores the manifest and reports failure when the shared-tree install fails', async () => {
     installMock.mockImplementation(async () => ({ ok: false, detail: 'ERR_PNPM_NO_MATCHING_VERSION' }))
     const { profile, options } = await fixture()

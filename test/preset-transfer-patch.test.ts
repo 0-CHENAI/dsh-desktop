@@ -204,7 +204,7 @@ describe('agent preset package transfer', () => {
         format: 'dsh-preset',
         version: 1,
         id: sourceId,
-        sourceDshVersion: '0.1.5-rc.1'
+        sourceDshVersion: '0.1.5-rc.2'
       })
       expect(exportedManifest.exportedAt).toEqual(expect.any(String))
       expect(exportedManifest.dshVersion).toBeUndefined()
