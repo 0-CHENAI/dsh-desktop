@@ -1,10 +1,93 @@
 import { randomUUID } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
+import { createRequire } from 'node:module'
+import path from 'node:path'
 import { AuthorizationDeclinedError } from '@deepseek-ai/dsh-authorization'
 
 const endpoint = '/api/desktop.authorization'
+const providerIconEndpoint = '/api/desktop.provider-icon'
 const json = (body, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } })
 const safeUrl = (value) => {
   try { const url = new URL(value); return ['https:', 'http:'].includes(url.protocol) ? url.href : undefined } catch { return undefined }
+}
+
+const providerIconSlugs = Object.freeze({
+  'amazon-bedrock': 'bedrock',
+  'ant-ling': 'antgroup',
+  anthropic: 'anthropic',
+  'azure-openai-responses': 'azureai',
+  baseten: 'baseten',
+  cerebras: 'cerebras',
+  'cloudflare-ai-gateway': 'cloudflare',
+  'cloudflare-workers-ai': 'workersai',
+  deepseek: 'deepseek',
+  'deepseek-official': 'deepseek',
+  fireworks: 'fireworks',
+  'github-copilot': 'githubcopilot',
+  google: 'gemini',
+  'google-vertex': 'vertexai',
+  groq: 'groq',
+  huggingface: 'huggingface',
+  'kimi-coding': 'kimi',
+  minimax: 'minimax',
+  'minimax-cn': 'minimax',
+  mistral: 'mistral',
+  moonshotai: 'moonshot',
+  'moonshotai-cn': 'moonshot',
+  nvidia: 'nvidia',
+  openai: 'openai',
+  'openai-codex': 'codex',
+  opencode: 'opencode',
+  'opencode-go': 'opencode',
+  openrouter: 'openrouter',
+  'qwen-token-plan': 'qwen',
+  'qwen-token-plan-cn': 'qwen',
+  'qwen-token-plan-individual': 'qwen',
+  together: 'together',
+  'vercel-ai-gateway': 'vercel',
+  xai: 'xai',
+  xiaomi: 'xiaomimimo',
+  'xiaomi-token-plan-ams': 'xiaomimimo',
+  'xiaomi-token-plan-cn': 'xiaomimimo',
+  'xiaomi-token-plan-sgp': 'xiaomimimo',
+  zai: 'zai',
+  'zai-coding-cn': 'zai'
+})
+
+export function providerIconSlug(provider) {
+  return providerIconSlugs[provider]
+}
+
+const require = createRequire(import.meta.url)
+const providerIconDirectory = path.join(
+  path.dirname(require.resolve('@lobehub/icons-static-svg/package.json')),
+  'icons'
+)
+const providerIconCache = new Map()
+const escapeXml = (value) => value.replace(/[<>&"']/g, char => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' })[char])
+const fallbackIcon = (provider) => {
+  const monogram = (provider.match(/[a-z0-9]/i)?.[0] ?? '?').toUpperCase()
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>${escapeXml(provider)}</title><text x="12" y="17" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="700">${monogram}</text></svg>`
+}
+
+export async function providerIconResponse(request) {
+  const provider = new URL(request.url).searchParams.get('provider')?.trim() ?? ''
+  if (!provider || provider.length > 100) return new Response('Provider is required', { status: 400 })
+  let svg = providerIconCache.get(provider)
+  if (svg === undefined) {
+    const slug = providerIconSlug(provider)
+    svg = slug === undefined
+      ? fallbackIcon(provider)
+      : await readFile(path.join(providerIconDirectory, `${slug}.svg`), 'utf8')
+    providerIconCache.set(provider, svg)
+  }
+  return new Response(svg, {
+    headers: {
+      'Cache-Control': 'public, max-age=86400',
+      'Content-Type': 'image/svg+xml; charset=utf-8',
+      'X-Content-Type-Options': 'nosniff'
+    }
+  })
 }
 
 /** Browser attempts expose notices and prompts, never credential records or provider errors. */
@@ -88,6 +171,7 @@ export function registerAuthorization(ctx) {
   ctx.inject(['connection', 'authorization', 'credentials', 'llm'], scope => {
     const bridge = createAuthorizationBridge(scope)
     scope.effect(() => scope.connection.fetch.register({ path: endpoint, methods: ['GET', 'POST'], requestBody: 'buffered', fetch: request => bridge.fetch(request) }))
+    scope.effect(() => scope.connection.fetch.register({ path: providerIconEndpoint, methods: ['GET'], requestBody: 'buffered', fetch: providerIconResponse }))
     scope.effect(() => () => bridge.dispose())
   })
 }
