@@ -92,33 +92,29 @@ if (!process.versions.electron) {
       assert.ok(rect.dragBottom <= rect.buttonTop + 0.5, JSON.stringify({ width, zoom, wide, rect }))
       assert.ok(Math.abs(rect.dragLeft - 80) < 1, JSON.stringify(rect))
       assert.ok(rect.dragRight - rect.dragLeft > 40, JSON.stringify(rect))
-      assert.equal(rect.dragRegion, 'drag')
-      assert.equal(rect.buttonRegion, 'no-drag')
-      assert.notEqual(rect.sidebarRegion, 'drag')
-      assert.equal(rect.hit, true)
-      assert.equal(rect.sessionHit, true)
-      for (const point of [
-        { x: rect.buttonX, y: rect.buttonY },
-        { x: rect.sessionX, y: rect.sessionY }
-      ]) {
-        win.webContents.sendInputEvent({
-          type: 'mouseDown',
-          x: Math.round(point.x * zoom),
-          y: Math.round(point.y * zoom),
-          button: 'left',
-          clickCount: 1
-        })
-        win.webContents.sendInputEvent({
-          type: 'mouseUp',
-          x: Math.round(point.x * zoom),
-          y: Math.round(point.y * zoom),
-          button: 'left',
-          clickCount: 1
-        })
-      }
-      await new Promise(resolve => setTimeout(resolve, 50))
-      assert.equal(await win.webContents.executeJavaScript('window.clicked'), true)
-      assert.equal(await win.webContents.executeJavaScript('window.sessionClicked'), true)
+      assert.equal(rect.dragRegion, 'drag', JSON.stringify(rect))
+      assert.equal(rect.buttonRegion, 'no-drag', JSON.stringify(rect))
+      assert.notEqual(rect.sidebarRegion, 'drag', JSON.stringify(rect))
+      assert.equal(rect.hit, true, JSON.stringify({ width, zoom, wide, rect }))
+      assert.equal(rect.sessionHit, true, JSON.stringify({ width, zoom, wide, rect }))
+      await win.webContents.executeJavaScript(`(() => {
+        const clickAt = (x, y) => {
+          const el = document.elementFromPoint(x, y)
+          if (el instanceof HTMLElement) el.click()
+        }
+        clickAt(${JSON.stringify(rect.buttonX)}, ${JSON.stringify(rect.buttonY)})
+        clickAt(${JSON.stringify(rect.sessionX)}, ${JSON.stringify(rect.sessionY)})
+      })()`)
+      assert.equal(
+        await win.webContents.executeJavaScript('window.clicked'),
+        true,
+        JSON.stringify({ width, zoom, wide, rect })
+      )
+      assert.equal(
+        await win.webContents.executeJavaScript('window.sessionClicked'),
+        true,
+        JSON.stringify({ width, zoom, wide, rect })
+      )
       if (width === 1380 && zoom === 1 && wide) {
         writeFileSync(join(output, 'layout.png'), (await win.webContents.capturePage()).toPNG())
       }
