@@ -188,7 +188,7 @@ describe('DSH PPT built-in plugin', () => {
     const patch = await readFile(path.join(
       projectRoot,
       'patches',
-      '@deepseek-ai+dsh-client-ui-conversation+0.1.5-rc.1.patch'
+      '@deepseek-ai+dsh-client-ui-conversation+0.1.5-rc.2.patch'
     ), 'utf8')
 
     expect(patch).toContain(

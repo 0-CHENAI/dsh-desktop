@@ -24,7 +24,8 @@ import { clearStaleLoopbackHttpCache } from './cache-maintenance'
 import {
   DEFAULT_HARNESS_PORT,
   extractFailureCause,
-  HarnessRuntime
+  HarnessRuntime,
+  prewarmShellEnvironment
 } from './runtime/harness-runtime'
 import { launchDisclaimedUtilityProcess } from './runtime/disclaimed-utility-process'
 import {
@@ -1161,6 +1162,7 @@ async function enterMigrationSafeRecovery(
   maintenanceRecoveryLocked = true
   maintenanceAllowedRestoreId = allowedRestoreId
   await refreshMigrationRecoveryLock(dshHome)
+  runtime.beginLaunch('safe mode recovery')
   runtime.note(`[desktop] Profile recovery requires Safe Mode: ${reason}`)
   await runtime.stop()
   await ensureSafeModeProfile(dshHome)
@@ -1183,6 +1185,7 @@ function launchHarness(): Promise<void> {
   harnessLaunchOperation = (async () => {
     safeModeVisible = false
     const dshHome = join(app.getPath('userData'), 'harness')
+    runtime.beginLaunch('web profile')
     await showSplash()
     // Migration and generation projection only hold on a stopped Harness, and
     // a restart still has the previous one running: start() stops it, but that
@@ -1285,6 +1288,7 @@ function launchSafeHarness(): Promise<void> {
   harnessLaunchOperation = (async () => {
     safeModeVisible = true
     const dshHome = join(app.getPath('userData'), 'harness')
+    runtime.beginLaunch('safe mode')
     await refreshMigrationRecoveryLock(dshHome)
     await showSplash()
     await runtime.stop()
@@ -2982,6 +2986,7 @@ if (isDaemonLaunch(process.env, process.platform)) {
     app.quit()
   } else {
     initializeDesktopService()
+    void prewarmShellEnvironment()
     app.on('second-instance', (_event, argv) => {
       if (!isUserInitiatedInstance(argv)) return
       if (shouldStartInSafeMode(argv)) {
