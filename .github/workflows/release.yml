@@ -69,6 +69,8 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run typecheck
+      - name: Check macOS titlebar drag layout and button clicks
+        run: node scripts/check-macos-titlebar-layout.cjs
       - name: Build ad-hoc signed Apple Silicon release package
         if: startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != ''
         env:
