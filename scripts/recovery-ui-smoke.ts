@@ -23,6 +23,7 @@ ipcMain.on('dsh:storage-sync', () => {})
 ipcMain.handle('updates:status', () => ({ phase: 'idle', currentVersion: '0.0.0', manual: false }))
 ipcMain.handle('mobile:status', () => ({ connected: false }))
 ipcMain.handle('desktop-titlebar:close-menu', () => {})
+ipcMain.handle('desktop-titlebar:is-fullscreen', () => false)
 ipcMain.handle('desktop-titlebar:set-theme', () => {})
 
 async function capture(contents: Electron.WebContents, path: string): Promise<void> {

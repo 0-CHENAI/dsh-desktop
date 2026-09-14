@@ -6,7 +6,7 @@ const SIDEBAR_WIDTH_PROPERTY = '--dsh-desktop-windows-sidebar-width'
 
 interface TitlebarLayoutMountOptions {
   document: Document
-  ipcRenderer: Pick<IpcRenderer, 'invoke'>
+  ipcRenderer: Pick<IpcRenderer, 'invoke' | 'on'>
 }
 
 export function mountWindowsTitlebarLayout(options: TitlebarLayoutMountOptions): void {
@@ -15,6 +15,15 @@ export function mountWindowsTitlebarLayout(options: TitlebarLayoutMountOptions):
 
   installLayout(document)
   trackSidebarLayout(document)
+  let fullscreenEventReceived = false
+  const fullscreenChanged = (_event: unknown, fullscreen: boolean): void => {
+    fullscreenEventReceived = true
+    document.body.classList.toggle('dsh-desktop-fullscreen', fullscreen === true)
+  }
+  ipcRenderer.on('desktop-titlebar:fullscreen', fullscreenChanged)
+  void ipcRenderer.invoke('desktop-titlebar:is-fullscreen').then(value => {
+    if (!fullscreenEventReceived) fullscreenChanged(undefined, value === true)
+  }).catch(() => {})
 
   document.addEventListener('pointerdown', () => {
     void ipcRenderer.invoke('desktop-titlebar:close-menu').catch((error: unknown) => {
@@ -41,10 +50,20 @@ function installLayout(document: Document): void {
   style.id = LAYOUT_STYLE_ID
   style.textContent = `
     html, body { height: 100% !important; }
-    body.dsh-desktop-windows-titlebar-layout {
+    body.dsh-desktop-windows-titlebar-layout:has(> #root) {
+      --dsh-titlebar-inset: env(titlebar-area-height, ${WINDOWS_TITLEBAR_HEIGHT}px);
       box-sizing: border-box !important;
-      height: 100% !important;
+      position: absolute !important;
+      top: var(--dsh-titlebar-inset) !important;
+      width: 100% !important;
+      height: calc(100% - var(--dsh-titlebar-inset)) !important;
+      margin: 0 !important;
       padding-top: 0 !important;
+      /* Keep fixed settings/backdrop portals inside the content viewport. */
+      transform: translateZ(0);
+    }
+    body.dsh-desktop-windows-titlebar-layout.dsh-desktop-fullscreen:has(> #root) {
+      --dsh-titlebar-inset: 0px;
     }
     body.dsh-desktop-windows-titlebar-layout > #root {
       height: 100% !important;
@@ -56,12 +75,11 @@ function installLayout(document: Document): void {
     body.dsh-desktop-windows-titlebar-layout header[data-slot="conversation.session.header"],
     body.dsh-desktop-windows-titlebar-layout [data-slot="conversation.session.header"] > header {
       box-sizing: border-box !important;
-      padding-top: calc(env(titlebar-area-height, ${WINDOWS_TITLEBAR_HEIGHT}px) + 6px) !important;
-      -webkit-app-region: drag;
+      padding-top: 6px !important;
     }
     body.dsh-desktop-windows-titlebar-layout [data-sidebar-right-panel] {
       box-sizing: border-box;
-      padding-top: env(titlebar-area-height, ${WINDOWS_TITLEBAR_HEIGHT}px);
+      padding-top: 0;
     }
     body.dsh-desktop-windows-titlebar-layout button,
     body.dsh-desktop-windows-titlebar-layout a,
