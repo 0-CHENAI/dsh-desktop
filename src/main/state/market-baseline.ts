@@ -1,4 +1,4 @@
-import { lstat, readFile, rm, writeFile } from 'node:fs/promises'
+import { lstat, readFile, readlink, rm, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { healProfilesModuleFallback } from '@deepseek-ai/dsh-app-boot'
 import { listGenerations, readDesired, writeDesired } from 'dsh-desktop-market-installer/generations/registry'
@@ -10,6 +10,16 @@ import { upgradeMarketInSharedTree, type MarketSharedTreeUpgradeOptions } from '
 export const VERIFIED_MARKET_BASELINE = '1.45.1'
 
 const MARKET_PACKAGE = 'dshmarket'
+
+/** True only for a generation pointer. pnpm isolated-store links (.pnpm/…) stay. */
+async function isGenerationLink(path: string): Promise<boolean> {
+  try {
+    if (!(await lstat(path)).isSymbolicLink()) return false
+    return (await readlink(path)).includes('.generations')
+  } catch {
+    return false
+  }
+}
 
 interface MarketManifest {
   dependencies?: Record<string, string>
@@ -56,7 +66,7 @@ export async function demoteMarketGeneration(
   const marketPath = join(dirname(manifestPath), 'node_modules', MARKET_PACKAGE)
 
   const owned = manifest.dsh?.desktop?.generationProjection?.plugins?.[MARKET_PACKAGE]
-  const linked = await lstat(marketPath).then((info) => info.isSymbolicLink()).catch(() => false)
+  const linked = await isGenerationLink(marketPath)
   const [desired, generations] = await Promise.all([readDesired(dshHome), listGenerations(dshHome)])
   const marketGenerations = new Set(
     generations.filter((generation) => generation.pluginName === MARKET_PACKAGE).map((generation) => generation.id)
@@ -127,15 +137,15 @@ export async function ensureMarketBaseline(
   const installed = await readInstalledPluginVersion(options.dshHome, 'dshmarket')
   // dshmarket must never be a generation (it is a core bundle the migration
   // keeps hoisted — see KEEP_IN_SHARED_TREE in generation-migration.ts). A
-  // symlinked entry forces a repair even when its version already reads as
-  // current, so a stray generation from an earlier build cannot linger.
-  const isGenerationLink = await lstat(
+  // generation link forces a repair even when its version already reads as
+  // current. A pnpm isolated-store symlink (.pnpm/…) is left alone.
+  const generationLink = await isGenerationLink(
     join(dirname(profilePackageJsonPath(options.dshHome)), 'node_modules', 'dshmarket')
-  ).then((info) => info.isSymbolicLink()).catch(() => false)
-  if (meetsBaseline(installed) && !isGenerationLink) return
+  )
+  if (meetsBaseline(installed) && !generationLink) return
 
   options.note?.(
-    isGenerationLink
+    generationLink
       ? `[market-baseline] dshmarket ${installed ?? '(unknown)'} is a generation link; reinstalling into the shared tree`
       : `[market-baseline] upgrading dshmarket ${installed ?? '(missing)'} to ${VERIFIED_MARKET_BASELINE}`
   )

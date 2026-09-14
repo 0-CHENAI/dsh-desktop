@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process'
+import { readFile } from 'node:fs/promises'
 import { pathToFileURL } from 'node:url'
 import { join } from 'node:path'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
@@ -286,5 +287,25 @@ describe('windowsHide patching for fork', () => {
       '/path/to/worker.js',
       { cwd: 'C:\\test', windowsHide: true }
     )
+  })
+})
+
+describe('DSH entry dispatch', () => {
+  /**
+   * Harness 0.1.5 moved the CLI behind `if (import.meta.main)` and exports
+   * `runCli`. The Node entry imports the CLI rather than being it, so a plain
+   * import loads the module, runs nothing, and lets the process exit 0 with no
+   * diagnostics. Lock both halves of the contract.
+   */
+  it('calls the runCli export the packaged CLI gates behind import.meta.main', async () => {
+    const [entry, bin] = await Promise.all([
+      readFile(join(process.cwd(), 'build/harness-node-entry.mjs'), 'utf8'),
+      readFile(join(process.cwd(), 'node_modules/@deepseek-ai/dsh/lib/bin.js'), 'utf8')
+    ])
+
+    expect(bin).toContain('import.meta.main')
+    expect(bin).toMatch(/export \{[^}]*\brunCli\b/)
+    expect(entry).toContain("typeof entry.runCli === 'function'")
+    expect(entry).toContain('await entry.runCli()')
   })
 })

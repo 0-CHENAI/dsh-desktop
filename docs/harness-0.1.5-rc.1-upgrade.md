@@ -1,10 +1,12 @@
 # Harness 0.1.5-rc.1 升级
 
+> 已被 [0.1.5-rc.2](./harness-0.1.5-rc.2-upgrade.md) 取代。下文保留为当时的迁移记录。
+
 从 `0.1.2-rc.1` 升级至上游 [`dsh-v0.1.5-rc.1`](https://github.com/deepseek-ai/deepseek-harness/releases/tag/dsh-v0.1.5-rc.1)，commit `183f08e9c6dde7e36cd2318eaee70b0da08fb35e`。这是 0.1.5 系列候选版，非正式版。桌面应用自身的版本号与 Harness 后端版本独立。
 
 ## 依赖
 
-替换旧本地构建产物为官方 npm tarball，并更新根依赖、锁文件、Desktop 插件 peer 范围和 PPT 包。新增会话格式迁移、文件上传、右侧文件预览、系统应用打开和 HTTP 代理等实际运行时依赖。保留 PPT 使用的公共 UI 包，不加入可选 Agent Teams 等 bundle。每个包的来源与完整性记录在 `packages/harness-0.1.5-rc.1/provenance.json`。
+替换旧本地构建产物为官方 npm tarball，并更新根依赖、锁文件、Desktop 插件 peer 范围和 PPT 包。新增会话格式迁移、文件上传、右侧文件预览、系统应用打开和 HTTP 代理等实际运行时依赖。保留 PPT 使用的公共 UI 包，不加入可选 Agent Teams 等 bundle。每个包的来源与完整性当时记录在 `packages/harness-0.1.5-rc.1/provenance.json`（该目录已随 rc.2 升级删除）。
 
 ## Desktop 适配
 
