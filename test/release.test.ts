@@ -87,10 +87,10 @@ describe('GitHub release contract', () => {
 
     for (const packageName of promotedClosurePackages) {
       expect(packageJson.dependencies[packageName]).toMatch(
-        /^file:packages\/harness-0\.1\.5-rc\.1\/npm-dsh\/.+\.tgz$/
+        /^file:packages\/harness-0\.1\.5-rc\.2\/npm-dsh\/.+\.tgz$/
       )
       expect(packageLock.packages[`node_modules/${packageName}`]?.resolved).toMatch(
-        /^file:packages\/harness-0\.1\.5-rc\.1\/npm-dsh\//
+        /^file:packages\/harness-0\.1\.5-rc\.2\/npm-dsh\//
       )
     }
 

@@ -1,0 +1,270 @@
+diff --git a/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js b/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js
+index e06cf8d..2a29995 100644
+--- a/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js
++++ b/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js
+@@ -981,6 +981,7 @@ const modelProfile = z.object({
+ /** A {@link modelProfile} whose id lives in the `modelOverrides` dict key. */
+ const modelOverride = z.object(modelFields);
+ const profile = z.object({
++	authFlow: z.string(),
+ 	apiKeyEnv: z.string().role("credential-ref"),
+ 	displayName: z.string(),
+ 	api: z.union(supportedProtocols()),
+@@ -1097,6 +1098,7 @@ function resolveProfiles(providers, validation = "strict") {
+ 			if (validation === "strict" || !(error instanceof PiAiCatalogError)) throw error;
+ 			catalogError ??= error.message;
+ 		}
++		if (source.authFlow !== void 0 && source.authFlow !== recordKeyFor(provider)) throw new LlmError(`llm-pi-ai: authFlow must address this provider (${recordKeyFor(provider)})`, "INVALID_AUTH_FLOW");
+ 		const { apiKeyEnv, retryPolicy, models: _models, displayName: _displayName, ...rest } = source;
+ 		resolved.set(provider, {
+ 			...rest,
+@@ -1363,12 +1365,18 @@ function mapUsage(usage) {
+ 		...usage.cacheWrite > 0 ? { cacheWriteTokens: usage.cacheWrite } : {}
+ 	};
+ }
+-function classifyPiAiError(message) {
+-	if (/\b(?:401|403)\b/.test(message)) return "AUTH";
++function classifyPiAiError(message, status) {
++	if (status === 401) return "AUTH";
++	if (status === 403) return "FORBIDDEN";
+ 	if (isQuotaExceededError(message)) return QUOTA_EXCEEDED_CODE;
++	if (status === 429) return "RATE_LIMIT";
++	if (status >= 500 && status <= 599) return "SERVER";
++	if (status >= 400 && status <= 499) return "INVALID_REQUEST";
++	if (/\b401\b/.test(message)) return "AUTH";
++	if (/\b403\b/.test(message)) return "FORBIDDEN";
+ 	if (/\b429\b|rate.?limit/i.test(message)) return "RATE_LIMIT";
+ 	if (/\b413\b|failed to buffer the request body:\s*length limit exceeded|payload too large|request body too large/i.test(message)) return "INVALID_REQUEST";
+-	if (/\b400\b|invalid.?request/i.test(message)) return "INVALID_REQUEST";
++	if (/\b(?:400|404|422)\b|invalid.?request/i.test(message)) return "INVALID_REQUEST";
+ 	if (/\b5\d\d\b/.test(message)) return "SERVER";
+ 	if (/\btime(?:d)?\s*out\b|timeout/i.test(message)) return "TIMEOUT";
+ 	if (/stream ended (?:before|without)\b/i.test(message)) return "TRANSPORT";
+@@ -1385,7 +1393,7 @@ function classifyPiAiError(message) {
+ *   `EMPTY_RESPONSE` error, while terminal `pending` and `deferred` states map
+ *   to non-retryable `PI_AI_ERROR` failures.
+ */
+-function mapStopReason(message, contextWindow) {
++function mapStopReason(message, contextWindow, hadOutput = false) {
+ 	const piAiOverflow = isContextOverflow(message, contextWindow);
+ 	const harnessOverflow = message.stopReason === "error" && message.errorMessage !== void 0 && isContextWindowExceededError(message.errorMessage);
+ 	if (piAiOverflow || harnessOverflow) return {
+@@ -1430,16 +1438,33 @@ function mapStopReason(message, contextWindow) {
+ 		};
+ 		case "error": {
+ 			const text = message.errorMessage ?? "pi-ai stream error";
++			const candidateStatus = message.errorDetails?.status;
++			const status = Number.isInteger(candidateStatus) && candidateStatus >= 400 && candidateStatus <= 599 ? candidateStatus : void 0;
++			const requestId = message.errorDetails?.requestId;
++			let code = classifyPiAiError(text, status);
++			if (code === "PI_AI_ERROR" && !hadOutput && message.content.length === 0 && message.usage.output === 0) {
++				code = "PI_AI_EMPTY_ERROR";
++			}
+ 			return {
+ 				kind: "error",
+ 				failure: {
+ 					message: text,
+-					code: classifyPiAiError(text)
++					code,
++					...(Number.isInteger(status) && status >= 400 && status <= 599 ? { status } : {}),
++					...(typeof requestId === "string" && /^[a-zA-Z0-9_.:-]{1,200}$/.test(requestId) ? { requestId } : {})
+ 				}
+ 			};
+ 		}
+ 	}
+ }
++/** Restore the terminal content array from completed stream blocks when a provider omits it. */
++function completeTerminalMessage(message, completed) {
++	if (Array.isArray(message.content)) return message;
++	return {
++		...message,
++		content: [...completed.entries()].sort(([left], [right]) => left - right).map(([, block]) => block)
++	};
++}
+ /**
+ * Translate the pi-ai event stream into StreamChunks. pi-ai never throws
+ * mid-stream — failures arrive as `error` events, which become error/aborted
+@@ -1454,7 +1479,11 @@ function mapStopReason(message, contextWindow) {
+ */
+ async function* toStreamChunks(events, contextWindow, callerSignal, requestedModel) {
+ 	const toolIds = /* @__PURE__ */ new Map();
+-	for await (const event of events) switch (event.type) {
++	const completed = /* @__PURE__ */ new Map();
++	let hadOutput = false;
++	for await (const event of events) {
++		if (["text_delta", "text_end", "thinking_delta", "thinking_end", "toolcall_start", "toolcall_delta", "toolcall_end"].includes(event.type)) hadOutput = true;
++		switch (event.type) {
+ 		case "start": break;
+ 		case "text_start":
+ 			yield {
+@@ -1470,16 +1499,19 @@ async function* toStreamChunks(events, contextWindow, callerSignal, requestedMod
+ 				text: event.delta
+ 			};
+ 			break;
+-		case "text_end":
++		case "text_end": {
++			const block = {
++				type: "text",
++				text: event.content
++			};
++			completed.set(event.contentIndex, block);
+ 			yield {
+ 				type: "block-end",
+ 				index: event.contentIndex,
+-				block: {
+-					type: "text",
+-					text: event.content
+-				}
++				block
+ 			};
+ 			break;
++		}
+ 		case "thinking_start":
+ 			yield {
+ 				type: "block-start",
+@@ -1494,16 +1526,19 @@ async function* toStreamChunks(events, contextWindow, callerSignal, requestedMod
+ 				text: event.delta
+ 			};
+ 			break;
+-		case "thinking_end":
++		case "thinking_end": {
++			const block = {
++				type: "reasoning",
++				text: event.content
++			};
++			completed.set(event.contentIndex, block);
+ 			yield {
+ 				type: "block-end",
+ 				index: event.contentIndex,
+-				block: {
+-					type: "reasoning",
+-					text: event.content
+-				}
++				block
+ 			};
+ 			break;
++		}
+ 		case "toolcall_start": {
+ 			const partial = event.partial.content[event.contentIndex];
+ 			const id = partial?.type === "toolCall" ? partial.id : "";
+@@ -1530,29 +1565,34 @@ async function* toStreamChunks(events, contextWindow, callerSignal, requestedMod
+ 			};
+ 			break;
+ 		}
+-		case "toolcall_end":
++		case "toolcall_end": {
++			const block = {
++				type: "tool-call",
++				id: brandString(event.toolCall.id),
++				name: event.toolCall.name,
++				arguments: JSON.stringify(event.toolCall.arguments)
++			};
++			completed.set(event.contentIndex, block);
+ 			yield {
+ 				type: "block-end",
+ 				index: event.contentIndex,
+-				block: {
+-					type: "tool-call",
+-					id: brandString(event.toolCall.id),
+-					name: event.toolCall.name,
+-					arguments: JSON.stringify(event.toolCall.arguments)
+-				}
++				block
+ 			};
+ 			break;
+-		case "done":
++		}
++		case "done": {
++			const message = completeTerminalMessage(event.message, completed);
+ 			yield {
+ 				type: "usage",
+-				usage: mapUsage(event.message.usage)
++				usage: mapUsage(message.usage)
+ 			};
+ 			yield {
+ 				type: "finish",
+-				reason: mapStopReason(event.message, contextWindow),
+-				replayState: toPiReplayState(event.message, requestedModel)
++				reason: mapStopReason(message, contextWindow),
++				replayState: toPiReplayState(message, requestedModel)
+ 			};
+ 			return;
++		}
+ 		case "error":
+ 			yield {
+ 				type: "usage",
+@@ -1563,10 +1603,11 @@ async function* toStreamChunks(events, contextWindow, callerSignal, requestedMod
+ 				reason: mapStopReason(callerSignal?.aborted ? {
+ 					...event.error,
+ 					stopReason: "aborted"
+-				} : event.error, contextWindow)
++				} : event.error, contextWindow, hadOutput)
+ 			};
+ 			return;
+ 	}
++	}
+ 	throw new LlmError("pi-ai event stream ended without done/error", "STREAM_CLOSED");
+ }
+ //#endregion
+@@ -1720,8 +1761,11 @@ function reasoningInfo(model, defaultLevel) {
+ 	} };
+ }
+ /** Merge deployment headers while removing case-insensitive attribution collisions. */
+-function requestHeaders(headers) {
+-	const attribution = attributionHeaders();
++function requestHeaders(headers, sessionId) {
++	const attribution = {
++		...attributionHeaders(),
++		...sessionId === void 0 ? {} : { "x-deepseek-harness-session-id": String(sessionId) }
++	};
+ 	const reserved = new Set(Object.keys(attribution).map((name) => name.toLowerCase()));
+ 	return {
+ 		...Object.fromEntries(Object.entries(headers ?? {}).filter(([name]) => !reserved.has(name.toLowerCase()))),
+@@ -1870,7 +1914,7 @@ var PiAiAdapter = class extends LlmAdapter {
+ 					...options.maxTokens === void 0 ? {} : { maxTokens: options.maxTokens },
+ 					...options.sessionId === void 0 ? {} : { sessionId: String(options.sessionId) },
+ 					signal: watchdog.signal,
+-					headers: requestHeaders(profile.headers)
++					headers: requestHeaders(profile.headers, options.sessionId)
+ 				}), model.contextWindow, options.signal, model.id)[Symbol.asyncIterator]();
+ 				let exhausted = false;
+ 				try {
+@@ -2453,7 +2497,7 @@ function registerPiAiFlows(ctx, auth) {
+ 		}
+ 		ctx.authorization.registerFlow({
+ 			key: recordKeyFor(providerId),
+-			label: provider.name,
++			label: provider.id === "openai-codex" ? "ChatGPT" : provider.name,
+ 			methods: [first, ...rest],
+ 			async run(session) {
+ 				const models = createModels(auth);
+@@ -2561,6 +2605,7 @@ function directoryEntries(profiles) {
+ 			settingsNs: NS,
+ 			settingsPath: ["providers", provider],
+ 			declared: !catalog.has(provider),
++			...(profiles.get(provider)?.authFlow !== void 0 ? { authFlow: profiles.get(provider).authFlow } : catalogProvider(provider)?.auth.oauth !== void 0 ? { authFlow: recordKeyFor(provider) } : {}),
+ 			...error === void 0 ? {} : { error }
+ 		});
+ 	};
+@@ -2597,6 +2642,8 @@ function apply(ctx, config) {
+ 		const credentials = ctx.get("credentials");
+ 		const hit = credentials !== void 0 ? (await credentials.resolve(ref))?.value : launchEnvironmentOf(ctx).get(ref)?.value;
+ 		if (hit !== void 0 && hit.length > 0) return assertUsableApiKey(hit, "llm-pi-ai", ref);
++		const flow = profile.authFlow ?? (catalogProvider(provider)?.auth.oauth !== void 0 ? recordKeyFor(provider) : void 0);
++		if (flow !== void 0 && (await credentials?.describeRecord(flow))?.configured === true) return void 0;
+ 		throw new LlmError(`llm-pi-ai: no credential for provider route "${provider}"; its profile resolves ${ref}, which is not set — store ${ref} through the credentials service (the web Models page writes it) or export it, and remove apiKeyEnv only if this provider should authenticate from pi-ai's own environment discovery`, "MISSING_CREDENTIAL");
+ 	};
+ 	const auth = {
+diff --git a/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/types/config.d.ts b/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/types/config.d.ts
+index 1391c2d..99a2aac 100644
+--- a/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/types/config.d.ts
++++ b/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/types/config.d.ts
+@@ -51,6 +51,8 @@ export declare const DEFAULT_INPUT: readonly PiAiModality[];
+ export type { PiAiCompatProfile, PiAiModality, PiAiModelOverride, PiAiModelProfile, PiAiReasoningEfforts, PiAiThinkingFormat, } from './catalog.ts';
+ /** Configuration for one pi-ai provider route; the `providers` dict key IS the route. */
+ export interface PiAiProviderProfile {
++    /** The registered flow must use llm-pi-ai/<provider> so the adapter reads its record. */
++    authFlow?: string;
+     /** Credential reference (environment-variable name) resolved per request through `ctx.credentials`. */
+     apiKeyEnv?: string;
+     /** Name shown by configuration surfaces; defaults to the route key. */
