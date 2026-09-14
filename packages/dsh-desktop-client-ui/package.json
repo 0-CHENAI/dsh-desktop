@@ -23,6 +23,9 @@
     }
   },
   "license": "MIT",
+  "dependencies": {
+    "@lobehub/icons-static-svg": "1.95.0"
+  },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
     "@deepseek-ai/dsh-client-locale": "^0.1.5-rc.1",

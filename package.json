@@ -289,6 +289,7 @@
     "@deepseek-ai/dsh-workflow-worker-thread": "file:packages/harness-0.1.5-rc.1/npm-dsh/deepseek-ai-dsh-workflow-worker-thread-0.1.5-rc.1.tgz",
     "@deepseek-ai/dsh-workspace": "file:packages/harness-0.1.5-rc.1/npm-dsh/deepseek-ai-dsh-workspace-0.1.5-rc.1.tgz",
     "@deepseek-ai/schemastery": "file:packages/harness-0.1.5-rc.1/npm-vendor/deepseek-ai-schemastery-3.18.2.tgz",
+    "@lobehub/icons-static-svg": "1.95.0",
     "dsh-desktop-client-ui": "file:packages/dsh-desktop-client-ui",
     "dsh-desktop-hmr-fallback": "file:packages/dsh-desktop-hmr-fallback",
     "dsh-desktop-market-installer": "file:packages/dsh-desktop-market-installer",
