@@ -21,7 +21,10 @@ const patchedPackages = [
     name: 'dsh-session-persistence-jsonl',
     version: '0.1.5-rc.2',
     file: 'lib/index.js',
-    markers: ['async delete(id)', 'this.tracker.claimWrite(id)', 'await this.acquireLease(id, void 0, dir)']
+    // The ctx.get marker pins the #91 fix: this plugin declares no inject, so
+    // `delete` must read the Session registry via the optional accessor. A
+    // regenerated patch that falls back to `ctx.sessions` fails here in CI.
+    markers: ['async delete(id)', 'this.ctx.get("sessions", false)', 'this.tracker.claimWrite(id)', 'await this.acquireLease(id, void 0, dir)']
   },
   {
     name: 'dsh-workspace',
