@@ -9,7 +9,23 @@ import { parsePluginStartupFailures, PLUGIN_FAILURE_PREFIX } from '../src/shared
 import { HarnessRuntime } from '../src/main/runtime/harness-runtime'
 
 const roots: string[] = []
-afterEach(async () => { await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true }))) })
+// Windows keeps handles on a harness profile dir briefly after its child
+// processes (pnpm workers included) exit, so a single rm pass intermittently
+// fails the afterEach with EBUSY/EPERM even though the test itself passed.
+async function removeRoot(root: string) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await rm(root, { recursive: true, force: true })
+      return
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code
+      const retriable = code === 'EBUSY' || code === 'EPERM' || code === 'ENOTEMPTY'
+      if (!retriable || attempt >= 10) throw error
+      await new Promise((wake) => setTimeout(wake, 200 * (attempt + 1)))
+    }
+  }
+}
+afterEach(async () => { await Promise.all(roots.splice(0).map((root) => removeRoot(root))) })
 
 async function fixture(sources: string[]) {
   const home = await mkdtemp(join(tmpdir(), 'dsh-startup-failure-'))
