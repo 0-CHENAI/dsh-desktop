@@ -1,0 +1,38 @@
+[
+  {
+    "package": "@deepseek-ai/dsh",
+    "status": "conflict",
+    "upstream": null,
+    "superseded": "@deepseek-ai+dsh+0.1.5-rc.1.patch",
+    "installed": "0.1.5-rc.2",
+    "target": "patches/deepseek-ai+dsh+0.1.5-rc.2.patch",
+    "error": "error: a/node_modules/@deepseek-ai/dsh/package.json: No such file or directory"
+  },
+  {
+    "package": "@deepseek-ai/dsh-app-boot",
+    "status": "conflict",
+    "upstream": null,
+    "superseded": "@deepseek-ai+dsh-app-boot+0.1.5-rc.1.patch",
+    "installed": "0.1.5-rc.2",
+    "target": "patches/deepseek-ai+dsh-app-boot+0.1.5-rc.2.patch",
+    "error": "error: a/node_modules/@deepseek-ai/dsh-app-boot/lib/index.js: No such file or directory"
+  },
+  {
+    "package": "@deepseek-ai/dsh-llm-pi-ai",
+    "status": "conflict",
+    "upstream": null,
+    "superseded": "@deepseek-ai+dsh-llm-pi-ai+0.1.5-rc.1.patch",
+    "installed": "0.1.5-rc.2",
+    "target": "patches/deepseek-ai+dsh-llm-pi-ai+0.1.5-rc.2.patch",
+    "error": "error: a/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js: No such file or directory | error: a/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/types/config.d.ts: No such file or directory"
+  },
+  {
+    "package": "@deepseek-ai/dsh-workspace",
+    "status": "conflict",
+    "upstream": null,
+    "superseded": "@deepseek-ai+dsh-workspace+0.1.5-rc.1.patch",
+    "installed": "0.1.5-rc.2",
+    "target": "patches/deepseek-ai+dsh-workspace+0.1.5-rc.2.patch",
+    "error": "error: a/node_modules/@deepseek-ai/dsh-workspace/lib/index.js: No such file or directory | error: a/node_modules/@deepseek-ai/dsh-workspace/lib/types/index.d.ts: No such file or directory | error: a/node_modules/@deepseek-ai/dsh-workspace/lib/types/index.js: No such file or directory"
+  }
+]
