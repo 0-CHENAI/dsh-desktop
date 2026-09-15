@@ -1,14 +1,16 @@
 diff --git a/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/index.js b/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/index.js
-index 48a1455..d410719 100644
+index 48a1455..e13d29d 100644
 --- a/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/index.js
 +++ b/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/index.js
-@@ -2310,6 +2310,32 @@ var JsonlSessionPersistence = class extends SessionPersistence {
+@@ -2310,6 +2310,34 @@ var JsonlSessionPersistence = class extends SessionPersistence {
  			path: logPath(this.root, meta.cwd, meta.id, this.compression)
  		};
  	}
 +	/** Delete all stored generations under the same ownership lock as writers. */
 +	async delete(id) {
 +		await this.ensureRootEncoding();
++		// The plugin chain declares no inject, so read the Session registry through the
++		// optional accessor instead of `ctx.sessions` (rejected without inject).
 +		const liveSessions = this.ctx.get("sessions", false);
 +		if (liveSessions?.get(id) !== void 0) throw new Error(`cannot delete session "${id}" while it is live`);
 +		this.tracker.claimWrite(id);
