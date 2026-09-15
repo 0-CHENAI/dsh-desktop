@@ -1,0 +1,38 @@
+[
+  {
+    "package": "@deepseek-ai/dsh",
+    "status": "conflict",
+    "upstream": null,
+    "superseded": "@deepseek-ai+dsh+0.1.5-rc.1.patch",
+    "installed": "0.1.5-rc.2",
+    "target": "patches/deepseek-ai+dsh+0.1.5-rc.2.patch",
+    "error": "error: patch failed: node_modules/@deepseek-ai/dsh/package.json:99 | error: node_modules/@deepseek-ai/dsh/package.json: patch does not apply"
+  },
+  {
+    "package": "@deepseek-ai/dsh-app-boot",
+    "status": "conflict",
+    "upstream": null,
+    "superseded": "@deepseek-ai+dsh-app-boot+0.1.5-rc.1.patch",
+    "installed": "0.1.5-rc.2",
+    "target": "patches/deepseek-ai+dsh-app-boot+0.1.5-rc.2.patch",
+    "error": "npm warn Unknown env config \"side-effects-cache\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options. |  | /Users/chenai/local/LAB/dsh-desktop/node_modules/patch-package/dist/makePatch.js:395 |         throw e; |         ^ | {"
+  },
+  {
+    "package": "@deepseek-ai/dsh-llm-pi-ai",
+    "status": "conflict",
+    "upstream": null,
+    "superseded": "@deepseek-ai+dsh-llm-pi-ai+0.1.5-rc.1.patch",
+    "installed": "0.1.5-rc.2",
+    "target": "patches/deepseek-ai+dsh-llm-pi-ai+0.1.5-rc.2.patch",
+    "error": "npm warn Unknown env config \"side-effects-cache\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options. |  | /Users/chenai/local/LAB/dsh-desktop/node_modules/patch-package/dist/makePatch.js:395 |         throw e; |         ^ | {"
+  },
+  {
+    "package": "@deepseek-ai/dsh-workspace",
+    "status": "conflict",
+    "upstream": null,
+    "superseded": "@deepseek-ai+dsh-workspace+0.1.5-rc.1.patch",
+    "installed": "0.1.5-rc.2",
+    "target": "patches/deepseek-ai+dsh-workspace+0.1.5-rc.2.patch",
+    "error": "npm warn Unknown env config \"side-effects-cache\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options. |  | /Users/chenai/local/LAB/dsh-desktop/node_modules/patch-package/dist/makePatch.js:395 |         throw e; |         ^ | {"
+  }
+]

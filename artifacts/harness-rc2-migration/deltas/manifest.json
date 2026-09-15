@@ -1,0 +1,320 @@
+[
+  {
+    "patchFile": "@deepseek-ai+cordis-plugin-loader+1.0.3.patch",
+    "package": "@deepseek-ai/cordis-plugin-loader",
+    "version": "1.0.3",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-cordis-plugin-loader.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/cordis-plugin-loader/lib/index.js"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh/package.json"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-api-remotes+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-api-remotes",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-api-remotes.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-api-remotes/lib/client.js"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-api-session-controller+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-api-session-controller",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-api-session-controller.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-api-session-controller/lib/client.js",
+      "node_modules/@deepseek-ai/dsh-api-session-controller/lib/index.js",
+      "node_modules/@deepseek-ai/dsh-api-session-controller/lib/typert.host.js",
+      "node_modules/@deepseek-ai/dsh-api-session-controller/lib/typert.remote-client.d.ts",
+      "node_modules/@deepseek-ai/dsh-api-session-controller/lib/typert.remote-client.js",
+      "node_modules/@deepseek-ai/dsh-api-session-controller/lib/types/agent.d.ts",
+      "node_modules/@deepseek-ai/dsh-api-session-controller/lib/types/agent.js",
+      "node_modules/@deepseek-ai/dsh-api-session-controller/lib/types/client/contract/sessions.d.ts",
+      "node_modules/@deepseek-ai/dsh-api-session-controller/lib/types/client/sessions/manager.d.ts",
+      "node_modules/@deepseek-ai/dsh-api-session-controller/lib/types/client/sessions/manager.js",
+      "node_modules/@deepseek-ai/dsh-api-session-controller/lib/types/client/sessions/service.d.ts",
+      "node_modules/@deepseek-ai/dsh-api-session-controller/lib/types/client/sessions/service.js",
+      "node_modules/@deepseek-ai/dsh-api-session-controller/lib/types/commands.d.ts",
+      "node_modules/@deepseek-ai/dsh-api-session-controller/lib/types/commands.js",
+      "node_modules/@deepseek-ai/dsh-api-session-controller/lib/types/index.d.ts",
+      "node_modules/@deepseek-ai/dsh-api-session-controller/lib/types/index.js",
+      "node_modules/@deepseek-ai/dsh-api-session-controller/lib/types/types.d.ts"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-app-boot+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-app-boot",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-app-boot.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-app-boot/lib/index.js"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-client-connection+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-client-connection",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-client-connection.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-client-connection/lib/index.js"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-client-modules+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-client-modules",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-client-modules.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-client-modules/lib/index.js"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-client-ui-agent-preset+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-client-ui-agent-preset",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-client-ui-agent-preset.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-client-ui-agent-preset/lib/client.js"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-client-ui-chat+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-client-ui-chat",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-client-ui-chat.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-client-ui-conversation+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-client-ui-conversation",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-client-ui-conversation.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js",
+      "node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/types/client/contract/slots.d.ts"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-client-ui-deliverables+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-client-ui-deliverables",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-client-ui-deliverables.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-client-ui-deliverables/lib/client.js"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-client-ui-directory-picker-native+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-client-ui-directory-picker-native",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-client-ui-directory-picker-native.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-client-ui-directory-picker-native/lib/client.js"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-client-ui-layout+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-client-ui-layout",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-client-ui-layout.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-client-ui-layout/lib/client.js"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-client-ui-model-selection+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-client-ui-model-selection",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-client-ui-model-selection.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-client-ui-model-selection/lib/client.js"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-client-ui-settings-general+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-client-ui-settings-general",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-client-ui-settings-general.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-client-ui-settings-general/lib/client.js"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-client-ui-settings-models+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-client-ui-settings-models",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-client-ui-settings-models.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-client-ui-sidebar+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-client-ui-sidebar",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-client-ui-sidebar.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-client-ui-sidebar/lib/client.js"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-client-ui-trajectory+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-client-ui-trajectory",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-client-ui-trajectory.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-client-ui-trajectory/lib/client.js"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-client-ui-workspace+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-client-ui-workspace",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-client-ui-workspace.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js",
+      "node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/contract/slots.d.ts",
+      "node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/locales.d.ts",
+      "node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/rows/Rows.d.ts",
+      "node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/types/client/rows/WorkspaceBrowser.d.ts"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-llm+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-llm",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-llm.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-llm/lib/types/types.d.ts"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-llm-deepseek+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-llm-deepseek",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-llm-deepseek.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-llm-deepseek/lib/index.js"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-llm-pi-ai+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-llm-pi-ai",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-llm-pi-ai.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js",
+      "node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/types/config.d.ts"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-llm-retry+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-llm-retry",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-llm-retry.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-llm-retry/lib/index.js"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-persona+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-persona",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-persona.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-persona/lib/index.js",
+      "node_modules/@deepseek-ai/dsh-persona/lib/types/index.d.ts"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-session-persistence+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-session-persistence",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-session-persistence.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-session-persistence/lib/index.js",
+      "node_modules/@deepseek-ai/dsh-session-persistence/lib/types/index.d.ts"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-session-persistence-jsonl+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-session-persistence-jsonl",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-session-persistence-jsonl.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/index.js",
+      "node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/types/index.d.ts"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-system-prompt+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-system-prompt",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-system-prompt.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-system-prompt/lib/index.js",
+      "node_modules/@deepseek-ai/dsh-system-prompt/lib/types/index.d.ts"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@deepseek-ai+dsh-workspace+0.1.5-rc.1.patch",
+    "package": "@deepseek-ai/dsh-workspace",
+    "version": "0.1.5-rc.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/deepseek-ai-dsh-workspace.delta.patch",
+    "touched": [
+      "node_modules/@deepseek-ai/dsh-workspace/lib/index.js",
+      "node_modules/@deepseek-ai/dsh-workspace/lib/types/index.d.ts",
+      "node_modules/@deepseek-ai/dsh-workspace/lib/types/index.js"
+    ],
+    "binary": false
+  },
+  {
+    "patchFile": "@earendil-works+pi-ai+0.85.1.patch",
+    "package": "@earendil-works/pi-ai",
+    "version": "0.85.1",
+    "delta": "artifacts/harness-rc2-migration/deltas/earendil-works-pi-ai.delta.patch",
+    "touched": [
+      "node_modules/@earendil-works/pi-ai/dist/api/openai-completions.js"
+    ],
+    "binary": false
+  }
+]
