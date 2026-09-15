@@ -21,7 +21,10 @@ const patchedPackages = [
     name: 'dsh-session-persistence-jsonl',
     version: '0.1.5-rc.2',
     file: 'lib/index.js',
-    markers: ['async delete(id)', 'this.tracker.claimWrite(id)', 'await this.acquireLease(id, void 0, dir)']
+    // The ctx.get marker pins the #91 fix: this plugin declares no inject, so
+    // `delete` must read the Session registry via the optional accessor. A
+    // regenerated patch that falls back to `ctx.sessions` fails here in CI.
+    markers: ['async delete(id)', 'this.ctx.get("sessions", false)', 'this.tracker.claimWrite(id)', 'await this.acquireLease(id, void 0, dir)']
   },
   {
     name: 'dsh-workspace',
@@ -170,6 +173,51 @@ describe('permanent session deletion dependency patches', () => {
       expect(reader.header.id).toBe(kept)
       await reader.close()
       expect(await persistence.delete(SessionId('desktop-delete-missing'))).toBe(false)
+    } finally {
+      await fiber.dispose()
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+
+  // Regression for #91: the Host calls `persistence.delete()` through a
+  // runtime-backed consumer fiber (SessionCommandController), and cordis
+  // rebinds the service's `ctx` to that caller context. A backend `delete`
+  // that reads undeclared services (previously `ctx.sessions`) threw
+  // `cannot get property "sessions" without inject` there while root-context
+  // callers like the test above passed. Mirror the Host call shape.
+  it('deletes through a consumer fiber exactly like the Host controller does', async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'dsh-desktop-session-delete-fiber-'))
+    const ctx = new Context()
+    await ctx.plugin(SessionStore)
+    const fiber = await ctx.plugin(JsonlSessionPersistence, { root, compression: 'none' })
+    const target = SessionId('desktop-delete-fiber')
+
+    let controller!: HostLikeController
+    class HostLikeController {
+      static inject = ['sessionPersistence', 'sessions']
+      ctx: Context
+      constructor(ctx: Context) {
+        this.ctx = ctx
+        controller = this
+      }
+      delete(sessionId: ReturnType<typeof SessionId>) {
+        const persistence = this.ctx.get('sessionPersistence')
+        if (persistence === undefined) throw new Error('missing sessionPersistence service')
+        return persistence.delete(sessionId)
+      }
+    }
+
+    try {
+      const handle = await ctx.sessionPersistence.create({ version: SESSION_FORMAT_VERSION, id: target, createdAt: 1, isSeeded: false })
+      await handle.flush()
+      await handle.close()
+      const controllerFiber = await ctx.plugin(HostLikeController)
+      try {
+        await expect(controller.delete(target)).resolves.toBe(true)
+        expect((await ctx.sessionPersistence.list()).map((snapshot) => snapshot.header.id)).toEqual([])
+      } finally {
+        await controllerFiber.dispose()
+      }
     } finally {
       await fiber.dispose()
       await rm(root, { recursive: true, force: true })

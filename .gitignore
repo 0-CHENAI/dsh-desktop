@@ -24,3 +24,7 @@ __pycache__/
 # Native recovery UI smoke-test output
 /artifacts/recovery-ui/
 .local/agent-work/
+
+# Scratch verification outputs and one-off issue drafts (harness-rc2-migration/ stays tracked)
+/artifacts/macos-titlebar/
+/artifacts/tmp-issue-*/
