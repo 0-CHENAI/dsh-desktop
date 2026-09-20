@@ -27,4 +27,5 @@ __pycache__/
 
 # Scratch verification outputs and one-off issue drafts (harness-rc2-migration/ stays tracked)
 /artifacts/macos-titlebar/
+/artifacts/chat-handoff/
 /artifacts/tmp-issue-*/
