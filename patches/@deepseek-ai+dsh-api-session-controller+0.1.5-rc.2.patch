@@ -197,7 +197,7 @@ index 0e94dd3..e5bbe83 100644
  			try {
 -				const { provider, model } = this.ctx.agentDefaultModel.currentSelection();
 -				await this.ctx.agents.create({
-+				const { provider, model } = await this.resolvedAgentOptions();
++				const { provider, model } = await this.agents.resolvedAgentOptions();
 +				const handle = await this.ctx.agents.create({
  					sessionId: childId,
  					seed: source.events.slice(0, cut),
