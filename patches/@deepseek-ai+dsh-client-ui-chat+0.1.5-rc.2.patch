@@ -1,5 +1,5 @@
 diff --git a/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js
-index 306645f..f709fb4 100644
+index b3f94bd..58e40c8 100644
 --- a/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js
 +++ b/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js
 @@ -1124,7 +1124,13 @@ window.__ModuleLoader__.load({
@@ -17,12 +17,58 @@ index 306645f..f709fb4 100644
  		}
  		function ModelRetryItem({ node, active, t }) {
  			const deadline = (0, react.useMemo)(() => Date.now() + node.delayMs, [node.delayMs, node.seq]);
-@@ -2694,6 +2700,15 @@ window.__ModuleLoader__.load({
+@@ -1542,6 +1548,7 @@ window.__ModuleLoader__.load({
+ 		}
+ 		/** Subscribe, apply Turn-process visibility, and dispatch one stable Context key. */
+ 		const ChatNodeSeat = (0, react.memo)(function ChatNodeSeat({ nodeKey, useChatNode, useChatNodeProcess, historyIncomplete, compactTranscript, cwd, openFile, inspectCall, forkAt, loadImage, renderMessageImages, fileMentions, useStore, actions, renderSlot, t }) {
++			const [handoffExpanded, setHandoffExpanded] = (0, react.useState)(null);
+ 			const node = useChatNode(nodeKey);
+ 			const routedNode = node;
+ 			const turn = turnOf(routedNode);
+@@ -1552,8 +1559,8 @@ window.__ModuleLoader__.load({
+ 			const setOpen = (0, react.useCallback)((open) => {
+ 				if (processSpec !== void 0 && processSpec.answerStep !== null) actions.setTurnProcessOpen(processSpec.turn, processSpec.answerStep, open);
+ 			}, [actions, processSpec]);
+-			const processWindowReady = processSpec !== void 0 && processPresentation !== void 0 && compactTranscript && processSpec.answerAnchorSeq !== null && processPresentation.turn === processSpec.turn && processPresentation.turnClosed && !historyIncomplete;
+-			const processMember = routedNode !== void 0 && processWindowReady && !TURN_PROCESS_INDEPENDENT_KINDS.has(routedNode.kind) && routedNode.anchorSeq >= processSpec.processStartSeq && routedNode.anchorSeq < processSpec.answerAnchorSeq;
++			const processWindowReady = processSpec !== void 0 && processPresentation !== void 0 && compactTranscript && processSpec.answerAnchorSeq !== null && processPresentation.answerReady && processPresentation.turn === processSpec.turn && processPresentation.turnClosed && !historyIncomplete;
++			const processMember = routedNode !== void 0 && processWindowReady && !(routedNode.kind === "assistant-step" && routedNode.data.step === processSpec.answerStep) && !TURN_PROCESS_INDEPENDENT_KINDS.has(routedNode.kind) && routedNode.anchorSeq >= processSpec.processStartSeq && routedNode.anchorSeq < processSpec.answerAnchorSeq;
+ 			const processAnswer = routedNode !== void 0 && processWindowReady && routedNode.kind === "assistant-step" && routedNode.data.step === processSpec.answerStep;
+ 			const ownsDisclosure = routedNode?.kind === "turn-process" || processAnswer;
+ 			const foldable = processWindowReady && (processMember || ownsDisclosure && (processPresentation.hasExternalProcess || processSpec.inlineReasoning));
+@@ -1570,7 +1577,7 @@ window.__ModuleLoader__.load({
+ 			]);
+ 			const controllerInactive = routedNode?.kind === "turn-process" && !foldable;
+ 			const compactAnswer = processAnswer && foldable && processPresentation.compactAnswer && !processOpen;
+-			const processHidden = controllerInactive || foldable && processMember && !processOpen;
++			const processHidden = controllerInactive || foldable && processMember && !processOpen && handoffExpanded !== true;
+ 			const wrapperRef = useSearchableHidden(processHidden, (0, react.useCallback)(() => {
+ 				if (processMember) setOpen(true);
+ 			}, [processMember, setOpen]));
+@@ -1598,6 +1605,9 @@ window.__ModuleLoader__.load({
+ 			const turnData = turnDataOf(routedNode);
+ 			const routedOwner = {
+ 				...owner,
++				compactTranscript,
++				handoffExpanded,
++				setHandoffExpanded,
+ 				node: routedNode
+ 			};
+ 			return (0, react_jsx_runtime.jsx)("div", {
+@@ -2694,6 +2704,23 @@ window.__ModuleLoader__.load({
  			"message.retry.delay": "重试延迟：",
  			"message.retry.failure": "失败原因：",
  			"message.failure.auth": "API 密钥无效",
 +			"message.failure.server": "模型服务暂时不可用，请稍后重试。",
 +			"message.branchFailed": "创建分支会话失败，请重试。",
++			"message.handoff.waiting": "仍在处理，以下内容尚非最终结果",
++			"message.handoff.retrying": "正在重试，以下为上一尝试内容",
++			"message.handoff.missing": "本轮已结束，但未收到最终正文",
++			"message.handoff.cancelled": "已取消，以下内容可能不完整",
++			"message.handoff.failed": "生成失败，以下内容可能不完整",
++			"message.handoff.incomplete": "本轮未完整完成，以下内容仅供参考",
++			"message.handoff.draft": "过程草稿（非最终答案）",
++			"message.handoff.previousAttempt": "上一尝试草稿（非最终答案）",
 +			"message.failure.transport": "连接模型服务时中断，请检查网络后重试。",
 +			"message.failure.timeout": "模型请求超时，请稍后重试。",
 +			"message.failure.invalid": "模型服务拒绝了请求参数，请检查模型设置或附件。",
@@ -33,12 +79,20 @@ index 306645f..f709fb4 100644
  			"message.turnError": "本轮运行失败",
  			"message.maxTokens": "已达到输出 token 上限",
  			"message.maxTokens.hint": "回答被截断，已有输出保留在对话中。发送“继续”可让模型接着输出。",
-@@ -2800,6 +2815,15 @@ window.__ModuleLoader__.load({
+@@ -2800,6 +2827,23 @@ window.__ModuleLoader__.load({
  			"message.retry.delay": "Retry delay: ",
  			"message.retry.failure": "Failure reason: ",
  			"message.failure.auth": "API key is invalid",
 +			"message.failure.server": "The model service is temporarily unavailable. Please retry later.",
 +			"message.branchFailed": "Could not create the branched conversation. Please retry.",
++			"message.handoff.waiting": "Still processing. This is not the final answer.",
++			"message.handoff.retrying": "Retrying. Showing the previous attempt.",
++			"message.handoff.missing": "This turn ended without a final answer.",
++			"message.handoff.cancelled": "Cancelled. This content may be incomplete.",
++			"message.handoff.failed": "Generation failed. This content may be incomplete.",
++			"message.handoff.incomplete": "This turn did not finish. This content is provisional.",
++			"message.handoff.draft": "Process draft (not the final answer)",
++			"message.handoff.previousAttempt": "Previous attempt (not the final answer)",
 +			"message.failure.transport": "The connection to the model service was interrupted. Check your network and retry.",
 +			"message.failure.timeout": "The model request timed out. Please retry later.",
 +			"message.failure.invalid": "The model service rejected the request. Check the model settings or attachments.",
@@ -49,7 +103,325 @@ index 306645f..f709fb4 100644
  			"message.turnError": "This turn failed",
  			"message.maxTokens": "Output token limit reached",
  			"message.maxTokens.hint": "The reply was cut off; earlier output is preserved in the conversation. Send \"continue\" to let the model resume.",
-@@ -8343,5 +8367,8 @@ window.__ModuleLoader__.load({
+@@ -3043,7 +3087,7 @@ window.__ModuleLoader__.load({
+ 		//#endregion
+ 		//#region lib/types/client/chat/AssistantNodeView.js
+ 		/** Streaming, settled, and interrupted Assistant states share one keyed renderer instance. */
+-		const AssistantNodeView = (0, react.memo)(function AssistantNodeView({ node, useTurnData, turnProcess, openFile, renderMessageImages, fileMentions, t }) {
++		const AssistantNodeView = (0, react.memo)(function AssistantNodeView({ node, useTurnData, turnProcess, openFile, renderMessageImages, fileMentions, compactTranscript = true, handoffExpanded, setHandoffExpanded, t }) {
+ 			const data = node.data;
+ 			const turn = node.location.kind === "turn" || node.location.kind === "step" ? node.location.turn : void 0;
+ 			const tail = useTurnData("turn-tail");
+@@ -3066,9 +3110,10 @@ window.__ModuleLoader__.load({
+ 			const revealProcess = (0, react.useCallback)(() => {
+ 				turnProcess?.setOpen(true);
+ 			}, [turnProcess]);
+-			return (0, react_jsx_runtime.jsx)(AssistantMarkdown, {
+-				blocks: data.blocks,
+-				streaming: data.status === "running",
++			const presentation = data.presentation;
++			const markdown = (0, react_jsx_runtime.jsx)(AssistantMarkdown, {
++				blocks: presentation?.blocks ?? data.blocks,
++				streaming: presentation === void 0 ? data.status === "running" : presentation.phase === "streaming",
+ 				interrupted: data.status === "interrupted",
+ 				renderMessageImages,
+ 				reasoningHidden,
+@@ -3076,7 +3121,35 @@ window.__ModuleLoader__.load({
+ 				mentions,
+ 				t
+ 			});
++			return (0, react_jsx_runtime.jsx)(AssistantHandoffView, {
++				presentation, compactTranscript, processOpen: turnProcess?.open === true, handoffExpanded, setHandoffExpanded, t,
++				children: markdown,
++				draft: presentation?.draft === void 0 ? null : (0, react_jsx_runtime.jsx)(AssistantMarkdown, {
++					blocks: presentation.draft.blocks, streaming: false, renderMessageImages, t
++				})
++			});
+ 		});
++		function AssistantHandoffView({ presentation, compactTranscript, processOpen, handoffExpanded, setHandoffExpanded, children, draft, t }) {
++			const phase = presentation?.phase;
++			const replaced = presentation?.replacedBy !== void 0;
++			const [localExpanded, setLocalExpanded] = (0, react.useState)(null);
++			const expanded = handoffExpanded ?? localExpanded ?? (!compactTranscript || processOpen);
++			const collapsed = replaced && !expanded;
++			return (0, react_jsx_runtime.jsxs)("div", {
++				"data-answer-phase": phase, "data-answer-replaced": replaced || void 0,
++				children: [
++					replaced ? (0, react_jsx_runtime.jsx)("button", { type: "button", "aria-expanded": !collapsed,
++						onClick: () => { setLocalExpanded(!expanded); setHandoffExpanded?.(!expanded); },
++						style: { border: 0, background: "transparent", color: "var(--dsw-alias-label-secondary, #666)", padding: "6px 0", font: "inherit", cursor: "pointer" }, children: t("message.handoff.draft") }) :
++					phase !== void 0 && phase !== "streaming" && phase !== "final" ?
++						(0, react_jsx_runtime.jsx)("div", { role: "status", "aria-live": "polite", style: { color: "var(--dsw-alias-label-secondary, #666)", fontSize: "var(--dsh-content-font-size-secondary, 13px)", lineHeight: 1.5, padding: "6px 0" }, children: t(`message.handoff.${phase}`) }) : null,
++					(0, react_jsx_runtime.jsx)("div", { hidden: collapsed, "data-answer-body": true, children }),
++					draft === null || draft === void 0 ? null : (0, react_jsx_runtime.jsxs)("details", { children: [
++						(0, react_jsx_runtime.jsx)("summary", { children: t("message.handoff.previousAttempt") }), draft
++					] })
++				]
++			});
++		}
+ 		//#endregion
+ 		//#region \0dsh-css:/home/runner/work/deepseek-harness/deepseek-harness/packages/client/ui-chat/src/client/chat/GenericCommandCard.module.css.mjs
+ 		const css$6 = "._5OnbHa_root{flex-direction:column;display:flex}._5OnbHa_row{position:relative;overflow:hidden}._5OnbHa_root[data-state=running] ._5OnbHa_row:after{content:\"\";inset-block:0;background:linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--dsw-alias-bg-base) 60%, transparent) 55%, transparent 100%);pointer-events:none;width:300px;animation:2.6s ease-out infinite _5OnbHa_dsh-command-row-sweep;position:absolute;left:0}@keyframes _5OnbHa_dsh-command-row-sweep{0%{left:-300px}90%,to{left:100%}}._5OnbHa_leading{flex-shrink:0}._5OnbHa_chevron{color:var(--dsw-alias-label-secondary)}._5OnbHa_title{font-weight:400}._5OnbHa_separator{background:var(--dsw-alias-label-caption);border-radius:1px;flex:none;width:2px;height:2px;margin:0 8px}._5OnbHa_summary{min-width:0;color:var(--dsw-alias-label-tertiary);font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));text-overflow:ellipsis;white-space:nowrap;flex:auto;overflow:hidden}._5OnbHa_summary[data-error],._5OnbHa_body[data-error]{color:var(--dsw-alias-state-error-primary)}._5OnbHa_body{border:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-markdown-code-block);max-height:260px;color:var(--dsw-alias-label-primary);font:var(--dsw-font-markdown-code-block-small);white-space:pre-wrap;border-radius:12px;margin:4px 0 4px 4px;padding:12px 16px;overflow:auto}@media (prefers-reduced-motion:reduce){._5OnbHa_root[data-state=running] ._5OnbHa_row:after{animation:none}}";
+@@ -4349,10 +4422,99 @@ window.__ModuleLoader__.load({
+ 		}
+ 		//#endregion
+ 		//#region lib/types/client/conversation-nodes/assistant.js
++		// Presentation only: never write these snapshots to messages, logs or model context.
++		function assistantBody(blocks) {
++			return blocks.filter(block => block?.kind === "text" && block.text.trim() !== "" || block?.kind === "image" && block.attachment != null);
++		}
++		function assistantSnapshot(state) {
++			const blocks = assistantBody(state.blocks);
++			return blocks.length === 0 ? state.preview : { blocks, attempt: state.attempt, step: state.step, turn: state.turn };
++		}
++		function assistantEndPhase(turn, finalReady) {
++			const reason = turn.end?.data?.reason?.kind;
++			if (reason === "aborted") return "cancelled";
++			if (reason === "error") return "failed";
++			if (reason === "interrupted" || reason === "blocked" || reason === "max-tokens") return "incomplete";
++			return finalReady ? "final" : "missing";
++		}
++		function assistantFinalReady(node) {
++			const data = node?.data;
++			return node?.kind === "assistant-step" && node.visibility === "visible" && data.finalNode !== void 0 &&
++				data.finalNode.interrupted !== true && assistantBody(data.blocks).length > 0 && !data.blocks.some(block => block.kind === "tool-call");
++		}
++		function traceAssistantPresentation(node, reason) {
++			if (typeof globalThis === "undefined" || globalThis.__DSH_CHAT_HANDOFF_DEBUG__ !== true) return;
++			const p = node.data.presentation;
++			// Explicit allowlist: no keys/IDs, text, arguments, headers, URLs or attachments.
++			console.debug("[chat-handoff]", { reason, turn: node.data.turn, step: node.data.step,
++				attempt: p.attempt, phase: p.phase, seq: p.eventSeq, eventType: p.eventType, visible: node.visibility === "visible",
++				textBlocks: p.blocks.filter(block => block.kind === "text").length,
++				textLength: p.blocks.reduce((sum, block) => sum + (block.kind === "text" ? block.text.length : 0), 0),
++				toolBlocks: node.data.blocks.filter(block => block.kind === "tool-call").length,
++				replaced: p.replacedBy !== void 0 });
++		}
++		// One instance per ChatSnapshotBuilder/session. Upsert all related rows before publishing.
++		var AssistantHandoffProjector = class {
++			turns = new Map();
++			published = new Map();
++			timeline;
++			replace(nodes, timeline) {
++				this.turns.clear();
++				this.published.clear();
++				this.timeline = void 0;
++				return this.apply(nodes, timeline);
++			}
++			apply(nodes, timeline) {
++				const affected = new Set();
++				const result = new Map(nodes.map(node => [node.key, node]));
++				for (const node of nodes) {
++					if (node.kind !== "assistant-step") continue;
++					let rows = this.turns.get(node.data.turn);
++					if (rows === void 0) this.turns.set(node.data.turn, rows = new Map());
++					rows.set(node.key, node);
++					affected.add(node.data.turn);
++				}
++				if (timeline !== this.timeline) for (const turn of this.turns.keys()) {
++					if (timeline.turns.get(turn) !== this.timeline?.turns.get(turn)) affected.add(turn);
++				}
++				for (const turnId of affected) {
++					const rows = [...this.turns.get(turnId).values()].sort((a, b) => a.data.step - b.data.step);
++					const turn = timeline.turns.get(turnId) ?? rows.at(-1)?.location.turn;
++					// Only a visible projected body can replace a previous body; tools/reasoning cannot.
++					const current = rows.findLast(node => node.visibility === "visible" && assistantBody(node.data.presentation?.blocks ?? node.data.blocks).length > 0);
++					const finalReady = assistantFinalReady(current) && current.data.step === turn?.steps.at(-1)?.step;
++					for (const node of rows) {
++						const base = node.data.presentation ?? { blocks: node.data.blocks, attempt: 0, sourceAttempt: 0, sourceStep: node.data.step, phase: "waiting" };
++						const replacedBy = current !== void 0 && current.data.step > node.data.step ? current.key : void 0;
++						const phase = turn?.status === "closed" ? assistantEndPhase(turn, finalReady && current?.key === node.key) : base.phase;
++						const presentation = { ...base, phase, replacedBy };
++						const previous = this.published.get(node.key);
++						if (previous?.data.blocks === node.data.blocks && previous.data.presentation.blocks === base.blocks &&
++							previous.data.presentation.phase === phase && previous.data.presentation.replacedBy === replacedBy &&
++							previous.data.presentation.draft === base.draft && previous.data.presentation.attempt === base.attempt &&
++							previous.location === node.location && previous.data.finalNode === node.data.finalNode && previous.data.usage === node.data.usage) {
++							if (result.has(node.key)) result.set(node.key, previous);
++							continue;
++						}
++						const notice = turn?.status === "closed" && current === void 0 && node === rows.at(-1);
++						const next = { ...node, visibility: notice ? "visible" : node.visibility, data: { ...node.data, presentation } };
++						this.published.set(node.key, next);
++						result.set(node.key, next);
++						if (previous?.data.presentation.phase !== phase || previous?.data.presentation.replacedBy !== replacedBy) traceAssistantPresentation(next, "presentation-transition");
++					}
++				}
++				this.timeline = timeline;
++				return [...result.values()];
++			}
++		};
+ 		function initialState(turn, step) {
+ 			return {
+ 				turn,
+ 				step,
++				attempt: 0,
++				lastSeq: -1,
++				preview: void 0,
++				draft: void 0,
+ 				blocks: [],
+ 				visibleBlocks: 0,
+ 				firstVisibleSeq: void 0,
+@@ -4388,11 +4550,18 @@ window.__ModuleLoader__.load({
+ 		function resetForRetry(state) {
+ 			return {
+ 				...initialState(state.turn, state.step),
++				attempt: state.attempt + 1,
++				lastSeq: state.lastSeq,
++				lastEventType: "llm/retry",
++				firstVisibleSeq: state.firstVisibleSeq,
++				firstVisibleTime: state.firstVisibleTime,
++				preview: assistantSnapshot(state),
+ 				firstTokenTime: state.firstTokenTime,
+ 				hidden: true
+ 			};
+ 		}
+ 		function updateChunk(state, chunk, seq, time) {
++			if (seq <= state.lastSeq || state.final !== void 0) return state;
+ 			const blocks = [...state.blocks];
+ 			let changedIndex = -1;
+ 			let previousVisible = false;
+@@ -4453,8 +4622,14 @@ window.__ModuleLoader__.load({
+ 			}
+ 			const visibleBlocks = state.visibleBlocks - Number(previousVisible) + Number(blockIsVisible(blocks[changedIndex]));
+ 			const firstToken = isTokenDelta(chunk);
++			const hasBody = assistantBody(blocks).length > 0;
++			const preview = hasBody ? void 0 : state.preview ?? assistantSnapshot(state);
+ 			return {
+ 				...state,
++				lastSeq: seq,
++				lastEventType: "assistant/live-chunk",
++				preview,
++				draft: hasBody && state.preview?.attempt < state.attempt ? state.preview : state.draft,
+ 				blocks,
+ 				visibleBlocks,
+ 				hidden: visibleBlocks > 0 ? false : state.hidden,
+@@ -4466,9 +4641,13 @@ window.__ModuleLoader__.load({
+ 			};
+ 		}
+ 		function settleMessage(state, match, event) {
++			if (event.seq <= state.lastSeq) return state;
+ 			const blocks = toAssistantBlocks(event.data.message.content);
+ 			return {
+ 				...state,
++				lastSeq: event.seq,
++				lastEventType: "assistant/message",
++				preview: assistantBody(blocks).length > 0 ? void 0 : assistantSnapshot(state),
+ 				blocks,
+ 				visibleBlocks: countVisibleBlocks(blocks),
+ 				hidden: false,
+@@ -4529,7 +4708,7 @@ window.__ModuleLoader__.load({
+ 					state = settleMessage(state, match, match.event);
+ 					continue;
+ 				}
+-				if (match.event.type === "llm/retry" && state !== void 0) state = resetForRetry(state);
++				if (match.event.type === "llm/retry" && state !== void 0 && match.event.seq > state.lastSeq) state = { ...resetForRetry(state), lastSeq: match.event.seq };
+ 			}
+ 			return state;
+ 		}
+@@ -4538,9 +4717,13 @@ window.__ModuleLoader__.load({
+ 			if (state === void 0) return void 0;
+ 			const settled = finalNode(state, context);
+ 			const blocks = settled?.blocks ?? compactBlocks(state.blocks);
+-			const visible = settled === void 0 ? state.visibleBlocks > 0 : hasVisibleContent(blocks);
++			const displayBlocks = assistantBody(blocks).length > 0 ? blocks : state.preview?.blocks ?? blocks;
++			const visible = hasVisibleContent(displayBlocks);
++			const turn = context.start?.location?.turn;
++			let phase = state.preview !== void 0 ? state.preview.attempt < state.attempt ? "retrying" : "waiting" : settled === void 0 ? "streaming" : "waiting";
++			if (turn?.status === "closed") phase = assistantEndPhase(turn, settled !== void 0 && !settled.interrupted && assistantBody(blocks).length > 0 && !blocks.some(block => block.kind === "tool-call"));
+ 			const status = settled?.interrupted === true ? "interrupted" : settled === void 0 ? "running" : "settled";
+-			const anchorSeq = settled?.seq ?? state.firstVisibleSeq ?? context.matches[0]?.event.seq ?? 0;
++			const anchorSeq = state.firstVisibleSeq ?? settled?.seq ?? context.matches[0]?.event.seq ?? 0;
+ 			const time = settled?.time ?? state.firstVisibleTime ?? context.matches[0]?.event.time ?? 0;
+ 			return {
+ 				anchorSeq,
+@@ -4551,6 +4734,8 @@ window.__ModuleLoader__.load({
+ 					turn: state.turn,
+ 					step: state.step,
+ 					blocks,
++					presentation: { blocks: displayBlocks, phase, attempt: state.attempt,
++						sourceStep: state.step, sourceAttempt: state.preview?.attempt ?? state.attempt, draft: state.draft, eventSeq: state.lastSeq, eventType: state.lastEventType },
+ 					time,
+ 					...state.usage === void 0 ? {} : { usage: state.usage },
+ 					...settled === void 0 ? {} : { finalNode: settled }
+@@ -4587,7 +4772,7 @@ window.__ModuleLoader__.load({
+ 			update: (context, match) => {
+ 				if (match.event.type === "assistant/live-chunk") return updateChunk(context.state, match.event.data.chunk, match.event.seq, match.event.time);
+ 				if (match.event.type === "assistant/message") return settleMessage(context.state, match, match.event);
+-				if (match.event.type === "llm/retry") return resetForRetry(context.state);
++					if (match.event.type === "llm/retry") return match.event.seq <= context.state.lastSeq ? context.state : { ...resetForRetry(context.state), lastSeq: match.event.seq };
+ 				return context.state;
+ 			},
+ 			publication: (match) => {
+@@ -4614,12 +4799,12 @@ window.__ModuleLoader__.load({
+ 				const data = publishedAssistantData(context);
+ 				if (data === void 0) return null;
+ 				const settled = data.finalNode;
+-				const visible = settled === void 0 ? state.visibleBlocks > 0 : hasVisibleContent(data.blocks);
++				const visible = hasVisibleContent(data.presentation?.blocks ?? data.blocks);
+ 				if (settled === void 0 && !visible) {
+ 					const current = context.current.get("chat");
+ 					if (!state.hidden || current === void 0 || current === null) return null;
+ 				}
+-				return chatNode(context, "assistant-step", settled?.seq ?? state.firstVisibleSeq ?? context.matches[0]?.event.seq ?? 0, data, { visibility: settled?.interrupted === true || visible ? "visible" : "hidden" });
++				return chatNode(context, "assistant-step", state.firstVisibleSeq ?? settled?.seq ?? context.matches[0]?.event.seq ?? 0, data, { visibility: settled?.interrupted === true || visible ? "visible" : "hidden" });
+ 			}
+ 		};
+ 		/**
+@@ -4724,7 +4909,7 @@ window.__ModuleLoader__.load({
+ 			return location?.kind === "turn" || location?.kind === "step" ? location.turn.turn : void 0;
+ 		}
+ 		function samePresentation(left, right) {
+-			return left === right || left !== void 0 && right !== void 0 && left.spec === right.spec && left.turn === right.turn && left.turnClosed === right.turnClosed && left.hasExternalProcess === right.hasExternalProcess && left.compactAnswer === right.compactAnswer;
++			return left === right || left !== void 0 && right !== void 0 && left.spec === right.spec && left.turn === right.turn && left.turnClosed === right.turnClosed && left.answerReady === right.answerReady && left.hasExternalProcess === right.hasExternalProcess && left.compactAnswer === right.compactAnswer;
+ 		}
+ 		function derivePresentation(turn, locations, nodes) {
+ 			const keys = locations.getTurn(turn);
+@@ -4751,6 +4936,7 @@ window.__ModuleLoader__.load({
+ 				turn,
+ 				spec,
+ 				turnClosed: location.turn.status === "closed",
++				answerReady: keys.some(key => { const node = nodes.get(key); return assistantFinalReady(node) && node.data.step === spec.answerStep; }),
+ 				hasExternalProcess,
+ 				compactAnswer
+ 			};
+@@ -5040,7 +5226,7 @@ window.__ModuleLoader__.load({
+ 			if (structural || previous === void 0) return true;
+ 			if (locationTurnStatus(previous.location) !== locationTurnStatus(next.location)) return true;
+ 			if (previous.kind === "turn-process" && next.kind === "turn-process") return previous.data !== next.data;
+-			return previous.kind === "assistant-step" && next.kind === "assistant-step" && previous.data.step !== next.data.step;
++			return previous.kind === "assistant-step" && next.kind === "assistant-step" && (previous.data.step !== next.data.step || assistantFinalReady(previous) !== assistantFinalReady(next));
+ 		}
+ 		function turnProcessPresentations(nodes) {
+ 			const presentations = /* @__PURE__ */ new Map();
+@@ -5568,6 +5754,7 @@ window.__ModuleLoader__.load({
+ 		}
+ 		/** Incremental keyed Chat builder registered under the `chat` target. */
+ 		var ChatSnapshotBuilder = class {
++			handoff = new AssistantHandoffProjector();
+ 			store = new MutableChatNodeStore();
+ 			locations = new MutableChatLocationIndex();
+ 			navigation = new MutableTurnNavigationIndex();
+@@ -5585,7 +5772,7 @@ window.__ModuleLoader__.load({
+ 				});
+ 			}
+ 			replace(input) {
+-				const nodes = this.skillNames.replace(this.referenceLabels.replace(input.nodes));
++				const nodes = this.handoff.replace(this.skillNames.replace(this.referenceLabels.replace(input.nodes)), input.timeline);
+ 				this.store.replace(nodes);
+ 				this.order = orderedVisibleChatNodes(nodes).map((node) => node.key);
+ 				this.locations.rebuild(this.order, this.store);
+@@ -5597,7 +5784,7 @@ window.__ModuleLoader__.load({
+ 				return snapshot;
+ 			}
+ 			apply(input) {
+-				const upserts = this.skillNames.apply(this.referenceLabels.apply(input.upserts, this.store), this.store);
++				const upserts = this.handoff.apply(this.skillNames.apply(this.referenceLabels.apply(input.upserts, this.store), this.store), input.timeline);
+ 				const processTurns = /* @__PURE__ */ new Set();
+ 				let structural = false;
+ 				const contentOnly = [];
+@@ -8342,7 +8529,10 @@ window.__ModuleLoader__.load({
+ 									increaseTitle: true
  								}).then((childId) => {
  									ctx.sessions.open(childId);
 -								}).catch(() => {});
@@ -59,3 +431,113 @@ index 306645f..f709fb4 100644
 +								});
  							}
  						};
+ 					}
+diff --git a/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/contract/chat-nodes.d.ts b/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/contract/chat-nodes.d.ts
+index 8a2f698..de68974 100644
+--- a/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/contract/chat-nodes.d.ts
++++ b/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/contract/chat-nodes.d.ts
+@@ -20,6 +20,9 @@ export type ChatNode<Kind extends ChatNodeKind = ChatNodeKind> = {
+ }[Kind];
+ /** Final Assistant row payload shared by streaming and settled states. */
+ export interface AssistantChatData {
++
++    /** Ephemeral UI state only; never part of the durable message or model input. */
++    readonly presentation?: AssistantPresentation;
+     readonly status: 'running' | 'settled' | 'interrupted';
+     readonly turn: number;
+     readonly step: number;
+@@ -28,6 +31,23 @@ export interface AssistantChatData {
+     readonly usage?: unknown;
+     readonly finalNode?: AssistantMessageNode;
+ }
++export interface AssistantDraft {
++    readonly blocks: readonly AssistantBlock[];
++    readonly turn: number;
++    readonly step: number;
++    readonly attempt: number;
++}
++export interface AssistantPresentation {
++    readonly blocks: readonly AssistantBlock[];
++    readonly phase: 'streaming' | 'waiting' | 'retrying' | 'final' | 'missing' | 'cancelled' | 'failed' | 'incomplete';
++    readonly attempt: number;
++    readonly sourceStep: number;
++    readonly sourceAttempt: number;
++    readonly draft?: AssistantDraft;
++    readonly replacedBy?: string;
++    readonly eventSeq?: number;
++    readonly eventType?: 'assistant/live-chunk' | 'assistant/message' | 'llm/retry';
++}
+ /** Settled or interrupted Assistant payload with its durable presentation node. */
+ export type FinalAssistantChatData = AssistantChatData & {
+     readonly finalNode: AssistantMessageNode;
+@@ -107,4 +127,4 @@ export declare function isSettledTool(block: ToolCallBlock): block is Extract<To
+  * @returns whether the root lacks a final result.
+  */
+ export declare function isRunningTool(block: ToolCallBlock): block is RunningToolCall;
+-//# sourceMappingURL=chat-nodes.d.ts.map
+\ No newline at end of file
++//# sourceMappingURL=chat-nodes.d.ts.map
+diff --git a/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/contract/slots.d.ts b/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/contract/slots.d.ts
+index 646baac..41b95c2 100644
+--- a/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/contract/slots.d.ts
++++ b/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/contract/slots.d.ts
+@@ -58,6 +58,9 @@ export interface ChatNodeTurnDataInjected {
+ }
+ /** Stable owner currency delivered to a keyed Chat renderer. */
+ export interface ChatNodeOwnerProps {
++    readonly compactTranscript?: boolean;
++    readonly handoffExpanded?: boolean | null;
++    readonly setHandoffExpanded?: (expanded: boolean) => void;
+     cwd?: string | undefined;
+     openFile: (path: string, options?: OpenFileOptions) => void;
+     inspectCall: (callId: ToolCallId) => void;
+@@ -195,4 +198,4 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
+         };
+     }
+ }
+-//# sourceMappingURL=slots.d.ts.map
+\ No newline at end of file
++//# sourceMappingURL=slots.d.ts.map
+diff --git a/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/contract/snapshot.d.ts b/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/contract/snapshot.d.ts
+index 50e0672..8d6b6c2 100644
+--- a/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/contract/snapshot.d.ts
++++ b/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/contract/snapshot.d.ts
+@@ -59,6 +59,8 @@ export interface ChatTurnProcessPresentation {
+     readonly turn: number;
+     readonly spec: TurnProcessSpec;
+     readonly turnClosed: boolean;
++    /** True only after the authoritative answer is present in the visible node store. */
++    readonly answerReady: boolean;
+     readonly hasExternalProcess: boolean;
+     readonly compactAnswer: boolean;
+ }
+@@ -89,4 +91,4 @@ declare module '@deepseek-ai/dsh-client-ui-conversation/client' {
+ }
+ /** Empty Chat target used before a view builder is registered. */
+ export declare const EMPTY_CHAT_SNAPSHOT: ChatSnapshot;
+-//# sourceMappingURL=snapshot.d.ts.map
+\ No newline at end of file
++//# sourceMappingURL=snapshot.d.ts.map
+diff --git a/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/conversation-nodes/assistant.d.ts b/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/conversation-nodes/assistant.d.ts
+index b4f617c..8829a81 100644
+--- a/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/conversation-nodes/assistant.d.ts
++++ b/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/conversation-nodes/assistant.d.ts
+@@ -14,6 +14,11 @@ declare module '@deepseek-ai/dsh-client-ui-conversation/client' {
+     }
+ }
+ interface AssistantState {
++    readonly attempt: number;
++    readonly lastSeq: number;
++    readonly lastEventType?: 'assistant/live-chunk' | 'assistant/message' | 'llm/retry';
++    readonly preview?: import('../contract/chat-nodes.ts').AssistantDraft;
++    readonly draft?: import('../contract/chat-nodes.ts').AssistantDraft;
+     readonly turn: number;
+     readonly step: number;
+     readonly blocks: readonly (AssistantBlock | undefined)[];
+@@ -33,4 +38,4 @@ export declare const assistantDefinition: ConversationNodeDefinition<AssistantSt
+  */
+ export declare function registerAssistantConversationNode(ctx: Context): void;
+ export {};
+-//# sourceMappingURL=assistant.d.ts.map
+\ No newline at end of file
++//# sourceMappingURL=assistant.d.ts.map

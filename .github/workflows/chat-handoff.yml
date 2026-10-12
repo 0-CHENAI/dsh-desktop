@@ -1,0 +1,44 @@
+name: 聊天正文交接回归
+
+on:
+  pull_request:
+    branches: [test, main]
+    paths:
+      - 'patches/**'
+      - 'scripts/check-chat-handoff.cjs'
+      - 'scripts/fixtures/chat-handoff-browser.tsx'
+      - 'test/chat-handoff.test.ts'
+      - 'test/helpers/chat-handoff-runtime.ts'
+      - 'package*.json'
+      - '.github/workflows/chat-handoff.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    name: 正文交接 (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run test/chat-handoff.test.ts
+      - run: npm run typecheck
+      - run: npm run build
+      - run: node scripts/check-chat-handoff.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chat-handoff-${{ matrix.os }}
+          path: artifacts/chat-handoff/*.png
+          if-no-files-found: ignore
