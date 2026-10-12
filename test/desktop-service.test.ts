@@ -8,9 +8,9 @@ import { attachDiagnostics } from '../src/main/desktop-service/diagnostics'
 const roots: string[] = []
 const disposers: Array<() => void> = []
 afterEach(() => { disposers.splice(0).forEach(fn => fn()); roots.splice(0).forEach(dir => rmSync(dir, { recursive: true, force: true })) })
-function fixture(request = vi.fn(async (_url: string, _init?: RequestInit): Promise<Response> => { throw new Error('offline') })) {
+function fixture(request = vi.fn(async (_url: string, _init?: RequestInit): Promise<Response> => { throw new Error('offline') }), platform = 'darwin') {
   const dir = mkdtempSync(join(tmpdir(), 'desktop-service-')); roots.push(dir)
-  const options = { stateDir: join(dir, 'state'), logPath: join(dir, 'harness.log'), version: '0.8.0', platform: 'darwin', arch: 'arm64', request, confirmUpload: vi.fn(async (_report: string) => true) }
+  const options = { stateDir: join(dir, 'state'), logPath: join(dir, 'harness.log'), version: '0.8.0', platform, arch: platform === 'win32' ? 'x64' : 'arm64', request, confirmUpload: vi.fn(async (_report: string) => true) }
   return { dir, options, request, service: new DesktopService(options) }
 }
 function queued(service: DesktopService, dir: string) {
@@ -142,6 +142,76 @@ describe('desktop service', () => {
   })
 })
 describe('diagnostic event integration', () => {
+  it('does not repeatedly report confirmed Windows session ends as unclean exits', async () => {
+    const { options, request } = fixture(undefined, 'win32')
+    for (let startup = 0; startup < 3; startup++) {
+      const service = new DesktopService(options)
+      const app = new EventEmitter(), events = new EventEmitter(), window = new EventEmitter()
+      const diagnostics = attachDiagnostics(app, service, { processEvents: events }); disposers.push(() => diagnostics.dispose())
+      await service.flush()
+      app.emit('browser-window-created', {}, window)
+      // Windows shutdown/restart/logoff ends the session without app quit events.
+      window.emit('session-end', { reasons: [] })
+      expect(service.pending()).toHaveLength(0)
+      diagnostics.dispose()
+    }
+    expect(options.confirmUpload).not.toHaveBeenCalled()
+    expect(request).not.toHaveBeenCalled()
+  })
+
+  it('keeps tracking a Windows session when shutdown is only queried or a window is closed', () => {
+    const { service, options, dir } = fixture(undefined, 'win32')
+    const app = new EventEmitter(), events = new EventEmitter(), window = new EventEmitter()
+    const diagnostics = attachDiagnostics(app, service, { processEvents: events }); disposers.push(() => diagnostics.dispose())
+    app.emit('browser-window-created', {}, window)
+    window.emit('query-session-end', { reasons: [] })
+    window.emit('close', { preventDefault: vi.fn() })
+    window.emit('closed')
+    expect(existsSync(join(dir, 'state', 'session.json'))).toBe(true)
+    const next = new DesktopService(options)
+    next.beginSession()
+    expect(queued(next, dir)).toEqual([expect.objectContaining({ kind: 'unclean-exit' })])
+  })
+
+  it('retains captured crash evidence after a confirmed Windows session end', async () => {
+    const { service, options, request, dir } = fixture(undefined, 'win32')
+    const app = new EventEmitter(), events = new EventEmitter(), window = new EventEmitter()
+    const diagnostics = attachDiagnostics(app, service, { processEvents: events }); disposers.push(() => diagnostics.dispose())
+    app.emit('browser-window-created', {}, window)
+    events.emit('uncaughtExceptionMonitor', new Error('actual crash'))
+    window.emit('session-end', { reasons: [] })
+    const next = new DesktopService(options)
+    next.beginSession()
+    expect(queued(next, dir).map(report => report.kind)).toEqual(['main-crash'])
+    options.confirmUpload.mockResolvedValue(false)
+    await next.flush()
+    next.markCleanExit()
+    const later = new DesktopService(options)
+    later.beginSession()
+    await later.flush()
+    expect(options.confirmUpload).toHaveBeenCalledTimes(1)
+    expect(request).not.toHaveBeenCalled()
+  })
+
+  it('handles hidden and replacement Windows windows and releases their listeners', () => {
+    const { service, dir } = fixture(undefined, 'win32')
+    const app = new EventEmitter(), events = new EventEmitter(), oldWindow = new EventEmitter(), window = new EventEmitter()
+    const diagnostics = attachDiagnostics(app, service, { processEvents: events }); disposers.push(() => diagnostics.dispose())
+    app.emit('browser-window-created', {}, oldWindow)
+    expect(oldWindow.listenerCount('session-end')).toBe(1)
+    oldWindow.emit('closed')
+    expect(oldWindow.listenerCount('session-end')).toBe(0)
+    app.emit('browser-window-created', {}, window)
+    window.emit('hide')
+    window.emit('session-end', { reasons: [] })
+    window.emit('session-end', { reasons: [] })
+    expect(existsSync(join(dir, 'state', 'session.json'))).toBe(false)
+    diagnostics.dispose()
+    expect(window.listenerCount('session-end')).toBe(0)
+    expect(window.listenerCount('closed')).toBe(0)
+    expect(app.listenerCount('browser-window-created')).toBe(0)
+  })
+
   it('waits for log flush, distinguishes startup from runtime failure, and ignores repeated failed snapshots', async () => {
     const { service, options, dir } = fixture()
     const app = new EventEmitter(), events = new EventEmitter()
