@@ -6,6 +6,7 @@ import { pathToFileURL } from 'node:url'
 import { installMarketGenerationCompatibility } from '../../build/market-generation-compat.mjs'
 import { createDesktopPnpmService } from '../../packages/dsh-desktop-market-installer/index.js'
 import { projectGenerations } from '../../packages/dsh-desktop-market-installer/generations/projection.mjs'
+import { legacyMarketFixture } from '../market-legacy-fixture.ts'
 
 const home = await mkdtemp(join(tmpdir(), 'market-update-route-'))
 process.env.DSH_HOME = home
@@ -17,7 +18,7 @@ const mismatch = process.argv.includes('--mismatch')
 const unpatched = process.argv.includes('--unpatched')
 const external = process.argv.find(arg => arg.startsWith('--market='))?.slice('--market='.length)
 if (!unpatched) installMarketGenerationCompatibility()
-const marketRoot = external ?? resolve('node_modules/dshmarket')
+const marketRoot = external ?? legacyMarketFixture()
 const { mountMarketRoutes } = await import(pathToFileURL(join(marketRoot, 'lib/routes.js')))
 const { createDesktopPluginRuntime } = await import(pathToFileURL(join(marketRoot, 'lib/dsh-cli.js')))
 const profile = join(home, 'profiles', 'web')

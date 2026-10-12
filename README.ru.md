@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="docs/images/readme-logo-black-v020.png" width="64" alt="Логотип DSH Desktop" valign="middle" />
+  <img src="docs/images/readme-logo-black-rounded.svg" width="64" alt="Логотип DSH Desktop" valign="middle" />
   DSH Desktop
 </h1>
 
@@ -42,7 +42,7 @@ DSH Desktop превращает локальный DeepSeek Harness в уста
 <p align="center">
   Отсканируйте QR-код ниже в WeChat, чтобы присоединиться к группе DSH Desktop.<br />
   <img src="docs/images/wechat-group-20260815.png" width="220" alt="QR-код группы DSH Desktop в WeChat" /><br />
-  Также можно присоединиться к <a href="https://discord.gg/he2gAKCpj">сообществу DSH Desktop в Discord</a>.
+  Также можно присоединиться к <a href="https://discord.gg/7Xgf3qe3Qp">сообществу DSH Desktop в Discord</a>.
 </p>
 
 ## Что добавляет DSH Desktop
@@ -54,6 +54,7 @@ DeepSeek Harness уже предоставляет Agent Runtime и Web UI. DSH 
 - Поддерживает официальные модели DeepSeek и популярные сторонние поставщики моделей
 - Импортирует и экспортирует пользовательские Agent Preset как переносимые [пакеты `.dshpreset`](docs/preset-packages.md)
 - Превращает исходные материалы в редактируемые презентации PPTX во встроенном режиме PPT
+- Включает Python и библиотеки Office для автономного создания и проверки DOCX, PPTX и XLSX в macOS и Windows
 - Сохраняет Profile, плагины, рабочие пространства, сессии и настройки моделей при обновлении приложения
 - Обнаруживает сбои запуска и ошибки плагинов интерфейса, сохраняет диагностику и предлагает управляемое восстановление
 - Предоставляет неразрушающий безопасный режим, временно блокирующий сторонние плагины

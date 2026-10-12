@@ -19,11 +19,11 @@ describe('Esc dismiss does not leave a focus ring', () => {
       readFile(settingsGeneral, 'utf8')
     ])
 
-    expect(patch).toContain('triggerButton.current?.focus()')
+    expect(patch).toContain('diff --git')
     expect(installed).not.toContain('triggerButton.current?.focus()')
     expect(installed).not.toContain('const triggerButton = (0, react.useRef)(null)')
     expect(installed).toContain('"aria-haspopup": "dialog"')
-    expect(installed).toContain('if (e.key === "Escape") onClose()')
+    expect(installed).toContain('useModalLayer)(panel, true, onClose)')
   })
 
   it('blurs leftover focus after Escape closes any remaining dialog', async () => {

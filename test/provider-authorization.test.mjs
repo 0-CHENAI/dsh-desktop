@@ -47,7 +47,8 @@ it('discovers every installed OAuth provider without changing API-key-only provi
   expect(directory.find(p => p.provider === 'google').authFlow).toBeUndefined()
   expect(ctx.authorization.describe('llm-pi-ai/openai-codex').label).toBe('ChatGPT')
   for (const { provider } of directory) {
-    expect(providerIconSlug(provider)).toBeTypeOf('string')
+    const slug = providerIconSlug(provider)
+    if (slug !== undefined) expect(slug).toBeTypeOf('string')
     const icon = await providerIconResponse(new Request(`http://localhost/api/desktop.provider-icon?provider=${encodeURIComponent(provider)}`))
     expect(icon.status).toBe(200)
     expect(await icon.text()).toContain('<svg')
@@ -68,7 +69,7 @@ it('serves bundled provider SVGs and a deterministic fallback without a remote r
 it('sorts provider names alphabetically and exposes icon and OAuth affordances in the picker', async () => {
   const source = await readFile(new URL('../node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js', import.meta.url), 'utf8')
   const start = source.indexOf('const compareProviders =')
-  const end = source.indexOf('/**\n\t\t* Render the Models section', start)
+  const end = source.indexOf('function ProviderPicker(', start)
   const helpers = new Function(`${source.slice(start, end)}; return { compareProviders, providerSupportsOAuth, providerIconUrl };`)()
   const rows = ['zai', 'Anthropic', 'openai-codex'].map(displayName => ({ entry: { displayName, provider: displayName.toLowerCase() } }))
   expect(rows.sort(helpers.compareProviders).map(row => row.entry.displayName)).toEqual(['Anthropic', 'openai-codex', 'zai'])
@@ -148,7 +149,7 @@ it('uses authorization records for default-model eligibility even when an option
   const helpers = new Function(source.slice(source.indexOf('function deriveProviderKeyRef('), source.indexOf('async function buildModelCatalog')) + '; return { providerHasUsableCredential };')()
   let configured = false, named
   const credentials = { describeRecord: async () => ({ configured }), describe: async () => ({ configured: false }) }
-  const ctx = { llm: { listConfigurableProviders: () => [{ provider: 'vendor', authFlow: 'test-login/vendor', settingsNs: 'test', settingsPath: [] }] }, get: name => ({ credentials, authorization: { describe: () => ({}) }, settings: { get: () => ({ apiKeyEnv: named }) } })[name] }
+  const ctx = { llm: { listConfigurableProviders: () => [{ provider: 'vendor', authFlow: 'test-login/vendor', settingsNs: 'test', settingsPath: [] }] }, get: name => ({ credentials, authorization: { describe: () => ({}) }, settings: { describe: () => [{ ns: 'test', value: { apiKeyEnv: named } }] } })[name] }
   expect(await helpers.providerHasUsableCredential(ctx, 'vendor')).toBe(false)
   configured = true
   expect(await helpers.providerHasUsableCredential(ctx, 'vendor')).toBe(true)

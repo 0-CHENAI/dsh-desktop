@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="docs/images/readme-logo-black-v020.png" width="64" alt="DSH Desktop ロゴ" valign="middle" />
+  <img src="docs/images/readme-logo-black-rounded.svg" width="64" alt="DSH Desktop ロゴ" valign="middle" />
   DSH Desktop
 </h1>
 
@@ -41,7 +41,7 @@ DSH Desktop は、ローカルの DeepSeek Harness をインストール可能�
 <p align="center">
   下の QR コードを WeChat で読み取り、DSH Desktop コミュニティグループに参加してください。<br />
   <img src="docs/images/wechat-group-20260815.png" width="220" alt="DSH Desktop WeChat グループの QR コード" /><br />
-  Discord を利用する場合は、<a href="https://discord.gg/he2gAKCpj">DSH Desktop Discord コミュニティ</a>にも参加できます。
+  Discord を利用する場合は、<a href="https://discord.gg/7Xgf3qe3Qp">DSH Desktop Discord コミュニティ</a>にも参加できます。
 </p>
 
 ## DSH Desktop が追加する機能
@@ -53,6 +53,7 @@ DeepSeek Harness は Agent Runtime と Web UI を提供します。DSH Desktop �
 - DeepSeek 公式モデルと主要なサードパーティーモデルプロバイダーに対応
 - カスタム Agent Preset 一式をポータブルな [`.dshpreset` パッケージ](docs/preset-packages.md)としてインポート・エクスポート
 - 内蔵の PPT モードで資料から編集可能な PPTX を生成・出力
+- macOS と Windows に Python と Office ライブラリを同梱し、DOCX・PPTX・XLSX のオフライン作成と検証に対応
 - アプリ更新後も Profile、プラグイン、ワークスペース、セッション、モデル設定を保持
 - Harness 起動時やフロントエンドのプラグイン障害を検出し、診断ログとガイド付き復旧を提供
 - サードパーティープラグインだけを一時停止する非破壊的なセーフモード

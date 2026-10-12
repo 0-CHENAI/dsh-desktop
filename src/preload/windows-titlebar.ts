@@ -4,6 +4,20 @@ import { WINDOWS_TITLEBAR_HEIGHT } from '../shared/desktop-menu'
 const LAYOUT_STYLE_ID = 'dsh-desktop-windows-titlebar-layout-style'
 const SIDEBAR_WIDTH_PROPERTY = '--dsh-desktop-windows-sidebar-width'
 
+/** Stamp before Harness computes its collapsed sidebar geometry. */
+export function markWindowsTitlebar(document: Document): void {
+  const mark = (): boolean => {
+    const root = document.documentElement
+    if (!root) return false
+    root.setAttribute('data-windows-titlebar', '')
+    root.style.setProperty('--dsh-windows-titlebar-height', `${WINDOWS_TITLEBAR_HEIGHT}px`)
+    return true
+  }
+  if (mark()) return
+  const observer = new MutationObserver(() => { if (mark()) observer.disconnect() })
+  observer.observe(document, { childList: true })
+}
+
 interface TitlebarLayoutMountOptions {
   document: Document
   ipcRenderer: Pick<IpcRenderer, 'invoke' | 'on'>
@@ -80,6 +94,15 @@ function installLayout(document: Document): void {
     body.dsh-desktop-windows-titlebar-layout [data-sidebar-right-panel] {
       box-sizing: border-box;
       padding-top: 0;
+    }
+    /* A narrow conversation between two sidebars still needs reachable actions.
+       Wrap the native row instead of letting its fixed-size controls overflow. */
+    body.dsh-desktop-windows-titlebar-layout [data-slot="conversation.session.header"] > header > :has(> [data-conversation-header-corner]) {
+      flex-wrap: wrap;
+      row-gap: 6px;
+    }
+    body.dsh-desktop-windows-titlebar-layout [data-conversation-header-corner] {
+      margin-left: auto;
     }
     body.dsh-desktop-windows-titlebar-layout button,
     body.dsh-desktop-windows-titlebar-layout a,

@@ -22,6 +22,7 @@ describe('DSH Desktop client slot occupants', () => {
         inject: string[]
       }
     } | undefined
+
     vm.runInNewContext(source, {
       window: {
         __ModuleLoader__: {
@@ -85,13 +86,17 @@ describe('DSH Desktop client slot occupants', () => {
       }
     })
 
-    expect(plugin.inject).toEqual(['slots', 'locale'])
+    expect(plugin.inject).toEqual(['slots', 'locale', 'remote.session', 'sessions', 'uiWorkspace'])
     expect(registrations.map(({ config }) => config.name)).toEqual([
       'sidebar.brand.mark',
       'sidebar.brand.name',
       'conversation.hero.brand.mark',
       'settings.section',
-      'settings.general.item'
+      'settings.general.item',
+      'sidebar.right.tab.document.unpreviewable',
+      'sidebar.workspaces.session.menu.item',
+      'sidebar.workspaces.session.menu.item',
+      'sidebar.workspaces.session.menu.item'
     ])
     expect(
       registrations.find(({ config }) => config.name === 'settings.section')?.config

@@ -54,6 +54,8 @@ describe('原子跨步骤展示投影', () => {
       expect(next?.data.presentation.blocks[0].text).toBe('新正文')
     })
     snapshot = builder.apply({ upserts: [row(r, text(r, r.initialState(1, 2), '新正文', 5), t.turns.get(1))], timeline: t })
+    // Harness 0.2 publishes after its projection/group update transaction.
+    builder.publish()
     expect(notifications).toBe(1)
     expect(snapshot.order).toEqual(['1:1', '1:2'])
     unsubscribe()

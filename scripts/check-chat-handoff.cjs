@@ -12,7 +12,7 @@ if (!process.versions.electron) {
   const { app, BrowserWindow } = require('electron')
   const { buildSync } = require('esbuild')
   process.on('uncaughtException', error => { console.error(error); app.exit(1) })
-  const output = join(process.cwd(), 'artifacts', 'chat-handoff')
+  const output = join(process.cwd(), '.build', 'chat-handoff-020')
   mkdirSync(output, { recursive: true })
   app.setPath('userData', join(output, 'profile'))
   const assets = join(process.cwd(), 'node_modules/@deepseek-ai/dsh-web-frontend/dist/assets')
@@ -22,7 +22,10 @@ if (!process.versions.electron) {
   const boot = [...frontend.matchAll(/const [\w$]+=document\.getElementById\("root"\)/g)].at(-1)
   assert.ok(registry && boot, 'Pinned frontend vendor registry/boot boundary changed')
   // Reuse shipped React/Markdown/store, but NEVER execute the application boot/network code.
-  const vendor = buildSync({ stdin: { contents: frontend.slice(0, boot.index) + `;window.__dshVendors=${registry[1]}();`,
+  // Harness 0.2 wraps application boot in try/catch. Exclude that whole
+  // opening block as well; the fixture must never run the application boot.
+  const vendorPrefix = frontend.slice(0, boot.index).replace(/try\s*\{\s*$/, '')
+  const vendor = buildSync({ stdin: { contents: vendorPrefix + `;window.__dshVendors=${registry[1]}();`,
     resolveDir: assets }, bundle: true, format: 'iife', write: false,
     define: { 'import.meta.url': JSON.stringify(require('node:url').pathToFileURL(join(assets, index)).href) } }).outputFiles[0].text
   const bundle = buildSync({ entryPoints: ['scripts/fixtures/chat-handoff-browser.tsx'], bundle: true,
@@ -37,7 +40,7 @@ if (!process.versions.electron) {
     await app.whenReady()
     win = new BrowserWindow({ width: 1000, height: 760, show: false, webPreferences: { sandbox: true, offscreen: true } })
     const pageErrors = []
-    win.webContents.on('console-message', details => { if (details.level === 'error') pageErrors.push(details.message) })
+    win.webContents.on('console-message', details => { if (details.level === 'error') { pageErrors.push(details.message); console.error(details.message) } })
     let cases = 0
     for (const zoom of [0.8, 1, 1.5]) for (const mode of ['compact', 'normal']) for (const expanded of [false, true]) {
       const html = join(output, 'fixture.html')
@@ -65,7 +68,7 @@ if (!process.versions.electron) {
           if (readingScroll === 80) assert.ok(Math.abs(await win.webContents.executeJavaScript('document.querySelector("[data-answer-body]").getBoundingClientRect().top') - readingTop) < 2, 'reading anchor jumped')
         }
         if (stage === 1) {
-          await win.webContents.executeJavaScript('Array.from(document.querySelectorAll("button")).find(b=>/copy|复制/i.test(b.textContent)).click()')
+          await win.webContents.executeJavaScript('const copyButton = Array.from(document.querySelectorAll("button")).find(b=>/copy|复制/i.test([b.textContent,b.getAttribute("aria-label"),b.title].join(" "))); if(!copyButton) throw new Error("Missing copy control"); copyButton.click()')
           assert.equal(await win.webContents.executeJavaScript('window.copiedText'), 'const answer = 42')
         }
         if (stage === 3) assert.ok(result.text.includes('重试后的新正文'))

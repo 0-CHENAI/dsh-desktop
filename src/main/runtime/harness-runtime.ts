@@ -1,13 +1,16 @@
 import { execFile, execFileSync, type SpawnOptionsWithoutStdio } from 'node:child_process'
 import type { EventEmitter } from 'node:events'
 import { createWriteStream, existsSync, mkdirSync, type WriteStream } from 'node:fs'
-import { mkdir } from 'node:fs/promises'
+import { mkdir, readFile } from 'node:fs/promises'
 import { createServer } from 'node:net'
-import { dirname, join } from 'node:path'
+import { dirname, join, posix, win32 } from 'node:path'
 import { StringDecoder } from 'node:string_decoder'
 import type { RuntimePhase, RuntimeSnapshot } from '../../shared/contracts'
 import { SAFE_MODE_PROFILE } from '../state/safe-mode-profile'
+import { prepareHostDisabledPluginsPatch } from '../state/host-disabled-plugins'
+import { prepareHostPluginSourcesPatch } from '../state/host-plugin-sources'
 import { parsePluginStartupFailures, type PluginStartupFailure } from '../../shared/plugin-startup-failure'
+import { removeStaleWriterLocks } from './stale-writer-locks'
 
 export interface HarnessRuntimeOptions {
   dshEntryPath: string
@@ -15,6 +18,8 @@ export interface HarnessRuntimeOptions {
   nodeEntryPath: string
   dshPatchPath: string
   dshSafePatchPath: string
+  /** Overlay for dshmarket's entry, passed only when the profile declares the market. */
+  dshMarketPatchPath?: string
   dshHome: string
   logPath: string
   launchProcess(
@@ -24,6 +29,8 @@ export interface HarnessRuntimeOptions {
   ): HarnessChildProcess
   preferredPort?: number
   startupTimeoutMs?: number
+  /** Mirror log lines to the console (development builds only). */
+  echoLogs?: boolean
   onChanged(snapshot: RuntimeSnapshot): void
 }
 
@@ -36,6 +43,17 @@ export interface HarnessChildProcess extends EventEmitter {
 }
 
 export const DEFAULT_HARNESS_PORT = 43129
+
+export function windowsProcessTreeKillArguments(pid: number): string[] {
+  if (!Number.isSafeInteger(pid) || pid <= 0) throw new Error(`Invalid Windows process id: ${pid}`)
+  return ['/pid', String(pid), '/t', '/f']
+}
+
+function terminateWindowsProcessTree(pid: number): Promise<void> {
+  return new Promise(resolve => {
+    execFile('taskkill', windowsProcessTreeKillArguments(pid), { windowsHide: true, timeout: 4000 }, () => resolve())
+  })
+}
 
 /**
  * Resolve the user's interactive login shell environment.
@@ -59,7 +77,6 @@ export const DEFAULT_HARNESS_PORT = 43129
  * The result is memoised for the process lifetime.
  */
 let resolvedShellEnvironment: NodeJS.ProcessEnv | undefined
-let shellEnvironmentCapture: Promise<NodeJS.ProcessEnv> | undefined
 
 interface ShellCapture {
   file: string
@@ -129,12 +146,16 @@ export function resolveShellEnvironment(): NodeJS.ProcessEnv {
   return resolvedShellEnvironment
 }
 
+let shellEnvironmentCapture: Promise<NodeJS.ProcessEnv> | undefined
+
 /**
- * Capture the shell environment off the launch critical path.
+ * Capture the shell environment off the main thread, memoised with
+ * {@link resolveShellEnvironment}.
  *
- * A login + interactive shell costs 300–450ms on a typical macOS setup.
- * Started when the app starts, it overlaps Electron boot and the splash;
- * `start()` just reads the memoised result.
+ * Running a login + interactive shell costs 300–450ms on a typical macOS
+ * setup. Captured synchronously at spawn time, that blocked the main process
+ * on the launch critical path; started when the app starts, it overlaps
+ * Electron's own boot and the splash, and the launch just reads the result.
  */
 export function prewarmShellEnvironment(): Promise<NodeJS.ProcessEnv> {
   if (resolvedShellEnvironment !== undefined) return Promise.resolve(resolvedShellEnvironment)
@@ -147,22 +168,17 @@ export function prewarmShellEnvironment(): Promise<NodeJS.ProcessEnv> {
       resolve(resolvedShellEnvironment)
       return
     }
-    const child = execFile(
+    execFile(
       capture.file,
       capture.args,
-      {
-        encoding: 'utf8' as const,
-        timeout: capture.timeout,
-        maxBuffer: 16 * 1024 * 1024,
-        windowsHide: true
-      },
+      { encoding: 'utf8', timeout: capture.timeout, maxBuffer: 16 * 1024 * 1024 },
       (error, stdout) => {
+        // A capture the synchronous path already finished wins; otherwise keep
+        // the inherited environment on failure, exactly like that path.
         resolvedShellEnvironment ??= error ? process.env : capture.parse(stdout)
         resolve(resolvedShellEnvironment)
       }
-    )
-    // Match the sync path: profile scripts may write to stderr without failing.
-    child.stderr?.resume()
+    ).stdin?.end()
   })
   return shellEnvironmentCapture
 }
@@ -236,12 +252,13 @@ export function extractLaunchToken(line: string): string | undefined {
 
 export function buildHarnessArguments(
   port: number,
-  patchPath?: string,
+  patchPaths?: string | readonly string[],
   profile = 'web'
 ): string[] {
+  const patches = typeof patchPaths === 'string' ? [patchPaths] : patchPaths ?? []
   return [
-    '--profile', profile,
-    ...(patchPath ? ['--patch', patchPath] : []),
+    ...(profile === 'web' ? ['web'] : ['--profile', profile]),
+    ...patches.flatMap((patchPath) => ['--patch', patchPath]),
     // The desktop window is the only intended surface. Without this, Harness
     // hands the same loopback URL to the system browser on every launch.
     '--no-open',
@@ -287,15 +304,20 @@ export function buildHarnessSpawnOptions(
   launchDirectory: string,
   dshHome: string,
   platform: NodeJS.Platform = process.platform,
-  environment: NodeJS.ProcessEnv = process.env
+  environment: NodeJS.ProcessEnv = process.env,
+  profile: string = 'web'
 ): SpawnOptionsWithoutStdio {
-  const { ELECTRON_RUN_AS_NODE: _runAsNode, ...parentEnvironment } = environment
+  const {
+    ELECTRON_RUN_AS_NODE: _runAsNode,
+    DSH_DESKTOP_HOST_RESOLVED: _hostResolved,
+    ...parentEnvironment
+  } = environment
   const pathKey = platform === 'win32' ? 'Path' : 'PATH'
+  const pathApi = platform === 'win32' ? win32 : posix
 
-  // ELECTRON_RUN_AS_NODE must not reach the Harness process itself: the macOS
-  // utility process is launched with Chromium switches (--type=utility, …)
-  // that Node rejects as bad options. The Harness entry re-declares Node mode
-  // from the inside, for its children only.
+  // Windows and Linux run Harness through the Electron executable as Node. macOS
+  // uses a utility process, which must not receive this flag before Chromium
+  // parses its switches. Its entry declares Node mode only for children.
   //
   // On Windows, `detached: true` puts the Harness in its own process group
   // and console. Without it, a child process that calls `os.kill(pid, 0)`
@@ -308,6 +330,7 @@ export function buildHarnessSpawnOptions(
     cwd: launchDirectory,
     env: {
       ...parentEnvironment,
+      ...(platform !== 'darwin' && { ELECTRON_RUN_AS_NODE: '1' }),
       DSH_HOME: dshHome,
       NO_COLOR: '1',
       // package-import-method/child-concurrency are left at pnpm's defaults
@@ -319,6 +342,11 @@ export function buildHarnessSpawnOptions(
       // the dedicated lock-recovery runner instead (see pnpm-runner.mjs).
       npm_config_side_effects_cache: 'false',
       PNPM_CONFIG_SIDE_EFFECTS_CACHE: 'false',
+      // Safe Mode loads only installation-owned bundles, so the patched Harness
+      // resolves them from its own installation and never touches the shared
+      // `profiles/node_modules` fallback, whose junctions Windows can refuse.
+      ...(profile === SAFE_MODE_PROFILE && { DSH_DESKTOP_HOST_RESOLVED: '1' }),
+      NODE_COMPILE_CACHE: environment.NODE_COMPILE_CACHE ?? pathApi.join(dshHome, 'cache', 'compile-cache'),
       [pathKey]: resolveEnvironmentPath(environment, platform)
     },
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -331,15 +359,33 @@ export function buildNodeArguments(
   nodeEntryPath: string,
   dshEntryPath: string,
   port: number,
-  patchPath?: string,
+  patchPaths?: string | readonly string[],
   profile = 'web'
 ): string[] {
   return [
     '--expose-internals',
     nodeEntryPath,
     dshEntryPath,
-    ...buildHarnessArguments(port, patchPath, profile)
+    ...buildHarnessArguments(port, patchPaths, profile)
   ]
+}
+
+/**
+ * Whether a profile boots dshmarket, so its patch row has an entry to modify.
+ * A row whose entry is absent makes the loader warn on every launch.
+ * @param profileDirectory - the profile's package directory.
+ * @returns true when `dsh.profile.bundles` lists dshmarket.
+ */
+export async function profileBootsMarket(profileDirectory: string): Promise<boolean> {
+  try {
+    const manifest = JSON.parse(await readFile(join(profileDirectory, 'package.json'), 'utf8')) as {
+      dsh?: { profile?: { bundles?: unknown } }
+    }
+    const bundles = manifest.dsh?.profile?.bundles
+    return Array.isArray(bundles) && bundles.includes('dshmarket')
+  } catch {
+    return false
+  }
 }
 
 export function updateReadyStability(
@@ -381,13 +427,14 @@ export class HarnessRuntime {
   private url?: string
   private launchToken?: string
   /**
-   * Wall clock for the current launch. File log lines carry `+<ms>` from it
-   * so a slow start can be attributed; in-memory lines stay unstamped for
-   * recovery matching.
+   * Wall clock for the current launch. Every log line carries `+<ms>` from it,
+   * so a slow start can be attributed to a phase instead of guessed at: the
+   * file otherwise timestamps only the `starting` line.
    */
   private launchClock?: number
   private readonly logLines: string[] = []
   private pluginFailures: PluginStartupFailure[] = []
+  private failureReason?: RuntimeSnapshot['failureReason']
   private logDecoders = { stdout: new StringDecoder('utf8'), stderr: new StringDecoder('utf8') }
   private readonly logRemainders: Record<'stdout' | 'stderr', string> = {
     stdout: '',
@@ -404,6 +451,7 @@ export class HarnessRuntime {
       url: this.url,
       authToken: this.launchToken,
       pluginFailures: structuredClone(this.pluginFailures),
+      failureReason: this.failureReason,
       logs: [...this.logLines]
     }
   }
@@ -427,7 +475,7 @@ export class HarnessRuntime {
       return
     }
     if (!existsSync(this.options.nodeExecutablePath)) {
-      this.setState('failed', `Bundled Node.js runtime was not found: ${this.options.nodeExecutablePath}`)
+      this.setState('failed', `Harness Node executable was not found: ${this.options.nodeExecutablePath}`)
       return
     }
     if (!existsSync(this.options.nodeEntryPath)) {
@@ -436,39 +484,55 @@ export class HarnessRuntime {
     }
     // Profile isolation alone is insufficient: --patch is applied afterwards.
     // Never reintroduce optional product plugins into the recovery profile.
-    const patchPath = profile === SAFE_MODE_PROFILE
+    const sourcePatchPath = profile === SAFE_MODE_PROFILE
       ? this.options.dshSafePatchPath
       : this.options.dshPatchPath
-    if (!existsSync(patchPath)) {
-      this.setState('failed', `DSH Desktop patch was not found: ${patchPath}`)
+    if (!existsSync(sourcePatchPath)) {
+      this.setState('failed', `DSH Desktop patch was not found: ${sourcePatchPath}`)
       return
+    }
+    await mkdir(this.options.dshHome, { recursive: true })
+    const patchPath = profile === SAFE_MODE_PROFILE
+      ? sourcePatchPath
+      : await prepareHostPluginSourcesPatch(this.options.dshHome, sourcePatchPath, this.options.dshEntryPath)
+    const marketPatchPath = this.options.dshMarketPatchPath
+    const patchPaths = profile !== SAFE_MODE_PROFILE &&
+      marketPatchPath !== undefined &&
+      existsSync(marketPatchPath) &&
+      await profileBootsMarket(join(this.options.dshHome, 'profiles', profile))
+      ? [patchPath, marketPatchPath]
+      : [patchPath]
+    if (profile !== SAFE_MODE_PROFILE) {
+      const disabledPatch = await prepareHostDisabledPluginsPatch(this.options.dshHome, sourcePatchPath)
+      if (disabledPatch) patchPaths.push(disabledPatch)
     }
 
     await mkdir(this.options.dshHome, { recursive: true })
     await mkdir(dirname(this.options.logPath), { recursive: true })
     this.logStream ??= createWriteStream(this.options.logPath, { flags: 'a' })
+    for (const lock of await removeStaleWriterLocks(this.options.dshHome)) {
+      this.writeLog(`[desktop] removed stale writer lock ${lock}`)
+    }
 
-    const preferredPort = this.options.preferredPort
-    const { port, usedPreferredPort } = preferredPort === undefined
-      ? { port: await reservePort(0), usedPreferredPort: false }
-      : await reserveLoopbackPort(preferredPort)
+    const preferredPort = this.options.preferredPort ?? DEFAULT_HARNESS_PORT
+    const { port, usedPreferredPort } = await reserveLoopbackPort(preferredPort)
     const url = `http://127.0.0.1:${port}`
     const args = buildNodeArguments(
       this.options.nodeEntryPath,
       this.options.dshEntryPath,
       port,
-      patchPath,
+      patchPaths,
       profile
     )
     const startupTimeoutMs =
-      this.options.startupTimeoutMs ?? (process.platform === 'win32' ? 120_000 : 45_000)
+      this.options.startupTimeoutMs ?? (process.platform === 'win32' ? 180_000 : 45_000)
 
     this.launchClock ??= Date.now()
     this.writeLog(`[desktop] starting ${new Date().toISOString()}`)
     this.writeLog(`[desktop] launch directory ${launchDirectory}`)
     this.writeLog(`[desktop] profile ${profile}`)
-    this.writeLog(`[desktop] patch ${patchPath}`)
-    if (preferredPort !== undefined && !usedPreferredPort) {
+    for (const path of patchPaths) this.writeLog(`[desktop] patch ${path}`)
+    if (!usedPreferredPort) {
       this.writeLog(
         `[desktop] preferred endpoint http://127.0.0.1:${preferredPort} is unavailable; using a temporary port`
       )
@@ -486,7 +550,8 @@ export class HarnessRuntime {
           launchDirectory,
           this.options.dshHome,
           process.platform,
-          shellEnvironment
+          shellEnvironment,
+          profile
         )
       )
     } catch (error) {
@@ -522,7 +587,7 @@ export class HarnessRuntime {
         this.writeLog(`[desktop] failed to stop rejected Harness launch: ${detail}`)
       })
     })
-    child.once('spawn', () => this.writeLog('[desktop] Bundled Node.js Harness process started'))
+    child.once('spawn', () => this.writeLog('[desktop] Harness process started'))
     child.once('error', (error) => {
       this.writeLog(`[node] ${error.stack ?? error.message}`)
       if (this.child !== child) return
@@ -562,7 +627,8 @@ ${cause}`
       await this.stopChild(child)
       this.setState(
         'failed',
-        `Harness did not become ready within ${Math.round(startupTimeoutMs / 1000)} seconds.`
+        `Harness did not become ready within ${Math.round(startupTimeoutMs / 1000)} seconds.`,
+        'startup-timeout'
       )
       return
     }
@@ -575,7 +641,7 @@ ${cause}`
   async stop(): Promise<void> {
     const child = this.child
     if (!child) {
-      this.closeLog()
+      await this.closeLog()
       if (this.phase !== 'failed') this.setState('idle', 'Harness is not running.')
       return
     }
@@ -583,7 +649,7 @@ ${cause}`
     this.setState('stopping', 'Stopping Harness…')
     this.child = undefined
     await this.stopChild(child)
-    this.closeLog()
+    await this.closeLog()
     this.url = undefined
     this.launchToken = undefined
     this.setState('idle', 'Harness is not running.')
@@ -594,20 +660,8 @@ ${cause}`
     const exitPromise = new Promise<boolean>((resolve) =>
       child.once('exit', () => resolve(true))
     )
-    if (process.platform === 'win32' && child.pid !== undefined) {
-      // Harness is detached on Windows so tools can never share or terminate
-      // the desktop process. The corresponding shutdown must therefore kill
-      // the whole tree; child.kill() only terminates the direct bundled Node
-      // process and can leave descendants locking resources/app during NSIS.
-      await terminateWindowsProcessTree(child.pid)
-      const exited = child.exitCode !== null || await Promise.race([
-        exitPromise,
-        new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 1_000))
-      ])
-      if (!exited && child.exitCode === null) child.kill('SIGKILL')
-      return
-    }
-    child.kill('SIGTERM')
+    if (process.platform === 'win32' && child.pid) await terminateWindowsProcessTree(child.pid)
+    if (child.exitCode === null) child.kill('SIGTERM')
     const exited = await Promise.race([
       exitPromise,
       new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 4_000))
@@ -615,9 +669,14 @@ ${cause}`
     if (!exited && child.exitCode === null) child.kill('SIGKILL')
   }
 
-  private setState(phase: RuntimePhase, message: string): void {
+  private setState(
+    phase: RuntimePhase,
+    message: string,
+    failureReason?: RuntimeSnapshot['failureReason']
+  ): void {
     this.phase = phase
     this.message = message
+    this.failureReason = failureReason
     this.options.onChanged(this.snapshot())
   }
 
@@ -653,8 +712,10 @@ ${cause}`
    * someone reading the log after a failed install needs to see.
    */
   /**
-   * Start this launch's clock before pre-flight work. Profile maintenance
-   * happens before `start()`, so a clock that began at `starting` hid it.
+   * Start this launch's clock before any pre-flight work runs. Profile
+   * maintenance — migration recovery, the pnpm store, generation projection,
+   * LaunchAgent audit — happens before `start()`, so a clock that began at
+   * `starting` hid all of it and made the launch look faster than it felt.
    */
   beginLaunch(reason: string): void {
     this.launchClock = Date.now()
@@ -676,16 +737,20 @@ ${cause}`
   private writeLog(line: string): void {
     this.logLines.push(line)
     if (this.logLines.length > 200) this.logLines.splice(0, this.logLines.length - 200)
-    this.logStream?.write(`${this.stampLog(line)}\n`)
+    const stamped = this.stampLog(line)
+    this.logStream?.write(`${stamped}\n`)
+    if (this.options.echoLogs) console.log(stamped)
   }
 
   /**
-   * Prefix a file log line with milliseconds since this launch began.
-   * `logLines` stay unstamped: recovery and failure-cause extractors match text.
+   * Prefix a log line with an ISO date and milliseconds since this launch began.
+   * Only the file copy is stamped: `logLines` feeds recovery detection and failure-cause
+   * extraction, which match on the line text.
    */
   private stampLog(line: string): string {
-    if (this.launchClock === undefined) return line
-    const stamp = `+${String(Date.now() - this.launchClock).padStart(5)}ms `
+    const iso = new Date().toISOString()
+    const elapsed = this.launchClock !== undefined ? `+${String(Date.now() - this.launchClock).padStart(5)}ms ` : ''
+    const stamp = `[${iso}] ${elapsed}`
     return line.startsWith('\n') ? `\n${stamp}${line.slice(1)}` : `${stamp}${line}`
   }
 
@@ -697,37 +762,35 @@ ${cause}`
     })
   }
 
-  private closeLog(): void {
-    this.logStream?.end()
+  private closeLog(): Promise<void> {
+    const stream = this.logStream
     this.logStream = undefined
+    if (!stream || stream.closed) return Promise.resolve()
+    return new Promise(resolve => {
+      stream.once('close', resolve)
+      stream.end()
+    })
   }
 }
 
-export function windowsProcessTreeKillArguments(pid: number): string[] {
-  if (!Number.isSafeInteger(pid) || pid <= 0) {
-    throw new Error(`Invalid Windows process id: ${pid}`)
-  }
-  return ['/pid', String(pid), '/t', '/f']
-}
+/**
+ * Runtime logger output bridged by `dsh-desktop-log-bridge`. It is kept in
+ * harness.log for people and the Repair Agent, but it is not launch evidence:
+ * a warning logged while running must not become recovery's failure cause or
+ * the plugin it blames.
+ */
+const BRIDGED_LOG_PREFIX = '[stderr] [harness-log] '
 
-function terminateWindowsProcessTree(pid: number): Promise<void> {
-  return new Promise((resolve) => {
-    execFile(
-      'taskkill',
-      windowsProcessTreeKillArguments(pid),
-      { windowsHide: true },
-      () => resolve()
-    )
-  })
-}
-
-function latestHarnessAttemptLogs(logLines: readonly string[]): readonly string[] {
+/** The latest launch attempt's log lines, without bridged runtime logger output. */
+export function latestHarnessAttemptLogs(logLines: readonly string[]): readonly string[] {
+  let start = 0
   for (let index = logLines.length - 1; index >= 0; index -= 1) {
     if (logLines[index]?.trimStart().startsWith('[desktop] starting ')) {
-      return logLines.slice(index + 1)
+      start = index + 1
+      break
     }
   }
-  return logLines
+  return logLines.slice(start).filter((line) => !line.startsWith(BRIDGED_LOG_PREFIX))
 }
 
 export function extractFailureCause(logLines: readonly string[]): string | undefined {
@@ -965,13 +1028,22 @@ async function waitUntilReady(
   launchToken: () => string | undefined,
   timeoutMs: number
 ): Promise<boolean> {
-  const deadline = Date.now() + timeoutMs
-  // Healthy only after the launch token is printed, which happens after the
-  // plugin tree is loaded and the server is serving. The first healthy probe
-  // is already settled; a 500ms sustain window was pure extra latency.
+  let deadline = Date.now() + timeoutMs
+  let extendedForLaunch = false
+  // A probe only counts as healthy once Harness has printed its launch token,
+  // and Harness prints that line after its whole plugin tree has loaded and
+  // the web server is serving. The first healthy probe is therefore already
+  // the settled state; a 500ms sustain window on top of it was pure latency
+  // at the end of every launch.
   const stabilityWindowMs = 0
   let readySince: number | undefined
   while (Date.now() < deadline && isAlive()) {
+    // If Harness has already announced its endpoint (launch token emitted),
+    // grant at least 30s for the HTTP probe to answer before timing out.
+    if (!extendedForLaunch && launchToken() !== undefined) {
+      extendedForLaunch = true
+      deadline = Math.max(deadline, Date.now() + 30_000)
+    }
     try {
       const response = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(1_000) })
       const stability = updateReadyStability(

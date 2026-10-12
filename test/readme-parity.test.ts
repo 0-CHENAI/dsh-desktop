@@ -11,6 +11,7 @@ const readmes = [
   'README.pt.md'
 ]
 
+const manifest = JSON.parse(readFileSync('package.json', 'utf8')) as { dependencies: Record<string, string> }
 const requiredFacts = [
   '@deepseek-ai/dsh@0.1.5-rc.2',
   '--safe-mode',
@@ -37,7 +38,8 @@ describe('localized README parity', () => {
       'docs/development.md',
       'docs/architecture.md',
       'docs/release-runbook.md',
-      'docs/preset-packages.md'
+      'docs/preset-packages.md',
+      'docs/office-runtime.md'
     ]
 
     for (const path of documents) {

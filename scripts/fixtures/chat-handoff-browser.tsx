@@ -47,7 +47,7 @@ globals.runHandoff = async (mode: string, processOpen = false) => {
   }
   const App = () => <>{snapshot.order.map((key: string) => <r.ChatNodeSeat key={key}
     nodeKey={key} useChatNode={useNode} useChatNodeProcess={useProcess}
-    compactTranscript={mode === 'compact'} historyIncomplete={false}
+    usePresentation={(selector: any) => selector({ foldCompletedTurns: mode === 'compact', settledReasoningPreview: false })}
     useStore={(selector: any) => selector({ turnProcesses: processExpanded ? [{ turn: 1, answerStep: 2 }] : [] })}
     actions={{ setTurnProcessOpen(_turn: number, _step: number, open: boolean) {
       processExpanded = open; ReactDOM.flushSync(() => root.render(<App />))
@@ -74,6 +74,7 @@ globals.runHandoff = async (mode: string, processOpen = false) => {
           processStartSeq: 1, answerStep: 2, answerAnchorSeq: seq, messageCount: 1, toolCallCount: 1, subagentCount: 0 } } as any)
       snapshot = snapshot === undefined ? builder.replace({ nodes: states.map(row), timeline: currentTimeline }) :
         builder.apply({ upserts, timeline: currentTimeline })
+      builder.publish()
       root.render(<App />)
     })
     await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
