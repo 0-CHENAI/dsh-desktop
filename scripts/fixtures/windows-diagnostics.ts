@@ -43,7 +43,9 @@ void app.whenReady().then(async () => {
     await service.flush()
     service.markCleanExit()
     record()
-    app.exit(0)
+    // This read-only verification launch needs no abrupt exit. Let Electron
+    // finish native teardown normally (app.exit can race it on CI machines).
+    app.quit()
     return
   }
   attachDiagnostics(app, service)
