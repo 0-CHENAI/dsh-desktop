@@ -1,0 +1,31 @@
+name: Windows 退出诊断回归
+
+on:
+  pull_request:
+    branches: [test, main]
+    paths:
+      - 'src/main/desktop-service/**'
+      - 'test/desktop-service.test.ts'
+      - 'scripts/check-windows-diagnostics.cjs'
+      - 'scripts/fixtures/windows-diagnostics.ts'
+      - 'package*.json'
+      - '.github/workflows/windows-diagnostics.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    name: Windows native diagnostics
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run test/desktop-service.test.ts test/close-to-tray.test.ts
+      - run: node scripts/check-windows-diagnostics.cjs

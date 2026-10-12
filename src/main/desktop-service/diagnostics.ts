@@ -34,6 +34,20 @@ export function attachDiagnostics(app: EventEmitter, service: DesktopService, op
   app.prependListener('child-process-gone', childGone)
   const clean = () => safe(() => service.markCleanExit())
   app.on('will-quit', clean)
+  // Windows shutdown/restart/logoff skips app's quit events. All windows,
+  // including the hidden tray window, can receive the confirmed session end.
+  // Do not clear on query-session-end: shutdown may still be cancelled.
+  const windowListeners = new Map<EventEmitter, () => void>()
+  const windowCreated = (_event: unknown, window: EventEmitter) => {
+    const closed = () => {
+      window.removeListener('session-end', clean)
+      windowListeners.delete(window)
+    }
+    windowListeners.set(window, closed)
+    window.prependListener('session-end', clean)
+    window.once('closed', closed)
+  }
+  app.on('browser-window-created', windowCreated)
   let previousAttempt = -1
   let wasReady = false
   let previousPhase: RuntimeSnapshot['phase'] | undefined
@@ -62,6 +76,12 @@ export function attachDiagnostics(app: EventEmitter, service: DesktopService, op
       app.removeListener('web-contents-created', created)
       app.removeListener('child-process-gone', childGone)
       app.removeListener('will-quit', clean)
+      app.removeListener('browser-window-created', windowCreated)
+      for (const [window, closed] of windowListeners) {
+        window.removeListener('session-end', clean)
+        window.removeListener('closed', closed)
+      }
+      windowListeners.clear()
       for (const [contents, listener] of contentsListeners) contents.removeListener('render-process-gone', listener)
       contentsListeners.clear()
     }
