@@ -46,6 +46,7 @@ let updateLocale: (() => 'en' | 'zh') | undefined
 let skippedVersion: string | undefined
 let skipLoaded = false
 let manualCheck = false
+let manualCheckRequested = false
 let presentationId = 0
 let pendingDowngrade = false
 let selectedUpdateVersion: string | undefined
@@ -131,7 +132,15 @@ export async function checkForUpdates(manual = false, source: UpdateStatus['sour
     return getUpdateStatus()
   }
 
-  if (checkPromise || ['available', 'downloading', 'downloaded'].includes(status.phase)) {
+  if (checkPromise) {
+    if (manual) {
+      manualCheckRequested = true
+      transition({ type: 'present-manual' })
+    }
+    await checkPromise
+    return getUpdateStatus()
+  }
+  if (['downloading', 'downloaded'].includes(status.phase) || (!manual && status.phase === 'available')) {
     if (manual) {
       manualCheck = true
       transition({ type: 'present-manual' })
@@ -141,29 +150,50 @@ export async function checkForUpdates(manual = false, source: UpdateStatus['sour
 
   transition({ type: 'check', manual, source })
   manualCheck = manual
+  manualCheckRequested = manual
   lastCheckedAt = Date.now()
   selectedUpdateVersion = undefined
   checkPromise = (async () => {
-    const policy = await checkDesktopUpdate()
-    if (!policy.updateAvailable) {
-      transition({ type: 'not-available' })
-      return
+    try {
+      let requestManual = manual
+      while (true) {
+        manualCheck = requestManual
+        const policy = await checkDesktopUpdate(requestManual)
+        // A manual request during the automatic policy check must get its own
+        // decision; showing the automatic cohort miss would be misleading.
+        if (!requestManual && manualCheckRequested) {
+          requestManual = true
+          status.presentationId = presentationId
+          transition({ type: 'check', manual: true })
+          continue
+        }
+        if (!policy.updateAvailable) {
+          transition({ type: 'not-available' })
+          return
+        }
+        selectedUpdateVersion = policy.version
+        autoUpdater.setFeedURL({ provider: 'generic', url: policy.feedUrl })
+        autoUpdater.allowPrerelease = isPrereleaseVersion(policy.version)
+        autoUpdater.allowDowngrade = false
+        const result = await autoUpdater.checkForUpdates()
+        if (result?.updateInfo.version !== policy.version) throw new Error('Update archive does not match the selected version')
+        if (!requestManual && manualCheckRequested) {
+          // The archive check also runs under the same lock. Re-evaluate the
+          // manual policy before releasing it, without starting a download.
+          requestManual = true
+          status.presentationId = presentationId
+          transition({ type: 'check', manual: true })
+          continue
+        }
+        return
+      }
+    } catch (error) {
+      transition({ type: 'error', message: errorMessage(error) })
+    } finally {
+      checkPromise = undefined
     }
-    selectedUpdateVersion = policy.version
-    autoUpdater.setFeedURL({ provider: 'generic', url: policy.feedUrl })
-    autoUpdater.allowPrerelease = isPrereleaseVersion(policy.version)
-    autoUpdater.allowDowngrade = false
-    const result = await autoUpdater.checkForUpdates()
-    if (result?.updateInfo.version !== policy.version) throw new Error('Update archive does not match the selected version')
   })()
-
-  try {
-    await checkPromise
-  } catch (error) {
-    transition({ type: 'error', message: errorMessage(error) })
-  } finally {
-    checkPromise = undefined
-  }
+  await checkPromise
 
   return getUpdateStatus()
 }
@@ -174,6 +204,13 @@ export async function checkForUpdates(manual = false, source: UpdateStatus['sour
  */
 export async function downloadAvailableUpdate(): Promise<UpdateStatus> {
   if (status.phase !== 'available' || downloading) return getUpdateStatus()
+  const expectedVersion = status.availableVersion
+  // A queued manual check can replace an automatic offer. Consent to A must
+  // not download B; history installs already own this lock and cannot await it.
+  if (checkPromise && !pendingDowngrade) await checkPromise
+  if (status.phase !== 'available' || status.availableVersion !== expectedVersion || downloading) {
+    return getUpdateStatus()
+  }
   downloading = true
 
   try {
@@ -194,39 +231,44 @@ export async function downloadAvailableUpdate(): Promise<UpdateStatus> {
  * — there is no version pinning.
  */
 export async function installSpecificVersion(version: unknown): Promise<UpdateStatus> {
-  if (!isVersion(version)) return getUpdateStatus()
+  if (!isVersion(version) || compareVersions(version, app.getVersion()) >= 0) return getUpdateStatus()
   if (!supportsUpdates()) return getUpdateStatus()
   if (checkPromise || ['checking', 'downloading', 'downloaded'].includes(status.phase)) {
     return getUpdateStatus()
   }
 
-  selectedUpdateVersion = version
-  pendingDowngrade = compareVersions(version, app.getVersion()) < 0
-  autoUpdater.setFeedURL({ provider: 'generic', url: archiveFeedUrl(version) })
-  autoUpdater.allowDowngrade = true
-  autoUpdater.allowPrerelease = isPrereleaseVersion(version)
   manualCheck = true
   status.presentationId = ++presentationId
   transition({ type: 'check', manual: true })
   lastCheckedAt = Date.now()
-  checkPromise = autoUpdater.checkForUpdates()
-
-  try {
-    await checkPromise
-    if (status.phase === 'available' && status.availableVersion === version) {
-      await downloadAvailableUpdate()
-    } else if (status.phase !== 'downloading' && status.phase !== 'downloaded') {
-      transition({ type: 'error', message: '在更新源未找到该版本' })
+  checkPromise = (async () => {
+    try {
+      const releases = await fetchAvailableReleases(app.getVersion())
+      if (!releases.some(release => release.version === version)) {
+        throw new Error('Selected version is not in the release history')
+      }
+      selectedUpdateVersion = version
+      pendingDowngrade = true
+      autoUpdater.setFeedURL({ provider: 'generic', url: archiveFeedUrl(version) })
+      autoUpdater.allowDowngrade = true
+      autoUpdater.allowPrerelease = isPrereleaseVersion(version)
+      await autoUpdater.checkForUpdates()
+      if (status.phase === 'available' && status.availableVersion === version) {
+        await downloadAvailableUpdate()
+      } else if (status.phase !== 'downloading' && status.phase !== 'downloaded') {
+        transition({ type: 'error', message: '在更新源未找到该版本' })
+      }
+    } catch (error) {
+      transition({ type: 'error', message: errorMessage(error) })
+    } finally {
+      checkPromise = undefined
+      autoUpdater.setFeedURL({ provider: 'generic', url: STABLE_FEED_URL })
+      autoUpdater.allowDowngrade = false
+      pendingDowngrade = false
+      autoUpdater.allowPrerelease = false
     }
-  } catch (error) {
-    transition({ type: 'error', message: errorMessage(error) })
-  } finally {
-    checkPromise = undefined
-    autoUpdater.setFeedURL({ provider: 'generic', url: STABLE_FEED_URL })
-    autoUpdater.allowDowngrade = false
-    pendingDowngrade = false
-    autoUpdater.allowPrerelease = false
-  }
+  })()
+  await checkPromise
 
   return getUpdateStatus()
 }

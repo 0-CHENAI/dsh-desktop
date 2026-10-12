@@ -1,6 +1,15 @@
 import { ipcRenderer } from 'electron'
 import type { AvailableRelease, UpdateStatus } from '../shared/contracts'
-import { isUpdateDismissed, isNewManualPresentation, shouldShowUpdate, updateHeadline, type UpdateLocale } from './update-view'
+import {
+  isUpdateDismissed,
+  isNewManualPresentation,
+  shouldShowUpdate,
+  updateHeadline,
+  comparePreloadVersions,
+  rollbackReleases,
+  rollbackEmptyMessage,
+  type UpdateLocale
+} from './update-view'
 import brandMark from '../../build/brand-mark.svg?raw'
 const ROOT_ID = 'dsh-desktop-update-root'
 let locale: UpdateLocale = 'en'
@@ -249,56 +258,6 @@ function skipButton(status: UpdateStatus): HTMLButtonElement {
   return skip
 }
 
-/** Compare two dotted versions; prerelease sorts below its release. Mirrors
- * `version-catalog.compareVersions` — a small duplication across the
- * main/preload boundary, kept local so the preload bundle stays standalone.
- * Keep the two implementations in lockstep, including the semver-style
- * numeric prerelease comparison below ("rc.10" > "rc.9"). */
-function comparePreloadVersions(a: string, b: string): number {
-  const parse = (value: string): [number[], string] => {
-    const [core = '', ...pre] = value.trim().split('-')
-    const nums = core.split('.').map((part) => Number.parseInt(part, 10) || 0)
-    while (nums.length < 3) nums.push(0)
-    return [nums, pre.join('-')]
-  }
-  const [an, ap] = parse(a)
-  const [bn, bp] = parse(b)
-  for (let i = 0; i < 3; i += 1) {
-    if ((an[i] ?? 0) !== (bn[i] ?? 0)) return (an[i] ?? 0) - (bn[i] ?? 0)
-  }
-  return comparePrerelease(ap, bp)
-}
-
-function comparePrerelease(left: string, right: string): number {
-  if (left === right) return 0
-  if (!left) return 1
-  if (!right) return -1
-  const l = left.split('.')
-  const r = right.split('.')
-  const length = Math.max(l.length, r.length)
-  for (let i = 0; i < length; i += 1) {
-    const x = l[i]
-    const y = r[i]
-    if (x === undefined) return -1
-    if (y === undefined) return 1
-    if (x === y) continue
-    const xn = /^\d+$/.test(x)
-    const yn = /^\d+$/.test(y)
-    if (xn && yn) {
-      const nx = x.replace(/^0+/, '') || '0'
-      const ny = y.replace(/^0+/, '') || '0'
-      if (nx.length !== ny.length) return nx.length < ny.length ? -1 : 1
-      if (nx !== ny) return nx < ny ? -1 : 1
-      continue
-    }
-    if (xn) return -1
-    if (yn) return 1
-    if (x < y) return -1
-    if (x > y) return 1
-  }
-  return 0
-}
-
 function loadVersionList(onDone?: () => void): void {
   versionPickerLoading = true
   versionPickerError = false
@@ -432,19 +391,15 @@ function renderAbout(): void {
       const line = element('p', 'version-status-text')
       line.textContent = zh ? '暂时无法获取版本列表' : 'Unable to load version list'
       pickerContainer.appendChild(line)
-    } else if (versionPickerList && versionPickerList.length > 0) {
-      const newer = versionPickerList.filter(
-        (release) => comparePreloadVersions(release.version, currentVer) > 0
-      )
-      const older = versionPickerList.filter(
-        (release) => comparePreloadVersions(release.version, currentVer) < 0
-      )
-      appendAboutVersionGroup(pickerContainer, zh ? '较新版本' : 'Newer versions', newer, currentVer, zh)
-      appendAboutVersionGroup(pickerContainer, zh ? '历史版本（回退）' : 'Roll back', older, currentVer, zh)
     } else {
-      const line = element('p', 'version-status-text')
-      line.textContent = zh ? '没有可选的其它版本' : 'No other versions available'
-      pickerContainer.appendChild(line)
+      const older = rollbackReleases(versionPickerList || [], currentVer)
+      if (older.length > 0) {
+        appendAboutVersionGroup(pickerContainer, zh ? '历史版本（回退）' : 'Roll back', older, currentVer, zh)
+      } else {
+        const line = element('p', 'version-status-text')
+        line.textContent = rollbackEmptyMessage(info.locale)
+        pickerContainer.appendChild(line)
+      }
     }
     switcher.appendChild(pickerContainer)
   }
@@ -481,14 +436,10 @@ function appendAboutVersionGroup(
 }
 
 function selectVersionFromAbout(release: AvailableRelease, currentVersion: string, zh: boolean): void {
-  const downgrade = comparePreloadVersions(release.version, currentVersion) < 0
-  const message = downgrade
-    ? zh
-      ? `将降级到 ${release.version}（当前 ${currentVersion}）。降级不会迁移新版本写入的数据，可能导致配置不兼容。确定继续？`
-      : `This downgrades to ${release.version} (currently ${currentVersion}). A downgrade does not migrate data written by newer versions and may be config-incompatible. Continue?`
-    : zh
-      ? `将安装 ${release.version}，确定继续？`
-      : `Install ${release.version}?`
+  if (comparePreloadVersions(release.version, currentVersion) >= 0) return
+  const message = zh
+    ? `将降级到 ${release.version}（当前 ${currentVersion}）。降级不会迁移新版本写入的数据，可能导致配置不兼容。确定继续？`
+    : `This downgrades to ${release.version} (currently ${currentVersion}). A downgrade does not migrate data written by newer versions and may be config-incompatible. Continue?`
   if (!window.confirm(message)) return
 
   installingVersion = release.version
@@ -496,6 +447,8 @@ function selectVersionFromAbout(release: AvailableRelease, currentVersion: strin
   versionPickerOpen = false
   renderAbout()
   void ipcRenderer.invoke('updates:install-version', release.version).catch((error: unknown) => {
+    installingVersion = null
+    showActionError(error)
     console.error('[updater] unable to install version', error)
   })
 }
@@ -554,12 +507,12 @@ const styles = `
   .notes-label { margin-top:24px; }
   .current-version { text-align:center; font-size:12px; margin:14px 0 0; }
   button { appearance:none; border:0; font:inherit; cursor:pointer; border-radius:6px; min-height:32px; }
-  button:focus-visible { outline:2px solid #4d6bfe; outline-offset:3px; }
+  button:focus-visible { outline:2px solid var(--dsw-alias-label-primary,#202124); outline-offset:3px; }
   button:disabled { cursor:default; opacity:.55; }
-  .primary { background:#0066ff; color:#fff; font-size:14px; padding:8px 16px; }
-  .primary:hover:not(:disabled) { background:#0057db; }
+  .primary { background:var(--dsw-alias-button-primary-fill,#000); color:var(--dsw-alias-label-primary-inverted,#fff); font-size:14px; padding:8px 16px; }
+  .primary:hover:not(:disabled) { background:var(--dsw-alias-button-primary-hover,#34363b); }
   .secondary,.details,.version-switch { color:var(--dsw-alias-label-secondary,#666b73); background:transparent; padding:4px 8px; font-size:13px; }
-  .details { color:var(--dsw-alias-link,#0066ff); padding-left:0; }
+  .details { color:var(--dsw-alias-label-primary,#202124); padding-left:0; text-decoration:underline; text-underline-offset:3px; }
   .version-switch { display:inline-flex; align-items:center; gap:8px; }
   .version-switch-icon { width:18px; height:18px; flex:none; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
   .secondary:hover,.details:hover,.version-switch:hover { background:var(--dsw-alias-interactive-bg-hover,#f0f2f5); }
@@ -584,14 +537,18 @@ const styles = `
   .version-tag-btn { display:block; width:100%; padding:6px 8px; text-align:left; background:transparent; color:inherit; font-size:13px; }
   .version-tag-btn:hover { background:var(--dsw-alias-interactive-bg-hover,#f0f2f5); }
   .progress { height:5px; background:var(--dsw-alias-bg-layer-2,#e5e7eb); border-radius:4px; overflow:hidden; margin:12px 0; }
-  .progressValue { height:100%; background:#0066ff; }
+  .progressValue { height:100%; background:var(--dsw-alias-button-primary-fill,#000); }
   .spinner { position:absolute; inset:16px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:spin .75s linear infinite; }
   @keyframes spin { to { transform:rotate(360deg); } }
   @media (prefers-color-scheme:dark) {
     .card,.about-card,.version-picker-container { background:var(--dsw-alias-bg-layer-1,#1f2023); color:var(--dsw-alias-label-primary,#f3f4f6); border-color:var(--dsw-alias-border-l2,#41434a); }
     .description,.about-line,.release-notes,.notes-label,.current-version,.secondary,.version-switch,.version-group-title,.version-status-text { color:var(--dsw-alias-label-secondary,#a9adb5); }
     .tooltip { background:var(--dsw-alias-bg-layer-2,#34363b); color:var(--dsw-alias-label-primary,#f3f4f6); }
-    .details { color:var(--dsw-alias-link,#7b93ff); }
+    .primary { background:var(--dsw-alias-button-primary-fill,#f9fafb); color:var(--dsw-alias-label-primary-inverted,#191b1f); }
+    .primary:hover:not(:disabled) { background:var(--dsw-alias-button-primary-hover,#e6e8eb); }
+    button:focus-visible { outline-color:var(--dsw-alias-label-primary,#f3f4f6); }
+    .details { color:var(--dsw-alias-label-primary,#f3f4f6); }
+    .progressValue { background:var(--dsw-alias-button-primary-fill,#f9fafb); }
   }
   @media (prefers-reduced-motion:reduce) { .spinner { animation:none; } }
 `

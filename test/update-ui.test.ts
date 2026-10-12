@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import type { UpdateStatus } from '../src/shared/contracts'
 import {
   isUpdateDismissed,
+  rollbackReleases,
+  rollbackEmptyMessage,
   isNewManualPresentation,
   shouldShowUpdate,
   updateHeadline,
@@ -104,5 +106,21 @@ describe('manual update presentation lifecycle', () => {
     const status: UpdateStatus = { ...downloaded, phase: 'available' }
     expect(updateHeadline(status, 'zh').title).toBe('检测到新版本 v1.1.0')
     expect(updateHeadline(status, 'en').title).toBe('New version v1.1.0 available')
+  })
+})
+
+describe('About rollback choices', () => {
+  const releases = ['0.13.0', '0.12.0', '0.11.0', '0.12.0-rc.10', '0.12.0-rc.9'].map(version => ({ version, tag: `v${version}`, archiveUrl: `https://example.invalid/${version}/` }))
+
+  it('filters out the current and future versions from a mixed catalogue', () => {
+    expect(rollbackReleases(releases, '0.12.0').map(release => release.version)).toEqual(['0.12.0-rc.10', '0.12.0-rc.9', '0.11.0'])
+    expect(releases[0]?.version).toBe('0.13.0')
+  })
+
+  it('returns an empty state when no historical versions exist', () => {
+    expect(rollbackReleases(releases, '0.11.0')).toEqual([])
+    expect(rollbackReleases([], '0.12.0')).toEqual([])
+    expect(rollbackEmptyMessage('zh')).toBe('暂无可回退的历史版本')
+    expect(rollbackEmptyMessage('en')).toBe('No older versions available to roll back to')
   })
 })
