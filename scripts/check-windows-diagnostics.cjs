@@ -11,6 +11,7 @@ const entry = join(scratch, 'fixture.cjs')
 const env = { ...process.env }
 delete env.ELECTRON_RUN_AS_NODE
 function run(stateDir, mode) {
+  rmSync(join(stateDir, 'observed.json'), { force: true })
   try {
     execFileSync(require('electron'), [entry, stateDir, mode], {
       env, windowsHide: true, timeout: 20_000, stdio: ['ignore', 'pipe', 'pipe']
