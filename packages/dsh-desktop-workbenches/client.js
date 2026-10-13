@@ -36,7 +36,7 @@ window.__ModuleLoader__.load({
       '装到本机，自测确认能用': 'Install locally and test', '想上架，再按验收规范提交': 'Submit for listing when ready', '工作台市场验收规范': 'market acceptance guide', '工作台市场仓库': 'market repository', '上架分类': 'Market category', '让 Agent 按规范选择': 'Let the agent choose', '想要的新分类（可选）': 'Suggested new category (optional)', '例如：法务合规': 'For example: Legal compliance', '想要的新分类': 'Suggested new category', '复制投稿指令': 'Copy submission instructions', '开发工作台给 Agent 的指令': 'Development instructions for agent', '投稿工作台给 Agent 的指令': 'Submission instructions for agent', '工作台制作步骤': 'Workbench creation steps',
       '已经提交了 PR？粘贴链接查看进度': 'Already submitted a PR? Paste its link to check progress', '投稿 PR 链接': 'Submission PR link', '正在查询…': 'Checking…', '查询': 'Check', '在 GitHub 查看': 'View on GitHub',
       '提交 PR 就是进入审核，进度以 GitHub 上的 PR 为准，本机不保存投稿状态。PR 合并、市场目录更新后，工作台就会出现在工作台市场中。': 'Submitting a PR starts review. Track progress on GitHub; submission status is not stored locally. The workbench appears in the market after the PR is merged and the catalog updates.',
-      '保存失败，当前内容仍保留在界面中。': 'Save failed. Your text is still visible here.', '正在保存…': 'Saving…', '已保存在本地 · 此工作台的会话共用这份笔记': 'Saved locally · Sessions in this workbench share these notes', '业务面板加载失败。会话和公共入口仍可使用。': 'The workbench panel failed to load. Sessions and shared controls are still available.',
+      '保存失败，当前内容仍保留在界面中。': 'Save failed. Your text is still visible here.', '正在保存…': 'Saving…', '已保存在本地 · 此工作台的会话共用这份笔记': 'Saved locally · Sessions in this workbench share these notes', '工作台加载失败': 'Workbench failed to load', '请检查该工作台是否已正确安装，重启 DSH 后重试；若仍失败，请联系工作台作者修复。': 'Check that this workbench is installed correctly, then restart DSH and try again. If it still fails, contact the workbench author for a fix.',
       '可以直接新建工作区并开始对话，也可以使用已有工作区。新会话会自动关联这个工作台。': 'Create a workspace and start a session, or use an existing workspace. New sessions are linked to this workbench.', '新建工作区并开始对话': 'Create workspace and start session', '选择工作区': 'Choose workspace', '选择已有工作区': 'Choose an existing workspace', '选择或新建一个项目文件夹，即可创建工作区并开始对话。': 'Choose or create a project folder to start a session.', '在此工作区新建会话': 'New session in this workspace',
       '不能改变已有会话的工作台归属。': 'This session is already linked to a different workbench.', '会话不属于当前工作台。': 'This session does not belong to the current workbench.', '创建会话需要业务项目文件夹。': 'A project folder is required to create a session.',
       '卸载原生插件失败。': 'Could not uninstall the plugin.', '卸载原生插件未生效。': 'Plugin uninstallation did not take effect.', '原生插件卸载服务不可用。': 'The plugin uninstaller is unavailable.', '原生插件卸载服务不可用，请重启后重试。': 'The plugin uninstaller is unavailable. Restart and retry.', '另一个工作台正在安装，请稍候。': 'Another workbench is installing. Please wait.',
@@ -1256,6 +1256,10 @@ window.__ModuleLoader__.load({
       .dshWbBusiness[data-side=left]{order:0;border-left:0;border-right:1px solid var(--dsw-alias-border-l2)}
       .dshWbBusiness[data-embedded=true]{padding:0;overflow:hidden;display:flex;flex-direction:column}.dshWbBusiness[data-embedded=true]>div{flex:1;min-height:0}
       .dshWbBusiness h3{margin:0 0 8px;font-size:16px}.dshWbBusiness textarea{display:block;resize:vertical;min-height:260px;width:100%;padding:12px;background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l2);border-radius:8px;line-height:1.7}
+      .dshWbPanelFailure{box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:16px;width:100%;max-width:408px;max-height:100%;min-width:0;min-height:0;margin:auto;padding:24px;text-align:center;overflow:auto;overflow-wrap:anywhere;color:var(--dsw-alias-label-primary)}
+      .dshWbPanelFailureIcon{display:flex;color:var(--dsw-alias-label-tertiary)}
+      .dshWbPanelFailure h2{margin:0;font-size:15px;line-height:22px;font-weight:600}
+      .dshWbPanelFailure p{margin:0;font-size:13px;line-height:20px;color:var(--dsw-alias-label-secondary)}
       .dshWbInit{width:100%;max-width:440px;min-width:0;box-sizing:border-box;padding:24px;margin:auto;overflow-wrap:anywhere}.dshWbInit h2{font-size:20px;line-height:28px;font-weight:600;margin:0 0 8px}.dshWbInit p{margin:0}.dshWbInit .dshWbInitWorkspace{display:flex;flex-direction:column;gap:8px;margin-top:24px;min-width:0}.dshWbInit label{font-size:13px;line-height:20px;font-weight:500}.dshWbInitWorkspaceRow{display:flex;flex-wrap:wrap;gap:8px;min-width:0}.dshWbInit select{flex:1 1 180px;width:100%;min-width:0;max-width:100%;height:34px;padding:5px 8px;background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l2);border-radius:6px}.dshWbInit .dshWbBtn{min-height:34px;white-space:normal;overflow-wrap:anywhere;flex-shrink:0;max-width:100%}.dshWbInitNew{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin-top:20px;padding-top:20px;border-top:1px solid var(--dsw-alias-border-l2)}.dshWbInitNew:first-of-type{margin-top:24px}.dshWbInitHint{font-size:12px;line-height:18px}
       .dshWbNotice{padding:10px 14px;background:var(--dsw-alias-bg-layer-2);font-size:13px;line-height:1.6;overflow-wrap:anywhere}
       .dshWb [hidden]{display:none!important}
@@ -1951,7 +1955,14 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
     class PanelBoundary extends React.Component {
       state = { error: false }
       static getDerivedStateFromError() { return { error: true } }
-      render() { return this.state.error ? h('div', { role: 'alert' }, tr('业务面板加载失败。会话和公共入口仍可使用。')) : this.props.children }
+      render() { return this.state.error ? h(PanelFailure, { service: this.props.service }) : this.props.children }
+    }
+    function PanelFailure({ service }) {
+      useHostLocale(service)
+      return h('section', { className: 'dshWbPanelFailure', role: 'alert' },
+        h('span', { className: 'dshWbPanelFailureIcon' }, h(MarketIcon, { name: 'failure', size: 28 })),
+        h('h2', null, tr('工作台加载失败')),
+        h('p', null, tr('请检查该工作台是否已正确安装，重启 DSH 后重试；若仍失败，请联系工作台作者修复。')))
     }
     // The portal destination stays stable; providers may dock its mount anywhere
     // inside their own main-area layout without remounting the native input.
@@ -1997,7 +2008,7 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
       const chosen = visibleWorkspaces.find((item) => item.workspaceId === workspaceId) || service.defaultWorkspace()
       return h('div', { className: 'dshWb dshWbFrame' }, h(Notice, { service }),
         require('react-dom').createPortal(conversation, conversationContainer),
-        ...loaded.filter((item) => item.customFrame === true).map((item) => h('div', { key: item.id, className: 'dshWbCustomFrame', hidden: id !== item.id, style: { position: 'relative', overflow: 'hidden', flex: 1, minHeight: 0, minWidth: 0, width: '100%', maxWidth: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' } }, h(PanelBoundary, null, h(item.Component, { service, entry: item, active: id === item.id, conversation: id === item.id ? h('div', { style: { display: hasCurrentSession ? 'contents' : 'none' } }, conversationMount) : null })))),
+        ...loaded.filter((item) => item.customFrame === true).map((item) => h('div', { key: item.id, className: 'dshWbCustomFrame', hidden: id !== item.id, style: { position: 'relative', overflow: 'hidden', flex: 1, minHeight: 0, minWidth: 0, width: '100%', maxWidth: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' } }, h(PanelBoundary, { service }, h(item.Component, { service, entry: item, active: id === item.id, conversation: id === item.id ? h('div', { style: { display: hasCurrentSession ? 'contents' : 'none' } }, conversationMount) : null })))),
         h('div', { className: 'dshWbBody', hidden: customFrame, style: { '--workbench-business-width': `${(entry?.layout?.businessWidth ?? 0.36) * 100}%` } },
           h('div', { className: 'dshWbConversation' },
             entry && !hasCurrentSession && h('section', { className: 'dshWbInit' },
@@ -2013,7 +2024,7 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
             // One fixed position for the native conversation: changing workbench
             // content or moving to a custom dock does not remount its input tree.
             h('div', { style: { display: entry && !hasCurrentSession ? 'none' : 'contents' } }, !customFrame && conversationMount)),
-          ...loaded.filter((item) => !item.customFrame).map((item) => h('aside', { key: item.id, className: 'dshWbBusiness', 'data-side': item.layout?.businessSide, 'data-embedded': item.embedded === true, hidden: id !== item.id, 'aria-label': item.panelTitle }, h(PanelBoundary, null, h(item.Component, { service, entry: item }))))))
+          ...loaded.filter((item) => !item.customFrame).map((item) => h('aside', { key: item.id, className: 'dshWbBusiness', 'data-side': item.layout?.businessSide, 'data-embedded': item.embedded === true, hidden: id !== item.id, 'aria-label': item.panelTitle }, h(PanelBoundary, { service }, h(item.Component, { service, entry: item }))))))
     }
     function apply(ctx) {
       hostLocale = ctx.locale
