@@ -57,3 +57,7 @@ Electron 44.0.0 已在本机通过 Harness 内部模块原生加载探测。选�
 - 源码和打包后的实际 Electron Harness 在临时 Profile 完成认证引导、bootstrap 执行与真实客户端挂载。截图输出 `.build/desktop-profile-smoke`，不会保存会话正文、凭据或完整工具回执。
 
 本机是 Windows，尚未执行 macOS 真机/签名安装/自动更新验证；已加入原生 macOS CI 门禁，但不能把尚未运行的远端任务写成通过。Windows 验收为开发目录包，未覆盖 NSIS 安装升级；未调用真实外部模型/OAuth 账户或在线市场安装。正式发布须继续执行对应目标平台门禁。
+
+### PR 验证补充（2026-10-13）
+
+经用户授权创建面向 `test` 和 `main` 的 PR。首次 CI 复现了核心检查的 runner 错配：`npm test` 前置的 Office 准备不支持 Linux，而旧核心作业仍使用 Ubuntu。核心作业改在原生 Windows 上执行完整测试、类型检查和构建，保留 Windows/macOS 原生客户端与打包矩阵，并增加 YAML 配置回归。不通过跳过 Office、删除测试或放宽原生目标校验来处理该失败；最终远端通过状态以 PR 检查记录为准。
