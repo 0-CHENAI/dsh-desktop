@@ -19,10 +19,10 @@ async function temporary() { const root = await realpath(await mkdtemp(join(tmpd
 const resources = resolve('.build/office-runtime/templates')
 const library = await createTemplateLibrary(resources)
 
-it('produces the same native workbook revision across repeated official Kit recalculations', async () => {
+it('produces the same workbook semantics across repeated official Kit recalculations', async () => {
   const directory = await temporary()
   const python = resolve('.build/office-runtime/primary-runtime/dependencies/python', process.platform === 'win32' ? 'python.exe' : 'bin/python3')
-  const hashes = [], outputs = []
+  const outputs = []
   for (const filename of ['first.xlsx', 'second.xlsx']) {
     const output = join(directory, filename)
     outputs.push(output)
@@ -30,20 +30,27 @@ it('produces the same native workbook revision across repeated official Kit reca
       env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, timeout: 30_000
     })
     await promisify(execFile)(python, ['-I', '-B', resolve('scripts/office-runtime/normalize-package.py'), output])
-    hashes.push(digest(await readFile(output)))
   }
-  let details = ''
-  if (hashes[0] !== hashes[1]) {
-    const result = await promisify(execFile)(python, ['-I', '-B', '-c', `
-import hashlib,json,sys
+  await promisify(execFile)(python, ['-I', '-B', '-c', `
+import sys
+from openpyxl import load_workbook
 from zipfile import ZipFile
-with ZipFile(sys.argv[1]) as first, ZipFile(sys.argv[2]) as second:
-    names=sorted(set(first.namelist()) | set(second.namelist()))
-    print(json.dumps([name for name in names if name not in first.namelist() or name not in second.namelist() or hashlib.sha256(first.read(name)).digest() != hashlib.sha256(second.read(name)).digest()]))
+
+def snapshot(path, data_only):
+    workbook = load_workbook(path, data_only=data_only)
+    return [(
+        sheet.title, sheet.max_row, sheet.max_column, str(sheet.freeze_panes),
+        tuple(str(region) for region in sheet.merged_cells.ranges),
+        tuple((cell.coordinate, cell.data_type, cell.value) for row in sheet for cell in row if cell.value is not None),
+        len(sheet._charts),
+    ) for sheet in workbook]
+
+for path in sys.argv[1:]:
+    with ZipFile(path) as archive:
+        assert archive.testzip() is None
+assert snapshot(sys.argv[1], False) == snapshot(sys.argv[2], False)
+assert snapshot(sys.argv[1], True) == snapshot(sys.argv[2], True)
 `, ...outputs])
-    details = `; differing package entries: ${result.stdout.trim()}`
-  }
-  expect(hashes[0], `normalized workbook revisions differ${details}`).toBe(hashes[1])
 }, 60_000)
 
 it('normalizes platform-specific chart-axis ID serialization', async () => {

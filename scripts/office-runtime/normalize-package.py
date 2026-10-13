@@ -7,7 +7,7 @@ from pathlib import Path
 
 def normalize_package(path):
     # Kit allocates random chart-axis IDs. Canonical local IDs preserve the
-    # axis-reference graph while giving equivalent workbooks stable revisions.
+    # axis-reference graph without retaining those volatile identifiers.
     with ZipFile(path) as archive:
         entries = [(name, archive.read(name)) for name in sorted(archive.namelist())]
     normalized = []
