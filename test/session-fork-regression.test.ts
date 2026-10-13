@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises'
 import { runInNewContext } from 'node:vm'
 import { describe, expect, it, vi } from 'vitest'
+import { buildForkSeed } from '@deepseek-ai/dsh-session/fork'
+import { SessionSeq } from '@deepseek-ai/dsh-session'
 
 async function fixture(completed = true) {
   const source = await readFile('node_modules/@deepseek-ai/dsh-api-session-controller/lib/index.js', 'utf8')
@@ -12,11 +14,11 @@ async function fixture(completed = true) {
     constructor(public code: string, message: string) { super(message) }
   }
   const Controller = runInNewContext(`${source.slice(start, end)}; SessionCommandController`, {
-    Symbol, RemoteError, SessionSeq: Number, SessionLogOffset: Number,
+    Symbol, RemoteError, SessionSeq: Number, SessionLogOffset: Number, buildForkSeed,
     brandString: String, randomUUID: () => 'child', SessionQueryError: class extends Error {}
   })
-  const events = [{ seq: 0, type: 'turn/start' }, { seq: 1, type: 'message' },
-    ...(completed ? [{ seq: 2, type: 'turn/end' }, { seq: 3, type: 'turn/start' }] : [])]
+  const events = [{ seq: 0, time: 0, type: 'turn/start', data: { turn: 1 } }, { seq: 1, time: 1, type: 'message', data: {} },
+    ...(completed ? [{ seq: 2, time: 2, type: 'turn/end', data: { turn: 1, reason: { kind: 'completed' } } }, { seq: 3, time: 3, type: 'turn/start', data: { turn: 2 } }] : [])]
   const dispose = vi.fn()
   const attachSession = vi.fn()
   const create = vi.fn().mockResolvedValue({ agent: { id: 'session-child' } })
@@ -38,10 +40,10 @@ async function fixture(completed = true) {
 describe('issue #96 session branching', () => {
   it('creates the child using the agent controller and only the completed prefix', async () => {
     const f = await fixture()
-    await expect(f.controller.fork({ sessionId: 'source', atSeq: 1 })).resolves.toEqual({ sessionId: 'session-child' })
+    await expect(f.controller.fork({ sessionId: 'source', atSeq: 2 })).resolves.toEqual({ sessionId: 'session-child' })
     expect(f.agents.resolvedAgentOptions).toHaveBeenCalledOnce()
     expect(f.create).toHaveBeenCalledWith(expect.objectContaining({
-      seed: f.events.slice(0, 3), inheritedEventCount: 3,
+      seed: buildForkSeed(f.events as any, SessionSeq(2)), inheritedEventCount: 3,
       agentOptions: { provider: 'custom', model: 'selected' },
       meta: { cwd: '/project', parentSession: 'source', isSeeded: true, agentPreset: 'preset' }
     }))
@@ -55,9 +57,23 @@ describe('issue #96 session branching', () => {
     await expect(f.controller.fork({ sessionId: 'source' })).resolves.toEqual({ sessionId: 'session-child' })
   })
 
-  it('rejects incomplete turns without creating a child', async () => {
+  it('branches from an open turn, closes only the child tail and keeps the parent intact', async () => {
     const f = await fixture(false)
-    await expect(f.controller.fork({ sessionId: 'source', atSeq: 1 })).rejects.toMatchObject({ code: 'session/fork-unavailable' })
+    const original = JSON.stringify(f.events)
+    await expect(f.controller.fork({ sessionId: 'source', atSeq: 1 })).resolves.toEqual({ sessionId: 'session-child' })
+    const call = f.create.mock.calls[0]
+    if (!call) throw new Error('Fork did not create a child')
+    const options = call[0]
+    expect(options.inheritedEventCount).toBe(2)
+    expect(options.seed.slice(0, 2)).toEqual(f.events)
+    expect(options.seed.at(-1)).toMatchObject({ type: 'turn/end', data: { reason: { kind: 'forked' } } })
+    expect(JSON.stringify(f.events)).toBe(original)
+    expect(f.attachSession).toHaveBeenCalledWith('session-child')
+  })
+
+  it('rejects a nonexistent anchor without creating a child', async () => {
+    const f = await fixture(false)
+    await expect(f.controller.fork({ sessionId: 'source', atSeq: 99 })).rejects.toMatchObject({ code: 'session/fork-unavailable' })
     expect(f.create).not.toHaveBeenCalled()
     expect(f.dispose).toHaveBeenCalledOnce()
   })
@@ -81,12 +97,12 @@ describe('issue #96 session branching', () => {
     const alert = vi.fn()
     const fork = failed ? vi.fn().mockRejectedValue(new Error('failed')) : vi.fn().mockResolvedValue('child')
     const actions = runInNewContext(`({${source.slice(start, end)}\n}})`, {
-      ctx: { sessions: { fork, open } }, sessionId: 'source', window: { alert },
+      ctx: { sessions: { fork }, uiWorkspace: { openSession: open } }, chat: { getSnapshot: () => ({ timeline: { turns: new Map() } }) }, sessionId: 'source', window: { alert },
       console: { error: vi.fn() }, t: (key: string) => key
     })
     actions.forkAt(5)
     await new Promise(resolve => setImmediate(resolve))
-    expect(fork).toHaveBeenCalledWith({ sessionId: 'source', atSeq: 5, increaseTitle: true })
+    expect(fork).toHaveBeenCalledWith(expect.objectContaining({ sessionId: 'source', atSeq: 5, increaseTitle: true, onCreated: expect.any(Function) }))
     if (failed) {
       expect(open).not.toHaveBeenCalled()
       expect(alert).toHaveBeenCalledWith('message.branchFailed')

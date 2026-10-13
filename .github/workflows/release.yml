@@ -69,21 +69,44 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run typecheck
-      - name: Check macOS titlebar drag layout and button clicks
-        run: node scripts/check-macos-titlebar-layout.cjs
-      - name: Build unsigned Apple Silicon release package
+      - name: Build and check the actual Harness client on native macOS
+        run: |
+          npm run build
+          node scripts/check-desktop-profile.cjs
+          node scripts/verify-image-electron.mjs
+      - name: Build ad-hoc signed Apple Silicon release package
         if: startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != ''
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          # electron-builder otherwise skips even explicit ad-hoc signing for pull-request builds.
+          CSC_FOR_PULL_REQUEST: 'true'
         run: npm run package:mac:arm64
-      - name: Build unsigned Apple Silicon development package
+      - name: Build ad-hoc signed Apple Silicon development package
         if: ${{ !startsWith(github.ref, 'refs/tags/v') && inputs.prerelease_tag == '' }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          # Safe here because the configured identity is the keyless ad-hoc identity (`-`).
+          CSC_FOR_PULL_REQUEST: 'true'
         run: npm run package:dev:mac:arm64
       - name: Preserve Apple Silicon update metadata
         if: startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != ''
         run: mv dist/latest-mac.yml dist/latest-mac-arm64.yml
+      - name: Verify Apple Silicon release package signatures
+        if: startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != ''
+        run: >-
+          node scripts/verify-macos-package.mjs
+          dist
+          'DSH Desktop'
+          dsh-desktop-mac-arm64
+          arm64
+      - name: Verify Apple Silicon development package signatures
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') && inputs.prerelease_tag == '' }}
+        run: >-
+          node scripts/verify-macos-package.mjs
+          dist-dev
+          'DSH Desktop Dev'
+          dsh-desktop-dev-mac-arm64
+          arm64
       - uses: actions/upload-artifact@v4
         if: startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != ''
         with:
@@ -157,7 +180,7 @@ jobs:
       - name: Build isolated Windows development package
         if: ${{ !startsWith(github.ref, 'refs/tags/v') && inputs.prerelease_tag == '' }}
         run: npm run package:dev:win
-      - name: Smoke test packaged Windows Harness
+      - name: Smoke test packaged Windows Harness and real client
         if: >-
           github.event_name == 'pull_request' ||
           github.event_name == 'workflow_dispatch' ||
@@ -165,107 +188,18 @@ jobs:
         shell: pwsh
         env:
           SMOKE_EXE: ${{ (startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != '') && 'dist\win-unpacked\DSH Desktop.exe' || 'dist-dev\win-unpacked\DSH Desktop Dev.exe' }}
-          SMOKE_USERDATA: ${{ (startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != '') && 'dsh-desktop' || 'dsh-desktop-dev' }}
         run: |
-          $userData = Join-Path $env:APPDATA $env:SMOKE_USERDATA
-          $logPath = Join-Path $userData 'logs\harness.log'
-          # Run outside the checkout: otherwise Node can silently resolve a
-          # missing packaged dependency from the repository's node_modules.
-          $sourceExecutable = Get-Item $env:SMOKE_EXE
-          $isolatedApp = Join-Path $env:RUNNER_TEMP ('DSH packaged smoke ' + [guid]::NewGuid().ToString())
-          New-Item -ItemType Directory -Path $isolatedApp | Out-Null
-          Copy-Item -Path (Join-Path $sourceExecutable.Directory.FullName '*') -Destination $isolatedApp -Recurse
-          $executable = Join-Path $isolatedApp $sourceExecutable.Name
-          $packagedNode = Join-Path $isolatedApp 'resources\app\node_modules\node\bin\node.exe'
-          if (-not (Test-Path $packagedNode)) { throw 'Packaged Windows node.exe is missing.' }
-          # Exercise the actual native binding too; the best-effort fallback
-          # must not hide a missing or broken packaged koffi dependency.
-          & $packagedNode --input-type=module -e "import { createRequire } from 'node:module'; import { pathToFileURL } from 'node:url'; const require = createRequire(pathToFileURL(process.argv[1])); const resolved = require.resolve('koffi'); if (!resolved.startsWith(process.argv[2])) throw new Error('koffi resolved outside packaged app: ' + resolved); const koffi = require('koffi'); const getCurrentProcessId = koffi.load('kernel32.dll').func('GetCurrentProcessId', 'uint32', []); if (getCurrentProcessId() !== process.pid) throw new Error('Native koffi smoke failed'); console.log('Packaged koffi native binding passed');" (Join-Path $isolatedApp 'resources\app\package.json') (Join-Path $isolatedApp 'resources\app\node_modules')
-          if ($LASTEXITCODE -ne 0) { throw 'Packaged koffi native binding failed.' }
-          if (Test-Path $userData) { Remove-Item -Recurse -Force $userData }
-          $desktop = Start-Process -FilePath $executable -WorkingDirectory $isolatedApp -PassThru
-          try {
-            $deadline = (Get-Date).AddSeconds(75)
-            $ready = $false
-            $endpoint = $null
-            while ((Get-Date) -lt $deadline) {
-              if ($desktop.HasExited) {
-                throw "DSH Desktop Dev exited before Harness was ready (exit code $($desktop.ExitCode))."
-              }
-              if (Test-Path $logPath) {
-                $log = Get-Content -Raw $logPath
-                if (-not [string]::IsNullOrEmpty($log)) {
-                  $match = [regex]::Match($log, 'dsh web: (http://127\.0\.0\.1:\d+/\?token=[^\s]+)')
-                  if ($match.Success) {
-                    try {
-                      $authenticatedUrl = $match.Groups[1].Value
-                      $response = Invoke-WebRequest `
-                        -UseBasicParsing `
-                        -Uri $authenticatedUrl `
-                        -SessionVariable harnessSession `
-                        -TimeoutSec 2
-                      if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 500) {
-                        $endpoint = ([uri]$authenticatedUrl).GetLeftPart([System.UriPartial]::Authority)
-                        $ready = $true
-                        break
-                      }
-                    } catch { }
-                  }
-                }
-              }
-              Start-Sleep -Milliseconds 500
-            }
-            if (-not $ready) { throw 'Packaged Harness did not become ready within 75 seconds.' }
-
-            function Invoke-HarnessRpc([string]$endpointName, [hashtable]$request) {
-              $rpcId = [guid]::NewGuid().ToString()
-              $body = @{
-                type = 'client-request'
-                rpcId = $rpcId
-                method = $endpointName
-                payload = @{ args = @{ request = $request } }
-              } | ConvertTo-Json -Depth 8 -Compress
-              $response = Invoke-RestMethod `
-                -Method Post `
-                -Uri "$endpoint/api/$endpointName" `
-                -ContentType 'application/json; charset=utf-8' `
-                -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) `
-                -WebSession $harnessSession `
-                -TimeoutSec 30
-              if ($response.rpcId -ne $rpcId) { throw "Harness RPC id mismatch for $endpointName." }
-              if (-not $response.result.ok) {
-                throw "Harness RPC $endpointName failed: $($response.result.error.code): $($response.result.error.message)"
-              }
-              return $response.result.value
-            }
-
-            $workspacePath = Join-Path $env:RUNNER_TEMP '数据项素-工作区'
-            New-Item -ItemType Directory -Force -Path $workspacePath | Out-Null
-            $workspace = Invoke-HarnessRpc 'workspace/create' @{ path = $workspacePath }
-            $session = Invoke-HarnessRpc 'session/create' @{ workspaceId = $workspace.workspace.workspaceId }
-            if ([string]::IsNullOrWhiteSpace($session.sessionId)) {
-              throw 'Harness did not return a session id for the selected workspace.'
-            }
-
-            Start-Sleep -Seconds 20
-            $stableLog = Get-Content -Raw $logPath
-            if ($stableLog -match '\[stderr\]') {
-              throw 'Harness reported stderr after workspace and session creation.'
-            }
-            if ($stableLog -match '\[node\] Harness process exited') {
-              throw 'Harness process exited after workspace and session creation.'
-            }
-            if ($desktop.HasExited) {
-              throw "DSH Desktop Dev exited after workspace and session creation (exit code $($desktop.ExitCode))."
-            }
-            Write-Host 'Packaged Windows Harness smoke test passed.'
-          } finally {
-            if (Test-Path $logPath) {
-              Write-Host '--- harness.log ---'
-              Get-Content $logPath
-            }
-            if (-not $desktop.HasExited) { Stop-Process -Id $desktop.Id -Force }
-          }
+          $executable = (Get-Item -LiteralPath $env:SMOKE_EXE).FullName
+          $resources = Join-Path (Split-Path $executable) 'resources'
+          $appRoot = Join-Path $resources 'app.asar'
+          # Wait for the GUI executable through a Node process handle. A direct
+          # PowerShell invocation can leave LASTEXITCODE unset despite success.
+          node scripts/check-packaged-windows.mjs $appRoot $executable
+          if ($LASTEXITCODE -ne 0) { throw 'Packaged native binding failed.' }
+          # The gate creates and removes only its own temporary Profile. No
+          # existing AppData folder or credential-bearing log is touched.
+          node scripts/check-desktop-profile.cjs $appRoot $resources $executable
+          if ($LASTEXITCODE -ne 0) { throw 'Packaged Harness/client activation failed.' }
       - uses: actions/upload-artifact@v4
         if: startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != ''
         with:
@@ -461,6 +395,7 @@ jobs:
             echo "MODELS_TOKEN not set; using the deterministic GitHub release note."
             python3 .github/scripts/github_release_notes.py generate-fallback --tag "$RELEASE_TAG" --output "$out"
           fi
+          printf '%s\n' '- macOS 包使用 ad-hoc 代码签名但未通过 Apple 公证；首次打开需在“系统设置 > 隐私与安全性”中选择“仍要打开”，不需要执行 `xattr` 或关闭 Gatekeeper。' >> "$out"
       - name: Create or update release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -656,6 +591,7 @@ jobs:
               --prerelease \
               --target "$GITHUB_SHA" \
               --generate-notes \
+              --notes 'macOS 包使用 ad-hoc 代码签名但未通过 Apple 公证；首次打开需在“系统设置 > 隐私与安全性”中选择“仍要打开”，不需要执行 `xattr` 或关闭 Gatekeeper。' \
               --title "DSH Desktop $RELEASE_TAG（预发布）" \
               --repo "$GITHUB_REPOSITORY"
           fi
@@ -801,7 +737,7 @@ jobs:
             echo "MODELS_TOKEN not set; using the deterministic GitHub release note."
             python3 .github/scripts/github_release_notes.py generate-fallback --tag "$tag" --output "$out"
           fi
-          printf '%s\n' '- macOS 包未进行 Developer ID 签名与 Apple 公证，更新需手动下载安装；Windows Dev 包未使用 UKey 签名。' >> "$out"
+          printf '%s\n' '- macOS 包使用 ad-hoc 代码签名但未通过 Apple 公证；首次打开需在“系统设置 > 隐私与安全性”中选择“仍要打开”，更新需手动下载安装；Windows Dev 包未使用 UKey 签名。' >> "$out"
           python3 .github/scripts/github_release_notes.py validate --tag "$tag" --input "$out"
       - name: Publish GitHub Release
         env:

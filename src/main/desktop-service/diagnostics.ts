@@ -1,4 +1,5 @@
 import type { EventEmitter } from 'node:events'
+import { randomUUID } from 'node:crypto'
 import type { RuntimeSnapshot } from '../../shared/contracts'
 import { DesktopService, type FailureKind } from './service'
 
@@ -11,9 +12,12 @@ export function attachDiagnostics(app: EventEmitter, service: DesktopService, op
   const safe = (operation: () => void) => { try { operation() } catch (error) { options.onError?.(error) } }
   const flush = () => { void service.flush().catch(error => options.onError?.(error)) }
   let canSend = false
-  const capture = (kind: FailureKind, message: string) => {
-    safe(() => service.capture(kind, message))
-    if (canSend) flush()
+  let pendingPluginFailureEventId: string | undefined
+  let suppressPluginFailure = false
+  const capture = (kind: FailureKind, message: string, eventId?: string) => {
+    safe(() => service.capture(kind, message, eventId))
+    // A plugin-attributed startup failure waits: recovery may still discard it.
+    if (canSend && (eventId === undefined || eventId !== pendingPluginFailureEventId)) flush()
   }
   safe(() => service.beginSession())
   const fatal = (error: Error) => safe(() => service.captureFatal(error))
@@ -21,7 +25,14 @@ export function attachDiagnostics(app: EventEmitter, service: DesktopService, op
   const contentsListeners = new Map<EventEmitter, (...args: any[]) => void>()
   const created = (_event: unknown, contents: EventEmitter) => {
     const gone = (_event: unknown, details: { reason: string; exitCode: number }) => {
-      if (!['clean-exit', 'killed'].includes(details.reason)) capture('renderer-crash', `reason=${details.reason} exitCode=${details.exitCode}`)
+      if (!['clean-exit', 'killed'].includes(details.reason)) {
+        let urlInfo = ''
+        try {
+          const url = (contents as { getURL?: () => string }).getURL?.()
+          if (url) urlInfo = ` url=${url}`
+        } catch { /* ignore */ }
+        capture('renderer-crash', `reason=${details.reason} exitCode=${details.exitCode}${urlInfo}`)
+      }
     }
     contentsListeners.set(contents, gone)
     contents.prependListener('render-process-gone', gone)
@@ -50,6 +61,7 @@ export function attachDiagnostics(app: EventEmitter, service: DesktopService, op
   app.on('browser-window-created', windowCreated)
   let previousAttempt = -1
   let wasReady = false
+  let recoveryGeneration = 0
   let previousPhase: RuntimeSnapshot['phase'] | undefined
   return {
     startSending() {
@@ -58,16 +70,49 @@ export function attachDiagnostics(app: EventEmitter, service: DesktopService, op
       flush()
     },
     runtimeChanged(snapshot: RuntimeSnapshot, flushLog: () => Promise<void>, attempt = 0) {
-      if (attempt !== previousAttempt) wasReady = false
-      if (snapshot.phase === 'starting') wasReady = false
-      if (snapshot.phase === 'ready') wasReady = true
+      if (attempt !== previousAttempt) {
+        recoveryGeneration++
+        wasReady = false
+        suppressPluginFailure = false
+      }
+      if (snapshot.phase === 'starting') {
+        wasReady = false
+        suppressPluginFailure = false
+      }
+      if (snapshot.phase === 'ready') {
+        recoveryGeneration++
+        wasReady = true
+        suppressPluginFailure = false
+        if (pendingPluginFailureEventId) {
+          service.discard(pendingPluginFailureEventId)
+          pendingPluginFailureEventId = undefined
+        }
+      }
       if (snapshot.phase === 'failed' && (previousPhase !== 'failed' || attempt !== previousAttempt)) {
         const kind = wasReady ? 'harness-crash' : 'startup-failure'
+        const startupPluginFailure = !wasReady && Boolean(snapshot.pluginFailures?.length)
+        const failureGeneration = recoveryGeneration
         // Wait for the actual Harness stream callback, not a guessed timer.
-        void flushLog().catch(error => options.onError?.(error)).then(() => capture(kind, snapshot.message))
+        void flushLog().catch(error => options.onError?.(error)).then(() => {
+          if (startupPluginFailure && (suppressPluginFailure || failureGeneration !== recoveryGeneration)) {
+            return
+          }
+          const eventId = randomUUID()
+          if (startupPluginFailure) {
+            pendingPluginFailureEventId = eventId
+          }
+          capture(kind, snapshot.message, eventId)
+        })
       }
       previousPhase = snapshot.phase
       previousAttempt = attempt
+    },
+    discardPendingPluginFailure() {
+      suppressPluginFailure = true
+      if (pendingPluginFailureEventId) {
+        service.discard(pendingPluginFailureEventId)
+        pendingPluginFailureEventId = undefined
+      }
     },
     startupFailed(error: unknown) { capture('startup-failure', error instanceof Error ? error.stack ?? error.message : String(error)) },
     markCleanExit: clean,

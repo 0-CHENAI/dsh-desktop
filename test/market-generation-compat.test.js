@@ -3,6 +3,8 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { adaptMarketGenerationSource } from '../build/market-generation-compat.mjs'
+import { legacyMarketFixture } from './market-legacy-fixture.ts'
+import { electronExecutable } from '../scripts/electron-node-loader.mjs'
 
 function update(...args) {
   const output = execFileSync(process.execPath, ['test/fixtures/market-generation-update.mjs', ...args], { encoding: 'utf8' })
@@ -11,14 +13,14 @@ function update(...args) {
 
 describe('market generation update compatibility', () => {
   it('keeps the bundled Node CJS/ESM dependency graph loadable', () => {
-    const node = join('node_modules', 'node', 'bin', process.platform === 'win32' ? 'node.exe' : 'node')
+    const node = electronExecutable(process.cwd())
     const script = `
       import { installMarketGenerationCompatibility } from './build/market-generation-compat.mjs';
       installMarketGenerationCompatibility();
       await import('jsdom');
       console.log('loaded');
     `
-    expect(execFileSync(node, ['--input-type=module', '-e', script], { encoding: 'utf8' }).trim()).toBe('loaded')
+    expect(execFileSync(node, ['--input-type=module', '-e', script], { encoding: 'utf8', env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' } }).trim()).toBe('loaded')
   })
 
   it('lets the published market observe the installed version without the adapter', () => {
@@ -59,7 +61,7 @@ describe('market generation update compatibility', () => {
   })
 
   it('leaves the active-profile rollback path intact and is idempotent', () => {
-    const source = readFileSync('node_modules/dshmarket/lib/routes.js', 'utf8')
+    const source = readFileSync(join(legacyMarketFixture(), 'lib/routes.js'), 'utf8')
     const patched = adaptMarketGenerationSource(source, 'routes.js')
     expect(patched).toContain('restoreProfileManifest(config.profile, manifestBefore, activeProfileDir)')
     expect(adaptMarketGenerationSource(patched, 'routes.js')).toBe(patched)

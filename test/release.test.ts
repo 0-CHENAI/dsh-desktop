@@ -10,6 +10,16 @@ const releaseAssets = [
 ]
 
 describe('GitHub release contract', () => {
+  it('keeps the linked PPT runtime on the reviewed image parser security release', async () => {
+    const lock = JSON.parse(await readFile(path.join(projectRoot, 'package-lock.json'), 'utf8'))
+    const parsers = Object.entries(lock.packages).filter(([location]) => location.endsWith('/image-size'))
+    expect(parsers.length).toBeGreaterThan(0)
+    // npm can keep an older nested entry when recalculating linked packages.
+    // Guard the actual frozen lock used by clean installs, not just overrides.
+    for (const [location, metadata] of parsers) {
+      expect((metadata as { version: string }).version, location).toBe('2.0.4')
+    }
+  })
   it('keeps the installer PR gate on main only', async () => {
     const workflow = (
       await readFile(
@@ -87,10 +97,10 @@ describe('GitHub release contract', () => {
 
     for (const packageName of promotedClosurePackages) {
       expect(packageJson.dependencies[packageName]).toMatch(
-        /^file:packages\/harness-0\.1\.5-rc\.2\/npm-dsh\/.+\.tgz$/
+        /^file:packages\/harness-0\.2\.0-rc\.2\/npm-dsh\/.+\.tgz$/
       )
       expect(packageLock.packages[`node_modules/${packageName}`]?.resolved).toMatch(
-        /^file:packages\/harness-0\.1\.5-rc\.2\/npm-dsh\//
+        /^file:packages\/harness-0\.2\.0-rc\.2\/npm-dsh\//
       )
     }
 
@@ -392,9 +402,9 @@ describe('GitHub release contract', () => {
     expect(main).toContain("app.setPath('userData', join(app.getPath('appData'), 'dsh-desktop'))")
     expect(main).toContain('startUpdateManager({')
     expect(main).not.toContain('if (!developmentBuild) {\n    startUpdateManager')
-    expect(targetVerifier).toContain("resolve('node_modules', 'node', 'bin', executable)")
-    expect(targetVerifier).toContain('Bundled Node.js runtime was not found or is not executable')
-    expect(targetVerifier).toContain('spawnSync')
+    expect(targetVerifier).toContain('electronExecutable(process.cwd())')
+    expect(targetVerifier).toContain('probeElectronNodeLoader')
+    expect(targetVerifier).toContain('Electron Node mode cannot load the Harness native loader')
   })
 
   it('builds and publishes every supported platform', async () => {
@@ -408,21 +418,21 @@ describe('GitHub release contract', () => {
     expect(workflow).toContain('runs-on: windows-2022')
     expect(workflow).toContain('npm run package:dev:win')
     expect(workflow).toContain('Smoke test packaged Windows Harness')
-    expect(workflow).toContain('$sourceExecutable = Get-Item $env:SMOKE_EXE')
-    expect(workflow).toContain("$isolatedApp = Join-Path $env:RUNNER_TEMP")
-    expect(workflow).toContain('$executable = Join-Path $isolatedApp $sourceExecutable.Name')
-    expect(workflow).toContain('-WorkingDirectory $isolatedApp')
-    expect(workflow).toContain('Packaged koffi native binding failed.')
+    expect(workflow).toContain('$executable = (Get-Item -LiteralPath $env:SMOKE_EXE).FullName')
+    expect(workflow).toContain("$appRoot = Join-Path $resources 'app.asar'")
+    expect(workflow).toContain('node scripts/check-packaged-windows.mjs $appRoot $executable')
+    expect(workflow).toContain('Packaged native binding failed.')
     expect(workflow).toContain("'dist-dev\\win-unpacked\\DSH Desktop Dev.exe'")
-    expect(workflow).toContain('if (-not [string]::IsNullOrEmpty($log))')
-    expect(workflow).toContain("dsh web: (http://127\\.0\\.0\\.1:\\d+/\\?token=[^\\s]+)")
-    expect(workflow).toContain('-SessionVariable harnessSession')
-    expect(workflow).toContain('-WebSession $harnessSession')
-    expect(workflow).toContain('Packaged Windows Harness smoke test passed.')
-    expect(workflow).toContain('payload = @{ args = @{ request = $request } }')
-    expect(workflow).toContain("Invoke-HarnessRpc 'workspace/create'")
-    expect(workflow).toContain("Invoke-HarnessRpc 'session/create'")
-    expect(workflow).toContain('Harness process exited after workspace and session creation.')
+    expect(workflow).toContain('node scripts/check-desktop-profile.cjs $appRoot $resources $executable')
+    expect(workflow).not.toContain('resources\\app\\node_modules\\node\\bin\\node.exe')
+    expect(workflow).not.toContain('Remove-Item -Recurse -Force $userData')
+    const gate = await readFile(path.join(projectRoot, 'scripts/check-desktop-profile.cjs'), 'utf8')
+    const fixture = await readFile(path.join(projectRoot, 'scripts/fixtures/desktop-profile.ts'), 'utf8')
+    expect(gate).toContain('cwd: temp')
+    expect(gate).toContain("mkdtempSync(join(tmpdir(), 'dsh-desktop-profile-'))")
+    expect(fixture).toContain("state.phase, 'ready'")
+    expect(fixture).toContain('state.authToken')
+    expect(fixture).toContain('real Harness client/sidebar')
     expect(workflow).toContain('prerelease_tag:')
     expect(workflow).toContain('--prerelease')
     expect(workflow).toContain('name: windows-x64-dev')
@@ -456,7 +466,8 @@ describe('GitHub release contract', () => {
     expect(publishMain).toContain('--target "$GITHUB_SHA"')
     expect(publishMain).toContain('--latest')
     expect(publishMain).toContain('refusing to overwrite it')
-    expect(publishMain).toContain('macOS 包未进行 Developer ID 签名与 Apple 公证')
+    expect(publishMain).toContain('macOS 包使用 ad-hoc 代码签名但未通过 Apple 公证')
+    expect(publishMain).toContain('系统设置 > 隐私与安全性')
     expect(publishMain).toContain('Windows Dev 包未使用 UKey 签名')
     expect(workflow).toContain('scripts/next-release-version.mjs --apply')
     expect(workflow.match(/Set app version from next patch release/g)).toHaveLength(2)
@@ -464,24 +475,33 @@ describe('GitHub release contract', () => {
     expect(workflow).toContain('description: Override the next version')
   })
 
-  it('builds macOS releases without Apple credentials or notarization', async () => {
+  it('ad-hoc signs and verifies macOS releases without Apple credentials or notarization', async () => {
     const workflow = await readFile(
       path.join(projectRoot, '.github', 'workflows', 'release.yml'),
       'utf8'
     )
     const macos = workflow.slice(workflow.indexOf('  macos-apple-silicon:'), workflow.indexOf('  windows-x64:'))
+    const packageJson = JSON.parse(
+      await readFile(path.join(projectRoot, 'package.json'), 'utf8')
+    ) as { build: { mac: { identity?: string; hardenedRuntime?: boolean } } }
     expect(macos).not.toContain('secrets.DESKTOP_')
     expect(macos).not.toContain('signing_keychain')
     expect(macos).not.toContain('notarytool')
     expect(macos).not.toContain('stapler')
-    expect(macos).not.toContain('spctl')
     expect(macos.match(/CSC_IDENTITY_AUTO_DISCOVERY: 'false'/g)).toHaveLength(2)
+    expect(macos.match(/CSC_FOR_PULL_REQUEST: 'true'/g)).toHaveLength(2)
+    expect(packageJson.build.mac.identity).toBe('-')
+    expect(packageJson.build.mac.hardenedRuntime).toBe(false)
     expect(macos).toContain('run: npm run package:mac:arm64')
     expect(macos).toContain('run: npm run package:dev:mac:arm64')
+    expect(macos.match(/scripts\/verify-macos-package\.mjs/g)).toHaveLength(2)
+    expect(macos).toContain("'DSH Desktop Dev'")
     expect(macos).toContain("!startsWith(github.ref, 'refs/tags/v') && inputs.prerelease_tag == ''")
     expect(macos).toContain('dist/latest-mac-arm64.yml')
     expect(macos).toContain('dist-dev/latest-mac.yml')
     expect(workflow).not.toContain('macos-intel:')
+    expect(workflow.match(/macOS 包使用 ad-hoc 代码签名但未通过 Apple 公证/g)).toHaveLength(3)
+    expect(workflow).toContain('不需要执行 `xattr` 或关闭 Gatekeeper')
   })
 
   it('signs Windows installers on the local UKey runner before publishing', async () => {
@@ -559,7 +579,8 @@ describe('prerelease parity workflow', () => {
   it('parametrises the Windows smoke test executable', async () => {
     const yml = await load()
     expect(yml).toContain('SMOKE_EXE')
-    expect(yml).toContain('SMOKE_USERDATA')
+    expect(yml).not.toContain('SMOKE_USERDATA')
+    expect(yml).toContain('node scripts/check-desktop-profile.cjs $appRoot $resources $executable')
   })
 })
 

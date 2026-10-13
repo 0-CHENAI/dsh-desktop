@@ -33,7 +33,7 @@ describe('desktop provider onboarding patch', () => {
     expect(patch).toContain('dshProviderGrid')
     expect(patch).toContain('aria-pressed')
     expect(installed).toContain('className: "dshProviderCard"')
-    expect(installed).toContain('providerPickerOpen')
+    expect(installed).toContain('function ProviderPicker(')
     expect(installed).toContain('providerSearch: "搜索提供方"')
     expect(installed).toContain('.dshProviderCard[aria-pressed=true]{border-color:var(--dsw-alias-border-l1)')
     expect(installed).not.toContain('SETTINGS_PROVIDER_PRIORITY')
@@ -42,7 +42,9 @@ describe('desktop provider onboarding patch', () => {
     expect(installed).toContain('providerIconUrl(row.entry.provider)')
     expect(installed).toContain('providerSupportsOAuth(row)')
     expect(installed).toContain('oauthProviderBadge: "OAuth"')
-    expect(installed).not.toContain('deepSeekOnboardingInjected')
+    // Harness 0.2 provides the native first-run injection; Desktop's editor
+    // remains a provider picker, not a second automatically mounted dialog.
+    expect(installed).toContain('const deepSeekOnboardingInjected =')
     expect(installed).not.toContain(', DeepSeekOnboardingDialog)')
   })
 })

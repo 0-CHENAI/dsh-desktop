@@ -1,6 +1,6 @@
 import { lstat, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { readDesired, registryLayout, writeDesired, writeGenerationMeta } from 'dsh-desktop-market-installer/generations/registry'
 
@@ -9,7 +9,7 @@ vi.mock('../src/main/runtime/profile-plugin-command', () => ({
   installProfileDependenciesWithDsh: installMock
 }))
 
-const { upgradeMarketInSharedTree } = await import('../src/main/state/plugin-upgrade')
+const { upgradeMarketInSharedTree, marketInstallPendingPath } = await import('../src/main/state/plugin-upgrade')
 
 const homes: string[] = []
 afterEach(async () => {

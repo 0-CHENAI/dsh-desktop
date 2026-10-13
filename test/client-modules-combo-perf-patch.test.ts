@@ -88,7 +88,7 @@ describe('client module combo build', () => {
     )
     // compose() goes through the memo instead of rebuilding every record.
     expect(bundle).toContain(
-      'for (const record of this.table.values()) {\n\t\t\tconst artifact = recordCombo(record);'
+      'const artifact = recordCombo(record, this.readSourceMap);'
     )
     expect(bundle).not.toContain(
       'for (const record of this.table.values()) {\n\t\t\tconst artifact = buildCombo([record], record.entry.rev);'
@@ -100,7 +100,7 @@ describe('client module combo build', () => {
     const { recordCombo } = new Function(
       'buildCombo',
       `${bundle.slice(start, end)}\nreturn { recordCombo }`
-    )((_records: unknown[], rev: string) => {
+    )((_records: unknown[], _sourceMapOf: unknown, rev: string) => {
       builds += 1
       return { rev, script: `build-${builds}` }
     }) as { recordCombo: (record: { entry: { rev: string } }) => { rev: string; script: string } }

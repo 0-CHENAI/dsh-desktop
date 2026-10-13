@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="docs/images/readme-logo-black-v020.png" width="64" alt="Logotipo do DSH Desktop" valign="middle" />
+  <img src="docs/images/readme-logo-black-rounded.svg" width="64" alt="Logotipo do DSH Desktop" valign="middle" />
   DSH Desktop
 </h1>
 
@@ -25,7 +25,7 @@
 O DSH Desktop transforma a experiência local do DeepSeek Harness em um aplicativo desktop instalável. Ele inicia o Harness automaticamente, armazena Profile, plugins, espaços de trabalho, configurações de modelos e sessões fora do diretório do aplicativo e abre a interface completa quando o Runtime local está pronto.
 
 > [!IMPORTANT]
-> O DSH Desktop é uma versão inicial baseada no `@deepseek-ai/dsh@0.1.5-rc.2`, que evolui rapidamente. As versões para macOS são assinadas e notarizadas pela Apple. Os instaladores para Windows x64 também são assinados; os avisos de segurança do Windows podem diminuir gradualmente à medida que o editor acumula reputação de downloads e instalações.
+> O DSH Desktop é uma versão inicial baseada no `@deepseek-ai/dsh@0.1.5-rc.2`, que evolui rapidamente. Este fork não possui credenciais do Apple Developer Program, portanto os pacotes para macOS recebem apenas assinatura ad-hoc e não são notarizados pela Apple; os instaladores para Windows x64 são assinados. Depois que o macOS bloquear a primeira abertura, use **Ajustes do Sistema → Privacidade e Segurança → Abrir Mesmo Assim**. Não é necessário executar `xattr` nem desativar o Gatekeeper.
 
 ## Download
 
@@ -42,7 +42,7 @@ As versões instaladas verificam atualizações logo após a inicialização e a
 <p align="center">
   Leia o código QR abaixo com o WeChat para entrar no grupo do DSH Desktop.<br />
   <img src="docs/images/wechat-group-20260815.png" width="220" alt="Código QR do grupo do DSH Desktop no WeChat" /><br />
-  Você também pode entrar na <a href="https://discord.gg/he2gAKCpj">comunidade do DSH Desktop no Discord</a>.
+  Você também pode entrar na <a href="https://discord.gg/7Xgf3qe3Qp">comunidade do DSH Desktop no Discord</a>.
 </p>
 
 ## O que o DSH Desktop acrescenta
@@ -54,6 +54,7 @@ O DeepSeek Harness já fornece o Agent Runtime e a Web UI. O DSH Desktop acresce
 - Oferece suporte aos modelos oficiais da DeepSeek e a provedores de terceiros populares
 - Importa e exporta Agent Preset completos como [pacotes `.dshpreset`](docs/preset-packages.md) portáteis
 - Transforma materiais em apresentações PPTX editáveis por meio do modo PPT integrado
+- Inclui Python e bibliotecas de Office para criar e verificar DOCX, PPTX e XLSX offline no macOS e Windows
 - Preserva Profile, plugins, espaços de trabalho, sessões e configurações de modelos durante atualizações
 - Detecta falhas de inicialização e de plugins da interface, guarda diagnósticos e oferece recuperação guiada
 - Inclui um Modo de segurança não destrutivo que bloqueia temporariamente plugins de terceiros
@@ -101,8 +102,8 @@ open -a "DSH Desktop" --args --safe-mode
 
 | Plataforma | Distribuição | Status |
 | --- | --- | --- |
-| macOS Apple Silicon | DMG/ZIP assinados e notarizados | Compatível |
-| macOS Intel | DMG/ZIP assinados e notarizados | Compatível |
+| macOS Apple Silicon | DMG/ZIP com assinatura ad-hoc, sem notarização | Prévia; exige aprovação uma vez |
+| macOS Intel | DMG/ZIP com assinatura ad-hoc, sem notarização | Prévia; exige aprovação uma vez |
 | Windows x64 | Instalador NSIS assinado | Compatível |
 | Windows ARM64 | — | Não compatível atualmente |
 | Linux | — | Não compatível atualmente |

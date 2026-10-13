@@ -12,7 +12,7 @@ import {
 import { resolveMarketRegistry } from 'dsh-desktop-market-installer/market-registry'
 import { lstat, readFile, readlink, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { installProfileDependenciesWithDsh } from '../runtime/profile-plugin-command'
+import { installProfileDependenciesWithDsh, packageCommandEnvironment } from '../runtime/profile-plugin-command'
 
 export interface PluginUpgradeOptions {
   dshHome: string
@@ -20,6 +20,8 @@ export interface PluginUpgradeOptions {
   targetVersion: string
   nodeExecutablePath: string
   pnpmEntryPath: string
+  /** The packaged lock-recovery runner the `.desktop-bin` pnpm shim routes through. */
+  pnpmRunnerPath?: string
   note?: (line: string) => void
 }
 
@@ -36,7 +38,7 @@ export interface PluginUpgradeResult {
 export async function upgradePluginToGeneration(
   options: PluginUpgradeOptions
 ): Promise<PluginUpgradeResult> {
-  const { dshHome, pluginName, targetVersion, nodeExecutablePath, pnpmEntryPath, note } = options
+  const { dshHome, pluginName, targetVersion, nodeExecutablePath, pnpmEntryPath, pnpmRunnerPath, note } = options
   const spec = `${pluginName}@${targetVersion}`
 
   return withRegistryLock(dshHome, async () => {
@@ -48,6 +50,7 @@ export async function upgradePluginToGeneration(
       expectedVersion: targetVersion,
       nodeExecutablePath,
       pnpmEntryPath,
+      environment: await packageCommandEnvironment({ dshHome, nodeExecutablePath, pnpmEntryPath, pnpmRunnerPath }),
       // targetVersion came from the market's registry; fetch it from there
       // too rather than from whatever ~/.npmrc happens to name (#337).
       registry: await resolveMarketRegistry({ profileDir: join(dshHome, 'profiles', 'web') }),
@@ -84,6 +87,27 @@ export async function upgradePluginToGeneration(
 }
 
 const MARKET_PACKAGE = 'dshmarket'
+
+export function marketInstallPendingPath(dshHome: string): string {
+  return join(dshHome, 'profiles', 'web', '.desktop-market-install-pending.json')
+}
+
+export async function hasPendingMarketInstall(
+  dshHome: string,
+  note?: (line: string) => void
+): Promise<boolean> {
+  try {
+    await lstat(marketInstallPendingPath(dshHome))
+    return true
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code
+    if (code === 'ENOENT') return false
+    // An unreadable marker is not a reason to stop booting: the installed
+    // version check still forces a repair when the tree is actually broken.
+    note?.(`[plugin-upgrade] market install marker unreadable (${code ?? 'unknown'}); relying on the installed version check`)
+    return false
+  }
+}
 
 export interface MarketSharedTreeUpgradeOptions {
   dshHome: string
@@ -158,9 +182,15 @@ export async function upgradeMarketInSharedTree(
       manifest.dependencies[MARKET_PACKAGE] = targetVersion
       modified = true
     }
-    if (modified) await writeFile(manifestPath, `${JSON.stringify(manifest, undefined, 2)}\n`, 'utf8')
-
+    // pnpm can replace packages before failing. Restoring package.json alone
+    // is not a tree rollback: preserve the first manifest and force a retry
+    // until installation and active-path verification both finish.
+    const pendingPath = marketInstallPendingPath(dshHome)
+    await writeFile(pendingPath, JSON.stringify({ targetVersion, previousManifest: before }), { flag: 'wx' }).catch((error: NodeJS.ErrnoException) => {
+      if (error.code !== 'EEXIST') throw error
+    })
     try {
+      if (modified) await writeFile(manifestPath, `${JSON.stringify(manifest, undefined, 2)}\n`, 'utf8')
       const entry = await lstat(marketPath).catch((error) => {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined
         throw error
@@ -206,6 +236,7 @@ export async function upgradeMarketInSharedTree(
         await writeDesired(dshHome, desired.filter((id) => !stale.has(id)))
       }
 
+      await rm(pendingPath)
       note?.(`[plugin-upgrade] successfully upgraded ${MARKET_PACKAGE} to v${targetVersion}`)
       return { ok: true }
     } catch (error) {

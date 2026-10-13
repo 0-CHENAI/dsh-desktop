@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="docs/images/readme-logo-black-v020.png" width="64" alt="DSH Desktop ロゴ" valign="middle" />
+  <img src="docs/images/readme-logo-black-rounded.svg" width="64" alt="DSH Desktop ロゴ" valign="middle" />
   DSH Desktop
 </h1>
 
@@ -24,7 +24,7 @@
 DSH Desktop は、ローカルの DeepSeek Harness をインストール可能なデスクトップアプリとして提供します。Harness を自動起動し、Profile、プラグイン、ワークスペース、モデル設定、セッションをアプリ本体とは別の場所に保存し、ローカル Runtime の準備が整うと完全な Harness 画面を開きます。
 
 > [!IMPORTANT]
-> DSH Desktop は、急速に進化している `@deepseek-ai/dsh@0.1.5-rc.2` を基盤とする早期プレビューです。macOS 版はコード署名と Apple 公証済みです。Windows x64 インストーラーもコード署名済みですが、発行元のダウンロード・インストール実績が蓄積されるまでは Windows のセキュリティ警告が表示される場合があります。
+> DSH Desktop は、急速に進化している `@deepseek-ai/dsh@0.1.5-rc.2` を基盤とする早期プレビューです。この fork には Apple Developer Program の資格情報がないため、macOS パッケージは ad-hoc 署名のみで Apple 公証されていません。Windows x64 インストーラーはコード署名済みです。macOS で初回起動がブロックされた後は、「システム設定 → プライバシーとセキュリティ → このまま開く」を選択してください。`xattr` の実行や Gatekeeper の無効化は不要です。
 
 ## ダウンロード
 
@@ -41,7 +41,7 @@ DSH Desktop は、ローカルの DeepSeek Harness をインストール可能�
 <p align="center">
   下の QR コードを WeChat で読み取り、DSH Desktop コミュニティグループに参加してください。<br />
   <img src="docs/images/wechat-group-20260815.png" width="220" alt="DSH Desktop WeChat グループの QR コード" /><br />
-  Discord を利用する場合は、<a href="https://discord.gg/he2gAKCpj">DSH Desktop Discord コミュニティ</a>にも参加できます。
+  Discord を利用する場合は、<a href="https://discord.gg/7Xgf3qe3Qp">DSH Desktop Discord コミュニティ</a>にも参加できます。
 </p>
 
 ## DSH Desktop が追加する機能
@@ -53,6 +53,7 @@ DeepSeek Harness は Agent Runtime と Web UI を提供します。DSH Desktop �
 - DeepSeek 公式モデルと主要なサードパーティーモデルプロバイダーに対応
 - カスタム Agent Preset 一式をポータブルな [`.dshpreset` パッケージ](docs/preset-packages.md)としてインポート・エクスポート
 - 内蔵の PPT モードで資料から編集可能な PPTX を生成・出力
+- macOS と Windows に Python と Office ライブラリを同梱し、DOCX・PPTX・XLSX のオフライン作成と検証に対応
 - アプリ更新後も Profile、プラグイン、ワークスペース、セッション、モデル設定を保持
 - Harness 起動時やフロントエンドのプラグイン障害を検出し、診断ログとガイド付き復旧を提供
 - サードパーティープラグインだけを一時停止する非破壊的なセーフモード
@@ -100,8 +101,8 @@ open -a "DSH Desktop" --args --safe-mode
 
 | プラットフォーム | 配布形式 | 状態 |
 | --- | --- | --- |
-| macOS Apple Silicon | 署名・公証済み DMG/ZIP | 対応 |
-| macOS Intel | 署名・公証済み DMG/ZIP | 対応 |
+| macOS Apple Silicon | ad-hoc 署名・未公証の DMG/ZIP | プレビュー；初回のみ手動承認が必要 |
+| macOS Intel | ad-hoc 署名・未公証の DMG/ZIP | プレビュー；初回のみ手動承認が必要 |
 | Windows x64 | コード署名済み NSIS インストーラー | 対応 |
 | Windows ARM64 | — | 未対応 |
 | Linux | — | 未対応 |

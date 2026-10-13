@@ -90,7 +90,7 @@ function mockCtx(options: {
       }
       if (name === 'settings' && options.settings !== undefined) {
         return {
-          get: (ns: string) => options.settings?.[ns]
+          describe: () => Object.entries(options.settings ?? {}).map(([ns, value]) => ({ ns, value }))
         }
       }
       return undefined

@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="docs/images/readme-logo-black-v020.png" width="64" alt="DSH Desktop Logo" valign="middle" />
+  <img src="docs/images/readme-logo-black-rounded.svg" width="64" alt="DSH Desktop Logo" valign="middle" />
   DSH Desktop
 </h1>
 
@@ -24,7 +24,7 @@
 DSH Desktop 把本地 DeepSeek Harness 封装为可安装的桌面应用。它会自动启动 Harness，把 Profile、插件、工作区、模型配置和会话保存在应用安装目录之外，并在本地 Runtime 就绪后直接进入完整 Harness 界面。
 
 > [!IMPORTANT]
-> DSH Desktop 当前处于早期预览阶段，基于仍在快速迭代的 `@deepseek-ai/dsh@0.1.5-rc.2`。macOS 正式包已完成代码签名并通过 Apple 公证；Windows x64 安装包也已完成代码签名。随着下载量、安装量和发行者信誉逐步积累，Windows 安全提示会逐渐减少，但不会立即消失。
+> DSH Desktop 当前处于早期预览阶段，基于仍在快速迭代的 `@deepseek-ai/dsh@0.1.5-rc.2`。本 fork 没有 Apple Developer Program 凭据，因此 macOS 包仅使用 ad-hoc 签名且未通过 Apple 公证；Windows x64 安装包已完成代码签名。首次打开 macOS 包被拦截后，请前往“系统设置 → 隐私与安全性”点击“仍要打开”，不需要执行 `xattr` 或关闭 Gatekeeper。
 
 ## 下载安装
 
@@ -41,7 +41,7 @@ DSH Desktop 把本地 DeepSeek Harness 封装为可安装的桌面应用。它�
 <p align="center">
   使用微信扫描下方二维码，加入 DSH Desktop 微信交流群。<br />
   <img src="docs/images/wechat-group-20260815.png" width="220" alt="DSH Desktop 微信群二维码" /><br />
-  也可以加入 <a href="https://discord.gg/he2gAKCpj">DSH Desktop Discord 社区</a>。
+  也可以加入 <a href="https://discord.gg/7Xgf3qe3Qp">DSH Desktop Discord 社区</a>。
 </p>
 
 ## DSH Desktop 带来了什么
@@ -53,6 +53,7 @@ DeepSeek Harness 已经提供 Agent Runtime 与 Web UI。DSH Desktop 在此基�
 - 支持 DeepSeek 官方模型与主流第三方模型提供方
 - 将完整的自定义 Agent Preset 导入或导出为便携的 [`.dshpreset` 压缩包](docs/preset-packages.md)，安装前检查命名冲突并提示信任风险
 - 通过内置 PPT 模式将材料生成并交付为可继续编辑的 PPTX
+- 在 macOS 和 Windows 自带 Python 及 Office 库，支持离线生成和检查 DOCX、PPTX、XLSX
 - 应用升级时保留 Profile、插件、工作区、会话和模型配置
 - 识别 Harness 启动或前端插件故障，把诊断写入 `harness.log` 并提供引导恢复入口
 - 提供不破坏用户数据的安全模式，临时屏蔽第三方插件
@@ -68,9 +69,12 @@ PPT 功能保持预装，相关自动提示词仅在选中 PPT 按钮的会话�
 
 ## 手机连接
 
-从 `Harness` 菜单选择“连接手机…”，再扫描配对二维码。手机获得会话访问权限前，桌面端必须明确批准连接。
+从 `Harness` 菜单选择“连接手机…”，再扫描配对二维码。
 
-Harness 本身始终运行在随机的 `127.0.0.1` 端口。手机访问由独立的配对 Bridge 提供：可以只在局域网内使用，也可以在你选择远程访问时启用临时 Cloudflare Quick Tunnel。桌面端断开连接后，手机会话随即失效。
+- WiFi 下扫码即可连接。
+- 互联网隧道需要再输入电脑上显示的 6 位连接密码。默认是 5 分钟、只存在内存里的临时密码；只有在「连接手机」窗口勾选同意后，才会在本机生成长效密码。
+
+Harness 本身始终运行在随机的 `127.0.0.1` 端口。手机访问由独立的配对 Bridge 提供。Cloudflare Quick Tunnel 是常态长连接路径；免费 Pinggy 是 Cloudflare 不可用时（如中国大陆）的备用通道，大约 60 分钟后失效。桌面端断开连接后，手机会话随即失效。
 
 Cloudflare 启动失败时会尝试 Pinggy。若已显示 Cloudflare 配对链接，但手机无法打开，可点击“**扫码打不开？换一条线路**”切换到 Pinggy。
 
@@ -95,14 +99,14 @@ open -a "DSH Desktop" --args --safe-mode
 - WebView、不可信站内跳转和非预期权限请求会被阻止。
 - 外部网页链接交给系统浏览器打开。
 - Profile 与会话保存在 Electron 的用户级应用数据目录，不在安装目录内。
-- 手机访问需要短时配对 Token 和桌面端明确批准。
+- 手机访问需要短时配对 Token。WiFi 扫码即连；互联网隧道还需要电脑上显示的连接密码。
 
 ## 平台支持
 
 | 平台 | 分发形式 | 状态 |
 | --- | --- | --- |
-| macOS Apple Silicon | 已签名并通过公证的 DMG/ZIP | 支持 |
-| macOS Intel | 已签名并通过公证的 DMG/ZIP | 支持 |
+| macOS Apple Silicon | ad-hoc 签名、未公证的 DMG/ZIP | 预览；首次打开需手动批准 |
+| macOS Intel | ad-hoc 签名、未公证的 DMG/ZIP | 预览；首次打开需手动批准 |
 | Windows x64 | 已完成代码签名的 NSIS 安装包 | 支持 |
 | Windows ARM64 | — | 当前不支持 |
 | Linux | — | 当前不支持 |

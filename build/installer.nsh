@@ -2,6 +2,7 @@
   !ifndef ONE_CLICK
     !include "LogicLib.nsh"
     !include "nsDialogs.nsh"
+    !include "${__FILEDIR__}\installer-directories.nsh"
 
     Var DshDirectoryPage
     Var DshDirectoryEdit
@@ -77,6 +78,19 @@
     Function .onVerifyInstDir
       ; Always pass — we create the directory in DshEnsureInstDirExists.
     FunctionEnd
+
+    !macro customInstall
+      !insertmacro dshFinishDirectories
+      ; CHECK_APP_RUNNING force-kills the previous process, so will-quit never
+      ; clears the session marker. Same-version overwrite would otherwise look
+      ; like an unclean-exit. Delete is a no-op when the file is absent.
+      ; Match the current application identity; a Dev install must not clear
+      ; a still-running production application's diagnostic session.
+      !if "${APP_FILENAME}" == "dsh-desktop-dev"
+        Delete "$APPDATA\dsh-desktop-dev\desktop-service\session.json"
+      !else
+        Delete "$APPDATA\dsh-desktop\desktop-service\session.json"
+      !endif
+    !macroend
   !endif
 !endif
-

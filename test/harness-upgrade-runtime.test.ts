@@ -5,7 +5,7 @@ import { join, resolve } from 'node:path'
 import { expect, it } from 'vitest'
 import { HarnessRuntime } from '../src/main/runtime/harness-runtime'
 
-it('boots the full desktop profile and serves authenticated PPT RPC with Harness 0.1.5', async () => {
+it('boots the full desktop profile and serves authenticated PPT RPC with Harness 0.2', async () => {
   const root = resolve(import.meta.dirname, '..')
   const home = await mkdtemp(join(tmpdir(), 'dsh-upgrade-runtime-'))
   const runtime = new HarnessRuntime({
@@ -16,6 +16,7 @@ it('boots the full desktop profile and serves authenticated PPT RPC with Harness
     dshSafePatchPath: join(root, 'build/dsh-desktop-safe.patch.yml'),
     dshHome: home,
     logPath: join(home, 'runtime.log'),
+    preferredPort: 0,
     startupTimeoutMs: 30_000,
     launchProcess: (executable, args, options) => spawn(executable, args, options),
     onChanged() {}
@@ -38,6 +39,6 @@ it('boots the full desktop profile and serves authenticated PPT RPC with Harness
     expect((await response.json()).result.ok).toBe(true)
   } finally {
     await runtime.stop()
-    await rm(home, { recursive: true, force: true })
+    await rm(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
   }
 }, 45_000)

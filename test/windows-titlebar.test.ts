@@ -24,7 +24,7 @@ describe('Windows titlebar menu', () => {
     const main = await readFile('src/main/index.ts', 'utf8')
 
     expect(main).toContain("const isWindows = process.platform === 'win32'")
-    expect(main).toContain("frame: process.platform !== 'darwin'")
+    expect(main).toContain("titleBarStyle: 'hidden'")
     expect(main).toContain("titleBarStyle: 'hidden' as const")
     expect(main).toContain('titleBarOverlay: windowsTitleBarOverlay')
     expect(main).toContain('autoHideMenuBar: true')
@@ -75,8 +75,9 @@ describe('Windows titlebar menu', () => {
     expect(isDesktopMenuCommand({ command: 'quit' })).toBe(false)
     expect(main).toContain("ipcMain.handle('desktop-menu:execute'")
     expect(main).toContain("ipcMain.handle('desktop-menu:get-zoom-factor'")
+    expect(main).toContain('assertTrustedMainWindowEvent(event)')
     expect(main).toContain('assertTrustedDesktopMenuEvent(event)')
-    expect(main).toContain('event.sender === windowsMenuView.webContents')
+    expect(main).toContain('event.sender !== windowsMenuView.webContents')
     expect(main).toContain('if (!isDesktopMenuCommand(command))')
   })
 

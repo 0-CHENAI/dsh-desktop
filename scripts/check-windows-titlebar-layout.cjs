@@ -11,6 +11,10 @@ if (!process.versions.electron) {
   process.exit(result.status ?? 1)
 } else {
   const { app, BrowserWindow, WebContentsView, ipcMain } = require('electron')
+  app.disableHardwareAcceleration()
+  // CI windows can be occluded by the desktop host; keep their real renderer
+  // surface alive so native input dispatch can still be exercised.
+  app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion')
   const { buildSync } = require('esbuild')
   const source = buildSync({
     entryPoints: ['src/preload/windows-titlebar.ts'], bundle: true,
@@ -47,7 +51,7 @@ if (!process.versions.electron) {
     await app.whenReady()
     win = new BrowserWindow({ width: 1380, height: 800, show: true,
       titleBarStyle: 'hidden', titleBarOverlay: { height: 36, color: '#ffffff' },
-      webPreferences: { sandbox: true, contextIsolation: true } })
+      webPreferences: { sandbox: true, contextIsolation: true, backgroundThrottling: false } })
     menuView=new WebContentsView({webPreferences:{sandbox:true,preload:join(process.cwd(),'out/preload/windows-menu.cjs')}})
     win.contentView.addChildView(menuView)
     ipcMain.handle('desktop-titlebar:set-menu-open',(_event,open)=>{menuOpen=open;syncMenu()})
@@ -102,7 +106,7 @@ if (!process.versions.electron) {
       assert.ok(Math.abs(content.top * zoom - (fullscreen ? 0 : 36)) < 2)
       assert.equal(content.leftTop, content.top)
       assert.ok(Math.abs(content.bottom - content.viewport) < 2)
-      assert.ok(rect.edge - rect.right >= 0 && rect.edge - rect.right <= 20)
+      assert.ok(rect.edge - rect.right >= 0 && rect.edge - rect.right <= 20, JSON.stringify({width,zoom,sidebar,fullscreen,rect}))
       assert.equal(rect.hit, true, JSON.stringify({width,zoom,sidebar,fullscreen,rect,content}))
       win.webContents.sendInputEvent({ type: 'mouseMove', x: Math.round(rect.x * zoom), y: Math.round(rect.y * zoom) })
       await new Promise(resolve => setTimeout(resolve, 100))

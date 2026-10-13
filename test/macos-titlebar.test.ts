@@ -41,7 +41,8 @@ describe('macOS titlebar drag layout', () => {
     expect(MACOS_HEADER_PADDING_TOP).toBe(28)
     expect(MACOS_HEADER_PADDING_TOP).toBeGreaterThan(MACOS_DRAG_STRIP_HEIGHT)
 
-    expect(index).toContain('mountMacosTitlebarLayout(document)')
+    expect(index).toContain('mountMacosWindowChrome(document,')
+    expect(index).not.toContain('mountMacosTitlebarLayout(document)')
     expect(main).not.toContain('dsh-desktop-drag-region')
     expect(preload).toContain("const DRAG_REGION_ID = 'dsh-desktop-drag-region'")
     expect(preload).toContain('dragRegion.id = DRAG_REGION_ID')
