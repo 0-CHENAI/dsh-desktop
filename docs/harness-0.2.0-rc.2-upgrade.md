@@ -61,3 +61,5 @@ Electron 44.0.0 已在本机通过 Harness 内部模块原生加载探测。选�
 ### PR 验证补充（2026-10-13）
 
 经用户授权创建面向 `test` 和 `main` 的 PR。首次 CI 复现了核心检查的 runner 错配：`npm test` 前置的 Office 准备不支持 Linux，而旧核心作业仍使用 Ubuntu。核心作业改在原生 Windows 上执行完整测试、类型检查和构建，保留 Windows/macOS 原生客户端与打包矩阵，并增加 YAML 配置回归。不通过跳过 Office、删除测试或放宽原生目标校验来处理该失败；最终远端通过状态以 PR 检查记录为准。
+
+Windows 安装包作业还暴露了旧恢复 UI smoke 对已移除 `SafeModeOverlay` 的引用。恢复页面三档缩放的 120 个场景保留并通过，按钮验证改走实际 preload/IPC，而非覆写桥对象；125% 缩放的页脚断言仅容许已实测的单设备像素取整差，不容许实际布局溢出。真实 Harness smoke 使用完整生产 preload、桌面资源协议和 `SafeModeFrame`，覆盖侧栏保留、状态原位更新、过期代次拒绝、受信任 iframe 动作、非 iframe 消息拒绝、宿主重载与幂等关闭，源码和 Windows ASAR 包验证通过。新增脚本构建回归；补充后的本地全量为 205 个文件、1799 通过、7 个平台限定跳过、0 失败（`.build/pr-integration-tests.json`）。macOS CI 已通过原生目录包与 ad-hoc 安装包签名检查；补充 smoke 的最终远端状态仍以最新 PR 检查为准，不等同于真机自动更新已经验收。
