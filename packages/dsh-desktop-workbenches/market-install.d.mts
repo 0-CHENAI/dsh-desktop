@@ -4,6 +4,7 @@ export interface MarketInstallRecord {
   version: string
   source?: string
   installedAt?: string
+  fingerprint?: string
 }
 
 export interface MarketInstallStore {
