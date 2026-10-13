@@ -138,6 +138,20 @@ describe('bundled workbench development guide', () => {
     } finally { await rm(root, { recursive: true, force: true }) }
   })
 
+  it('serves the bundled market header image through a fixed local route', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-workbench-header-'))
+    try {
+      const routes = []
+      apply({ effect: fn => fn(), inject() {}, reflect: { provide() {} }, connection: { fetch: { register(route) { routes.push(route) } } } }, { root })
+      const route = routes.find(value => value.path === '/api/desktop-workbenches/assets/market-header.png')
+      expect(route.methods).toEqual(['GET'])
+      const response = await route.fetch(new Request('http://localhost/api/desktop-workbenches/assets/market-header.png'))
+      expect(response.status).toBe(200)
+      expect(response.headers.get('content-type')).toBe('image/png')
+      expect(Buffer.from(await response.arrayBuffer())).toEqual(readFileSync(join(import.meta.dirname, '../packages/dsh-desktop-workbenches/assets/market-header.png')))
+    } finally { await rm(root, { recursive: true, force: true }) }
+  })
+
   it('writes the documents and their reading pages for the website', () => {
     expect(SITE_DOCUMENTS.development).toMatchObject({
       file: 'docs/development.md', url: 'https://dshdesktop.com/workbench/docs/development.md',

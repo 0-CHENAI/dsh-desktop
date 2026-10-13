@@ -344,7 +344,8 @@ describe('desktop workbench client navigation', () => {
     const toggle = mine.find(card, node => node.props?.role === 'switch')[0]
     expect(toggle.props.disabled).toBe(false)
     expect(toggle.props['aria-checked']).toBe(false)
-    expect(toggle.props.title).toBe('已关闭')
+    expect(toggle.props.title).toBeUndefined()
+    expect(mine.find(card, node => node.props?.id === toggle.props['aria-describedby'])[0].props.children).toEqual(['启用'])
     expect(JSON.stringify(card)).not.toContain('安装失败')
     const market = interactiveMarket(service)
     const marketCard = market.find(market.render(), node => node.type === 'article')[0]
@@ -805,8 +806,8 @@ describe('desktop workbench client navigation', () => {
     expect(styles).toHaveLength(1)
     expect(styles[0].dataset.plugin).toBe('dsh-desktop-workbenches')
     expect(styles[0].textContent).toContain('.dshWbWorkbenchHome')
-    expect(styles[0].textContent).toContain('height:232px;flex:0 0 232px')
-    expect(styles[0].textContent).toContain('-webkit-line-clamp:4')
+    expect(styles[0].textContent).toContain('min-height:0;flex:1 0 auto')
+    expect(styles[0].textContent).toContain('-webkit-line-clamp:3')
     styleEffect()
     expect(styles).toHaveLength(1)
     styles[0].dataset.plugin = 'another-plugin'
@@ -1024,10 +1025,10 @@ describe('desktop workbench client navigation', () => {
   })
 
   it('includes the market and builder header whitespace in the drag region while preserving caption and button controls', () => {
-    expect(code).toContain('.dshWbMarket{position:relative;container-type:inline-size;container-name:workbench-market;overflow:auto;height:100%;width:100%;min-width:0;padding:0 32px 52px')
-    expect(code).toContain('.dshWbMarketHeader{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin:0 -32px;padding:30px 32px 28px}')
+    expect(code).toContain('.dshWbMarket{position:relative;container-type:inline-size;container-name:workbench-market;overflow:auto;height:100%;width:100%;min-width:0;padding:0 0 52px')
+    expect(code).toContain('.dshWbMarketHeader{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin:0;padding:var(--dsh-page-title-top-spacing,56px) max(var(--dsh-wb-page-gutter),calc((100% - 1376px)/2)) 24px}')
     expect(code).toContain('html[data-platform=darwin] .dshWbMarketHeader{-webkit-app-region:drag}')
-    expect(code).toContain('html[data-platform=darwin] [data-sidebar-collapsed] .dshWbMarketHeader{padding-top:var(--dsh-frame-top-clearance,48px)}')
+    expect(code).toContain('html[data-platform=darwin] [data-sidebar-collapsed] .dshWbMarketHeader{padding-top:max(var(--dsh-page-title-top-spacing,56px),var(--dsh-frame-top-clearance,48px))}')
     expect(code).toContain('html[data-platform=darwin] [data-sidebar-collapsed] .dshWbMarketHeader::before{content:\'\';position:absolute;top:0;left:0;width:var(--dsh-frame-leading-clearance,160px);height:var(--dsh-frame-top-clearance,48px);-webkit-app-region:no-drag}')
     expect(code).toContain('html[data-platform=darwin] .dshWbMarketModalOpen .dshWbMarketHeader{-webkit-app-region:no-drag}')
     expect(code).toContain("className: 'dshWbMarketHeader', 'data-window-drag': true")
@@ -2020,19 +2021,30 @@ describe('workbench market screenshot and metadata display', () => {
     service.dispose()
   })
 
-  it('uses a four-column desktop grid with explicit responsive reductions', () => {
-    expect(fullSource).toContain('.dshWbGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}')
-    expect(fullSource).toContain('.dshWbCard{min-width:0;border:1px solid var(--dsw-alias-border-l2);')
-    expect(fullSource).toContain('@container workbench-market (max-width:980px){.dshWbGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}}')
-    expect(fullSource).toContain('@container workbench-market (max-width:620px){.dshWbGrid{grid-template-columns:1fr}}')
-    expect(fullSource).toContain('.dshWbMeta{display:grid;grid-template-columns:minmax(0,1fr) auto auto;')
+  it('keeps footer icon controls circular under the host superellipse corner theme', () => {
+    const rule = fullSource.match(/\.dshWbCard \.dshWbFavorite,\.dshWbCard \.dshWbRoundButton\{([^}]+)\}/)?.[1]
+    expect(rule).toContain('width:30px;height:30px')
+    expect(rule).toContain('min-width:30px;min-height:30px;max-width:30px;max-height:30px')
+    expect(rule).toContain('border-radius:50%;corner-shape:round')
+    expect(fullSource).toContain('.dshWbCard .dshWbBtn{border-radius:999px;corner-shape:round}')
+    expect(fullSource).toContain('.dshWbCard .dshWbUninstall,.dshWbCard .dshWbRunSwitch{corner-shape:round}')
+    expect(fullSource).toContain('.dshWbCard :is(.dshWbBtn,.dshWbUninstall,.dshWbRunSwitch)::after{corner-shape:round}')
+    expect(fullSource).toContain('.dshWbCard :is(.dshWbFavorite,.dshWbRoundButton)::after{corner-shape:round}')
+  })
+
+  it('uses a three-column desktop grid with explicit responsive reductions', () => {
+    expect(fullSource).toContain('.dshWbGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}')
+    expect(fullSource).toContain('.dshWbCard{min-width:0;border:0;')
+    expect(fullSource).toContain('@container workbench-market (max-width:760px){.dshWbGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}}')
+    expect(fullSource).toContain('@container workbench-market (max-width:520px){.dshWbGrid{grid-template-columns:1fr}}')
+    expect(fullSource).toContain('.dshWbMeta{display:flex;flex-wrap:wrap;')
     expect(fullSource).not.toContain('未安装')
   })
 
   it('renders a persistent Workbench home area beside the current mode and switch button', () => {
     expect(fullSource).toContain('function WorkbenchSidebarSwitcher({ service, wide, startSession, usePanelInfo })')
     expect(fullSource).toContain("'data-dsh-workbench-switcher': ''")
-    expect(fullSource).toContain("className: 'dshWbModeSwitch', title: both(`切换工作台（当前：${active?.title || tr('会话')}）`, `Switch workbench (current: ${active?.title || tr('会话')})`)")
+    expect(fullSource).toContain("className: 'dshWbModeSwitch', 'aria-describedby': 'dsh-wb-current-mode-tooltip'")
     expect(fullSource).toContain("role: 'menu', 'aria-label': tr('选择会话模式')")
     expect(fullSource).toContain("role: 'menuitemradio'")
     expect(fullSource).toContain('service.openNative(startSession)')
@@ -2046,7 +2058,7 @@ describe('workbench market screenshot and metadata display', () => {
     expect(fullSource).not.toContain('.dshWbModeSwitch:hover:not(:disabled),.dshWbModeSwitch[aria-expanded=true]{background:')
     expect(fullSource).toContain('min-height:36px;margin:0 2px 8px;padding:0;')
     expect(fullSource).toContain('.dshWbModeSwitch svg{flex:0 0 auto;color:var(--dsw-alias-label-tertiary)}')
-    expect(fullSource).toContain('.dshWbCurrentModeLabel{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}')
+    expect(fullSource).toContain('.dshWbCurrentModeLabel{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}')
     expect(fullSource).toContain('.dshWbModeMenu{position:absolute;z-index:32;left:2px;right:2px;')
     expect(fullSource).toContain('background:var(--dsw-alias-label-primary);color:var(--dsw-alias-label-primary-foreground)')
     expect(fullSource).toContain("ctx.slots.inject('sidebar.quickSwitcher'")
@@ -2079,6 +2091,7 @@ describe('workbench market screenshot and metadata display', () => {
     expect(ui.find(tree, node => node.props?.className === 'dshWbCurrentMode')).toHaveLength(0)
     expect(ui.find(tree, node => node.props?.className === 'dshWbCurrentModeIcon')).toHaveLength(0)
     expect(switchButton.props['aria-expanded']).toBe(false)
+    expect(ui.find(switchButton, node => node.props?.id === switchButton.props['aria-describedby'])[0].props.children).toEqual(['投标作战室'])
     switchButton.props.onClick()
     tree = ui.render()
     expect(ui.find(tree, node => node.props?.role === 'menu')).toHaveLength(1)
@@ -2192,15 +2205,15 @@ describe('workbench market screenshot and metadata display', () => {
   it('shows the author as a GitHub avatar and name without an author label', () => {
     expect(fullSource).toContain('login ? `https://github.com/${login}.png?size=40`')
     expect(fullSource).toContain('src: avatar')
-    expect(fullSource).toContain("showVersion && entry.version && h('small', null, `· v${entry.version}`)")
-    expect(fullSource).toContain("h(EntryMeta, { entry, showVersion: false })")
+    expect(fullSource).toContain("showVersion && entry.version && h('small', { className: 'dshWbCardVersion' }, `· v${entry.version}`)")
+    expect(fullSource).toContain("h(AuthorItem, { entry, showVersion: false })")
     expect(fullSource).not.toContain('`作者 · v${entry.version}`')
   })
 
-  it('links the workbench icon and name together without a separate GitHub icon', () => {
+  it('links the workbench name and exposes a separate GitHub action', () => {
     expect(fullSource).toContain("h('a', { className: 'dshWbTitleLink', href, target: '_blank', rel: 'noopener noreferrer'")
     expect(fullSource).toContain("const icon = showIcon && h('span', { className: 'dshWbCardIcon'")
-    expect(fullSource).toContain("h(EntryTitle, { entry, showIcon: true })")
+    expect(fullSource).toContain("h(EntryTitle, { entry })")
     expect(fullSource).toContain('a.dshWbTitleLink:hover{border-bottom-color:currentColor}')
     expect(fullSource).not.toContain("className: 'dshWbRepository'")
     expect(fullSource).not.toContain("'GitHub：'")
@@ -2210,9 +2223,9 @@ describe('workbench market screenshot and metadata display', () => {
     expect(fullSource).toContain("tab === 'mine'\n                    ? h('button'")
     expect(fullSource).toContain("h('span', { className: 'dshWbInstalled', role: 'status' }, tr('已安装'))")
     expect(fullSource).toContain("installing === catalogId ? tr('正在安装…') : tr('安装')")
-    expect(fullSource).toContain('.dshWbCard .dshWbActions{margin-top:auto;min-height:36px;gap:8px;padding-top:8px;align-items:center;justify-content:flex-end;flex-wrap:nowrap}')
-    expect(fullSource).toContain('height:232px;flex:0 0 232px')
-    expect(fullSource).toContain('gap:8px;padding:18px 20px 16px')
+    expect(fullSource).toContain('.dshWbCard .dshWbActions{margin-top:0;flex-shrink:0;min-height:36px;gap:8px;padding-top:8px;align-items:center;justify-content:flex-end;flex-wrap:nowrap}')
+    expect(fullSource).toContain('min-height:0;flex:1 0 auto')
+    expect(fullSource).toContain('gap:8px;padding:16px')
   })
 
   it('bookmarks favorites and marks added workbenches as installed outside the installed collection', () => {
@@ -2236,10 +2249,10 @@ describe('workbench market screenshot and metadata display', () => {
     expect(fullSource).toContain("'aria-label': both(`属于${entry.title}`")
   })
 
-  it('hides version on cards while retaining it in details', () => {
-    expect(fullSource).toContain("h(EntryMeta, { entry, showVersion: false })")
+  it('shows version beside author on cards and retains it in details', () => {
+    expect(fullSource).toContain("h(AuthorItem, { entry, showVersion: false })")
     expect(fullSource).toContain("h(EntryMeta, { entry })")
-    expect(fullSource).toContain('-webkit-line-clamp:4')
+    expect(fullSource).toContain('-webkit-line-clamp:3')
   })
 
   it('ScreenshotGallery is used in the detail view instead of Preview', () => {
@@ -2379,7 +2392,7 @@ describe('workbench market screenshot and metadata display', () => {
     const node = predicate => ui.find(ui.render(), predicate)[0]
     node(item => item.type === 'select' && item.props['aria-label'] === '工作台排序方式').props.onChange({ target: { value: 'stars' } })
     expect(cards()).toEqual(['o/c', 'o/b', 'o/a'])
-    node(item => item.type === 'button' && item.props.className === 'dshWbCategoryFilter' && item.props.children[0] === '效率').props.onClick()
+    node(item => item.type === 'select' && item.props['aria-label'] === '按分类筛选').props.onChange({ target: { value: '效率' } })
     expect(cards()).toEqual(['o/c', 'o/a'])
     node(item => item.type === 'input' && item.props['aria-label'] === '搜索工作台').props.onChange({ target: { value: 'Alpha' } })
     expect(cards()).toEqual(['o/a'])
@@ -2390,6 +2403,50 @@ describe('workbench market screenshot and metadata display', () => {
     expect(cards()).toEqual(['o/a', 'o/b', 'writer', 'research'])
   })
 
+  it('shows enable and disable switch tooltips and preserves unavailable protection', async () => {
+    const { service, ctx } = await fixture({ ...emptyState(), added: ['o/helper'] })
+    service.remoteCatalog = [listed()]
+    service.installs = { 'o/helper': { catalogId: 'o/helper', pluginName: 'helper', version: '1.0.0' } }
+    const ui = interactiveMarket(service, 'mine')
+    for (const enabled of [true, false]) {
+      ctx.remote = { pluginManager: { listBundles: vi.fn(async () => ({ ok: true, value: [{ name: 'helper', installed: true, enabled }] })) } }
+      await service.refreshNative()
+      const card = ui.find(ui.render(), node => node.type === 'article')[0]
+      const control = ui.find(card, node => node.props?.role === 'switch')[0]
+      expect(control.props.title).toBeUndefined()
+      expect(control.props['aria-checked']).toBe(enabled)
+      expect(ui.find(card, node => node.props?.id === control.props['aria-describedby'])[0].props.children).toEqual([enabled ? '停用' : '启用'])
+    }
+    ctx.remote.pluginManager.listBundles = vi.fn(async () => { throw new Error('Unavailable') })
+    await service.refreshNative()
+    const card = ui.find(ui.render(), node => node.type === 'article')[0]
+    const control = ui.find(card, node => node.props?.role === 'switch')[0]
+    expect(control.props.disabled).toBe(true)
+    expect(ui.find(card, node => node.props?.id === control.props['aria-describedby'])[0].props.children).toEqual(['原生插件状态暂不可用'])
+  })
+
+  it('offers real accessible card action tooltips and updates the favorite hint', async () => {
+    const { service } = await fixture()
+    service.remoteCatalog = [listed()]
+    service.publish()
+    const ui = interactiveMarket(service)
+    const find = predicate => ui.find(ui.render(), predicate)[0]
+    for (const [className, label] of [['dshWbRoundButton', '查看 GitHub'], ['dshWbFavorite', '收藏'], ['dshWbMediaOpen', '查看详情']]) {
+      const control = find(node => node.props?.className === className)
+      expect(control.props.title).toBeUndefined()
+      const hint = find(node => node.props?.id === control.props['aria-describedby'])
+      expect(hint.props.role).toBe('tooltip')
+      expect(hint.props.children).toEqual([label])
+    }
+    service.state.favorites = ['o/helper']
+    service.publish()
+    const favorite = find(node => node.props?.className === 'dshWbFavorite')
+    expect(favorite.props['aria-pressed']).toBe(true)
+    expect(find(node => node.props?.id === favorite.props['aria-describedby']).props.children).toEqual(['已收藏'])
+    expect(fullSource).toContain('overflow:hidden;min-height:66px}')
+    expect(fullSource).toContain('.dshWbTabs [role=tab]{border:0;border-radius:999px;corner-shape:round;')
+  })
+
   it('opens details from the screenshot while favorite remains a separate action', async () => {
     const { service } = await fixture()
     service.remoteCatalog = [listed()]
@@ -2398,7 +2455,7 @@ describe('workbench market screenshot and metadata display', () => {
     const card = ui.find(ui.render(), node => node.type === 'article')[0]
     const media = ui.find(card, node => node.props?.className === 'dshWbMedia')[0]
     const preview = ui.find(media, node => node.props?.className === 'dshWbMediaOpen')[0]
-    const favorite = ui.find(media, node => node.props?.className === 'dshWbFavorite')[0]
+    const favorite = ui.find(card, node => node.props?.className === 'dshWbFavorite')[0]
     expect(preview.type).toBe('button')
     expect(preview.props.type).toBe('button')
     expect(preview.props['aria-label']).toContain('Helper')
@@ -2412,7 +2469,7 @@ describe('workbench market screenshot and metadata display', () => {
     expect(ui.find(ui.render(), node => node.type?.name === 'DetailModal')[0].props.entry.catalogId).toBe('o/helper')
   })
 
-  it('makes the card icon and title one repository link', async () => {
+  it('makes the card title a repository link', async () => {
     const { service } = await fixture()
     service.remoteCatalog = [listed()]
     service.publish()
@@ -2423,7 +2480,7 @@ describe('workbench market screenshot and metadata display', () => {
     const link = title.type(title.props)
     expect(link.type).toBe('a')
     expect(link.props.href).toBe('https://github.com/o/helper')
-    expect(ui.find(link, node => node.props?.className === 'dshWbCardIcon')).toHaveLength(1)
+    expect(ui.find(card, node => node.props?.className === 'dshWbRoundButton')).toHaveLength(1)
     expect(ui.find(link, node => node.props?.className === 'dshWbTitleText')[0].props.children).toEqual(['Helper'])
     expect(ui.find(card, node => node.props?.className === 'dshWbRepository')).toHaveLength(0)
     const mineTab = ui.find(tree, node => node.props?.id === 'dsh-workbench-mine-tab')[0]
@@ -2566,7 +2623,7 @@ describe('workbench market screenshot and metadata display', () => {
     expect(service.marketInstallFor('o/helper')).toBe('o/helper')
   })
 
-  it('places listed or installed versions at the left of the shared card footer', async () => {
+  it('places listed or installed versions beside the author', async () => {
     const { service, ctx } = await fixture({ ...emptyState(), added: ['o/helper'] })
     service.remoteCatalog = [listed({ version: '2.0.0' })]
     service.publish()
@@ -2576,7 +2633,7 @@ describe('workbench market screenshot and metadata display', () => {
       const footer = ui.find(card, node => node.props?.className === 'dshWbActions')[0]
       expect(footer.props.children[0].props.className).toBe('dshWbCardVersionActions')
       expect(footer.props.children[1].props.className).toBe('dshWbCardControls')
-      return ui.find(footer, node => node.props?.className === 'dshWbCardVersion')[0]?.props.children[0]
+      return ui.find(card, node => node.props?.className === 'dshWbCardVersion')[0]?.props.children[0]
     }
     expect(versionIn('market')).toBe('v2.0.0')
     service.state.favorites = ['o/helper']
@@ -2616,14 +2673,17 @@ describe('workbench market screenshot and metadata display', () => {
     const footer = ui.find(card, node => node.props?.className === 'dshWbActions')[0]
     const versionActions = ui.find(footer, node => node.props?.className === 'dshWbCardVersionActions')[0]
     expect(versionActions.props.children[1]).toBe(update)
-    expect(ui.find(card, node => node.props?.className === 'dshWbMediaActions')[0].props.children[0].props.className).toBe('dshWbUninstall')
-    expect(ui.find(card, node => node.props?.className === 'dshWbMediaActions')[0].props.children).toHaveLength(1)
+    expect(ui.find(card, node => node.props?.className === 'dshWbUninstall')).toHaveLength(1)
+    expect(ui.find(card, node => node.props?.className === 'dshWbMediaActions')).toHaveLength(0)
     expect(ui.find(card, node => node.props?.className === 'dshWbCardVersion')[0].props.children).toEqual(['v0.3.3'])
     expect(ui.find(card, node => node.props?.role === 'switch')).toHaveLength(1)
     expect(cardButtons(card)).toEqual([])
     const check = ui.find(ui.render(), node => node.props?.['aria-label'] === '检查更新')[0]
     expect(check).toBeDefined()
-    expect(check.props.children.at(-1)).toBe('检查更新')
+    expect(check.props.children).toHaveLength(1)
+    expect(check.props.children[0].props.name).toBe('refresh')
+    expect(check.props['aria-describedby']).toBe('dsh-workbench-refresh-tooltip')
+    expect(ui.find(ui.render(), node => node.props?.id === 'dsh-workbench-refresh-tooltip')[0].props.children).toEqual(['检查更新'])
 
     let finishInstall
     const calls = withMarket(service, { '/api/desktop-workbenches/market-install': () => new Promise(resolve => { finishInstall = resolve }) })
@@ -2654,7 +2714,7 @@ describe('workbench market screenshot and metadata display', () => {
       const card = ui.find(ui.render(), node => node.type === 'article')[0]
       const footer = ui.find(card, node => node.props?.className === 'dshWbActions')[0]
       const versionActions = ui.find(footer, node => node.props?.className === 'dshWbCardVersionActions')[0]
-      expect(versionActions.props.children[0].props.children).toEqual([tab === 'mine' ? 'v1.0.0' : 'v2.0.0'])
+      expect(ui.find(card, node => node.props?.className === 'dshWbCardVersion')[0].props.children).toEqual([tab === 'mine' ? 'v1.0.0' : 'v2.0.0'])
       const update = versionActions.props.children[1]
       expect(update.props.className).toBe('dshWbUpdate')
       expect(update.props.children.at(-1).props.children[0]).toBe('更新')
@@ -2724,7 +2784,7 @@ describe('workbench market screenshot and metadata display', () => {
       const versionActions = ui.find(footer, node => node.props?.className === 'dshWbCardVersionActions')[0]
       const controls = ui.find(footer, node => node.props?.className === 'dshWbCardControls')[0]
       expect(footer.props.children).toEqual([versionActions, controls])
-      expect(versionActions.props.children[0].props.children).toEqual([tab === 'mine' ? 'v1.0.0' : 'v1.1.0'])
+      expect(ui.find(card, node => node.props?.className === 'dshWbCardVersion')[0].props.children).toEqual([tab === 'mine' ? 'v1.0.0' : 'v1.1.0'])
       expect(versionActions.props.children[1].props.children.at(-1).props.children[0]).toBe('更新')
       const diagnostic = versionActions.props.children[2]
       expect(diagnostic.props.className).toBe('dshWbFailureHint')
@@ -2736,7 +2796,7 @@ describe('workbench market screenshot and metadata display', () => {
       expect(ui.find(diagnostic, node => node.props?.role === 'tooltip')[0].props.children).toEqual(['Update rejected'])
       expect(ui.find(controls, node => node.props?.className === 'dshWbInstallFailed')).toHaveLength(0)
       expect(ui.find(card, node => node.props?.className === 'dshWbRetry')).toHaveLength(0)
-      if (tab === 'mine') expect(ui.find(controls, node => node.props?.role === 'switch')).toHaveLength(1)
+      if (tab === 'mine') expect(ui.find(card, node => node.props?.role === 'switch')).toHaveLength(1)
       else expect(ui.find(controls, node => node.props?.className === 'dshWbInstalled')[0].props.children).toEqual(['已安装'])
     }
     expect(service.getSnapshot().restartNeeded).toBe(false)
@@ -2816,7 +2876,7 @@ describe('workbench market screenshot and metadata display', () => {
       expect(button.props.children.at(-1).props.children[0]).toBe('更新')
       expect(versionActions.props.children[1]).toBe(button)
       if (tab === 'mine') {
-        expect(ui.find(controls, node => node.props?.role === 'switch')).toHaveLength(1)
+        expect(ui.find(card, node => node.props?.role === 'switch')).toHaveLength(1)
       } else {
         expect(ui.find(controls, node => node.props?.className === 'dshWbInstalled')[0].props.children).toEqual(['已安装'])
       }
@@ -2861,6 +2921,46 @@ describe('workbench market screenshot and metadata display', () => {
     expect(service.marketInstallFor('o/helper')).toBeNull()
     expect(JSON.stringify(marketCard(service))).not.toContain('安装失败')
     expect(cardButtons(marketCard(service))).toContain('安装')
+  })
+
+  it('shows first-install sidebar guidance only after success and remembers dismissal', async () => {
+    const { service, ctx } = await fixture()
+    service.remoteCatalog = [listed()]
+    sidebarCollapsed = true
+    ctx.layout.toggleSidebar = vi.fn(() => { sidebarCollapsed = false })
+    withMarket(service, { '/api/desktop-workbenches/market-install': () => Response.json({ error: 'Rejected' }, { status: 500 }) })
+    await expect(service.installFromMarket('o/helper')).rejects.toThrow('Rejected')
+    expect(service.getSnapshot().switcherHint).toBe(false)
+    expect(ctx.layout.toggleSidebar).not.toHaveBeenCalled()
+    withMarket(service, { '/api/desktop-workbenches/market-install': () => Response.json({ install: { catalogId: 'o/helper', pluginName: 'helper', version: '1.0.0' }, restartRequired: true }) })
+    await service.installFromMarket('o/helper')
+    expect(service.getSnapshot().switcherHint).toBe(true)
+    expect(ctx.layout.toggleSidebar).toHaveBeenCalledOnce()
+    expect(service.state.pinned).toContain('o/helper')
+    service.dismissSwitcherHint()
+    expect(service.getSnapshot().switcherHint).toBe(false)
+    const { service: reloaded } = await fixture()
+    reloaded.showSwitcherHint()
+    expect(reloaded.getSnapshot().switcherHint).toBe(false)
+  })
+
+  it('keeps descriptions uncluttered and separates installed controls from preview', async () => {
+    const { service, ctx } = await fixture({ ...emptyState(), added: ['o/helper'] })
+    service.remoteCatalog = [listed({ description: { zh: 'Full description with content beyond the three visible lines.' } })]
+    setFiberPackage(ctx, 'helper')
+    service.register({ title: 'Helper', description: 'Full description with content beyond the three visible lines.' }, () => null)
+    service.publish()
+    const ui = interactiveMarket(service, 'mine')
+    const card = ui.find(ui.render(), node => node.type === 'article')[0]
+    const hint = ui.find(card, node => node.props?.className === 'dshWbDescriptionHint')[0]
+    expect(hint.props.tabIndex).toBeUndefined()
+    expect(ui.find(hint, node => node.props?.role === 'tooltip')).toHaveLength(0)
+    expect(ui.find(hint, node => node.type === 'p')[0].props.children).toEqual(['Full description with content beyond the three visible lines.'])
+    const title = ui.find(card, node => node.props?.className === 'dshWbCardTitle')[0]
+    expect(ui.find(title, node => node.props?.role === 'switch')).toHaveLength(1)
+    const media = ui.find(card, node => node.props?.className === 'dshWbMedia')[0]
+    expect(ui.find(media, node => node.props?.className === 'dshWbFavorite')).toHaveLength(0)
+    expect(ui.find(media, node => node.props?.className === 'dshWbUninstall')).toHaveLength(0)
   })
 
   it('shows an install API error on the card and recovers after a successful retry', async () => {
@@ -3045,7 +3145,7 @@ describe('workbench market screenshot and metadata display', () => {
     expect(saved().state.added).toEqual(['owner/local'])
   })
 
-  it('shows a hover-only uninstall action only in Installed and opens the existing confirmation', async () => {
+  it('shows an explicit uninstall action only in Installed and opens the existing confirmation', async () => {
     const { service } = await fixture({ ...emptyState(), added: ['o/helper'], pinned: ['o/helper'] })
     service.remoteCatalog = [listed()]
     service.installs = { 'o/helper': { catalogId: 'o/helper', pluginName: 'helper', version: '1.0.0' } }
@@ -3059,7 +3159,7 @@ describe('workbench market screenshot and metadata display', () => {
     const tree = ui.render()
     const card = ui.find(tree, node => node.type === 'article')[0]
     const media = ui.find(card, node => node.props?.className === 'dshWbMedia')[0]
-    const uninstall = ui.find(media, node => node.props?.className === 'dshWbUninstall')[0]
+    const uninstall = ui.find(card, node => node.props?.className === 'dshWbUninstall')[0]
     expect(uninstall.props['aria-label']).toBe('卸载helper')
     expect(uninstall.props.disabled).toBe(false)
     expect(ui.modal(tree)).toBeUndefined()
@@ -3152,12 +3252,12 @@ describe('workbench host localization', () => {
     const card = find(node => node.type === 'article')
     expect(ui.find(card, node => node.type?.name === 'EntryTitle')[0].props.entry.title).toBe('English Workbench')
     expect(ui.find(card, node => node.props?.className?.includes('dshWbCardDescription'))[0].props.children).toEqual(['English summary'])
-    find(node => node.type === 'button' && node.props.className === 'dshWbCategoryFilter' && node.props.children[0] === 'Content').props.onClick()
+    find(node => node.type === 'select' && node.props['aria-label'] === 'Filter by category').props.onChange({ target: { value: 'content' } })
     find(node => node.type === 'input' && node.props.type === 'search').props.onChange({ target: { value: 'English Workbench' } })
     expect(ui.find(ui.render(), node => node.type === 'article')).toHaveLength(1)
     ctx.locale.setActive('zh')
     expect(find(node => node.type === 'h1').props.children).toEqual(['工作台'])
-    expect(find(node => node.type === 'button' && node.props.className === 'dshWbCategoryFilter' && node.props['aria-pressed']).props.children).toEqual(['内容'])
+    expect(find(node => node.type === 'select' && node.props['aria-label'] === '按分类筛选').props.value).toBe('content')
     expect(ui.find(ui.render(), node => node.type === 'article')).toHaveLength(1)
     expect(find(node => node.type === 'input' && node.props.type === 'search').props.value).toBe('English Workbench')
   })

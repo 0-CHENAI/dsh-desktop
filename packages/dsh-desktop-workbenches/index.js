@@ -83,6 +83,21 @@ export function apply(ctx, config) {
       }
     }
   })
+  // A fixed packaged asset keeps the market header available offline without
+  // exposing a filesystem path or allowing arbitrary file reads.
+  ctx.connection.fetch.register({
+    path: '/api/desktop-workbenches/assets/market-header.png',
+    methods: ['GET'],
+    requestBody: 'buffered',
+    async fetch() {
+      try {
+        const image = await readFile(new URL('./assets/market-header.png', import.meta.url))
+        return new Response(image, { headers: { 'content-type': 'image/png', 'cache-control': 'no-cache' } })
+      } catch {
+        return Response.json({ error: 'Could not read the workbench header image.' }, { status: 500 })
+      }
+    }
+  })
   ctx.connection.fetch.register(documentRoute('/api/desktop-workbenches/development-guide', 'development-guide.zh.md'))
   ctx.connection.fetch.register(documentRoute('/api/desktop-workbenches/author-guide', 'development-guide.zh.md'))
   ctx.connection.fetch.register(documentRoute('/api/desktop-workbenches/market-acceptance', 'market-acceptance.zh.md'))
