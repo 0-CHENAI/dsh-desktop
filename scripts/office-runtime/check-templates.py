@@ -10,7 +10,7 @@ from docx import Document
 from PIL import Image
 
 def check(root, sources):
-    catalog = json.loads((root / 'catalog.json').read_text())
+    catalog = json.loads((root / 'catalog.json').read_text(encoding='utf-8'))
     assert {entry.name for entry in root.iterdir()} == {'catalog.json', *(item['id'] for item in catalog)}, 'catalogue resource root'
     numeric_checks, previews, visual_checks = 0, 0, 0
     for item in catalog:
@@ -30,7 +30,7 @@ def check(root, sources):
             assert document.paragraphs, item['id']
             proof = directory / 'preview-checks.json'
             if proof.exists():
-                checks = json.loads(proof.read_text())
+                checks = json.loads(proof.read_text(encoding='utf-8'))
                 assert checks['schemaVersion'] == 1 and isinstance(checks['checks'], list)
                 for row in checks['checks']:
                     assert row['image'] in item['files'] and row['image'].startswith('pages/')
@@ -62,7 +62,7 @@ def check(root, sources):
         else:
             assert all(sheet.freeze_panes == 'A2' for sheet in editable)
         if (directory / 'checks.json').exists():
-            for row in json.loads((directory / 'checks.json').read_text()):
+            for row in json.loads((directory / 'checks.json').read_text(encoding='utf-8')):
                 actual = values[row['sheet']][row['cell']].value
                 assert math.isclose(actual, row['expected'], abs_tol=row.get('tolerance', 1e-6)), (item['id'], row, actual)
                 numeric_checks += 1

@@ -57,8 +57,8 @@ root=Path(sys.argv[1]); path=root/'meeting-minutes/pages/1.webp'
 image=Image.open(path).convert('RGB')
 ImageDraw.Draw(image).rectangle((int(image.width*.27),int(image.height*.06),int(image.width*.56),int(image.height*.105)),fill='white')
 image.save(path,format='WEBP',quality=86)
-catalog=json.loads((root/'catalog.json').read_text());catalog[0]['files']['pages/1.webp']=hashlib.sha256(path.read_bytes()).hexdigest()
-(root/'catalog.json').write_text(json.dumps(catalog))
+catalog=json.loads((root/'catalog.json').read_text(encoding='utf-8'));catalog[0]['files']['pages/1.webp']=hashlib.sha256(path.read_bytes()).hexdigest()
+(root/'catalog.json').write_text(json.dumps(catalog),encoding='utf-8')
 `, root])
   await expect(promisify(execFile)(python, ['-I', '-B', resolve('scripts/office-runtime/check-templates.py'), root,
     resolve('packages/dsh-desktop-office/sources')])).rejects.toThrow('Generate and verify previews with complete native font access')
