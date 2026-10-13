@@ -1,3 +1,4 @@
+import { readInstallEvidence } from './install-evidence.mjs'
 import Schema from '@deepseek-ai/schemastery'
 import { CatalogError, createCatalogReader } from './catalog.mjs'
 import { awaitHandle, createMarketInstallStore, MarketInstallError, resolveInstallTarget } from './market-install.mjs'
@@ -168,17 +169,22 @@ export function apply(ctx, config) {
     headers: { 'cache-control': 'no-store' }
   })
   // Market entries are identified by their Awesome repository identity.
-  const catalogIdFrom = async (request) => {
+  const catalogPayloadFrom = async (request) => {
     const payload = await readPayload(request, 4096, 'Request is too large.')
     if (typeof payload?.id !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9-]{0,38}\/(?!\.\.?$)[A-Za-z0-9_.-]{1,100}$/.test(payload.id)) throw new MarketInstallError('A workbench market entry is required.')
-    return payload.id
+    return payload
   }
   ctx.connection.fetch.register({
     path: '/api/desktop-workbenches/market-installs',
     methods: ['GET'],
     requestBody: 'buffered',
-    async fetch() {
-      try { return Response.json({ installs: await marketInstalls.read() }, { headers: { 'cache-control': 'no-store' } }) }
+    async fetch(request) {
+      try {
+        const installs = await marketInstalls.read()
+        const requested = new URL(request.url).searchParams.getAll('package').slice(0, 64)
+        const listed = await readCatalog().then(value => value.catalog.workbenches.map(item => item.distribution?.name).filter(Boolean), () => [])
+        return Response.json({ installs, packages: await readInstallEvidence(installs, undefined, [...requested, ...listed]) }, { headers: { 'cache-control': 'no-store' } })
+      }
       catch (error) { return installFailure(error, 'Could not read workbench market installs.') }
     }
   })
@@ -190,12 +196,23 @@ export function apply(ctx, config) {
       requestBody: 'buffered',
       async fetch(request) {
         try {
-          const id = await catalogIdFrom(request)
+          const { id, confirmedReplacement } = await catalogPayloadFrom(request)
           // The install source always comes from the Awesome catalog, never from the request.
           const entry = (await readCatalog()).catalog.workbenches.find((item) => item.id === id)
           if (!entry) throw new MarketInstallError('This workbench is no longer listed in the workbench market.', 404)
+          const installs = await marketInstalls.read()
+          const requireReplacement = async (names) => {
+            if (confirmedReplacement === true) return
+            const packages = await readInstallEvidence(installs, undefined, names)
+            if (names.some(name => packages[name] && packages[name].origin !== 'market')) {
+              throw new MarketInstallError('Confirm replacement of the installed workbench with the market version.', 409)
+            }
+          }
+          // Check known package identities before resolving or downloading the target.
+          await requireReplacement([entry.distribution.name, installs[id]?.pluginName].filter(Boolean))
           const target = await resolveInstallTarget(entry)
           try {
+            await requireReplacement([target.expectedPluginName])
             let handle
             try {
               handle = ctx.desktopPnpm.installWorkbenchGeneration({
@@ -208,6 +225,8 @@ export function apply(ctx, config) {
             await awaitHandle(handle)
           } finally { await target.cleanup() }
           const install = { catalogId: entry.id, pluginName: target.expectedPluginName, version: entry.version, source: entry.distribution.type, installedAt: new Date().toISOString() }
+          const evidence = (await readInstallEvidence({}, undefined, [install.pluginName]))[install.pluginName]
+          if (evidence?.fingerprint) install.fingerprint = evidence.fingerprint
           await marketInstalls.record(id, install)
           return Response.json({ install, restartRequired: true }, { headers: { 'cache-control': 'no-store' } })
         } catch (error) { return installFailure(error, 'Could not install the workbench.') }
@@ -219,7 +238,7 @@ export function apply(ctx, config) {
       requestBody: 'buffered',
       async fetch(request) {
         try {
-          const id = await catalogIdFrom(request)
+          const { id } = await catalogPayloadFrom(request)
           const install = (await marketInstalls.read())[id]
           if (!install) throw new MarketInstallError('This workbench was not installed from the workbench market.', 404)
           let handle
