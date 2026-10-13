@@ -420,7 +420,7 @@ describe('GitHub release contract', () => {
     expect(workflow).toContain('Smoke test packaged Windows Harness')
     expect(workflow).toContain('$executable = (Get-Item -LiteralPath $env:SMOKE_EXE).FullName')
     expect(workflow).toContain("$appRoot = Join-Path $resources 'app.asar'")
-    expect(workflow).toContain("$env:ELECTRON_RUN_AS_NODE = '1'")
+    expect(workflow).toContain('node scripts/check-packaged-windows.mjs $appRoot $executable')
     expect(workflow).toContain('Packaged native binding failed.')
     expect(workflow).toContain("'dist-dev\\win-unpacked\\DSH Desktop Dev.exe'")
     expect(workflow).toContain('node scripts/check-desktop-profile.cjs $appRoot $resources $executable')

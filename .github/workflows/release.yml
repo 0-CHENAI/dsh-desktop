@@ -192,15 +192,10 @@ jobs:
           $executable = (Get-Item -LiteralPath $env:SMOKE_EXE).FullName
           $resources = Join-Path (Split-Path $executable) 'resources'
           $appRoot = Join-Path $resources 'app.asar'
-          # Electron Node mode replaces the removed standalone node.exe.
-          $previousNodeMode = $env:ELECTRON_RUN_AS_NODE
-          try {
-            $env:ELECTRON_RUN_AS_NODE = '1'
-            & $executable -e "const requireHost=require('node:module').createRequire(require('node:path').join(process.argv[1],'package.json')); const koffi=requireHost('koffi'); const pid=koffi.load('kernel32.dll').func('GetCurrentProcessId','uint32',[]); if(pid()!==process.pid)throw new Error('Packaged koffi failed');" $appRoot
-            if ($LASTEXITCODE -ne 0) { throw 'Packaged native binding failed.' }
-          } finally {
-            $env:ELECTRON_RUN_AS_NODE = $previousNodeMode
-          }
+          # Wait for the GUI executable through a Node process handle. A direct
+          # PowerShell invocation can leave LASTEXITCODE unset despite success.
+          node scripts/check-packaged-windows.mjs $appRoot $executable
+          if ($LASTEXITCODE -ne 0) { throw 'Packaged native binding failed.' }
           # The gate creates and removes only its own temporary Profile. No
           # existing AppData folder or credential-bearing log is touched.
           node scripts/check-desktop-profile.cjs $appRoot $resources $executable
