@@ -22,17 +22,50 @@ const library = await createTemplateLibrary(resources)
 it('produces the same native workbook revision across repeated official Kit recalculations', async () => {
   const directory = await temporary()
   const python = resolve('.build/office-runtime/primary-runtime/dependencies/python', process.platform === 'win32' ? 'python.exe' : 'bin/python3')
-  const hashes = []
+  const hashes = [], outputs = []
   for (const filename of ['first.xlsx', 'second.xlsx']) {
     const output = join(directory, filename)
+    outputs.push(output)
     await promisify(execFile)(electronExecutable(resolve('.')), [resolve('build/office-cli.mjs'), 'recalculate', '--input', join(resources, 'annual-business/example.xlsx'), '--output', output], {
       env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, timeout: 30_000
     })
     await promisify(execFile)(python, ['-I', '-B', resolve('scripts/office-runtime/normalize-package.py'), output])
     hashes.push(digest(await readFile(output)))
   }
-  expect(hashes[0]).toBe(hashes[1])
+  let details = ''
+  if (hashes[0] !== hashes[1]) {
+    const result = await promisify(execFile)(python, ['-I', '-B', '-c', `
+import hashlib,json,sys
+from zipfile import ZipFile
+with ZipFile(sys.argv[1]) as first, ZipFile(sys.argv[2]) as second:
+    names=sorted(set(first.namelist()) | set(second.namelist()))
+    print(json.dumps([name for name in names if name not in first.namelist() or name not in second.namelist() or hashlib.sha256(first.read(name)).digest() != hashlib.sha256(second.read(name)).digest()]))
+`, ...outputs])
+    details = `; differing package entries: ${result.stdout.trim()}`
+  }
+  expect(hashes[0], `normalized workbook revisions differ${details}`).toBe(hashes[1])
 }, 60_000)
+
+it('normalizes platform-specific chart-axis ID serialization', async () => {
+  const directory = await temporary()
+  const python = resolve('.build/office-runtime/primary-runtime/dependencies/python', process.platform === 'win32' ? 'python.exe' : 'bin/python3')
+  const hashes = []
+  for (const [filename, chart] of [
+    ['first.xlsx', '<chart><axId val="101"/><axId val="202"/><crossAx val="202"/><crossAx val="101"/></chart>'],
+    ['second.xlsx', "<chart><axId val = '303'/><axId val = '404'/><crossAx val = '404'/><crossAx val = '303'/></chart>"]
+  ]) {
+    const output = join(directory, filename)
+    await promisify(execFile)(python, ['-I', '-B', '-c', `
+import sys
+from zipfile import ZipFile
+with ZipFile(sys.argv[1], 'w') as archive:
+    archive.writestr('xl/charts/chart1.xml', sys.argv[2])
+`, output, chart])
+    await promisify(execFile)(python, ['-I', '-B', resolve('scripts/office-runtime/normalize-package.py'), output])
+    hashes.push(digest(await readFile(output)))
+  }
+  expect(hashes[0]).toBe(hashes[1])
+})
 
 it('independently verifies recalculated values, charts, original frozen panes and native package integrity', async () => {
   const python = resolve('.build/office-runtime/primary-runtime/dependencies/python', process.platform === 'win32' ? 'python.exe' : 'bin/python3')

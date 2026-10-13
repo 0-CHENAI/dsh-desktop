@@ -8,7 +8,7 @@ import path from 'node:path';
  */
 export async function prepareOfficeFontAccess({platform=process.platform,home=homedir(),openDirectory=opendir}={}) {
   if(platform!=='darwin')return {status:'not-required'};
-  const directory=path.join(home,'Library','Group Containers','UBF8T346G9.Office','FontCache');
+  const directory=path.posix.join(home,'Library','Group Containers','UBF8T346G9.Office','FontCache');
   let handle;
   try {
     handle=await openDirectory(directory);

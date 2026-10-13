@@ -17,10 +17,14 @@ def normalize_package(path):
         if re.fullmatch(r'xl/charts/chart\d+\.xml', name):
             axis_ids = {}
             def stable_axis(match):
-                original = match.group(2)
+                original = match.group(3)
                 axis_ids.setdefault(original, str(100000 + len(axis_ids)).encode())
-                return match.group(1) + axis_ids[original] + match.group(3)
-            data = re.sub(rb'(<(?:[\w.-]+:)?(?:axId|crossAx)\b[^>]*\bval=")(\d+)(")', stable_axis, data)
+                return match.group(1) + b'val="' + axis_ids[original] + b'"'
+            data = re.sub(
+                rb'(<(?:[\w.-]+:)?(?:axId|crossAx)\b[^>]*?\b)val\s*=\s*(["\'])([^"\']+)\2',
+                stable_axis,
+                data,
+            )
         normalized.append((name, data))
     with ZipFile(path, 'w', compression=ZIP_DEFLATED) as archive:
         for name, data in normalized:
