@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type { UpdateLocale } from './update-view'
 import { setupDesktopStoragePersistence } from './desktop-storage'
+import { setupDesktopNotificationBridge } from './desktop-notification'
 import { mountDesktopUpdateUi } from './desktop-update-ui'
 import { isPluginLoadError } from './plugin-error-view'
 import { findBootFailureText } from './boot-failure'
@@ -23,6 +24,7 @@ if (process.platform === 'win32') markWindowsTitlebar(document)
 
 // Intercept and persist localStorage to disk storage before any page script executes
 setupDesktopStoragePersistence()
+setupDesktopNotificationBridge()
 
 const MOBILE_BUTTON_ID = 'dsh-desktop-mobile-button'
 const SAFE_MODE_BANNER_ID = 'dsh-desktop-safe-mode-banner'
