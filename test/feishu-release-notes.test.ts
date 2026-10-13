@@ -55,7 +55,7 @@ describe('Feishu release notes pipeline', () => {
   it(
     'builds a prompt with valid metadata and evidence blocks',
     () => {
-      const output = execFileSync('python3', [scriptPath, 'build-prompt', '--tag', 'v0.4.0'], {
+      const output = execFileSync(pythonExecutable, [scriptPath, 'build-prompt', '--tag', 'v0.4.0'], {
         encoding: 'utf8',
         env: pythonEnv
       })
@@ -75,7 +75,7 @@ describe('Feishu release notes pipeline', () => {
   it('generates deterministic fallback release notes that pass validation', () => {
     const tempFile = join(process.cwd(), '.temp-feishu-test-notes.md')
     try {
-      execFileSync('python3', [scriptPath, 'generate-fallback', '--tag', 'v0.4.0', '--output', tempFile], {
+      execFileSync(pythonExecutable, [scriptPath, 'generate-fallback', '--tag', 'v0.4.0', '--output', tempFile], {
         encoding: 'utf8',
         env: pythonEnv
       })
@@ -87,7 +87,7 @@ describe('Feishu release notes pipeline', () => {
       expect(content).toContain('---')
 
       // Validate passes without error
-      const validateOutput = execFileSync('python3', [scriptPath, 'validate', '--tag', 'v0.4.0', '--input', tempFile], {
+      const validateOutput = execFileSync(pythonExecutable, [scriptPath, 'validate', '--tag', 'v0.4.0', '--input', tempFile], {
         encoding: 'utf8',
         env: pythonEnv
       })
@@ -124,7 +124,7 @@ Description here.
       writeFileSync(tempFile, invalidContent, 'utf8')
 
       expect(() => {
-        execFileSync('python3', [scriptPath, 'validate', '--tag', 'v0.4.0', '--input', tempFile], {
+        execFileSync(pythonExecutable, [scriptPath, 'validate', '--tag', 'v0.4.0', '--input', tempFile], {
           encoding: 'utf8',
           stdio: 'pipe',
           env: pythonEnv
@@ -141,7 +141,7 @@ Description here.
     const tempFile = join(process.cwd(), '.temp-feishu-prerelease-test-notes.md')
     try {
       execFileSync(
-        'python3',
+        pythonExecutable,
         [scriptPath, 'generate-fallback', '--tag', '0.7.2', '--prerelease', '--output', tempFile],
         {
           encoding: 'utf8',
@@ -157,7 +157,7 @@ Description here.
 
       // Validate passes without error with --prerelease flag
       const validateOutput = execFileSync(
-        'python3',
+        pythonExecutable,
         [scriptPath, 'validate', '--tag', '0.7.2', '--prerelease', '--input', tempFile],
         {
           encoding: 'utf8',
@@ -181,7 +181,7 @@ Description here.
         { message: 'prerelease cut', date: '2026-03-01T00:00:00', tag: '0.7.2' }
       ])
       const output = execFileSync(
-        'python3',
+        pythonExecutable,
         [scriptPath, 'build-prompt', '--tag', '0.7.2', '--prerelease'],
         {
           encoding: 'utf8',
@@ -210,7 +210,7 @@ Description here.
       { message: 'unreleased work', date: '2026-04-01T00:00:00' }
     ])
     const buildPrompt = (args: string[]): string =>
-      execFileSync('python3', [scriptPath, 'build-prompt', ...args], {
+      execFileSync(pythonExecutable, [scriptPath, 'build-prompt', ...args], {
         encoding: 'utf8',
         env: pythonEnv,
         cwd: repo
@@ -242,3 +242,4 @@ Description here.
     expect(workflow).toMatch(/publish-prerelease:[\s\S]*feishu_release_notes\.py send[\s\S]*--prerelease/)
   })
 })
+import { pythonExecutable } from './python-executable'

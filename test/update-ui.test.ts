@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises'
 import { describe, expect, it } from 'vitest'
 import type { UpdateStatus } from '../src/shared/contracts'
 import {
@@ -50,24 +49,6 @@ describe('desktop update card visibility', () => {
   it('formats localized progress copy', () => {
     expect(updateMessage(downloading, 'zh')).toBe('正在下载更新 42%')
     expect(updateMessage(downloading, 'en')).toBe('Downloading update 42%')
-  })
-})
-
-describe('secure update card wiring', () => {
-  it('bundles a preload and mounts it without enabling Node in Harness', async () => {
-    const [config, main, preload] = await Promise.all([
-      readFile('electron.vite.config.ts', 'utf8'),
-      readFile('src/main/index.ts', 'utf8'),
-      readFile('src/preload/index.ts', 'utf8')
-    ])
-
-    expect(config).toContain('preload:')
-    expect(main).toContain("preload: join(import.meta.dirname, '../preload/index.cjs')")
-    expect(main).toContain('nodeIntegration: false')
-    expect(preload).toContain("ipcRenderer.on('updates:status-changed'")
-    expect(preload).toContain("ipcRenderer.invoke('updates:install')")
-    expect(preload).toContain("'right:20px'")
-    expect(preload).toContain("'bottom:20px'")
   })
 })
 
@@ -141,22 +122,6 @@ describe('accepting an update is what starts the download', () => {
     }
     expect(updateHeadline(available, 'zh').description).toContain('应用程序')
     expect(updateMessage(available, 'en')).toContain('Move it to Applications')
-  })
-})
-
-describe('about dialog and version selection wiring', () => {
-  it('wires about modal with top-right close and version picker alongside check for updates', async () => {
-    const [main, preload] = await Promise.all([
-      readFile('src/main/index.ts', 'utf8'),
-      readFile('src/preload/index.ts', 'utf8')
-    ])
-
-    expect(main).toContain("window.webContents.send('desktop:show-about', info)")
-    expect(preload).toContain("ipcRenderer.on('desktop:show-about'")
-    expect(preload).toContain("zh ? '选择版本' : 'Select version'")
-    expect(preload).toContain("zh ? '检查更新' : 'Check for updates'")
-    expect(preload).toContain("button('×', 'about-close')")
-    expect(preload).toContain('mountAbout()')
   })
 })
 

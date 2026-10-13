@@ -20,14 +20,51 @@ concurrency:
 jobs:
   check:
     name: Test and typecheck
-    runs-on: ubuntu-24.04
+    # npm test/build prepare the locked Office payload; Linux is not a
+    # supported Desktop target. Keep the complete gate on a native target.
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
       - run: npm ci
       - run: npm test
       - run: npm run typecheck
       - run: npm run build
+
+  native-runtime:
+    name: Native Harness/Office (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: node scripts/verify-target.mjs ${{ runner.os == 'Windows' && 'win32' || 'darwin' }} ${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}
+      - run: npm run build
+      - run: node scripts/check-desktop-profile.cjs
+      - if: runner.os == 'macOS'
+        run: node scripts/verify-image-electron.mjs
+      - if: runner.os == 'Windows'
+        run: node scripts/check-windows-titlebar-layout.cjs
+      - run: npm run package:dev:dir
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          CSC_FOR_PULL_REQUEST: 'true'
+      - if: runner.os == 'Windows'
+        run: node scripts/check-desktop-profile.cjs dist-dev/win-unpacked/resources/app.asar dist-dev/win-unpacked/resources "dist-dev/win-unpacked/DSH Desktop Dev.exe"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-client-${{ matrix.os }}
+          path: .build/desktop-profile-smoke/*.png
+          if-no-files-found: ignore

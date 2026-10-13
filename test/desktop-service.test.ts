@@ -112,17 +112,36 @@ describe('desktop service', () => {
     request.mockImplementation(async (_url: string, init?: RequestInit) => new Response(JSON.stringify({ accepted: true, eventId: JSON.parse(String(init?.body)).eventId })))
     await Promise.all([service.flush(), service.flush()]); expect(request).toHaveBeenCalledTimes(50); expect(service.pending()).toHaveLength(0)
   })
-  it('attributes an unclean exit to the previous version and does not report clean shutdowns', () => {
+  it('reports an interrupted session regardless of version, but not after a clean exit', () => {
     const { service, options, dir } = fixture()
+    writeFileSync(options.logPath, 'uncaught exception\n(exit code 1)\n')
     service.beginSession()
     const next = new DesktopService({ ...options, version: '0.9.0' }); next.beginSession()
-    expect(queued(next, dir)[0]).toMatchObject({ version: '0.8.0', kind: 'unclean-exit' })
-    next.markCleanExit(); new DesktopService(options).beginSession(); expect(next.pending()).toHaveLength(1)
+    expect(queued(next, dir)).toEqual([expect.objectContaining({ kind: 'unclean-exit', version: '0.8.0' })])
+    next.markCleanExit()
+    const later = new DesktopService(options)
+    later.beginSession()
+    expect(later.pending()).toHaveLength(1)
+  })
+  it('asks once for consent before sending an actual unclean-exit report', async () => {
+    const { service, request, options } = fixture()
+    service.capture('unclean-exit', 'stale leftover')
+    expect(service.pending()).toHaveLength(1)
+    await service.flush()
+    expect(service.pending()).toHaveLength(0)
+    expect(options.confirmUpload).toHaveBeenCalledOnce()
+    expect(request).toHaveBeenCalledOnce()
   })
   it('does not replace a queued fatal report with a generic unclean-exit report', () => {
     const { service, options, dir } = fixture()
     service.beginSession(); service.captureFatal(new Error('fatal'))
     new DesktopService(options).beginSession()
+    expect(queued(service, dir).map(r => r.kind)).toEqual(['main-crash'])
+  })
+  it('keeps a queued fatal report when a later version starts after an upgrade', () => {
+    const { service, options, dir } = fixture()
+    service.beginSession(); service.captureFatal(new Error('fatal'))
+    new DesktopService({ ...options, version: '0.9.0' }).beginSession()
     expect(queued(service, dir).map(r => r.kind)).toEqual(['main-crash'])
   })
   it('queries with no channel/arch and rejects invalid or downgraded policy responses', async () => {
@@ -142,6 +161,20 @@ describe('desktop service', () => {
   })
 })
 describe('diagnostic event integration', () => {
+  it.each(['ready', 'next-attempt', 'discard'] as const)('does not resurrect a transient plugin report after delayed flush: %s', async recovery => {
+    const { service } = fixture()
+    const diagnostics = attachDiagnostics(new EventEmitter(), service)
+    disposers.push(() => diagnostics.dispose())
+    let finish!: () => void
+    const logFlushed = new Promise<void>(resolve => { finish = resolve })
+    diagnostics.runtimeChanged({ phase: 'failed', message: 'plugin failed', logs: [], pluginFailures: [{ stage: 'import', packageName: 'plugin', message: 'failure', chain: [] }] }, () => logFlushed, 1)
+    if (recovery === 'discard') diagnostics.discardPendingPluginFailure()
+    else diagnostics.runtimeChanged({ phase: recovery === 'ready' ? 'ready' : 'starting', message: 'recovering', logs: [] }, async () => {}, recovery === 'ready' ? 1 : 2)
+    finish()
+    await new Promise(resolve => setImmediate(resolve))
+    expect(service.pending()).toHaveLength(0)
+  })
+
   it('does not repeatedly report confirmed Windows session ends as unclean exits', async () => {
     const { options, request } = fixture(undefined, 'win32')
     for (let startup = 0; startup < 3; startup++) {
@@ -244,6 +277,92 @@ describe('diagnostic event integration', () => {
     expect(queued(service, dir).map(r => r.kind).sort()).toEqual(['gpu-crash', 'main-crash', 'renderer-crash'])
     app.emit('will-quit'); expect(existsSync(join(dir, 'state', 'session.json'))).toBe(false)
   })
+  it('does not infer a clean exit from a healthy-looking log', () => {
+    const { service, options } = fixture()
+    writeFileSync(options.logPath, '[desktop] endpoint http://127.0.0.1:43129\n[desktop] Harness is ready\n[desktop] cleared 1 stale Harness authentication cookie(s)\n')
+    service.beginSession()
+    const healthy = new DesktopService(options)
+    healthy.beginSession()
+    expect(healthy.pending()).toHaveLength(1)
+    writeFileSync(options.logPath, 'uncaught exception\nSTATUS_ACCESS_VIOLATION\n')
+    const unhealthy = new DesktopService(options)
+    unhealthy.beginSession()
+    expect(unhealthy.pending()).toHaveLength(2)
+  })
+  it('discards a pending report by eventId', () => {
+    const { service } = fixture()
+    const eventId = service.capture('startup-failure', 'recoverable error')
+    expect(service.pending()).toHaveLength(1)
+    expect(service.discard(eventId)).toBe(true)
+    expect(service.pending()).toHaveLength(0)
+  })
+  it('discards transient plugin failure report when recovery succeeds and runtime reaches ready', async () => {
+    const { service, dir } = fixture()
+    const app = new EventEmitter()
+    const diagnostics = attachDiagnostics(app, service); disposers.push(() => diagnostics.dispose())
+    const failedSnapshot = {
+      phase: 'failed' as const,
+      message: 'plugin error',
+      logs: [],
+      pluginFailures: [{ stage: 'import' as const, packageName: 'test-plugin', message: 'failed', chain: [] }]
+    }
+    diagnostics.runtimeChanged(failedSnapshot, async () => {})
+    await vi.waitFor(() => expect(service.pending()).toHaveLength(1))
+    // User or safe mode recovers and launches successfully
+    diagnostics.runtimeChanged({ phase: 'ready', message: 'ready', logs: [] }, async () => {})
+    expect(service.pending()).toHaveLength(0)
+  })
+  it('discards pending plugin failure when frontend opens recovery, even with active sending', async () => {
+    const { service, request } = fixture()
+    request.mockResolvedValue(new Response(JSON.stringify({ accepted: true })))
+    const app = new EventEmitter()
+    const diagnostics = attachDiagnostics(app, service); disposers.push(() => diagnostics.dispose())
+    diagnostics.startSending()
+    const failedSnapshot = {
+      phase: 'failed' as const,
+      message: 'plugin error',
+      logs: [],
+      pluginFailures: [{ stage: 'import' as const, packageName: 'test-plugin', message: 'failed', chain: [] }]
+    }
+    diagnostics.runtimeChanged(failedSnapshot, async () => {})
+    await vi.waitFor(() => expect(service.pending()).toHaveLength(1))
+    expect(request).not.toHaveBeenCalled()
+    // Frontend identifies the incompatible plugin and invokes discard
+    diagnostics.discardPendingPluginFailure()
+    expect(service.pending()).toHaveLength(0)
+    expect(request).not.toHaveBeenCalled()
+  })
+  it('sends a crash without an event id right away while sending is active', async () => {
+    const { service, request } = fixture()
+    request.mockResolvedValue(new Response(JSON.stringify({ accepted: true })))
+    const app = new EventEmitter()
+    const diagnostics = attachDiagnostics(app, service); disposers.push(() => diagnostics.dispose())
+    diagnostics.startSending()
+    // Let the empty drain started by startSending settle first.
+    await new Promise(resolve => setTimeout(resolve, 0))
+    app.emit('child-process-gone', {}, { type: 'GPU', reason: 'crashed', exitCode: 1 })
+    await vi.waitFor(() => expect(request).toHaveBeenCalled())
+  })
+  it('suppresses plugin failure report when discardPendingPluginFailure is called before log flush completes', async () => {
+    const { service, request } = fixture()
+    const app = new EventEmitter()
+    const diagnostics = attachDiagnostics(app, service); disposers.push(() => diagnostics.dispose())
+    diagnostics.startSending()
+    let finishLog!: () => void
+    const logPromise = new Promise<void>(resolve => { finishLog = resolve })
+    const failedSnapshot = {
+      phase: 'failed' as const,
+      message: 'plugin error',
+      logs: [],
+      pluginFailures: [{ stage: 'import' as const, packageName: 'test-plugin', message: 'failed', chain: [] }]
+    }
+    diagnostics.runtimeChanged(failedSnapshot, () => logPromise)
+    diagnostics.discardPendingPluginFailure()
+    finishLog()
+    await new Promise(resolve => setTimeout(resolve, 50))
+    expect(service.pending()).toHaveLength(0)
+    expect(request).not.toHaveBeenCalled()
+  })
 })
 
 it('waits for the actual Harness file stream before capturing its final error', async () => {
@@ -253,6 +372,22 @@ it('waits for the actual Harness file stream before capturing its final error', 
   for (let n = 0; n < 150; n++) runtime.note(`error ${n}`)
   await runtime.flushLog()
   const lines = tailLog(options.logPath).lines
-  expect(lines).toHaveLength(100); expect(lines[0]).toBe('error 50'); expect(lines.at(-1)).toBe('error 149')
+  expect(lines).toHaveLength(100); expect(lines[0]).toContain('error 50'); expect(lines.at(-1)).toContain('error 149')
+  await runtime.stop()
+})
+
+it('formats harness.log with ISO date timestamps and relative elapsed time', async () => {
+  const { HarnessRuntime } = await import('../src/main/runtime/harness-runtime')
+  const { dir, options } = fixture()
+  const runtime = new HarnessRuntime({ dshEntryPath: '', nodeExecutablePath: '', nodeEntryPath: '', dshPatchPath: '', dshSafePatchPath: '', dshHome: dir, logPath: options.logPath, launchProcess: () => { throw new Error('Not used') }, onChanged: () => {} })
+  runtime.note('pre-launch message')
+  runtime.beginLaunch('test reason')
+  runtime.note('post-launch message')
+  await runtime.flushLog()
+  const lines = tailLog(options.logPath).lines
+  expect(lines[0]).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] pre-launch message$/)
+  expect(lines[1]).toBe('')
+  expect(lines[2]).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\]\s+\+\s*\d+ms \[desktop\] launch requested \(test reason\)$/)
+  expect(lines[3]).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\]\s+\+\s*\d+ms post-launch message$/)
   await runtime.stop()
 })

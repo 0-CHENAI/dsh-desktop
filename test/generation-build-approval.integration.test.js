@@ -21,8 +21,9 @@ it('real pnpm refuses unapproved scripts and executes an explicitly approved reb
     for (const name of ['dependency', 'plugin']) await mkdir(join(root, name, 'package'), { recursive: true })
     await writeFile(join(root, 'dependency/package/package.json'), JSON.stringify({
       name: 'dsh-test-build-dependency', version: '1.0.0', main: 'built.js',
-      // Use the same executable that runs pnpm, not a PATH-selected node.cmd.
-      scripts: { install: `"${process.execPath}" build.cjs` }
+      // pnpm adds its Node executable to lifecycle PATH. Quoting execPath in
+      // a script breaks cmd.exe when Windows installs Node under Program Files.
+      scripts: { install: 'node build.cjs' }
     }))
     await writeFile(join(root, 'dependency/package/build.cjs'), "require('node:fs').writeFileSync(require('node:path').join(__dirname, 'built.js'), 'module.exports = 42')")
     const dependencyTar = join(root, 'dependency.tgz')
@@ -60,7 +61,7 @@ it('real pnpm refuses unapproved scripts and executes an explicitly approved reb
     await writeFile(join(profile, 'pnpm-workspace.yaml'), 'allowBuilds:\n  dsh-test-build-dependency: true\n')
     let buildOutput = ''
     const approved = await installGeneration({ ...options, onOutput: chunk => { buildOutput += chunk } })
-    expect(approved.ok, approved.detail).toBe(true)
+    expect(approved.ok, `${approved.detail}\n${buildOutput}`).toBe(true)
     const builtFile = join(approved.generation.directory, 'node_modules/dsh-test-build-dependency/built.js')
     const built = await readFile(builtFile, 'utf8').catch(error => String(error))
     expect(built, `Approved build must produce ${builtFile}\n${buildOutput}`).toBe('module.exports = 42')

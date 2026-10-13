@@ -4,11 +4,11 @@ This guide covers local development, validation, patch maintenance, and target-n
 
 ## Prerequisites
 
-- Node.js 22 or later
+- Node.js 24 (the validated CI baseline)
 - npm
 - macOS on Apple Silicon or Intel, or Windows x64
 
-DSH Desktop currently pins `@deepseek-ai/dsh@0.1.1-rc.2`. Windows packages bundle a target-native Node.js runtime for Harness, while macOS uses an Electron UtilityProcess. Both are independent of the Node.js version used to run development commands.
+This baseline pins `@deepseek-ai/dsh@0.2.0-rc.2`. Windows packages run Harness in Electron Node mode, while macOS uses an Electron UtilityProcess. Both are independent of the Node.js version used to run development commands.
 
 ## Local setup
 

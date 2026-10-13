@@ -28,7 +28,7 @@ export function run (file, args, cwd) {
 /** `git diff --no-index` exits 1 when the trees differ, which is the normal case. */
 export function runDiff (args, cwd) {
   try {
-    return execFileSync('git', args, { cwd, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+    return execFileSync('git', ['-c', 'core.autocrlf=false', ...args], { cwd, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
   } catch (error) {
     if (error.status === 1 && error.stdout) return error.stdout
     const detail = (error.stderr ?? error.message).toString().trim().split('\n').slice(0, 6).join(' | ')

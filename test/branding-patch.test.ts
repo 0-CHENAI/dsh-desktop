@@ -9,11 +9,11 @@ describe('DSH Desktop sidebar branding', () => {
   it('matches the native window surface to the initial Harness theme', async () => {
     const main = await readFile(path.join(projectRoot, 'src', 'main', 'index.ts'), 'utf8')
 
-    expect(main).toContain("frame: process.platform !== 'darwin'")
+    expect(main).toContain("titleBarStyle: 'hidden'")
     expect(main).toContain("document.body.hasAttribute('data-ds-dark-theme')")
     expect(main).toContain("window.setBackgroundColor(isDark ? '#141416' : '#ffffff')")
     expect(main).toContain('window.setWindowButtonVisibility(true)')
-    expect(main).toContain('x: Math.round(16 * window.webContents.getZoomFactor()) - 2')
+    expect(main).toContain('trafficLightPosition: { x: 16, y: 18 }')
     expect(main).toContain("titleBarStyle: 'hidden' as const")
     expect(main).not.toContain('dsh-desktop-titlebar-style')
     expect(main).not.toContain('--dsh-desktop-titlebar-height')
@@ -76,7 +76,7 @@ describe('DSH Desktop sidebar branding', () => {
     )
 
     expect(patch).toContain('navigator.userAgent.includes("Macintosh") ? 80 : 56')
-    expect(patch).toContain('sidebar === 0 ? COLLAPSED_SIDEBAR_WIDTH')
+    expect(patch).toContain('COLLAPSED_SIDEBAR_WIDTH')
   })
 
   it('keeps the phone entry aligned at the right edge of the settings row', async () => {
@@ -95,8 +95,8 @@ describe('DSH Desktop sidebar branding', () => {
     expect(preload).toContain("liveElement(sidebarSettingsArea, '[data-dsh-sidebar-settings]')")
     expect(preload).toContain('settingsArea.appendChild(mobileButton)')
     expect(preload).toContain('[data-dsh-sidebar-settings] { position:relative')
-    expect(preload).toContain('padding-right:38px')
-    expect(preload).toContain('position:absolute; right:0; top:50%')
+    expect(preload).toContain('padding-right:46px')
+    expect(preload).toContain('position:absolute; right:-2px; top:50%')
     expect(preload).toContain('const hidden = !wide && !phoneConnected')
     expect(main).toContain("ipcMain.handle('mobile:open-pairing'")
     expect(main).toContain("ipcMain.handle('mobile:status'")

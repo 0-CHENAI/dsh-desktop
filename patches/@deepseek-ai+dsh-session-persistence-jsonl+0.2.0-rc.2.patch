@@ -1,0 +1,122 @@
+diff --git a/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/index.js b/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/index.js
+index a42f2a2..1a944e5 100644
+--- a/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/index.js
++++ b/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/index.js
+@@ -2419,6 +2419,34 @@ var JsonlSessionPersistence = class extends SessionPersistence {
+ 			path: logPath(this.root, meta.cwd, meta.id, this.compression)
+ 		};
+ 	}
++	/** Delete all stored generations under the same ownership lock as writers. */
++	async delete(id) {
++		await this.ensureRootEncoding();
++		// The plugin chain declares no inject, so read the Session registry through the
++		// optional accessor instead of `ctx.sessions` (rejected without inject).
++		const liveSessions = this.ctx.get("sessions", false);
++		if (liveSessions?.get(id) !== void 0) throw new Error(`cannot delete session "${id}" while it is live`);
++		this.tracker.claimWrite(id);
++		let lease;
++		try {
++			const selected = await this.findLog(id);
++			if (selected === void 0) return false;
++			const dir = dirname(selected.currentPath);
++			lease = await this.acquireLease(id, void 0, dir);
++			const generations = (await readdir(dir)).map((name) => ({ name, version: parseGenerationLogFilename(name, this.compression) })).filter((entry) => entry.version !== void 0).sort((a, b) => a.version - b.version);
++			for (const entry of generations) await rm(join(dir, entry.name));
++			this.coldLogMemo.delete(id);
++			this.migrationPreparations.delete(id);
++			if (process.platform !== "win32") {
++				const directory = await open(dir, "r");
++				try { await directory.sync(); } finally { await directory.close(); }
++			}
++			return generations.length > 0;
++		} finally {
++			try { await lease?.release(); } finally { this.tracker.releaseClaim(id); }
++		}
++	}
++
+ 	/**
+ 	* Create a new stored session and take its write ownership. The session is
+ 	* visible to this process immediately; the physical artifact appears on the
+@@ -2526,6 +2554,40 @@ var JsonlSessionPersistence = class extends SessionPersistence {
+ 	flush() {
+ 		return this.tracker.flushAll();
+ 	}
++	/** Remove one durable session while holding its write claim and directory lease. */
++	async delete(id, options) {
++		options?.signal?.throwIfAborted();
++		await this.ensureRootEncoding();
++		options?.signal?.throwIfAborted();
++		if (this.tracker.hasPending(id)) throw new Error(`cannot delete session "${id}" while its unmaterialized create is live`);
++		this.tracker.claimWrite(id);
++		let lease;
++		try {
++			const resolved = await this.findLog(id, options?.signal);
++			if (resolved === void 0) return false;
++			const path = resolved.currentPath;
++			lease = await this.acquireLease(id, void 0, dirname(path));
++			try {
++				await rm(path);
++			} catch (error) {
++				if (isENOENT(error)) return false;
++				throw error;
++			}
++			if (process.platform !== "win32") await this.syncDirPosix(dirname(path));
++			return true;
++		} finally {
++			this.coldLogMemo.delete(id);
++			this.migrationPreparations.delete(id);
++			let releaseFailure;
++			try {
++				await lease?.release();
++			} catch (raw) {
++				releaseFailure = raw instanceof Error ? raw : new Error(String(raw));
++			}
++			this.tracker.releaseClaim(id);
++			if (releaseFailure !== void 0) throw releaseFailure;
++		}
++	}
+ 	/**
+ 	* Observe one stored session without reading its event log.
+ 	* @param id - the stored session to observe.
+@@ -3040,8 +3102,10 @@ var JsonlSessionPersistence = class extends SessionPersistence {
+ 			try {
+ 				header = await this.readGenerationHeader(selected, void 0, signal);
+ 			} catch (error) {
+-				if (error instanceof SessionFormatUnsupportedError || error instanceof SessionPersistenceCorruptionError) continue;
+-				throw error;
++				if (error instanceof SessionFormatUnsupportedError) continue;
++				signal?.throwIfAborted();
++				this.ctx.logger.warn(`${this.name}: skipped unreadable session log ${selected.sourcePath}: ${error instanceof Error ? error.message : String(error)}`);
++				continue;
+ 			}
+ 			if (header === void 0) continue;
+ 			if (ids.has(header.id)) throw new Error(`duplicate JSONL session id "${header.id}" appears in multiple project directories`);
+diff --git a/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/types/index.d.ts b/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/types/index.d.ts
+index 48f0351..5715f6d 100644
+--- a/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/types/index.d.ts
++++ b/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/types/index.d.ts
+@@ -7,7 +7,7 @@
+  */
+ import { Context } from '@deepseek-ai/cordis';
+ import z from '@deepseek-ai/schemastery';
+-import { SessionPersistence, type SessionAccess, type SessionHandle, type SessionHandleReadResult, type SessionPersistenceCreateOptions, type SessionPersistenceListOptions, type SessionPersistenceOpenOptions, type SessionPersistenceSnapshot, type SessionPersistenceStatOptions, type SessionPersistenceRevision as PersistenceRevision } from '@deepseek-ai/dsh-session-persistence';
++import { SessionPersistence, type SessionAccess, type SessionHandle, type SessionHandleReadResult, type SessionPersistenceCreateOptions, type SessionPersistenceDeleteOptions, type SessionPersistenceListOptions, type SessionPersistenceOpenOptions, type SessionPersistenceSnapshot, type SessionPersistenceStatOptions, type SessionPersistenceRevision as PersistenceRevision } from '@deepseek-ai/dsh-session-persistence';
+ import { JsonlSessionHandle } from './storage.ts';
+ import { SessionWriteLease } from './lease.ts';
+ import type { SessionEvent, SessionId, SessionHeader, SessionLogOffset as SessionLogOffsetType } from '@deepseek-ai/dsh-session';
+@@ -88,6 +88,7 @@ declare class JsonlSessionPersistence extends SessionPersistence {
+      * @param options - optional cancellation.
+      * @returns the owned write handle.
+      */
++    delete(id: SessionId): Promise<boolean>;
+     create(header: SessionHeader, options?: SessionPersistenceCreateOptions): Promise<SessionHandle>;
+     /**
+      * Open an existing stored session for `read` or single-writer `write`.
+@@ -103,6 +104,7 @@ declare class JsonlSessionPersistence extends SessionPersistence {
+      * @returns resolution once every write handle active at the call has flushed.
+      */
+     flush(): Promise<void>;
++    delete(id: SessionId, options?: SessionPersistenceDeleteOptions): Promise<boolean>;
+     /**
+      * Observe one stored session without reading its event log.
+      * @param id - the stored session to observe.

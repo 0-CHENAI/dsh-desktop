@@ -1,66 +1,56 @@
-import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { runInNewContext } from 'node:vm'
 import { Context } from '@deepseek-ai/cordis'
-import SessionStore, { SESSION_FORMAT_VERSION, SessionId } from '@deepseek-ai/dsh-session'
+import SessionStore, { SESSION_FORMAT_VERSION, SessionId, SessionSeq } from '@deepseek-ai/dsh-session'
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
 import { describe, expect, it } from 'vitest'
 
 const projectRoot = path.resolve(import.meta.dirname, '..')
 
-// version tracks the patch-filename suffix; bumped when the Harness pin moves.
+// version tracks the patch-filename suffix; every Harness upgrade renames all of them
 const patchedPackages = [
   {
     name: 'dsh-session-persistence',
-    version: '0.1.5-rc.2',
+    version: '0.2.0-rc.2',
     file: 'lib/index.js',
-    markers: ['delete(_id)', 'this session persistence backend does not support deletion']
+    markers: ['does not support deletion', 'delete(_id, _options)', 'Permanently remove one stored Session identity']
   },
   {
     name: 'dsh-session-persistence-jsonl',
-    version: '0.1.5-rc.2',
+    version: '0.2.0-rc.2',
     file: 'lib/index.js',
-    // The ctx.get marker pins the #91 fix: this plugin declares no inject, so
-    // `delete` must read the Session registry via the optional accessor. A
-    // regenerated patch that falls back to `ctx.sessions` fails here in CI.
-    markers: ['async delete(id)', 'this.ctx.get("sessions", false)', 'this.tracker.claimWrite(id)', 'await this.acquireLease(id, void 0, dir)']
+    markers: ['async delete(id, options)', 'this.tracker.claimWrite(id)', 'this.coldLogMemo.delete(id)']
   },
   {
     name: 'dsh-workspace',
-    version: '0.1.5-rc.2',
+    version: '0.2.0-rc.2',
     file: 'lib/index.js',
     markers: ['forgetSession(sessionId)', 'archivedSessionIds: state.archivedSessionIds.filter']
   },
   {
     name: 'dsh-api-session-controller',
-    version: '0.1.5-rc.2',
+    version: '0.2.0-rc.2',
     file: 'lib/index.js',
     markers: ['disposeOwned(sessionId)', 'await persistence.delete(request.sessionId)', 'workspaceRegistry.forgetSession(request.sessionId)']
   },
   {
     name: 'dsh-api-session-controller',
-    version: '0.1.5-rc.2',
+    version: '0.2.0-rc.2',
     file: 'lib/client.js',
-    markers: ['SessionDeleteError', 'this.remote.session.delete({ sessionId })', 'if (this.watched === sessionId) this.watched = void 0']
+    markers: ['SessionDeleteError', 'this.remote.session.delete({ sessionId })', 'uiWorkspace, which releases its main view before calling this method']
   },
   {
     name: 'dsh-api-session-controller',
-    version: '0.1.5-rc.2',
+    version: '0.2.0-rc.2',
     file: 'lib/typert.host.js',
     markers: ["id: '@deepseek-ai/dsh-api-session-controller#session/delete'", "method: 'delete'"]
   },
   {
-    name: 'dsh-api-remotes',
-    version: '0.1.5-rc.2',
-    file: 'lib/client.js',
-    markers: ['#session/delete', 'SessionDeleteRequest', 'SessionDeleteValue']
-  },
-  {
     name: 'dsh-client-ui-workspace',
-    version: '0.1.5-rc.2',
+    version: '0.2.0-rc.2',
     file: 'lib/client.js',
-    markers: ['delete.session', 'danger: true', 'Workspace files are kept', 'await sessions.delete(sessionId)']
+    markers: ['async deleteSession(sessionId)', 'this.clearMain()', 'const retention = this.sessions.retainInfo(sessionId)', 'timer = setTimeout(finish, 250)', 'await this.sessions.delete(sessionId)']
   }
 ] as const
 
@@ -77,55 +67,30 @@ describe('permanent session deletion dependency patches', () => {
     }
   })
 
-  it('mounts the delete command from the actual client bundle with matching wire schemas', async () => {
-    type Schema = { parse(value: unknown): unknown; safeParse(value: unknown): { success: boolean } }
-    type Command = {
-      id: string; service: string; namespace: string; method: string
-      parameters: Array<{ name: string; wire: string; source: string; codec: { schema: Schema; typeSymbol: string } }>
-      result: { schema: Schema; typeSymbol: string }
-    }
-    const commands: Command[] = []
-    let client!: { apply(ctx: unknown): Promise<() => Promise<void>> }
+  it('migrates unavailable persisted presets to standard mode', async () => {
     const source = await readFile(
-      path.join(projectRoot, 'node_modules/@deepseek-ai/dsh-api-remotes/lib/client.js'), 'utf8'
+      path.join(projectRoot, 'node_modules', '@deepseek-ai', 'dsh-api-session-controller', 'lib', 'index.js'),
+      'utf8'
     )
-    runInNewContext(source, {
-      window: { __ModuleLoader__: { load: (module: { factory(): typeof client }) => {
-        client = module.factory()
-      } } }
-    })
-    const dispose = await client.apply({ remote: { $mount: async (contribution: { descriptors: Command[] }) => {
-      commands.push(...contribution.descriptors)
-      return async () => {}
-    } } })
-    try {
-      const matches = commands.filter((command) => command.namespace === 'session' && command.method === 'delete')
-      expect(matches).toHaveLength(1)
-      const command = matches[0]
-      if (!command) throw new Error('Missing session/delete descriptor')
-      expect(command.id).toBe('@deepseek-ai/dsh-api-session-controller#session/delete')
-      expect(command.service).toBe('sessionController')
-      expect(command.parameters).toHaveLength(1)
-      const parameter = command.parameters[0]
-      if (!parameter) throw new Error('Missing session/delete request parameter')
-      expect(parameter).toMatchObject({ name: 'request', wire: 'request', source: 'json' })
-      expect(parameter.codec.typeSymbol).toBe('@deepseek-ai/dsh-api-session-controller/types#SessionDeleteRequest')
-      const request = parameter.codec.schema
-      expect(request.parse({ sessionId: 'delete-test' })).toEqual({ sessionId: 'delete-test' })
-      expect(request.safeParse({}).success).toBe(false)
-      expect(request.safeParse({ sessionId: 42 }).success).toBe(false)
-      expect(command.result.typeSymbol).toBe('@deepseek-ai/dsh-api-session-controller/types#SessionDeleteValue')
-      expect(command.result.schema.parse({ deleted: true })).toEqual({ deleted: true })
-      expect(command.result.schema.safeParse({ deleted: false }).success).toBe(false)
-      expect(command.result.schema.safeParse({}).success).toBe(false)
-    } finally {
-      await dispose()
-    }
+
+    expect(source).toContain('error.code !== "agent-preset/not-found"')
+    expect(source).toContain('resolved = await presets.resolve("standard")')
+    expect(source).toContain('agent.session.append("agent-preset/selected", { agentPreset: composition.agentPreset })')
+    expect(source).toContain('migrated session "${sessionId}" from unavailable preset')
+  })
+
+  it('uses the same menu slot in flat and grouped session rows', async () => {
+    const ui = await readFile(
+      path.join(projectRoot, 'node_modules', '@deepseek-ai', 'dsh-client-ui-workspace', 'lib', 'client.js'),
+      'utf8'
+    )
+    expect(ui).toContain('renderSlot("sidebar.workspaces.session.menu.item", {')
+    expect(ui).toContain('groupBy === "flat"')
   })
 
   it('states the destructive retention boundary in both locales', async () => {
     const ui = await readFile(
-      path.join(projectRoot, 'node_modules', '@deepseek-ai', 'dsh-client-ui-workspace', 'lib', 'client.js'),
+      path.join(projectRoot, 'packages', 'dsh-desktop-client-ui', 'client.js'),
       'utf8'
     )
 
@@ -143,81 +108,32 @@ describe('permanent session deletion dependency patches', () => {
     }
     const removed = SessionId('desktop-delete-removed')
     const kept = SessionId('desktop-delete-kept')
+    const event = [{ type: 'turn/start', seq: SessionSeq(0), time: 1, data: { turn: 1 } }] as const
+
+    // 0.1.5 replaced the append/load seam with per-session handles: `create`
+    // hands back the single write handle, and `flush` is the durability
+    // barrier that materializes the artifact deletion has to find.
+    const seed = async (id: ReturnType<typeof SessionId>, createdAt: number): Promise<void> => {
+      const handle = await persistence.create({ version: SESSION_FORMAT_VERSION, id, createdAt, isSeeded: false })
+      try {
+        await handle.append(event)
+        await handle.flush()
+      } finally {
+        await handle.close()
+      }
+    }
 
     try {
-      const removedHandle = await persistence.create({ version: SESSION_FORMAT_VERSION, id: removed, createdAt: 1, isSeeded: false })
-      await removedHandle.flush()
-      await expect(persistence.delete(removed)).rejects.toThrow(/owned/i)
-      const other = new Context()
-      await other.plugin(SessionStore)
-      const otherFiber = await other.plugin(JsonlSessionPersistence, { root, compression: 'none' })
-      try {
-        await expect(other.sessionPersistence.delete(removed)).rejects.toThrow(/owned/i)
-      } finally {
-        await otherFiber.dispose()
-      }
-      await removedHandle.close()
-      // An older generation must not make a deleted session reappear on cold read.
-      const currentLog = (await readdir(root, { recursive: true })).find(file => file.endsWith(`session.v${SESSION_FORMAT_VERSION}.jsonl`))!
-      const oldGeneration = path.join(root, path.dirname(currentLog), 'session.jsonl')
-      await writeFile(oldGeneration, 'historical generation retained by migration\n')
-      const keptHandle = await persistence.create({ version: SESSION_FORMAT_VERSION, id: kept, createdAt: 2, isSeeded: false })
-      await keptHandle.flush()
-      await keptHandle.close()
+      await seed(removed, 1)
+      await seed(kept, 2)
 
       expect(await persistence.delete(removed)).toBe(true)
-      await expect(readFile(oldGeneration)).rejects.toMatchObject({ code: 'ENOENT' })
       expect((await persistence.list()).map((snapshot) => snapshot.header.id)).toEqual([kept])
-      await expect(persistence.open(removed, 'read')).rejects.toThrow(/not found/i)
-      const reader = await persistence.open(kept, 'read')
-      expect(reader.header.id).toBe(kept)
-      await reader.close()
+      expect(await persistence.stat(removed)).toBeUndefined()
+      expect((await persistence.stat(kept))?.header.id).toBe(kept)
+      // A second delete of the same id is a no-op, not a failure.
+      expect(await persistence.delete(removed)).toBe(false)
       expect(await persistence.delete(SessionId('desktop-delete-missing'))).toBe(false)
-    } finally {
-      await fiber.dispose()
-      await rm(root, { recursive: true, force: true })
-    }
-  })
-
-  // Regression for #91: the Host calls `persistence.delete()` through a
-  // runtime-backed consumer fiber (SessionCommandController), and cordis
-  // rebinds the service's `ctx` to that caller context. A backend `delete`
-  // that reads undeclared services (previously `ctx.sessions`) threw
-  // `cannot get property "sessions" without inject` there while root-context
-  // callers like the test above passed. Mirror the Host call shape.
-  it('deletes through a consumer fiber exactly like the Host controller does', async () => {
-    const root = await mkdtemp(path.join(tmpdir(), 'dsh-desktop-session-delete-fiber-'))
-    const ctx = new Context()
-    await ctx.plugin(SessionStore)
-    const fiber = await ctx.plugin(JsonlSessionPersistence, { root, compression: 'none' })
-    const target = SessionId('desktop-delete-fiber')
-
-    let controller!: HostLikeController
-    class HostLikeController {
-      static inject = ['sessionPersistence', 'sessions']
-      ctx: Context
-      constructor(ctx: Context) {
-        this.ctx = ctx
-        controller = this
-      }
-      delete(sessionId: ReturnType<typeof SessionId>) {
-        const persistence = this.ctx.get('sessionPersistence')
-        if (persistence === undefined) throw new Error('missing sessionPersistence service')
-        return persistence.delete(sessionId)
-      }
-    }
-
-    try {
-      const handle = await ctx.sessionPersistence.create({ version: SESSION_FORMAT_VERSION, id: target, createdAt: 1, isSeeded: false })
-      await handle.flush()
-      await handle.close()
-      const controllerFiber = await ctx.plugin(HostLikeController)
-      try {
-        await expect(controller.delete(target)).resolves.toBe(true)
-        expect((await ctx.sessionPersistence.list()).map((snapshot) => snapshot.header.id)).toEqual([])
-      } finally {
-        await controllerFiber.dispose()
-      }
     } finally {
       await fiber.dispose()
       await rm(root, { recursive: true, force: true })

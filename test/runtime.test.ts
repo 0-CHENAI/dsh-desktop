@@ -1,5 +1,6 @@
-import { readFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm, writeFile, readFile } from 'node:fs/promises'
 import { createServer } from 'node:net'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
@@ -11,6 +12,8 @@ import {
   extractFailureCause,
   extractOffendingPlugin,
   extractOffendingPlugins,
+  latestHarnessAttemptLogs,
+  profileBootsMarket,
   extractPluginFailureReferences,
   extractSlotConflictName,
   formatExitCode,
@@ -22,6 +25,7 @@ import {
 } from '../src/main/runtime/harness-runtime'
 import { canGrantWindowPermission, isTrustedAppUrl } from '../src/main/security-policy'
 import { buildDisclaimedUtilityProcessSpec } from '../src/main/runtime/disclaimed-utility-process'
+import { SAFE_MODE_PROFILE } from '../src/main/state/safe-mode-profile'
 import {
   clearStaleHarnessAuthCookies,
   desktopHarnessUrl,
@@ -90,7 +94,6 @@ describe('Harness launch contract', () => {
 
   it('builds the web server arguments for the selected loopback port', () => {
     expect(buildHarnessArguments(43127)).toEqual([
-      '--profile',
       'web',
       '--no-open',
       '--host',
@@ -106,7 +109,6 @@ describe('Harness launch contract', () => {
 
   it('applies the desktop composition patch before web arguments', () => {
     expect(buildHarnessArguments(43127, 'C:\\app\\dsh-desktop.patch.yml')).toEqual([
-      '--profile',
       'web',
       '--patch',
       'C:\\app\\dsh-desktop.patch.yml',
@@ -116,6 +118,40 @@ describe('Harness launch contract', () => {
       '--port',
       '43127'
     ])
+  })
+
+  it('passes every overlay in order, each behind its own --patch', () => {
+    expect(buildHarnessArguments(43127, ['/app/dsh-desktop.patch.yml', '/app/dsh-desktop-market.patch.yml'])).toEqual([
+      'web',
+      '--patch',
+      '/app/dsh-desktop.patch.yml',
+      '--patch',
+      '/app/dsh-desktop-market.patch.yml',
+      '--no-open',
+      '--host',
+      '127.0.0.1',
+      '--port',
+      '43127'
+    ])
+  })
+
+  it('applies the market overlay only to a profile that boots the market', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'dsh-market-patch-'))
+    try {
+      const profile = async (name: string, manifest: unknown): Promise<string> => {
+        const profileDirectory = join(dir, name)
+        await mkdir(profileDirectory, { recursive: true })
+        if (manifest !== undefined) await writeFile(join(profileDirectory, 'package.json'), JSON.stringify(manifest))
+        return profileDirectory
+      }
+      expect(await profileBootsMarket(await profile('with', { dsh: { profile: { bundles: ['@deepseek-ai/dsh-base', 'dshmarket'] } } }))).toBe(true)
+      // Installed but no longer booted, never installed, or no manifest at all.
+      expect(await profileBootsMarket(await profile('declared', { dependencies: { dshmarket: '1.48.0' }, dsh: { profile: { bundles: ['@deepseek-ai/dsh-base'] } } }))).toBe(false)
+      expect(await profileBootsMarket(await profile('without', { dsh: { profile: { bundles: ['@deepseek-ai/dsh-base'] } } }))).toBe(false)
+      expect(await profileBootsMarket(await profile('missing', undefined))).toBe(false)
+    } finally {
+      await rm(dir, { recursive: true, force: true })
+    }
   })
 
   it('boots an isolated profile while preserving the web server arguments', () => {
@@ -134,7 +170,7 @@ describe('Harness launch contract', () => {
     ])
   })
 
-  it('launches Harness with the bundled Node.js runtime', () => {
+  it('launches Windows Harness as an isolated Node process', () => {
     const options = buildHarnessSpawnOptions(
       'C:\\Users\\tester\\AppData\\Roaming\\dsh-desktop\\launch-root',
       'C:\\Users\\tester\\AppData\\Roaming\\dsh-desktop\\harness',
@@ -156,11 +192,28 @@ describe('Harness launch contract', () => {
       detached: true,
       env: {
         DSH_HOME: 'C:\\Users\\tester\\AppData\\Roaming\\dsh-desktop\\harness',
+        NODE_COMPILE_CACHE:
+          'C:\\Users\\tester\\AppData\\Roaming\\dsh-desktop\\harness\\cache\\compile-cache',
         NO_COLOR: '1',
         Path: 'windows-path'
       }
     })
-    expect(options.env).not.toHaveProperty('ELECTRON_RUN_AS_NODE')
+    expect(options.env).toHaveProperty('ELECTRON_RUN_AS_NODE', '1')
+  })
+
+  it('asks the patched Harness to resolve Safe Mode plugins from its installation only', () => {
+    // Safe Mode must not depend on the shared profiles/node_modules fallback:
+    // Windows can refuse to recreate its junctions (EPERM) for minutes.
+    const safe = buildHarnessSpawnOptions('/launch-root', '/harness', 'win32', { Path: 'p' }, SAFE_MODE_PROFILE)
+    expect(safe.env).toMatchObject({ DSH_DESKTOP_HOST_RESOLVED: '1' })
+    expect(safe.env).not.toHaveProperty('PNPM_CONFIG_NODE_LINKER')
+
+    // A normal profile keeps the fallback, even if the flag leaked into the parent environment.
+    const web = buildHarnessSpawnOptions('/launch-root', '/harness', 'win32', {
+      Path: 'p',
+      DSH_DESKTOP_HOST_RESOLVED: '1'
+    }, 'web')
+    expect(web.env).not.toHaveProperty('DSH_DESKTOP_HOST_RESOLVED')
   })
 
   it('does not detach the Harness on macOS or Linux', () => {
@@ -173,6 +226,12 @@ describe('Harness launch contract', () => {
       })
       expect(options.detached).toBeFalsy()
     }
+  })
+
+  it('launches Linux Harness through the Electron executable in Node mode', () => {
+    // No standalone Node is installed; Linux development runs execPath as Node.
+    const options = buildHarnessSpawnOptions('/launch-root', '/harness', 'linux', { PATH: '/usr/bin' })
+    expect(options.env).toHaveProperty('ELECTRON_RUN_AS_NODE', '1')
   })
 
   it('finds the Windows PATH when the environment block stores it lowercase', () => {
@@ -194,7 +253,7 @@ describe('Harness launch contract', () => {
     for (const [, value] of pathEntries) expect(value).toBe(userPath)
   })
 
-  it('passes the internal-loader flag directly to bundled Node.js', () => {
+  it('passes the internal-loader flag to the Harness Node process', () => {
     expect(
       buildNodeArguments(
         'C:\\app\\harness-node-entry.mjs',
@@ -206,7 +265,6 @@ describe('Harness launch contract', () => {
       '--expose-internals',
       'C:\\app\\harness-node-entry.mjs',
       'C:\\app\\dsh\\lib\\bin.js',
-      '--profile',
       'web',
       '--patch',
       'C:\\app\\dsh-desktop.patch.yml',
@@ -236,8 +294,7 @@ describe('Harness launch contract', () => {
       modulePath: '/Applications/DSH Desktop.app/Contents/Resources/harness-node-entry.mjs',
       args: [
         '/Applications/DSH Desktop.app/Contents/Resources/app/node_modules/@deepseek-ai/dsh/lib/bin.js',
-        '--profile',
-      'web',
+        'web',
         '--patch',
         '/Applications/DSH Desktop.app/Contents/Resources/dsh-desktop.patch.yml',
         '--no-open',
@@ -251,6 +308,8 @@ describe('Harness launch contract', () => {
         env: {
           PATH: '/usr/bin',
           DSH_HOME: '/Users/tester/Library/Application Support/dsh-desktop/harness',
+          NODE_COMPILE_CACHE:
+            '/Users/tester/Library/Application Support/dsh-desktop/harness/cache/compile-cache',
           NO_COLOR: '1',
           npm_config_side_effects_cache: 'false',
           PNPM_CONFIG_SIDE_EFFECTS_CACHE: 'false'
@@ -336,6 +395,19 @@ describe('shell environment resolution', () => {
 })
 
 describe('harness failure cause extraction', () => {
+  it('never takes bridged runtime logger output as launch evidence', () => {
+    const logs = [
+      '[desktop] starting 2026-09-18T00:00:00.000Z',
+      '[stderr] Error: Harness could not bind its port',
+      '[stderr] [harness-log] error loader: failed to apply loader entry include:x (dsh-innocent)',
+      '[stderr] [harness-log]   at somewhere',
+      '[stderr] [harness-log] session-error s1: agent-presets: preset "code" not found'
+    ]
+    expect(latestHarnessAttemptLogs(logs)).toEqual(['[stderr] Error: Harness could not bind its port'])
+    expect(extractFailureCause(logs)).toBe('Error: Harness could not bind its port')
+    expect(extractOffendingPlugins(logs)).toEqual([])
+  })
+
   it('extracts the DSH entry failure message from stderr', () => {
     const logs = [
       '[stderr] [harness-node] DSH entry failed: Error: dsh: plugin tree failed to load',
@@ -604,6 +676,28 @@ describe('navigation trust boundary', () => {
     expect(
       canGrantWindowPermission('clipboard-sanitized-write', 'file:///tmp/app.html', true)
     ).toBe(false)
+  })
+
+  it('only grants notifications from the trusted main frame', () => {
+    expect(
+      canGrantWindowPermission('notifications', 'http://127.0.0.1:43127/session', true)
+    ).toBe(true)
+    expect(
+      canGrantWindowPermission('notifications', 'http://localhost:43127/session', true)
+    ).toBe(true)
+    expect(
+      canGrantWindowPermission('notifications', 'http://127.0.0.1:43127/session', false)
+    ).toBe(false)
+    expect(
+      canGrantWindowPermission('notifications', 'https://example.com/session', true)
+    ).toBe(false)
+    expect(
+      canGrantWindowPermission('notifications', 'https://127.0.0.1:43127/session', true)
+    ).toBe(false)
+    expect(canGrantWindowPermission('notifications', 'file:///tmp/app.html', true)).toBe(
+      false
+    )
+    expect(canGrantWindowPermission('notifications', undefined, true)).toBe(false)
   })
 })
 

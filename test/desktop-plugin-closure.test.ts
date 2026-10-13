@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
-import { patchPath, projectRoot } from './patch-path'
+import { projectRoot } from './patch-path'
 
 const profileConfigTags = [
   {
@@ -42,9 +42,18 @@ describe('desktop plugin closure', () => {
 
     expect(mounted.length).toBeGreaterThan(0)
 
-    const dshPatch = await readFile(patchPath('@deepseek-ai/dsh'), 'utf8')
+    const closure = new Map<string, string>()
+    const pending = ['@deepseek-ai/dsh']
+    while (pending.length > 0) {
+      const name = pending.pop()!
+      if (closure.has(name)) continue
+      const manifest = JSON.parse(await readFile(path.join(projectRoot, 'node_modules', name, 'package.json'), 'utf8'))
+      closure.set(name, manifest.version)
+      pending.push(...Object.keys(manifest.dependencies ?? {}).filter(dependency =>
+        dependency.startsWith('@deepseek-ai/') || mounted.includes(dependency)))
+    }
     for (const name of mounted) {
-      expect(dshPatch).toContain(`+    "${name}":`)
+      expect(closure.has(name), name).toBe(true)
     }
   })
 

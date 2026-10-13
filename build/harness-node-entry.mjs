@@ -1,10 +1,10 @@
 import childProcess from 'node:child_process'
 import { syncBuiltinESMExports } from 'node:module'
+import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { registerHostModuleFallback } from './host-module-fallback.mjs'
+import { packagedArchiveRoot, registerOfficeEngineResolution } from './office-engine-resolution.mjs'
 import { enforceWindowsChildProcessHide } from './windows-child-process-hide.mjs'
-import { installMarketGenerationCompatibility } from './market-generation-compat.mjs'
-
-installMarketGenerationCompatibility()
 
 // On macOS Harness runs inside an Electron utility process (TCC responsibility
 // isolation), so `process.execPath` and `argv0` point at the Electron helper
@@ -14,7 +14,8 @@ installMarketGenerationCompatibility()
 // `--expose-internals` shifts argv and the CLI answers "--profile <name> is
 // required" instead of installing. Declaring it here, after this process has
 // already parsed the Chromium switches it was launched with, marks only the
-// children as Node processes. Bundled-Node hosts (Windows, Linux) skip it.
+// children as Node processes. Windows and Linux declare Node mode before
+// launching this entry.
 if (process.versions.electron !== undefined) {
   process.env.ELECTRON_RUN_AS_NODE = '1'
 }
@@ -86,10 +87,27 @@ if (!dshEntryPath) {
   process.stdout.write(`[harness-node] loading=${dshEntryPath}\n`)
   process.argv = [process.execPath, dshEntryPath, ...dshArguments]
   try {
+    const archive = packagedArchiveRoot(dshEntryPath)
+    const resources = archive ? dirname(archive) : import.meta.dirname
+    process.env.DSH_DESKTOP_OFFICE_RESOURCES = archive
+      ? join(resources, 'office-runtime')
+      : join(resources, '..', '.build', 'office-runtime')
+    process.env.DSH_DESKTOP_OFFICE_CLI = join(resources, 'office-cli.mjs')
+    registerHostModuleFallback(dshEntryPath)
+    // Packages load through app.asar; the Office engine must resolve to its
+    // unpacked directory so the OS can spawn it.
+    registerOfficeEngineResolution(dshEntryPath)
+    // Harness 0.1.5 gates its CLI behind `if (import.meta.main)` and exports
+    // `runCli`. This file imports the entry rather than being it, so that guard
+    // is false here and a plain import would load the module, run nothing, and
+    // let the process exit 0 with no diagnostics. Call the export when the
+    // entry offers one; older builds still self-execute on import.
     const entry = await import(pathToFileURL(dshEntryPath).href)
-    // Harness 0.1.5 only auto-runs when bin.js is the main module.
-    if (typeof entry.runCli === 'function') await entry.runCli()
     process.stdout.write('[harness-node] DSH entry loaded\n')
+    if (typeof entry.runCli === 'function') {
+      process.stdout.write('[harness-node] invoking DSH runCli()\n')
+      await entry.runCli()
+    }
   } catch (error) {
     reportPluginFailures(error)
     report('DSH entry failed', error?.stack ?? error)
