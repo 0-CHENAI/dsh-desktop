@@ -67,6 +67,7 @@ function marketCard(service, tab = 'market') {
     Fragment: Symbol('Fragment'),
     useState: (initial) => [stateIndex++ === 0 ? tab : initial, () => {}],
     useLayoutEffect: () => {},
+      useRef: () => ({ current: null }),
     useSyncExternalStore: (_subscribe, getSnapshot) => getSnapshot()
   }
   vm.runInNewContext(code, { window: { sessionStorage, localStorage: enabledStorage, __ModuleLoader__: { load({ factory }) {
@@ -107,6 +108,7 @@ function interactiveMarket(service, tab = 'market', clipboard) {
       return [state[index], (value) => { state[index] = typeof value === 'function' ? value(state[index]) : value }]
     },
     useLayoutEffect: () => {},
+      useRef: () => ({ current: null }),
     useSyncExternalStore: (_subscribe, getSnapshot) => getSnapshot()
   }
   vm.runInNewContext(code, { window: { sessionStorage, localStorage: enabledStorage, navigator: clipboard && { clipboard }, __ModuleLoader__: { load({ factory }) {
@@ -139,6 +141,7 @@ function sidebarSwitcher({ pinned = [], active = null, title = '工作台', work
     },
     useRef: initial => ({ current: initial }),
     useLayoutEffect: () => {},
+      useRef: () => ({ current: null }),
     useSyncExternalStore: (_subscribe, getSnapshot) => getSnapshot()
   }
   const sandbox = { window: { sessionStorage, localStorage: clientWindow.localStorage, __ModuleLoader__: { load({ factory }) {
@@ -1145,6 +1148,7 @@ describe('desktop workbench client navigation', () => {
       createElement: (type, props, ...children) => ({ type, props: props || {}, children }),
       Component: class {},
       useLayoutEffect: () => {},
+      useRef: () => ({ current: null }),
       useSyncExternalStore: (_subscribe, snapshot) => snapshot(),
       useCallback: callback => callback,
       useState: initial => [typeof initial === 'function' ? initial() : initial, () => {}]
@@ -1170,7 +1174,7 @@ describe('desktop workbench client navigation', () => {
       node.children?.flat(Infinity).forEach(walk)
     }
     walk(tree)
-    const panel = nodes.find(node => node.type === 'aside')
+    const panel = nodes.find(node => node.props?.as === 'aside')
     expect(panel.props.hidden).toBe(false)
     expect(panel.props['data-side']).toBe('left')
     expect(nodes.some(node => node.type === Business)).toBe(true)
@@ -1186,6 +1190,7 @@ describe('desktop workbench client navigation', () => {
       createElement: (type, props, ...children) => ({ type, props: props || {}, children }),
       Component: class {},
       useLayoutEffect: () => {},
+      useRef: () => ({ current: null }),
       useSyncExternalStore: (_subscribe, snapshot) => snapshot(),
       useCallback: callback => callback,
       useState: initial => [typeof initial === 'function' ? initial() : initial, () => {}]
@@ -1519,6 +1524,86 @@ describe('desktop workbench client navigation', () => {
     expect(service.state.added).toEqual(['example/writer'])
   })
 
+  it.each(['default', 'compact-left', 'compact-custom'])('reserves host caption rows for %s across platform and sidebar states', async mode => {
+    const { JSDOM } = await import('jsdom')
+    const dom = new JSDOM(`<div class="dshWbFrame"><div class="dshWbCaptionRow"></div><div class="dshWbBody"><div class="dshWbConversation"></div><aside class="dshWbBusiness"></aside></div></div>`)
+    const doc = dom.window.document
+    const style = doc.createElement('style')
+    // Exercise the emitted layout rules, not a second copy of the policy.
+    style.textContent = code.slice(code.indexOf('      .dshWbCaptionRow{'), code.indexOf('      [data-dsh-compact-toolbar]{'))
+    doc.head.append(style)
+    if (mode !== 'default') {
+      const host = mode === 'compact-left' ? doc.querySelector('aside') : doc.createElement('div')
+      host.setAttribute('data-dsh-compact-valid', 'true')
+      if (mode === 'compact-custom') doc.querySelector('.dshWbFrame').append(host)
+    }
+    const caption = doc.querySelector('.dshWbFrame > .dshWbCaptionRow')
+    for (const platform of ['darwin', 'win32']) for (const fullscreen of ['true', 'false']) for (const collapsed of [true, false]) {
+      doc.documentElement.setAttribute('data-platform', platform)
+      doc.documentElement.setAttribute('data-fullscreen', fullscreen)
+      doc.body.toggleAttribute('data-sidebar-collapsed', collapsed)
+      const visible = platform === 'darwin' && fullscreen === 'false' && collapsed
+      expect(dom.window.getComputedStyle(caption).display !== 'none').toBe(visible && mode === 'default')
+      expect(doc.querySelector('.dshWbConversationCaption')).toBeNull()
+    }
+    dom.window.close()
+  })
+
+  it.each([{ customFrame: true }, { customFrame: false, layout: { businessSide: 'left' } }, { customFrame: false, layout: { businessSide: 'right' } }, { customFrame: true, headerLayout: 'default' }])('resolves one nested compact toolbar and safely falls back when markers change (%j)', async descriptor => {
+    const { JSDOM } = await import('jsdom')
+    const ReactDOM = await import('react-dom')
+    const { createRoot } = await import('react-dom/client')
+    const dom = new JSDOM('<div id="root"></div>')
+    const previous = { window: globalThis.window, document: globalThis.document, act: globalThis.IS_REACT_ACT_ENVIRONMENT }
+    globalThis.window = dom.window; globalThis.document = dom.window.document; globalThis.IS_REACT_ACT_ENVIRONMENT = true
+    const { service, ctx } = await fixture()
+    let root
+    try {
+      let Frame
+      vm.runInNewContext(code, { console, MutationObserver: dom.window.MutationObserver, document: dom.window.document, window: { localStorage: enabledStorage, __ModuleLoader__: { load({ factory }) {
+        Frame = factory(name => name === 'react-dom' ? ReactDOM : name === '@deepseek-ai/cordis' ? { Service } : React).Frame
+      } } } })
+      const snapshot = ctx.workspaces.list.getSnapshot()
+      ctx.workspaces.list.getSnapshot = () => snapshot; ctx.workspaces.list.subscribe = () => () => {}; ctx.sessions.list.subscribe = () => () => {}
+      let clicks = 0
+      const Panel = () => React.createElement('div', null, React.createElement('section', null, React.createElement('header', { 'data-dsh-workbench-toolbar': '' }, React.createElement('button', { onClick: () => clicks++ }, 'Refresh'))))
+      registerProvider(service, ctx, 'compact', { title: 'Compact', headerLayout: 'compact', ...descriptor }, Panel)
+      await service.add('compact'); await service.open('compact')
+      root = createRoot(dom.window.document.getElementById('root'))
+      await React.act(async () => root.render(React.createElement(Frame, { service, conversation: null })))
+      const host = dom.window.document.querySelector(descriptor.customFrame ? '.dshWbCustomFrame' : '.dshWbBusiness')
+      const conversationCaption = dom.window.document.querySelector('.dshWbConversationCaption')
+      expect(conversationCaption).toBeNull()
+      const toolbar = host.querySelector('header')
+      const compact = descriptor.headerLayout !== 'default' && (descriptor.customFrame || descriptor.layout?.businessSide === 'left')
+      if (!compact) {
+        expect(host.hasAttribute('data-dsh-compact-valid')).toBe(false)
+        expect(toolbar.hasAttribute('data-dsh-compact-toolbar')).toBe(false)
+        return
+      }
+      expect(host.getAttribute('data-dsh-compact-valid')).toBe('true')
+      expect(toolbar.hasAttribute('data-dsh-compact-toolbar')).toBe(true)
+      await React.act(async () => toolbar.querySelector('button').click())
+      expect(clicks).toBe(1)
+      const extra = dom.window.document.createElement('header'); extra.setAttribute('data-dsh-workbench-toolbar', '')
+      await React.act(async () => { host.append(extra); await Promise.resolve() })
+      expect(host.hasAttribute('data-dsh-compact-valid')).toBe(false)
+      expect(toolbar.hasAttribute('data-dsh-compact-toolbar')).toBe(false)
+      await React.act(async () => { extra.remove(); await Promise.resolve() })
+      expect(host.getAttribute('data-dsh-compact-valid')).toBe('true')
+      await React.act(async () => { toolbar.removeAttribute('data-dsh-workbench-toolbar'); await Promise.resolve() })
+      expect(host.hasAttribute('data-dsh-compact-valid')).toBe(false)
+      await React.act(async () => root.unmount()); root = null
+      toolbar.setAttribute('data-dsh-workbench-toolbar', '')
+      await Promise.resolve()
+      expect(toolbar.hasAttribute('data-dsh-compact-toolbar')).toBe(false)
+    } finally {
+      if (root) await React.act(async () => root.unmount())
+      service.dispose(); dom.window.close()
+      globalThis.window = previous.window; globalThis.document = previous.document; globalThis.IS_REACT_ACT_ENVIRONMENT = previous.act
+    }
+  })
+
   it('renders Frame with native stores whose snapshot and subscribe methods require their receiver', async () => {
     const cleanups = []
     let Frame
@@ -1528,6 +1613,7 @@ describe('desktop workbench client navigation', () => {
       useState: (value) => [typeof value === 'function' ? value() : value, () => {}],
       useCallback: (callback) => callback,
       useLayoutEffect: () => {},
+      useRef: () => ({ current: null }),
       useSyncExternalStore(subscribe, getSnapshot) {
         // React calls these as standalone functions, without a store receiver.
         cleanups.push(subscribe(() => {}))
@@ -1554,10 +1640,8 @@ describe('desktop workbench client navigation', () => {
     const customHost = frame.children.find((child) => child?.props?.key === 'dock')
     expect(customHost.props.hidden).toBe(false)
     expect(customHost.props.className).toBe('dshWbCustomFrame')
-    expect(code).toContain('.dshWbBusiness[data-side=left][data-embedded=true] > :first-child > header:first-child')
-    expect(code).toContain('padding-inline-start:var(--dsh-frame-leading-clearance,160px)')
-    expect(code).toContain('html[data-platform=darwin] .dshWbCustomFrame > :first-child > header:first-child{-webkit-app-region:drag}')
-    expect(code).toContain('html[data-platform=darwin] .dshWbCustomFrame > :first-child > header:first-child :is(button,a,input,select,textarea,[role=button],[role=tab],[role=combobox],[contenteditable=true],[data-dsh-no-drag]){-webkit-app-region:no-drag}')
+    expect(frame.children.some(child => child?.props?.className === 'dshWbCaptionRow')).toBe(true)
+    expect(customHost.props.entry.customFrame).toBe(true)
     expect(customHost.props.style).toMatchObject({
       position: 'relative', overflow: 'hidden', flex: 1, minHeight: 0, minWidth: 0,
       width: '100%', maxWidth: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box'
@@ -2003,6 +2087,7 @@ describe('workbench business layout contract', () => {
     registerProvider(service, ctx, 'map', { title: 'Map', embedded: true, layout: { businessSide: 'left', businessWidth: 0.65 } })
     expect(service.catalog.get('map').layout).toEqual({ businessSide: 'left', businessWidth: 0.65 })
     expect(service.catalog.get('writer').layout).toEqual({ businessSide: 'right', businessWidth: 0.36 })
+    expect(() => registerProvider(service, ctx, 'bad-header', { title: 'Bad', headerLayout: 'guess' })).toThrow(/header layout/)
     expect(() => registerProvider(service, ctx, 'bad-width', { title: 'Bad', layout: { businessWidth: 1 } })).toThrow(/width/)
     expect(() => registerProvider(service, ctx, 'bad-side', { title: 'Bad', layout: { businessSide: 'overlay' } })).toThrow(/side/)
   })

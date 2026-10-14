@@ -792,6 +792,8 @@ window.__ModuleLoader__.load({
         this.queue = task.catch(() => {})
         return task
       }
+      /** Header layout is host-managed: 'default' reserves caption space;
+       * 'compact' requires one same-document data-dsh-workbench-toolbar. */
       register(descriptor, Component) {
         // Older workbench packages declared a local id. Keep accepting those
         // packages during the repository-identity migration, but never use the
@@ -801,6 +803,7 @@ window.__ModuleLoader__.load({
         const source = this.sourcePackage()
         if (this.providers.has(source)) throw new Error(`Duplicate workbench provider: ${source}`)
         if (descriptor.customFrame !== undefined && typeof descriptor.customFrame !== 'boolean') throw new Error('Invalid custom frame flag')
+        if (descriptor.headerLayout !== undefined && !['default', 'compact'].includes(descriptor.headerLayout)) throw new Error('Invalid workbench header layout')
         const layout = descriptor.layout || {}
         if (layout.businessSide !== undefined && !['left', 'right'].includes(layout.businessSide)) throw new Error('Invalid workbench business side')
         if (layout.businessWidth !== undefined && (!Number.isFinite(layout.businessWidth) || layout.businessWidth < 0.25 || layout.businessWidth > 0.7)) throw new Error('Workbench business width must be between 0.25 and 0.7')
@@ -1324,16 +1327,27 @@ window.__ModuleLoader__.load({
       .dshWbFrame{height:100%;min-height:0;display:flex;flex-direction:column;position:relative}
       /* Keep unrelated mode-action contributions available in workbench conversations. */
       .dshWbFrame[data-dsh-workbench-active] .dso-actions,.dshWbFrame[data-dsh-workbench-active] button[data-office-mode],.dshWbFrame[data-dsh-workbench-active] button[data-desktop-ppt]{display:none}
-      /* shell.leading owns the collapsed Mac caption controls. Let an embedded
-         workbench's semantic top header share that row after its reserved width. */
-      html[data-platform=darwin] [data-sidebar-collapsed] .dshWbBusiness[data-side=left][data-embedded=true] > :first-child > header:first-child,
-      html[data-platform=darwin] [data-sidebar-collapsed] .dshWbCustomFrame > :first-child > header:first-child{padding-inline-start:var(--dsh-frame-leading-clearance,160px)}
-      html[data-platform=darwin] .dshWbCustomFrame > :first-child > header:first-child{-webkit-app-region:drag}
-      html[data-platform=darwin] .dshWbCustomFrame > :first-child > header:first-child :is(button,a,input,select,textarea,[role=button],[role=tab],[role=combobox],[contenteditable=true],[data-dsh-no-drag]){-webkit-app-region:no-drag}
+      /* The host owns a non-scrolling caption row. Compact authors opt into one
+         explicit toolbar; semantic headers and nested content are never guessed. */
+      .dshWbCaptionRow{display:none;flex:none;position:relative}
+      html[data-platform=darwin]:not([data-fullscreen=true]) [data-sidebar-collapsed] .dshWbCaptionRow{display:block;height:var(--dsh-frame-top-clearance,48px);-webkit-app-region:drag}
+      html[data-platform=darwin] [data-sidebar-collapsed] .dshWbFrame > .dshWbCaptionRow::before{content:'';position:absolute;inset-block:0;left:0;width:var(--dsh-frame-leading-clearance,160px);-webkit-app-region:no-drag}
+      .dshWbFrame:has([data-dsh-compact-valid=true]:not([hidden])) > .dshWbCaptionRow{display:none!important}
+      .dshWbNativeDragLayer{position:absolute;inset:0;pointer-events:none;z-index:20}
+      .dshWbNativeDragSegment{position:absolute;pointer-events:auto;-webkit-app-region:drag}
+      [data-dsh-compact-toolbar]{box-sizing:border-box;min-width:0;min-height:var(--dsh-frame-top-clearance,48px)}
+      html[data-platform=darwin] [data-dsh-compact-toolbar]{-webkit-app-region:drag}
+      html[data-platform=darwin]:not([data-fullscreen=true]) [data-sidebar-collapsed] [data-dsh-compact-toolbar]{padding-inline-start:var(--dsh-frame-leading-clearance,160px)}
+      /* Provider drag styles must not consume controls or their nested icons. */
+      html[data-platform=darwin] [data-dsh-compact-toolbar] :is(button,a,input,select,textarea,label,summary,iframe,[role=button],[role=tab],[role=combobox],[role=slider],[role=menu],[role=menuitem],[role=checkbox],[role=radio],[role=switch],[role=spinbutton],[role=listbox],[role=option],[role=dialog],[role=tree],[role=treeitem],[contenteditable]:not([contenteditable=false]),[tabindex],[draggable=true],[data-dsh-no-drag],[data-window-drag=false]),html[data-platform=darwin] [data-dsh-compact-toolbar] :is(button,a,input,select,textarea,label,summary,iframe,[role=button],[role=tab],[role=combobox],[role=slider],[role=menu],[role=menuitem],[role=checkbox],[role=radio],[role=switch],[role=spinbutton],[role=listbox],[role=option],[role=dialog],[role=tree],[role=treeitem],[contenteditable]:not([contenteditable=false]),[tabindex],[draggable=true],[data-dsh-no-drag],[data-window-drag=false]) *{-webkit-app-region:no-drag!important}
 .dshWbSidebarSwitcher{position:relative;z-index:30;display:flex;align-items:center;gap:8px;box-sizing:border-box;min-width:0;min-height:36px;margin:0 2px 8px;padding:0;overflow:visible}.dshWbWorkbenchHome{display:flex;align-items:center;justify-content:flex-start;gap:8px;flex:0 0 auto;min-width:88px;box-sizing:border-box;min-height:36px;padding:7px 8px;font:inherit;line-height:22px;cursor:pointer;border:0;border-radius:var(--dsw-radius-md);background:transparent;color:var(--dsw-alias-label-primary);text-align:left;white-space:nowrap}.dshWbSidebarSwitcher.dshWb{font-size:14px;line-height:22px}.dshWbSidebarSwitcher .dshWbWorkbenchHome{font:inherit;line-height:22px}.dshWbWorkbenchHome svg{flex:0 0 auto}.dshWbSidebarSwitcher:is([data-selected=true],:hover,:focus-within){border-radius:var(--dsw-radius-md);background:var(--dsw-alias-interactive-bg-hover)}.dshWbCurrentMode{display:flex;align-items:center;justify-content:flex-end;gap:5px;flex:1 1 0;min-width:0;max-width:none;padding:0 8px;color:var(--dsw-alias-label-secondary);font-size:12px}.dshWbCurrentModeLabel{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}.dshWbModeSwitch{position:relative;display:flex;align-items:center;justify-content:flex-end;gap:5px;flex:1 1 0;min-width:0;max-width:none;box-sizing:border-box;height:36px;padding:7px 8px;border:0;border-radius:var(--dsw-radius-md);background:transparent;color:var(--dsw-alias-label-secondary);font-size:12px;cursor:pointer}.dshWbModeSwitch svg{flex:0 0 auto;color:var(--dsw-alias-label-tertiary)}.dshWbModeSwitch:focus-visible,.dshWbWorkbenchHome:focus-visible{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:-2px}.dshWbModeMenu{position:absolute;z-index:32;left:2px;right:2px;top:calc(100% + 5px);display:grid;gap:2px;padding:5px;border:1px solid var(--dsw-alias-border-l2);border-radius:10px;background:var(--dsw-alias-bg-layer-1);box-shadow:0 12px 28px rgba(0,0,0,.14)}.dshWbModeOptionRow{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 24px;align-items:center;gap:0;min-width:0}.dshWbModeOptionRow[data-dragging=true]{opacity:.46}.dshWbModeOptionRow[data-drop-edge=before]::before,.dshWbModeOptionRow[data-drop-edge=after]::after{content:"";position:absolute;z-index:1;left:8px;right:6px;height:2px;border-radius:1px;background:var(--dsw-alias-label-primary);pointer-events:none}.dshWbModeOptionRow[data-drop-edge=before]::before{top:-2px}.dshWbModeOptionRow[data-drop-edge=after]::after{bottom:-2px}.dshWbModeOption{display:grid;grid-template-columns:18px minmax(0,1fr) 16px;align-items:center;gap:8px;width:100%;min-width:0;min-height:34px;padding:6px 8px;border:0;border-radius:7px;background:transparent;color:var(--dsw-alias-label-primary);text-align:left}.dshWbModeOption:hover:not(:disabled),.dshWbModeOption:focus-visible{background:var(--dsw-alias-bg-layer-2)}.dshWbModeOptionLabel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}.dshWbModeOptionCheck{font-size:12px;text-align:center;color:var(--dsw-alias-label-primary)}.dshWbModeDragHandle{display:grid;place-items:center;width:24px;height:34px;padding:0;border:0;border-radius:6px;background:transparent;color:var(--dsw-alias-label-tertiary);cursor:grab}.dshWbModeDragHandle:hover:not(:disabled),.dshWbModeDragHandle:focus-visible{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary)}.dshWbModeDragHandle:focus-visible{outline:2px solid var(--dsw-alias-label-primary);outline-offset:-2px}.dshWbModeDragHandle:active{cursor:grabbing}.dshWbModeDragHandle:disabled{cursor:default;opacity:.35}.dshWbSrOnly{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
       .dshWbBody{display:flex;flex:1;min-height:0;min-width:0}.dshWbConversation{container-type:inline-size;container-name:workbench-conversation;overflow:hidden;order:1;flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
       .dshWbBusiness{order:2;width:var(--workbench-business-width,36%);min-width:220px;border-left:1px solid var(--dsw-alias-border-l2);overflow:auto;padding:18px;box-sizing:border-box}
       .dshWbBusiness[data-side=left]{order:0;border-left:0;border-right:1px solid var(--dsw-alias-border-l2)}
+      /* Ordinary split panels keep their content gutters, but the opted-in
+         caption toolbar must start at the top and remain safe while scrolling. */
+      .dshWbBusiness[data-dsh-compact-valid=true]:not([data-embedded=true]){padding-top:0}
+      .dshWbBusiness[data-dsh-compact-valid=true]:not([data-embedded=true]) [data-dsh-compact-toolbar]{position:sticky;top:0;z-index:1;background:var(--dsw-alias-bg-layer-1)}
       .dshWbBusiness[data-embedded=true]{padding:0;overflow:hidden;display:flex;flex-direction:column}.dshWbBusiness[data-embedded=true]>div{flex:1;min-height:0}
       .dshWbBusiness h3{margin:0 0 8px;font-size:16px}.dshWbBusiness textarea{display:block;resize:vertical;min-height:260px;width:100%;padding:12px;background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l2);border-radius:8px;line-height:1.7}
       .dshWbPanelFailure{box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:16px;width:100%;max-width:408px;max-height:100%;min-width:0;min-height:0;margin:auto;padding:24px;text-align:center;overflow:auto;overflow-wrap:anywhere;color:var(--dsw-alias-label-primary)}
@@ -2104,6 +2118,134 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
       }, [container])
       return h('div', { ref: attach, style: { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, minWidth: 0, height: '100%' } })
     }
+    /** @param {{ as?: string, entry: { headerLayout?: 'default' | 'compact', customFrame?: boolean, embedded?: boolean, layout?: { businessSide?: 'left' | 'right' } }, children?: unknown }} props */
+    function HeaderHost({ as = 'div', entry, children, ...props }) {
+      const root = React.useRef(null)
+      React.useLayoutEffect(() => {
+        const node = root.current
+        const eligible = entry.headerLayout === 'compact' && (entry.customFrame === true || entry.layout?.businessSide === 'left')
+        if (!node || !eligible) return
+        let marked = null
+        let warned = false
+        const update = () => {
+          const candidates = node.querySelectorAll('[data-dsh-workbench-toolbar]')
+          const toolbar = candidates.length === 1 ? candidates[0] : null
+          if (candidates.length !== 1 && !warned) { console.warn('[workbenches] compact layout needs exactly one data-dsh-workbench-toolbar; using default layout'); warned = true }
+          if (toolbar === marked) return
+          marked?.removeAttribute('data-dsh-compact-toolbar')
+          marked = toolbar
+          if (toolbar) { toolbar.setAttribute('data-dsh-compact-toolbar', ''); node.setAttribute('data-dsh-compact-valid', 'true') }
+          else node.removeAttribute('data-dsh-compact-valid')
+        }
+        update()
+        const observer = new MutationObserver(update)
+        observer.observe(node, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-dsh-workbench-toolbar'] })
+        return () => { observer.disconnect(); marked?.removeAttribute('data-dsh-compact-toolbar'); node.removeAttribute('data-dsh-compact-valid') }
+      }, [entry.headerLayout, entry.customFrame, entry.embedded, entry.layout?.businessSide])
+      return h(as, { ...props, ref: root }, children)
+    }
+    // Only unoccupied pieces of the existing caption band become native drag
+    // regions. Never overlay controls, infer a provider header, or move content.
+    function mountNativeDragRegions(frame) {
+      if (document.documentElement.dataset.platform !== 'darwin') return () => {}
+      const controls = 'button,a,input,select,textarea,label,summary,iframe,canvas,video,audio,[role=button],[role=tab],[role=combobox],[role=slider],[role=menu],[role=menuitem],[role=checkbox],[role=radio],[role=switch],[role=spinbutton],[role=listbox],[role=option],[role=dialog],[role=tree],[role=treeitem],[contenteditable]:not([contenteditable=false]),[tabindex],[draggable=true],[data-dsh-no-drag],[data-window-drag=false],[onclick],[onmousedown],[onpointerdown]'
+      const layer = document.createElement('div')
+      layer.className = 'dshWbNativeDragLayer'
+      layer.setAttribute('aria-hidden', 'true')
+      frame.appendChild(layer)
+      let ticket = 0
+      let signature = ''
+      const observed = new Set()
+      const resize = new ResizeObserver(() => schedule())
+      const intersect = (a, b) => ({ left: Math.max(a.left, b.left), top: Math.max(a.top, b.top), right: Math.min(a.right, b.right), bottom: Math.min(a.bottom, b.bottom) })
+      const valid = (r) => r.right > r.left && r.bottom > r.top
+      const subtract = (r, cut) => {
+        const overlap = intersect(r, cut)
+        if (!valid(overlap)) return [r]
+        return [
+          { ...r, bottom: overlap.top }, { ...r, top: overlap.bottom },
+          { left: r.left, right: overlap.left, top: overlap.top, bottom: overlap.bottom },
+          { left: overlap.right, right: r.right, top: overlap.top, bottom: overlap.bottom },
+        ].filter(valid)
+      }
+      const update = () => {
+        ticket = 0
+        const html = document.documentElement
+        const collapsed = !!frame.closest('[data-sidebar-collapsed]')
+        const bounds = frame.getBoundingClientRect()
+        const caption = frame.querySelector(':scope > .dshWbCaptionRow')
+        const separateRow = caption && getComputedStyle(caption).display !== 'none'
+        let parts = []
+        if (html.dataset.platform === 'darwin' && html.dataset.fullscreen !== 'true' && !separateRow) {
+          const height = parseFloat(getComputedStyle(frame).getPropertyValue('--dsh-frame-top-clearance')) || 48
+          const band = intersect(bounds, { left: 0, top: 0, right: window.innerWidth, bottom: Math.min(window.innerHeight, bounds.top + height) })
+          if (valid(band)) parts = [band]
+          if (collapsed) {
+            const leading = parseFloat(getComputedStyle(frame).getPropertyValue('--dsh-frame-leading-clearance')) || 160
+            parts = parts.flatMap((r) => subtract(r, { left: bounds.left, top: bounds.top, right: bounds.left + leading, bottom: bounds.top + height }))
+          }
+        }
+        const targets = new Set([frame])
+        for (const element of frame.querySelectorAll(controls)) {
+          if (layer.contains(element)) continue
+          targets.add(element)
+          // Include transformed fragments, then clip to visible scroll ancestors.
+          for (const rect of element.getClientRects()) {
+            let visible = intersect({ left: rect.left - 1, top: rect.top - 1, right: rect.right + 1, bottom: rect.bottom + 1 }, bounds)
+            for (let ancestor = element.parentElement; valid(visible) && ancestor && ancestor !== frame; ancestor = ancestor.parentElement) {
+              const style = getComputedStyle(ancestor)
+              const box = ancestor.getBoundingClientRect()
+              if (/(hidden|clip|scroll|auto)/.test(style.overflowX)) visible = { ...visible, left: Math.max(visible.left, box.left), right: Math.min(visible.right, box.right) }
+              if (/(hidden|clip|scroll|auto)/.test(style.overflowY)) visible = { ...visible, top: Math.max(visible.top, box.top), bottom: Math.min(visible.bottom, box.bottom) }
+            }
+            if (valid(visible)) parts = parts.flatMap((r) => subtract(r, visible))
+            // Fail closed for pathological fragmented control layouts.
+            if (parts.length > 256) parts = []
+          }
+        }
+        // A scroll gutter is an interaction surface even without semantic roles.
+        for (const element of frame.querySelectorAll('*')) {
+          if (!parts.length || layer.contains(element)) continue
+          const rect = element.getBoundingClientRect()
+          if (!parts.some((part) => valid(intersect(part, rect)))) continue
+          const style = getComputedStyle(element)
+          if (!/(auto|scroll)/.test(style.overflowX + style.overflowY)) continue
+          targets.add(element)
+          const vertical = Math.max(0, element.offsetWidth - element.clientWidth - parseFloat(style.borderLeftWidth || '0') - parseFloat(style.borderRightWidth || '0'))
+          const horizontal = Math.max(0, element.offsetHeight - element.clientHeight - parseFloat(style.borderTopWidth || '0') - parseFloat(style.borderBottomWidth || '0'))
+          if (vertical) parts = parts.flatMap((part) => subtract(part, style.direction === 'rtl' ? { left: rect.left, right: rect.left + vertical + 1, top: rect.top, bottom: rect.bottom } : { left: rect.right - vertical - 1, right: rect.right, top: rect.top, bottom: rect.bottom }))
+          if (horizontal) parts = parts.flatMap((part) => subtract(part, { left: rect.left, right: rect.right, top: rect.bottom - horizontal - 1, bottom: rect.bottom }))
+          if (parts.length > 256) parts = []
+        }
+        for (const element of observed) if (!targets.has(element)) { resize.unobserve(element); observed.delete(element) }
+        for (const element of targets) if (!observed.has(element)) { resize.observe(element); observed.add(element) }
+        const next = JSON.stringify(parts)
+        if (next === signature) return
+        signature = next
+        layer.replaceChildren(...parts.map((r) => {
+          const segment = document.createElement('div')
+          segment.className = 'dshWbNativeDragSegment'
+          Object.assign(segment.style, { left: `${r.left - bounds.left}px`, top: `${r.top - bounds.top}px`, width: `${r.right - r.left}px`, height: `${r.bottom - r.top}px` })
+          return segment
+        }))
+      }
+      function schedule() { if (!ticket) ticket = requestAnimationFrame(update) }
+      const mutation = new MutationObserver((records) => {
+        // Ignore our generated regions, including their own child replacement.
+        if (records.some((record) => !layer.contains(record.target) && !(record.type === 'childList' && [...record.addedNodes, ...record.removedNodes].every((node) => node === layer)))) schedule()
+      })
+      mutation.observe(frame, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'style', 'hidden', 'role', 'tabindex', 'contenteditable', 'draggable', 'data-dsh-no-drag', 'data-window-drag', 'onclick', 'onmousedown', 'onpointerdown', 'data-dsh-compact-valid'] })
+      const platform = new MutationObserver(schedule)
+      platform.observe(document.documentElement, { attributes: true, attributeFilter: ['data-platform', 'data-fullscreen'] })
+      // Sidebar flags live on a host ancestor, outside provider DOM.
+      for (let ancestor = frame.parentElement; ancestor; ancestor = ancestor.parentElement) platform.observe(ancestor, { attributes: true, attributeFilter: ['data-sidebar-collapsed', 'class', 'style'] })
+      window.addEventListener('resize', schedule)
+      document.addEventListener('scroll', schedule, true)
+      frame.addEventListener('transitionend', schedule, true)
+      frame.addEventListener('animationend', schedule, true)
+      update()
+      return () => { mutation.disconnect(); platform.disconnect(); resize.disconnect(); cancelAnimationFrame(ticket); window.removeEventListener('resize', schedule); document.removeEventListener('scroll', schedule, true); frame.removeEventListener('transitionend', schedule, true); frame.removeEventListener('animationend', schedule, true); layer.remove() }
+    }
     function Frame({ service, conversation }) {
       useHostLocale(service)
       const { state, catalog, ready, pending } = useWorkbench(service)
@@ -2112,6 +2254,8 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
       React.useSyncExternalStore(React.useCallback((listener) => service.ctx.sessions.list.subscribe(listener), [service]), () => service.ctx.sessions.list.getSnapshot())
       const workspaces = React.useSyncExternalStore(React.useCallback((listener) => service.ctx.workspaces.list.subscribe(listener), [service]), () => service.ctx.workspaces.list.getSnapshot())
       const [workspaceId, setWorkspaceId] = React.useState('')
+      const frameRef = React.useRef(null)
+      React.useLayoutEffect(() => frameRef.current ? mountNativeDragRegions(frameRef.current) : undefined, [workbenchEnabled])
       const [conversationContainer] = React.useState(() => {
         const node = document.createElement('div')
         Object.assign(node.style, { display: 'flex', flexDirection: 'column', flex: '1', minHeight: '0', minWidth: '0', height: '100%' })
@@ -2135,9 +2279,9 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
       const disabled = !ready || pending > 0 || service.blocked
       const visibleWorkspaces = workspaces.items.filter((item) => service.workspaceVisible(item.workspaceId, state.active))
       const chosen = visibleWorkspaces.find((item) => item.workspaceId === workspaceId) || service.defaultWorkspace()
-      return h('div', { className: 'dshWb dshWbFrame', 'data-dsh-workbench-active': entry ? '' : undefined }, h(Notice, { service }),
+      return h('div', { className: 'dshWb dshWbFrame', ref: frameRef, 'data-dsh-workbench-active': entry ? '' : undefined }, runtimeEntry && h('div', { className: 'dshWbCaptionRow', 'aria-hidden': true }), h(Notice, { service }),
         require('react-dom').createPortal(conversation, conversationContainer),
-        ...loaded.filter((item) => item.customFrame === true).map((item) => h('div', { key: item.id, className: 'dshWbCustomFrame', hidden: id !== item.id, style: { position: 'relative', overflow: 'hidden', flex: 1, minHeight: 0, minWidth: 0, width: '100%', maxWidth: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' } }, h(PanelBoundary, { service }, h(item.Component, { service, entry: item, active: id === item.id, conversation: id === item.id ? h('div', { style: { display: hasCurrentSession ? 'contents' : 'none' } }, conversationMount) : null })))),
+        ...loaded.filter((item) => item.customFrame === true).map((item) => h(HeaderHost, { entry: item, key: item.id, className: 'dshWbCustomFrame', hidden: id !== item.id, style: { position: 'relative', overflow: 'hidden', flex: 1, minHeight: 0, minWidth: 0, width: '100%', maxWidth: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' } }, h(PanelBoundary, { service }, h(item.Component, { service, entry: item, active: id === item.id, conversation: id === item.id ? h('div', { style: { display: hasCurrentSession ? 'contents' : 'none' } }, conversationMount) : null })))),
         h('div', { className: 'dshWbBody', hidden: customFrame, style: { '--workbench-business-width': `${(entry?.layout?.businessWidth ?? 0.36) * 100}%` } },
           h('div', { className: 'dshWbConversation' },
             entry && !hasCurrentSession && h('section', { className: 'dshWbInit' },
@@ -2153,7 +2297,7 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
             // One fixed position for the native conversation: changing workbench
             // content or moving to a custom dock does not remount its input tree.
             h('div', { style: { display: entry && !hasCurrentSession ? 'none' : 'contents' } }, !customFrame && conversationMount)),
-          ...loaded.filter((item) => !item.customFrame).map((item) => h('aside', { key: item.id, className: 'dshWbBusiness', 'data-side': item.layout?.businessSide, 'data-embedded': item.embedded === true, hidden: id !== item.id, 'aria-label': item.panelTitle }, h(PanelBoundary, { service }, h(item.Component, { service, entry: item }))))))
+          ...loaded.filter((item) => !item.customFrame).map((item) => h(HeaderHost, { as: 'aside', entry: item, key: item.id, className: 'dshWbBusiness', 'data-side': item.layout?.businessSide, 'data-embedded': item.embedded === true, hidden: id !== item.id, 'aria-label': item.panelTitle }, h(PanelBoundary, { service }, h(item.Component, { service, entry: item }))))))
     }
     function apply(ctx) {
       hostLocale = ctx.locale
