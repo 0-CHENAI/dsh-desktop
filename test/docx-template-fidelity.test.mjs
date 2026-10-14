@@ -9,7 +9,7 @@ import { SystemPrompt } from '@deepseek-ai/dsh-system-prompt'
 import { LocalSandboxProvider } from '@deepseek-ai/dsh-sandbox-local'
 import { LocalSubprocessRuntime } from '@deepseek-ai/dsh-subprocess-local'
 import { Session, SessionId, SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session'
-import { createDocxWorkflow, docxWorkerEnvironment, docxWriteTool, registerDocxDelivery } from '../packages/dsh-desktop-office/lib/docx-workflow.js'
+import { createDocxWorkflow, docxWorkerArgv, docxWorkerEnvironment, docxWriteTool, registerDocxDelivery } from '../packages/dsh-desktop-office/lib/docx-workflow.js'
 const cleanups = []
 afterEach(async () => { for (const fn of cleanups.splice(0).reverse()) await fn() })
 const sha = data => createHash('sha256').update(data).digest('hex')
@@ -41,12 +41,18 @@ async function fixture(templateId = 'government-notice') {
   const call = async (name, args) => ctx.tools.execute({ name, arguments: args, callId: randomUUID(), ...exec })
   return { ctx, workflow, prepared, plan, call, delivered, workspace, modes, exec, setMode: value => { mode = value }, clearSelection: () => { selection = {} } }
 }
-it('keeps Electron Node mode for the Windows confinement runner', () => {
-  const env = docxWorkerEnvironment({ env: { ELECTRON_RUN_AS_NODE: '1', SystemRoot: 'C:\\Windows', SECRET: 'x' }, platform: 'win32', versions: { electron: '39.0.0' } })
+it('keeps the Word worker off the Windows confinement command line', () => {
+  const script = 'print("段落")\n'
+  const argv = docxWorkerArgv('python.exe')
+  expect(argv.join('\0')).not.toContain(script)
+  expect(argv.filter(arg => arg.includes('\n'))).toEqual([])
+  const env = docxWorkerEnvironment({ env: { ELECTRON_RUN_AS_NODE: '1', SystemRoot: 'C:\\Windows', SECRET: 'x' }, platform: 'win32', versions: { electron: '39.0.0' } }, script)
+  expect(env.DSH_DOCX_LAYOUT_SOURCE).toBe(script)
   expect(env.ELECTRON_RUN_AS_NODE).toBe('1')
   expect(env.SystemRoot).toBe('C:\\Windows')
   expect(env.SECRET).toBeUndefined()
   expect(docxWorkerEnvironment({ env: { SystemRoot: 'C:\\Windows' }, platform: 'win32', versions: {} }).ELECTRON_RUN_AS_NODE).toBeUndefined()
+  expect(() => docxWorkerEnvironment({ env: {}, platform: 'win32', versions: {} }, 'x'.repeat(24001))).toThrow('Windows environment limit')
 })
 it('returns Chinese layout JSON when the Windows code page is charmap', async () => {
   const { spawn } = await import('node:child_process')

@@ -5,13 +5,28 @@ import { defineTool } from '@deepseek-ai/dsh-tools'
 import { workspacePolicy } from './template-tool.js'
 import { selectedTemplate } from './modes.js'
 
+// Short -c program. The worker source travels in the environment because Windows
+// Electron parses the confinement command line itself; inlining the script there
+// makes the runner exit before Python starts, with an empty stderr.
+const docxWorkerBootstrap = "import os; exec(compile(os.environ.pop('DSH_DOCX_LAYOUT_SOURCE'), 'docx-layout.py', 'exec'), {'__name__': '__main__'})"
+
+/** Argv for the confined interpreter. The worker source is not an argument. */
+export function docxWorkerArgv(python) {
+  return [python, '-I', '-B', '-c', docxWorkerBootstrap]
+}
+
 /** Environment for the confined Word worker. Credentials stay behind. */
-export function docxWorkerEnvironment(runtime = process) {
+export function docxWorkerEnvironment(runtime = process, script) {
   const env = Object.fromEntries(Object.keys(runtime.env).map(key => [key, undefined]))
   if (runtime.platform === 'win32') env.SystemRoot = runtime.env.SystemRoot
   // Windows wraps this command in the ACL runner at process.execPath. Inside the
   // Electron harness that executable runs the runner only in Node mode.
   if (runtime.versions.electron) env.ELECTRON_RUN_AS_NODE = '1'
+  // CreateProcessW rejects an environment block above 32767 characters.
+  if (typeof script === 'string') {
+    if (script.length > 24000) throw new Error('Word template worker exceeds the Windows environment limit')
+    env.DSH_DOCX_LAYOUT_SOURCE = script
+  }
   return env
 }
 
@@ -44,8 +59,8 @@ export function createDocxWorkflow(ctx, library, modes, resources) {
     const source = await library.asset(item.id, item.sampleFile)
     const profile = item.files['generation.json'] ? JSON.parse((await library.asset(item.id, 'generation.json')).toString('utf8')) : null
     worker ??= await readFile(fileURLToPath(new URL('./docx-layout.py', import.meta.url)), 'utf8')
-    const plan = await ctx.sandbox.confine([python, '-I', '-B', '-c', worker], policy)
-    const env = docxWorkerEnvironment()
+    const plan = await ctx.sandbox.confine(docxWorkerArgv(python), policy)
+    const env = docxWorkerEnvironment(process, worker)
     const signal = AbortSignal.any([AbortSignal.timeout(45_000), ...(exec.signal ? [exec.signal] : [])])
     const facts = { templateId: item.id, revision: item.revision, operation: command, path: args.path ?? args.output_path }
     await modes.record(id, 'office-docx-start', facts)
@@ -54,7 +69,10 @@ export function createDocxWorkflow(ctx, library, modes, resources) {
         stdio: { stdin: { data: JSON.stringify({ command, args, profile, source: source.toString('base64'), sourceSha256: item.files[item.sampleFile] }) }, stdout: { maxBytes: 1024 * 1024 }, stderr: { maxBytes: 4096 } } })
       const outcome = await child.done
       signal.throwIfAborted()
-      if (outcome.exitCode !== 0) throw new Error(child.collected.stderr.readFrom(0).text.trim() || 'Word template processing failed')
+      if (outcome.exitCode !== 0) {
+        const detail = child.collected.stderr.readFrom(0).text.trim() || child.collected.stdout.readFrom(0).text.trim().slice(0, 500)
+        throw new Error(detail || `Word template processing failed (exit ${outcome.exitCode})`)
+      }
       const result = JSON.parse(child.collected.stdout.readFrom(0).text)
       if (!result || !/^[a-f0-9]{64}$/.test(result.sha256)) throw new Error('Word template processing returned an invalid result')
       if (command === 'prepare' ? !Array.isArray(result.paragraphs) : !Array.isArray(result.checks) || result.checks.some(check => typeof check !== 'string')) throw new Error('Word template processing returned an invalid layout result')
