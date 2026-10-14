@@ -431,7 +431,7 @@ window.__ModuleLoader__.load({
         if (!this.ready || this.blocked || this.disposed) return
         const additions = this.marketCatalog().filter((entry) => {
           const install = this.installRecordFor(entry.catalogId)
-          return entry.installed && install && !this.state.added.includes(entry.id)
+          return entry.installed && install && (!this.state.added.includes(entry.id) || !this.state.pinned.includes(entry.id))
         })
         if (!additions.length) return
         this.run(this.commit((state) => {
@@ -533,6 +533,7 @@ window.__ModuleLoader__.load({
             // A catalog refresh updates discovery metadata only. It must not
             // navigate, rewrite session ownership, or change the active workbench.
             this.rebuildProviders({ preserveActive: true })
+            this.reconcileMarketInstalls()
             this.reconcileLocalProviders()
           } catch (error) {
             if (!this.disposed) this.catalogError = error instanceof Error ? error.message : String(error)
@@ -1413,15 +1414,20 @@ window.__ModuleLoader__.load({
       if (catalogStale) return h('div', { className: 'dshWbNotice', role: 'status' }, tr('在线市场暂时无法更新，正在显示上一次成功读取的目录。'))
       return null
     }
-    function screenshotFor(entry) {
-      return typeof entry?.screenshot === 'string' && entry.screenshot ? entry.screenshot
-        : Array.isArray(entry?.screenshots) && typeof entry.screenshots[0] === 'string' ? entry.screenshots[0] : ''
-    }
     function screenshotsFor(entry) {
-      const result = []
-      if (typeof entry?.screenshot === 'string' && entry.screenshot) result.push(entry.screenshot)
-      if (Array.isArray(entry?.screenshots)) for (const s of entry.screenshots) if (typeof s === 'string' && s) result.push(s)
-      return [...new Set(result)]
+      const images = Array.isArray(entry?.screenshots) ? entry.screenshots.filter(image => typeof image === 'string' && image) : []
+      const primary = typeof entry?.screenshot === 'string' && entry.screenshot ? [entry.screenshot] : []
+      // Published market images can replace stale runtime descriptor URLs.
+      return [...new Set(entry?.listed ? [...images, ...primary] : [...primary, ...images])]
+    }
+    function useScreenshots(entry) {
+      const candidates = screenshotsFor(entry)
+      const key = JSON.stringify([entry.id, candidates])
+      const [failure, setFailure] = React.useState({ key, urls: [] })
+      const failed = failure.key === key ? failure.urls : []
+      return [candidates.filter(url => !failed.includes(url)), (url) => setFailure(previous => ({
+        key, urls: [...new Set([...(previous.key === key ? previous.urls : []), url])]
+      }))]
     }
     function compactCount(value) {
       if (!Number.isFinite(value) || value < 0) return tr('暂无')
@@ -1617,11 +1623,10 @@ window.__ModuleLoader__.load({
       return href ? h('a', { className: 'dshWbTitleLink', href, target: '_blank', rel: 'noopener noreferrer', title: both(`在 GitHub 上查看${entry.title || ''}`, `View ${entry.title || ''} on GitHub`) }, icon, title) : h('span', { className: 'dshWbTitleLink' }, icon, title)
     }
     function Preview({ entry, detail = false }) {
-      const screenshot = screenshotFor(entry)
-      const [failedScreenshot, setFailedScreenshot] = React.useState('')
-      React.useEffect(() => { setFailedScreenshot('') }, [screenshot])
+      const [screenshots, setFailedScreenshot] = useScreenshots(entry)
+      const screenshot = screenshots[0]
       if (detail) return null
-      if (screenshot && failedScreenshot !== screenshot) return h('img', { className: 'dshWbCardScreenshot', src: screenshot, alt: both(`${entry.title || tr('工作台')}产品截图`, `${entry.title || tr('工作台')} screenshot`), loading: 'lazy', style: { objectPosition: entry.screenshotPosition || 'center' }, onError: () => setFailedScreenshot(screenshot) })
+      if (screenshot) return h('img', { className: 'dshWbCardScreenshot', src: screenshot, alt: both(`${entry.title || tr('工作台')}产品截图`, `${entry.title || tr('工作台')} screenshot`), loading: 'lazy', style: { objectPosition: entry.screenshotPosition || 'center' }, onError: () => setFailedScreenshot(screenshot) })
       const columns = entry.layout?.businessSide === 'left' ? '1fr 1.8fr' : '1.45fr 1fr'
       return h('div', { className: 'dshWbPreview', role: 'img', 'aria-label': both(`${entry.title}界面预览（模拟）`, `${entry.title} simulated preview`) },
         h('div', { className: 'dshWbPreviewBar', 'aria-hidden': true }, h('span', { className: 'dshWbPreviewDot' }), h('span', { className: 'dshWbPreviewDot' }), h('span', { className: 'dshWbPreviewDot' })),
@@ -1630,12 +1635,18 @@ window.__ModuleLoader__.load({
           h('div', { className: 'dshWbPreviewPane', style: { order: entry.layout?.businessSide === 'left' ? 1 : 2 } }, h('em'), entry.panelTitle || tr('业务区域'), h('i'), h('i'))))
     }
     function ScreenshotGallery({ entry }) {
-      const screenshots = screenshotsFor(entry)
+      const [screenshots, failScreenshot] = useScreenshots(entry)
       const [lightbox, setLightbox] = React.useState(null)
       const [index, setIndex] = React.useState(0)
       const trackRef = React.useRef(null)
       const lightboxCloseRef = React.useRef(null)
       const triggerRef = React.useRef(null)
+      const screenshotKey = JSON.stringify(screenshots)
+      React.useEffect(() => {
+        setIndex(0)
+        if (trackRef.current) trackRef.current.scrollLeft = 0
+        setLightbox(null)
+      }, [screenshotKey])
       React.useEffect(() => {
         if (!lightbox) return undefined
         lightboxCloseRef.current?.focus()
@@ -1657,7 +1668,7 @@ window.__ModuleLoader__.load({
         onKeyDown: (event) => { if (event.key === 'ArrowLeft') { event.preventDefault(); go(index - 1) } else if (event.key === 'ArrowRight') { event.preventDefault(); go(index + 1) } } },
         h('div', { ref: trackRef, className: 'dshWbCarouselTrack', onScroll: (event) => { const track = event.currentTarget; if (track.clientWidth) setIndex(Math.round(track.scrollLeft / track.clientWidth)) } },
           screenshots.map((src, i) => h('button', { key: src, type: 'button', className: 'dshWbCarouselSlide', 'aria-label': both(`放大截图 ${i + 1}/${screenshots.length}`, `Enlarge screenshot ${i + 1} of ${screenshots.length}`), tabIndex: i === index ? 0 : -1, onClick: (event) => openLightbox(event, src) },
-            h('img', { src, alt: '', loading: i === 0 ? 'eager' : 'lazy' })))),
+            h('img', { src, alt: '', loading: i === 0 ? 'eager' : 'lazy', onError: () => failScreenshot(src) })))),
         many && h('button', { type: 'button', className: 'dshWbCarouselNav', 'data-side': 'prev', 'aria-label': tr('上一张'), disabled: index === 0, onClick: () => go(index - 1) }, h(MarketIcon, { name: 'chevronLeft', size: 18 })),
         many && h('button', { type: 'button', className: 'dshWbCarouselNav', 'data-side': 'next', 'aria-label': tr('下一张'), disabled: index === screenshots.length - 1, onClick: () => go(index + 1) }, h(MarketIcon, { name: 'chevronRight', size: 18 })),
         many && h('div', { className: 'dshWbCarouselDots', 'aria-hidden': true }, screenshots.map((src, i) => h('span', { key: src, 'data-active': i === index }))),

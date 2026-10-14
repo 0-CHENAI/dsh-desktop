@@ -58,7 +58,10 @@ async function readPayload(request, maximum = MAX_STATE_BYTES, tooLarge = 'Workb
 
 export function apply(ctx, config) {
   const store = createStateStore(config.root)
-  const readCatalog = createCatalogReader()
+  const readCatalog = createCatalogReader({
+    cachePath: join(config.root, 'workbench-catalog-cache.json'),
+    onWarning: error => ctx.logger?.warn?.(error)
+  })
   const marketInstalls = createMarketInstallStore(config.root)
   // Providers must use the same persisted ownership as Desktop, never a second
   // settings namespace that could accidentally authorize an ordinary session.
