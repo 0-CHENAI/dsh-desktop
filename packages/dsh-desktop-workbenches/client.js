@@ -5,6 +5,21 @@ window.__ModuleLoader__.load({
     const { Service } = require('@deepseek-ai/cordis')
     const { Switch, Toast } = require('@deepseek-ai/dsh-client-ui-primitives')
     const h = React.createElement
+    const DOWNLOAD_NS = 'dsh-desktop-workbenches.download'
+    const downloadCopy = {
+      zh: { download_failed: '无法下载工作台安装包', download_interrupted: '工作台安装包下载中断', invalid_download_url: '工作台下载地址无效。', unsafe_download_url: '工作台下载地址必须使用 HTTPS，且不能包含凭据或自定义端口。' },
+      en: { download_failed: 'Could not download the workbench package', download_interrupted: 'Workbench package download interrupted', invalid_download_url: 'The workbench download URL is invalid.', unsafe_download_url: 'The workbench download URL must use HTTPS without credentials or a custom port.' }
+    }
+    function installErrorMessage(ctx, data, status) {
+      if ((data?.code === 'invalid_download_url' || data?.code === 'unsafe_download_url') && ctx.locale?.bind && data.params === undefined) {
+        return ctx.locale.bind(DOWNLOAD_NS)(data.code)
+      }
+      const diagnostic = data?.params?.diagnostic
+      if ((data?.code === 'download_failed' || data?.code === 'download_interrupted') && ctx.locale?.bind && typeof diagnostic === 'string' && /^(?:E[A-Z0-9_]{1,63}|UND_ERR_[A-Z0-9_]{1,55}|TIMEOUT|ABORTED|NETWORK_ERROR)(?:, (?:E[A-Z0-9_]{1,63}|UND_ERR_[A-Z0-9_]{1,55}|TIMEOUT|ABORTED|NETWORK_ERROR))*$/.test(diagnostic)) {
+        return `${ctx.locale.bind(DOWNLOAD_NS)(data.code)}: ${diagnostic}`
+      }
+      return data?.error || `HTTP ${status}`
+    }
     // The host locale is observable. Keep catalog IDs and search/filter state
     // independent of translated labels so switching languages is immediate.
     let hostLocale
@@ -416,7 +431,7 @@ window.__ModuleLoader__.load({
         if (!this.ready || this.blocked || this.disposed) return
         const additions = this.marketCatalog().filter((entry) => {
           const install = this.installRecordFor(entry.catalogId)
-          return entry.installed && install && !this.state.added.includes(entry.id)
+          return entry.installed && install && (!this.state.added.includes(entry.id) || !this.state.pinned.includes(entry.id))
         })
         if (!additions.length) return
         this.run(this.commit((state) => {
@@ -518,6 +533,7 @@ window.__ModuleLoader__.load({
             // A catalog refresh updates discovery metadata only. It must not
             // navigate, rewrite session ownership, or change the active workbench.
             this.rebuildProviders({ preserveActive: true })
+            this.reconcileMarketInstalls()
             this.reconcileLocalProviders()
           } catch (error) {
             if (!this.disposed) this.catalogError = error instanceof Error ? error.message : String(error)
@@ -559,7 +575,7 @@ window.__ModuleLoader__.load({
             method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: catalogId, ...options })
           })
           const data = await response.json()
-          if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`)
+          if (!response.ok) throw new Error(installErrorMessage(this.ctx, data, response.status))
           if (data.restartRequired) this.restartNeeded = true
           return data
         } finally {
@@ -1258,16 +1274,15 @@ window.__ModuleLoader__.load({
       .dshWbSubmitOutcome{margin-top:14px!important;padding-top:12px;border-top:1px solid var(--dsw-alias-border-l2);font-size:13px}
       .dshWbPrompt{display:block;width:100%;min-height:160px;resize:vertical;margin:0;padding:10px 12px;border:1px solid var(--dsw-alias-border-l2);border-radius:6px;background:var(--dsw-alias-bg-module-platform);font-family:ui-monospace,SFMono-Regular,Menlo,monospace!important;font-size:11px!important;line-height:18px!important}
       .dshWbGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}
-      .dshWbCard{min-width:0;border:0;border-radius:14px;display:flex;flex-direction:column;background:var(--dsw-alias-bg-module-platform);overflow:visible;transition:background .16s ease-out}
+      .dshWbCard{position:relative;height:360px;box-sizing:border-box;container:workbench-card / inline-size;min-width:0;border:0;border-radius:14px;display:flex;flex-direction:column;background:var(--dsw-alias-bg-module-platform);overflow:visible;transition:background .16s ease-out}
       .dshWbCard:hover,.dshWbCard:focus-within{background:color-mix(in srgb,var(--dsw-alias-bg-module-platform),var(--dsw-alias-label-primary) 5%)}
       .dshWbCard:has(.dshWbFailureHint:hover),.dshWbCard:has(.dshWbFailureHint:focus-within){overflow:visible;z-index:3}
-      .dshWbCardBody{display:flex;flex-direction:column;gap:8px;padding:16px;min-height:0;flex:1 0 auto;box-sizing:border-box;min-width:0}.dshWbCardTitle{display:flex;align-items:center;gap:8px;min-width:0;height:26px;flex:0 0 26px}.dshWbCardTitle h2{flex:1;min-width:0;white-space:nowrap;overflow:hidden}.dshWbCardTitle .dshWbTitleLink{min-width:0;overflow:hidden;white-space:nowrap}
-      .dshWbCardBody:has(.dshWbUninstallReason){min-height:0;flex-basis:auto}.dshWbCardBody:has(.dshWbUninstallReason) .dshWbCardDescription{min-height:66px;-webkit-line-clamp:3}
-      .dshWbCard h2{overflow-wrap:anywhere;display:flex;align-items:center;gap:7px;min-width:0;font-size:18px;line-height:26px;letter-spacing:-.018em;font-weight:650;margin:0}.dshWbCard p{overflow-wrap:anywhere;margin:0;font-size:14px;line-height:22px}.dshWbCardDescription{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:66px}
-      .dshWbCard .dshWbActions{margin-top:0;flex-shrink:0;min-height:36px;gap:8px;padding-top:8px;align-items:center;justify-content:flex-end;flex-wrap:nowrap}.dshWbCardVersionActions{display:flex;align-items:center;gap:8px;min-width:0;margin-right:auto}.dshWbCardControls{display:flex;align-items:center;gap:8px;margin-left:auto}.dshWbCardVersion{font-size:12px;line-height:18px;color:var(--dsw-alias-label-secondary);white-space:nowrap;font-variant-numeric:tabular-nums}.dshWbCardIcon{display:grid;place-items:center;width:20px;height:20px;flex-shrink:0;color:var(--dsw-alias-label-secondary)}.dshWbGlyph{display:inline-grid;place-items:center;line-height:1;flex-shrink:0}.dshWbMonogram{box-sizing:border-box;border:1.3px solid currentColor;border-radius:4px;font-weight:600}.dshWbCard .dshWbBtn{font-size:12px;line-height:18px;padding:6px 11px}.dshWbInstalled{display:inline-flex;align-items:center;min-height:32px;padding:6px 11px;box-sizing:border-box;font-size:12px;line-height:18px;color:var(--dsw-alias-label-secondary)}.dshWbInstallFailed{color:var(--dsw-alias-state-error-primary)}.dshWbFailureHint{position:relative;display:inline-flex;align-items:center;gap:2px;color:var(--dsw-alias-state-error-primary);font-size:12px;line-height:18px;white-space:nowrap;cursor:help}.dshWbFailureIcon{display:inline-grid;place-items:center;width:24px;height:24px;flex:0 0 24px;color:var(--dsw-alias-state-error-primary)}.dshWbFailureTooltip{display:none;position:absolute;z-index:4;bottom:calc(100% + 7px);left:0;width:max-content;max-width:min(300px,calc(100vw - 40px));max-height:140px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;padding:8px 10px;border:1px solid var(--dsw-alias-border-l2);border-radius:6px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);box-shadow:0 8px 24px rgba(0,0,0,.14);font-size:12px;line-height:18px}.dshWbFailureHint:hover .dshWbFailureTooltip,.dshWbFailureHint:focus-within .dshWbFailureTooltip{display:block}.dshWbRetry{display:inline-grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:6px;background:transparent;color:var(--dsw-alias-label-primary)}.dshWbRetry:hover:not(:disabled){background:var(--dsw-alias-bg-layer-2)}.dshWbRunSwitch{position:relative;width:38px;height:22px;flex:0 0 38px;padding:0;border:0;border-radius:999px;background:var(--dsw-alias-border-l2);transition:background .15s}.dshWbRunSwitch[aria-checked=true]{background:var(--dsw-alias-label-primary)}.dshWbRunSwitch::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--dsw-alias-bg-layer-1);transition:transform .15s}.dshWbRunSwitch[aria-checked=true]::after{transform:translateX(16px)}
+      .dshWbCardBody{display:flex;flex-direction:column;gap:8px;padding:16px;min-height:0;flex:1 1 0;box-sizing:border-box;min-width:0}.dshWbCardTitle{display:flex;align-items:center;gap:8px;min-width:0;height:26px;flex:0 0 26px}.dshWbCardTitle h2{flex:1;min-width:0;white-space:nowrap;overflow:hidden}.dshWbCardTitle .dshWbTitleLink{min-width:0;overflow:hidden;white-space:nowrap}
+      .dshWbCard h2{overflow-wrap:anywhere;display:flex;align-items:center;gap:7px;min-width:0;font-size:18px;line-height:26px;letter-spacing:-.018em;font-weight:650;margin:0}.dshWbCard p{overflow-wrap:anywhere;margin:0;font-size:14px;line-height:22px}.dshWbCardDescription{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;height:66px;min-height:66px;max-height:66px}
+      .dshWbCard .dshWbActions{margin-top:auto;flex-shrink:0;min-height:36px;gap:8px;padding-top:8px;align-items:center;justify-content:flex-end;flex-wrap:nowrap}.dshWbCardVersionActions{display:flex;align-items:center;gap:8px;min-width:0;margin-right:auto;flex:1 1 0;flex-wrap:nowrap}.dshWbCardControls{display:flex;align-items:center;gap:8px;margin-left:auto;min-width:0;flex-shrink:0}.dshWbCardVersion{font-size:12px;line-height:18px;color:var(--dsw-alias-label-secondary);white-space:nowrap;font-variant-numeric:tabular-nums}.dshWbCardIcon{display:grid;place-items:center;width:20px;height:20px;flex-shrink:0;color:var(--dsw-alias-label-secondary)}.dshWbGlyph{display:inline-grid;place-items:center;line-height:1;flex-shrink:0}.dshWbMonogram{box-sizing:border-box;border:1.3px solid currentColor;border-radius:4px;font-weight:600}.dshWbCard .dshWbBtn{font-size:12px;line-height:18px;padding:6px 11px}.dshWbInstalled{display:inline-flex;align-items:center;min-height:32px;padding:6px 11px;box-sizing:border-box;font-size:12px;line-height:18px;color:var(--dsw-alias-label-secondary)}.dshWbInstallFailed{color:var(--dsw-alias-state-error-primary)}.dshWbFailureHint{position:static;display:inline-flex;flex:none;align-items:center;gap:2px;color:var(--dsw-alias-state-error-primary);font-size:12px;line-height:18px;white-space:nowrap;cursor:help}.dshWbFailureIcon{display:inline-grid;place-items:center;width:24px;height:24px;flex:0 0 24px;color:var(--dsw-alias-state-error-primary)}.dshWbFailureTooltip{display:none;position:absolute;z-index:4;bottom:56px;left:16px;right:16px;width:auto;max-width:none;max-height:140px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;padding:8px 10px;border:1px solid var(--dsw-alias-border-l2);border-radius:6px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);box-shadow:0 8px 24px rgba(0,0,0,.14);font-size:12px;line-height:18px}.dshWbFailureHint:hover .dshWbFailureTooltip,.dshWbFailureHint:focus-within .dshWbFailureTooltip{display:block}.dshWbRetry{display:inline-grid;flex:0 0 28px;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:6px;background:transparent;color:var(--dsw-alias-label-primary)}.dshWbRetry:hover:not(:disabled){background:var(--dsw-alias-bg-layer-2)}.dshWbRunSwitch{position:relative;width:38px;height:22px;flex:0 0 38px;padding:0;border:0;border-radius:999px;background:var(--dsw-alias-border-l2);transition:background .15s}.dshWbRunSwitch[aria-checked=true]{background:var(--dsw-alias-label-primary)}.dshWbRunSwitch::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--dsw-alias-bg-layer-1);transition:transform .15s}.dshWbRunSwitch[aria-checked=true]::after{transform:translateX(16px)}
       .dshWbCategory{margin-left:auto;font-size:11px;line-height:18px;color:var(--dsw-alias-label-secondary);background:transparent;padding:0;white-space:nowrap}
       .dshWbFailureIcon:focus-visible{outline:2px solid var(--dsw-alias-state-error-primary);outline-offset:2px;border-radius:4px}
-      .dshWbMedia{position:relative;aspect-ratio:3/1;margin:16px 16px 0;border-radius:6px;background:var(--dsw-alias-bg-module-platform);overflow:visible}
+      .dshWbMedia{position:relative;aspect-ratio:3/1;max-height:120px;flex-shrink:0;margin:16px 16px 0;border-radius:6px;background:var(--dsw-alias-bg-module-platform);overflow:visible}
       .dshWbMediaOpen{overflow:hidden;border-radius:6px;display:block;position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;background:transparent;cursor:pointer}.dshWbMediaOpen:focus-visible{outline:2px solid var(--dsw-alias-label-primary);outline-offset:-3px;z-index:1}.dshWbMediaZoom{opacity:0;transition:opacity .16s;position:absolute;right:12px;bottom:10px;display:grid;place-items:center;width:28px;height:28px;border-radius:6px;background:var(--dsw-alias-label-primary);color:var(--dsw-alias-label-primary-foreground)}.dshWbMediaOpen:hover .dshWbMediaZoom,.dshWbMediaOpen:focus-visible .dshWbMediaZoom{opacity:1}
       .dshWbPreview{position:absolute;inset:0;display:grid;grid-template-rows:22px 1fr;background:var(--dsw-alias-bg-module-platform);overflow:hidden;color:var(--dsw-alias-label-secondary)}
       .dshWbPreviewBar{display:flex;align-items:center;gap:4px;padding:0 9px;border-bottom:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1)}.dshWbPreviewDot{width:4px;height:4px;border-radius:50%;background:var(--dsw-alias-border-l2)}
@@ -1277,8 +1292,8 @@ window.__ModuleLoader__.load({
       .dshWbCard .dshWbFavorite,.dshWbCard .dshWbRoundButton{position:relative;display:inline-grid;place-items:center;width:30px;height:30px;min-width:30px;min-height:30px;max-width:30px;max-height:30px;flex:0 0 30px;padding:0;border:1px solid var(--dsw-alias-border-l2);border-radius:50%;corner-shape:round;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-secondary);text-decoration:none}
       .dshWbCard :is(.dshWbFavorite,.dshWbRoundButton)::before,.dshWbCard :is(.dshWbFavorite,.dshWbRoundButton)::after{corner-shape:round}
       .dshWbFavorite:hover:not(:disabled),.dshWbRoundButton:hover{border-color:var(--dsw-alias-label-secondary);color:var(--dsw-alias-label-primary)}.dshWbFavorite[aria-pressed=true]{color:var(--dsw-alias-label-primary)}.dshWbFavorite[aria-pressed=true] svg{fill:currentColor}
-      .dshWbMarket .dshWbUninstall{display:inline-flex;align-items:center;justify-content:center;min-height:30px;flex:none;padding:4px 12px;border:1px solid var(--dsw-alias-state-error-primary);border-radius:999px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-state-error-primary);font-size:12px;line-height:18px}.dshWbUninstall:hover:not(:disabled){background:var(--dsw-alias-bg-layer-2)}.dshWbUninstall:disabled{cursor:not-allowed}.dshWbUninstallReason{font-size:12px;line-height:18px;color:var(--dsw-alias-label-secondary)}
-      .dshWbUpdate{display:inline-flex;align-items:center;gap:4px;min-width:0;min-height:28px;padding:3px 7px;border:1px solid var(--dsw-alias-border-l2);border-radius:6px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font-size:12px;line-height:18px;white-space:nowrap}.dshWbUpdate svg{flex:none}.dshWbUpdateText{min-width:0;overflow:hidden;text-overflow:ellipsis}.dshWbUpdate:hover:not(:disabled){background:var(--dsw-alias-bg-layer-2)}.dshWbUpdate:disabled{opacity:1}
+      .dshWbMarket .dshWbUninstall{display:inline-flex;align-items:center;justify-content:center;min-height:30px;flex:none;padding:4px 12px;border:1px solid var(--dsw-alias-state-error-primary);border-radius:999px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-state-error-primary);font-size:12px;line-height:18px}.dshWbUninstall:hover:not(:disabled){background:var(--dsw-alias-bg-layer-2)}.dshWbUninstall:disabled{cursor:not-allowed}.dshWbUninstallReason{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+      .dshWbUpdate{display:inline-flex;flex:none;align-items:center;gap:4px;min-width:0;min-height:28px;padding:3px 7px;border:1px solid var(--dsw-alias-border-l2);border-radius:6px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font-size:12px;line-height:18px;white-space:nowrap}.dshWbUpdate svg{flex:none}.dshWbUpdateText{min-width:0;overflow:hidden;text-overflow:ellipsis}.dshWbUpdate:hover:not(:disabled){background:var(--dsw-alias-bg-layer-2)}.dshWbUpdate:disabled{opacity:1}
       .dshWbTitleLink{display:inline-flex;align-items:center;gap:7px;color:inherit;text-decoration:none;border-bottom:1px solid transparent}a.dshWbTitleLink:hover{border-bottom-color:currentColor}.dshWbTitleLink:focus-visible{outline:2px solid var(--dsw-alias-label-primary);outline-offset:2px;border-radius:3px}.dshWbTitleText{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       .dshWbAvatar{width:18px;height:18px;flex:0 0 auto;border-radius:50%;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-module-platform)}
       .dshWbMeta{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--dsw-alias-border-l2);border-bottom:1px solid var(--dsw-alias-border-l2);font-variant-numeric:tabular-nums;min-width:0}
@@ -1296,6 +1311,8 @@ window.__ModuleLoader__.load({
       .dshWbCarouselNav[data-side=prev]{left:12px}.dshWbCarouselNav[data-side=next]{right:12px}.dshWbCarousel:hover .dshWbCarouselNav:not(:disabled),.dshWbCarouselNav:focus-visible{opacity:1}
       .dshWbCarouselDots{position:absolute;left:50%;bottom:10px;display:flex;gap:6px;transform:translateX(-50%)}.dshWbCarouselDots span{width:6px;height:6px;border-radius:50%;background:rgba(0,0,0,.22);transition:width .16s,background .16s}.dshWbCarouselDots span[data-active=true]{width:16px;border-radius:3px;background:rgba(0,0,0,.6)}
       .dshWbCarouselCount{position:absolute;right:10px;bottom:8px;padding:1px 7px;border-radius:9px;background:rgba(0,0,0,.45);color:#fff;font-size:11px;line-height:18px;font-variant-numeric:tabular-nums}
+      .dshWbCardControls>.dshWbControlHint,.dshWbCardControls>.dshWbInstalled{flex:none}
+      @container workbench-card (max-width:360px){.dshWbUpdateText{display:none}.dshWbCard .dshWbActions,.dshWbCardVersionActions,.dshWbCard .dshWbCardControls,.dshWbMetrics{gap:4px}.dshWbCard .dshWbUninstall{padding-inline:8px}.dshWbMetrics .dshWbMetaItem{gap:3px}.dshWbMetrics .dshWbMetaItem b{max-width:30px}}
       @media(hover:none){.dshWbCarouselNav:not(:disabled){opacity:1}}
       .dshWbDetailLightbox{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.75);cursor:pointer}
       .dshWbDetailLightbox img{max-width:92vw;max-height:92vh;object-fit:contain;border-radius:6px}.dshWbLightboxClose{position:fixed;right:22px;top:22px;width:36px;height:36px;border:0;border-radius:8px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font-size:20px;line-height:1}
@@ -1305,6 +1322,8 @@ window.__ModuleLoader__.load({
       @keyframes dshWbFade{from{opacity:0}to{opacity:1}}@keyframes dshWbRise{from{opacity:.75;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
       .dshWbDisabledHint{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:48px 24px;text-align:center;color:var(--dsw-alias-label-secondary);gap:8px}
       .dshWbFrame{height:100%;min-height:0;display:flex;flex-direction:column;position:relative}
+      /* Keep unrelated mode-action contributions available in workbench conversations. */
+      .dshWbFrame[data-dsh-workbench-active] .dso-actions,.dshWbFrame[data-dsh-workbench-active] button[data-office-mode],.dshWbFrame[data-dsh-workbench-active] button[data-desktop-ppt]{display:none}
       /* shell.leading owns the collapsed Mac caption controls. Let an embedded
          workbench's semantic top header share that row after its reserved width. */
       html[data-platform=darwin] [data-sidebar-collapsed] .dshWbBusiness[data-side=left][data-embedded=true] > :first-child > header:first-child,
@@ -1330,7 +1349,7 @@ window.__ModuleLoader__.load({
       .dshWbMarketHeaderText .dshWbSearch{display:block;margin-top:16px;width:100%;min-width:0}.dshWbMarketHeaderActions{padding-top:4px}.dshWbMarketHeader{background-color:var(--dsw-alias-bg-module-platform);background-image:url("/api/desktop-workbenches/assets/market-header.png");background-position:right center;background-size:cover;background-repeat:no-repeat;background-blend-mode:multiply}
       .dshWbAuthorRow{display:flex;align-items:center;gap:4px;min-width:0}.dshWbAuthorRow .dshWbCardVersion::before{content:"· ";}.dshWbAuthorRow .dshWbAuthor{min-width:0}.dshWbAuthorRow .dshWbAuthor b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       .dshWbMetrics .dshWbMetaItem small{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-      .dshWbMetrics{display:inline-flex;align-items:center;gap:8px;min-width:0;flex:none}.dshWbCard .dshWbMetaItem b{font-size:11px}.dshWbCard .dshWbAuthor b{font-size:12px}.dshWbCard .dshWbAvatar{width:16px;height:16px}.dshWbCard .dshWbBtn{border-radius:999px;corner-shape:round}.dshWbCard .dshWbUninstall,.dshWbCard .dshWbRunSwitch{corner-shape:round}.dshWbCard :is(.dshWbBtn,.dshWbUninstall,.dshWbRunSwitch)::before,.dshWbCard :is(.dshWbBtn,.dshWbUninstall,.dshWbRunSwitch)::after{corner-shape:round}.dshWbCard .dshWbAuthor{gap:4px}.dshWbCardVersionActions:has(.dshWbUpdate),.dshWbCardVersionActions:has(.dshWbFailureHint){flex-wrap:wrap}.dshWbCard .dshWbActions:has(.dshWbUpdate),.dshWbCard .dshWbActions:has(.dshWbFailureHint){flex-wrap:wrap}.dshWbCard .dshWbCardControls{gap:8px}.dshWbCard .dshWbInstalled{padding:4px 0;white-space:nowrap}
+      .dshWbMetrics{display:inline-flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto;overflow:hidden}.dshWbCard .dshWbMetaItem b{font-size:11px}.dshWbCard .dshWbAuthor b{font-size:12px}.dshWbCard .dshWbAvatar{width:16px;height:16px}.dshWbCard .dshWbBtn{border-radius:999px;corner-shape:round}.dshWbCard .dshWbUninstall,.dshWbCard .dshWbRunSwitch{corner-shape:round}.dshWbCard :is(.dshWbBtn,.dshWbUninstall,.dshWbRunSwitch)::before,.dshWbCard :is(.dshWbBtn,.dshWbUninstall,.dshWbRunSwitch)::after{corner-shape:round}.dshWbCard .dshWbAuthor{gap:4px}.dshWbCard .dshWbCardControls{gap:8px}.dshWbCard .dshWbInstalled{padding:4px 0;white-space:nowrap}
       .dshWbDescriptionHint{position:relative;min-width:0;margin-top:8px}
       .dshWbSwitcherHint{position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:10;display:flex;flex-direction:column;align-items:flex-start;gap:8px;border-radius:8px;padding:12px;background:var(--dsw-alias-label-primary);color:var(--dsw-alias-label-primary-foreground);font-size:12px;line-height:18px;box-shadow:0 8px 24px rgba(0,0,0,.14)}.dshWbSwitcherHint button{border:1px solid currentColor;border-radius:999px;background:transparent;color:inherit;padding:3px 10px;font:inherit;cursor:pointer}.dshWbFavorite:focus-visible,.dshWbRoundButton:focus-visible,.dshWbUninstall:focus-visible,.dshWbRunSwitch:focus-visible{outline:2px solid var(--dsw-alias-label-primary);outline-offset:3px}
       @container workbench-market (max-width:760px){.dshWbBrowseTools{margin-left:auto}.dshWbToolbar{align-items:flex-start}.dshWbMarketHeaderActions{max-width:180px}.dshWbCardBody{padding:16px}}
@@ -1397,15 +1416,20 @@ window.__ModuleLoader__.load({
       if (catalogStale) return h('div', { className: 'dshWbNotice', role: 'status' }, tr('在线市场暂时无法更新，正在显示上一次成功读取的目录。'))
       return null
     }
-    function screenshotFor(entry) {
-      return typeof entry?.screenshot === 'string' && entry.screenshot ? entry.screenshot
-        : Array.isArray(entry?.screenshots) && typeof entry.screenshots[0] === 'string' ? entry.screenshots[0] : ''
-    }
     function screenshotsFor(entry) {
-      const result = []
-      if (typeof entry?.screenshot === 'string' && entry.screenshot) result.push(entry.screenshot)
-      if (Array.isArray(entry?.screenshots)) for (const s of entry.screenshots) if (typeof s === 'string' && s) result.push(s)
-      return [...new Set(result)]
+      const images = Array.isArray(entry?.screenshots) ? entry.screenshots.filter(image => typeof image === 'string' && image) : []
+      const primary = typeof entry?.screenshot === 'string' && entry.screenshot ? [entry.screenshot] : []
+      // Published market images can replace stale runtime descriptor URLs.
+      return [...new Set(entry?.listed ? [...images, ...primary] : [...primary, ...images])]
+    }
+    function useScreenshots(entry) {
+      const candidates = screenshotsFor(entry)
+      const key = JSON.stringify([entry.id, candidates])
+      const [failure, setFailure] = React.useState({ key, urls: [] })
+      const failed = failure.key === key ? failure.urls : []
+      return [candidates.filter(url => !failed.includes(url)), (url) => setFailure(previous => ({
+        key, urls: [...new Set([...(previous.key === key ? previous.urls : []), url])]
+      }))]
     }
     function compactCount(value) {
       if (!Number.isFinite(value) || value < 0) return tr('暂无')
@@ -1601,11 +1625,10 @@ window.__ModuleLoader__.load({
       return href ? h('a', { className: 'dshWbTitleLink', href, target: '_blank', rel: 'noopener noreferrer', title: both(`在 GitHub 上查看${entry.title || ''}`, `View ${entry.title || ''} on GitHub`) }, icon, title) : h('span', { className: 'dshWbTitleLink' }, icon, title)
     }
     function Preview({ entry, detail = false }) {
-      const screenshot = screenshotFor(entry)
-      const [failedScreenshot, setFailedScreenshot] = React.useState('')
-      React.useEffect(() => { setFailedScreenshot('') }, [screenshot])
+      const [screenshots, setFailedScreenshot] = useScreenshots(entry)
+      const screenshot = screenshots[0]
       if (detail) return null
-      if (screenshot && failedScreenshot !== screenshot) return h('img', { className: 'dshWbCardScreenshot', src: screenshot, alt: both(`${entry.title || tr('工作台')}产品截图`, `${entry.title || tr('工作台')} screenshot`), loading: 'lazy', style: { objectPosition: entry.screenshotPosition || 'center' }, onError: () => setFailedScreenshot(screenshot) })
+      if (screenshot) return h('img', { className: 'dshWbCardScreenshot', src: screenshot, alt: both(`${entry.title || tr('工作台')}产品截图`, `${entry.title || tr('工作台')} screenshot`), loading: 'lazy', style: { objectPosition: entry.screenshotPosition || 'center' }, onError: () => setFailedScreenshot(screenshot) })
       const columns = entry.layout?.businessSide === 'left' ? '1fr 1.8fr' : '1.45fr 1fr'
       return h('div', { className: 'dshWbPreview', role: 'img', 'aria-label': both(`${entry.title}界面预览（模拟）`, `${entry.title} simulated preview`) },
         h('div', { className: 'dshWbPreviewBar', 'aria-hidden': true }, h('span', { className: 'dshWbPreviewDot' }), h('span', { className: 'dshWbPreviewDot' }), h('span', { className: 'dshWbPreviewDot' })),
@@ -1614,12 +1637,18 @@ window.__ModuleLoader__.load({
           h('div', { className: 'dshWbPreviewPane', style: { order: entry.layout?.businessSide === 'left' ? 1 : 2 } }, h('em'), entry.panelTitle || tr('业务区域'), h('i'), h('i'))))
     }
     function ScreenshotGallery({ entry }) {
-      const screenshots = screenshotsFor(entry)
+      const [screenshots, failScreenshot] = useScreenshots(entry)
       const [lightbox, setLightbox] = React.useState(null)
       const [index, setIndex] = React.useState(0)
       const trackRef = React.useRef(null)
       const lightboxCloseRef = React.useRef(null)
       const triggerRef = React.useRef(null)
+      const screenshotKey = JSON.stringify(screenshots)
+      React.useEffect(() => {
+        setIndex(0)
+        if (trackRef.current) trackRef.current.scrollLeft = 0
+        setLightbox(null)
+      }, [screenshotKey])
       React.useEffect(() => {
         if (!lightbox) return undefined
         lightboxCloseRef.current?.focus()
@@ -1641,7 +1670,7 @@ window.__ModuleLoader__.load({
         onKeyDown: (event) => { if (event.key === 'ArrowLeft') { event.preventDefault(); go(index - 1) } else if (event.key === 'ArrowRight') { event.preventDefault(); go(index + 1) } } },
         h('div', { ref: trackRef, className: 'dshWbCarouselTrack', onScroll: (event) => { const track = event.currentTarget; if (track.clientWidth) setIndex(Math.round(track.scrollLeft / track.clientWidth)) } },
           screenshots.map((src, i) => h('button', { key: src, type: 'button', className: 'dshWbCarouselSlide', 'aria-label': both(`放大截图 ${i + 1}/${screenshots.length}`, `Enlarge screenshot ${i + 1} of ${screenshots.length}`), tabIndex: i === index ? 0 : -1, onClick: (event) => openLightbox(event, src) },
-            h('img', { src, alt: '', loading: i === 0 ? 'eager' : 'lazy' })))),
+            h('img', { src, alt: '', loading: i === 0 ? 'eager' : 'lazy', onError: () => failScreenshot(src) })))),
         many && h('button', { type: 'button', className: 'dshWbCarouselNav', 'data-side': 'prev', 'aria-label': tr('上一张'), disabled: index === 0, onClick: () => go(index - 1) }, h(MarketIcon, { name: 'chevronLeft', size: 18 })),
         many && h('button', { type: 'button', className: 'dshWbCarouselNav', 'data-side': 'next', 'aria-label': tr('下一张'), disabled: index === screenshots.length - 1, onClick: () => go(index + 1) }, h(MarketIcon, { name: 'chevronRight', size: 18 })),
         many && h('div', { className: 'dshWbCarouselDots', 'aria-hidden': true }, screenshots.map((src, i) => h('span', { key: src, 'data-active': i === index }))),
@@ -1859,9 +1888,8 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
       const label = kind === 'update' ? tr('更新失败') : kind === 'install' ? tr('安装失败') : tr('加载失败')
       const tooltipId = `dsh-wb-failure-${id.replace(/[^A-Za-z0-9_-]/g, '-')}`
       return h('span', { className: 'dshWbFailureHint', role: 'status' },
-        h('span', { className: 'dshWbInstallFailed' }, label),
         h('span', { className: 'dshWbFailureIcon', tabIndex: 0, 'aria-label': both(`${label}详情：${tr(detail)}`, `${label} details: ${tr(detail)}`), 'aria-describedby': tooltipId }, h(MarketIcon, { name: 'failure', size: 17 })),
-        h('span', { id: tooltipId, className: 'dshWbFailureTooltip', role: 'tooltip' }, tr(detail)))
+        h('span', { id: tooltipId, className: 'dshWbFailureTooltip', role: 'tooltip', tabIndex: 0 }, `${label}：${tr(detail)}`))
     }
     function Market({ service }) {
       useHostLocale(service)
@@ -2014,7 +2042,6 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
                 h('div', { className: 'dshWbCardTitle' }, h('h2', null, h(EntryTitle, { entry })), tab === 'mine' && service.isLocalEntry(entry) && h('span', { className: 'dshWbCategory' }, tr('本地')), tab === 'mine' && h('span', { className: 'dshWbControlHint dshWbSwitchHint' }, h('button', { type: 'button', className: 'dshWbRunSwitch', role: 'switch', 'aria-checked': activation === 'on', 'aria-label': both(`${entry.title}运行状态`, `${entry.title} running state`), 'aria-describedby': `dsh-wb-switch-tooltip-${catalogId}`, disabled: disabled || !!togglingPlugin || !hasNativeControl || activation === 'unknown', onClick: () => service.run(service.setPluginEnabled(pluginName, activation !== 'on')) }), h('span', { id: `dsh-wb-switch-tooltip-${catalogId}`, className: 'dshWbControlTooltip', role: 'tooltip' }, activation === 'unknown' ? tr('原生插件状态暂不可用') : activation === 'on' ? tr('停用') : tr('启用')))),
                 h('div', { className: 'dshWbAuthorRow' }, h(AuthorItem, { entry, showVersion: false }), typeof cardVersion === 'string' && cardVersion.trim() && h('span', { className: 'dshWbCardVersion' }, `v${cardVersion.trim()}`)),
                 h('div', { className: 'dshWbDescriptionHint' }, h('p', { className: 'dshWbMuted dshWbCardDescription' }, entry.description || tr('这个工作台暂时还没有填写介绍。'))),
-                tab === 'mine' && localRemoval && !localRemoval.removable && h('p', { className: 'dshWbUninstallReason', role: 'status' }, tr(localRemoval.reason)),
                 h('div', { className: 'dshWbActions' },
                   h('div', { className: 'dshWbCardVersionActions' },
                     h(EntryMetrics, { entry }),
@@ -2024,13 +2051,16 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
                   h('div', { className: 'dshWbCardControls' },
                   entry.repository && h('span', { className: 'dshWbControlHint' }, h('a', { className: 'dshWbRoundButton', href: entry.repository, target: '_blank', rel: 'noopener noreferrer', 'aria-describedby': `dsh-wb-github-tooltip-${catalogId}`, 'aria-label': both(`在 GitHub 查看${entry.title}`, `View ${entry.title} on GitHub`) }, h(MarketIcon, { name: 'github', size: 16 })), h('span', { id: `dsh-wb-github-tooltip-${catalogId}`, className: 'dshWbControlTooltip', role: 'tooltip' }, tr('查看 GitHub'))),
                   !entry.local && h('span', { className: 'dshWbControlHint' }, h('button', { type: 'button', className: 'dshWbFavorite', 'aria-describedby': `dsh-wb-favorite-tooltip-${catalogId}`, 'aria-label': isFavorite ? both(`取消收藏${entry.title}`, `Remove ${entry.title} from favorites`) : both(`收藏${entry.title}`, `Add ${entry.title} to favorites`), 'aria-pressed': isFavorite, disabled: disabled, onClick: () => service.run(service.toggleFavorite(catalogId)) }, h(MarketIcon, { name: 'bookmark', size: 17 })), h('span', { id: `dsh-wb-favorite-tooltip-${catalogId}`, className: 'dshWbControlTooltip', role: 'tooltip' }, isFavorite ? tr('已收藏') : both('收藏', 'Favorite'))),
+                  tab === 'mine' && !canUninstall && h('span', { className: 'dshWbFailureHint dshWbRemovalHint' },
+                    h('span', { className: 'dshWbFailureIcon', tabIndex: 0, 'aria-label': tr(localRemoval?.reason) || tr('原生插件状态未知或不可卸载'), 'aria-describedby': `dsh-wb-uninstall-reason-${catalogId}` }, h(MarketIcon, { name: 'failure', size: 17 })),
+                    h('span', { id: `dsh-wb-uninstall-reason-${catalogId}`, className: 'dshWbFailureTooltip', role: 'tooltip', tabIndex: 0 }, tr(localRemoval?.reason) || tr('原生插件状态未知或不可卸载'))),
                   entry.loadFailure && !installed && !updating
                     ? h(React.Fragment, null,
                       FailureHint({ id: catalogId, kind: entry.failureKind, detail: entry.loadFailure }),
                       !entry.unavailable && h('button', { type: 'button', className: 'dshWbRetry', title: entry.listed && entry.distribution ? tr('重试安装') : tr('重新加载'), 'aria-label': both(`${entry.listed && entry.distribution ? tr('重试安装') : tr('重新加载')}${entry.title}`, `${entry.listed && entry.distribution ? tr('重试安装') : tr('重新加载')} ${entry.title}`), disabled: disabled || !!installing, onClick: () => entry.listed && entry.distribution ? installMarket(entry) : service.run(service.load()) }, h(MarketIcon, { name: 'refresh', size: 17 })),
-                      entry.failureKind === 'install' && !added.includes(entry.id) && !service.installs[catalogId] && h('button', { type: 'button', className: 'dshWbStepLink', onClick: () => service.clearInstallFailure(catalogId) }, tr('清除失败提示')))
+                      entry.failureKind === 'install' && !added.includes(entry.id) && !service.installs[catalogId] && h('button', { type: 'button', className: 'dshWbRetry', title: tr('清除失败提示'), 'aria-label': tr('清除失败提示'), onClick: () => service.clearInstallFailure(catalogId) }, h('span', { 'aria-hidden': true }, '×')))
                     : tab === 'mine'
-                    ? h('button', { type: 'button', className: !entry.listed ? 'dshWbUninstall dshWbLocalUninstall' : 'dshWbUninstall', title: canUninstall ? both(`${removalLabel}${entry.title}`, `${removalLabel} ${entry.title}`) : tr(localRemoval?.reason) || tr('原生插件状态未知或不可卸载'), 'aria-label': both(`${removalLabel}${entry.title}`, `${removalLabel} ${entry.title}`), disabled: disabled || !!removingPlugin || !canUninstall, onClick: () => setRemoving(entry.id) }, removalLabel)
+                    ? h('button', { type: 'button', className: !entry.listed ? 'dshWbUninstall dshWbLocalUninstall' : 'dshWbUninstall', title: canUninstall ? both(`${removalLabel}${entry.title}`, `${removalLabel} ${entry.title}`) : tr(localRemoval?.reason) || tr('原生插件状态未知或不可卸载'), 'aria-label': both(`${removalLabel}${entry.title}`, `${removalLabel} ${entry.title}`), 'aria-describedby': !canUninstall ? `dsh-wb-uninstall-reason-${catalogId}` : undefined, disabled: disabled || !!removingPlugin || !canUninstall, onClick: () => setRemoving(entry.id) }, removalLabel)
                     : installed
                       ? h('span', { className: 'dshWbInstalled', role: 'status' }, tr('已安装'))
                       : entry.distribution
@@ -2105,7 +2135,7 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
       const disabled = !ready || pending > 0 || service.blocked
       const visibleWorkspaces = workspaces.items.filter((item) => service.workspaceVisible(item.workspaceId, state.active))
       const chosen = visibleWorkspaces.find((item) => item.workspaceId === workspaceId) || service.defaultWorkspace()
-      return h('div', { className: 'dshWb dshWbFrame' }, h(Notice, { service }),
+      return h('div', { className: 'dshWb dshWbFrame', 'data-dsh-workbench-active': entry ? '' : undefined }, h(Notice, { service }),
         require('react-dom').createPortal(conversation, conversationContainer),
         ...loaded.filter((item) => item.customFrame === true).map((item) => h('div', { key: item.id, className: 'dshWbCustomFrame', hidden: id !== item.id, style: { position: 'relative', overflow: 'hidden', flex: 1, minHeight: 0, minWidth: 0, width: '100%', maxWidth: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' } }, h(PanelBoundary, { service }, h(item.Component, { service, entry: item, active: id === item.id, conversation: id === item.id ? h('div', { style: { display: hasCurrentSession ? 'contents' : 'none' } }, conversationMount) : null })))),
         h('div', { className: 'dshWbBody', hidden: customFrame, style: { '--workbench-business-width': `${(entry?.layout?.businessWidth ?? 0.36) * 100}%` } },
@@ -2127,6 +2157,7 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
     }
     function apply(ctx) {
       hostLocale = ctx.locale
+      ctx.effect(() => ctx.locale.register(DOWNLOAD_NS, downloadCopy), 'workbenches: download dictionaries')
       const service = new Workbenches(ctx)
       ctx.effect(() => ctx.reflect.provide('desktopWorkbenches', service), 'workbenches: service')
       ctx.effect(() => ctx.modules?.entries?.state?.subscribe?.(() => service.publish()), 'workbenches: client module failures')

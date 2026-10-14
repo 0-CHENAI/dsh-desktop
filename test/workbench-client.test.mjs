@@ -771,6 +771,7 @@ describe('desktop workbench client navigation', () => {
     let service
     const ctx = {
       fiber: { name: 'external-package', entry: { options: { name: 'external-package' } } },
+      locale: { register: vi.fn() },
       reflect: { provide: (name, value) => { if (name === 'desktopWorkbenches') service = value } },
       effect: (callback, label) => {
         // Exercise registration effects without mounting DOM styles or starting network I/O.
@@ -807,7 +808,7 @@ describe('desktop workbench client navigation', () => {
     expect(styles).toHaveLength(1)
     expect(styles[0].dataset.plugin).toBe('dsh-desktop-workbenches')
     expect(styles[0].textContent).toContain('.dshWbWorkbenchHome')
-    expect(styles[0].textContent).toContain('min-height:0;flex:1 0 auto')
+    expect(styles[0].textContent).toContain('min-height:0;flex:1 1 0')
     expect(styles[0].textContent).toContain('-webkit-line-clamp:3')
     styleEffect()
     expect(styles).toHaveLength(1)
@@ -2035,7 +2036,7 @@ describe('workbench market screenshot and metadata display', () => {
 
   it('uses a three-column desktop grid with explicit responsive reductions', () => {
     expect(fullSource).toContain('.dshWbGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}')
-    expect(fullSource).toContain('.dshWbCard{min-width:0;border:0;')
+    expect(fullSource).toContain('.dshWbCard{position:relative;height:360px;box-sizing:border-box;container:workbench-card / inline-size;min-width:0;border:0;')
     expect(fullSource).toContain('@container workbench-market (max-width:760px){.dshWbGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}}')
     expect(fullSource).toContain('@container workbench-market (max-width:520px){.dshWbGrid{grid-template-columns:1fr}}')
     expect(fullSource).toContain('.dshWbMeta{display:flex;flex-wrap:wrap;')
@@ -2224,8 +2225,8 @@ describe('workbench market screenshot and metadata display', () => {
     expect(fullSource).toContain("tab === 'mine'\n                    ? h('button'")
     expect(fullSource).toContain("h('span', { className: 'dshWbInstalled', role: 'status' }, tr('已安装'))")
     expect(fullSource).toContain("installing === catalogId ? tr('正在安装…') : tr('安装')")
-    expect(fullSource).toContain('.dshWbCard .dshWbActions{margin-top:0;flex-shrink:0;min-height:36px;gap:8px;padding-top:8px;align-items:center;justify-content:flex-end;flex-wrap:nowrap}')
-    expect(fullSource).toContain('min-height:0;flex:1 0 auto')
+    expect(fullSource).toContain('.dshWbCard .dshWbActions{margin-top:auto;flex-shrink:0;min-height:36px;gap:8px;padding-top:8px;align-items:center;justify-content:flex-end;flex-wrap:nowrap}')
+    expect(fullSource).toContain('min-height:0;flex:1 1 0')
     expect(fullSource).toContain('gap:8px;padding:16px')
   })
 
@@ -2444,7 +2445,7 @@ describe('workbench market screenshot and metadata display', () => {
     const favorite = find(node => node.props?.className === 'dshWbFavorite')
     expect(favorite.props['aria-pressed']).toBe(true)
     expect(find(node => node.props?.id === favorite.props['aria-describedby']).props.children).toEqual(['已收藏'])
-    expect(fullSource).toContain('overflow:hidden;min-height:66px}')
+    expect(fullSource).toContain('overflow:hidden;height:66px;min-height:66px;max-height:66px}')
     expect(fullSource).toContain('.dshWbTabs [role=tab]{border:0;border-radius:999px;corner-shape:round;')
   })
 
@@ -2789,12 +2790,12 @@ describe('workbench market screenshot and metadata display', () => {
       expect(versionActions.props.children[1].props.children.at(-1).props.children[0]).toBe('更新')
       const diagnostic = versionActions.props.children[2]
       expect(diagnostic.props.className).toBe('dshWbFailureHint')
-      expect(ui.find(diagnostic, node => node.props?.className === 'dshWbInstallFailed')[0].props.children).toEqual(['更新失败'])
+      expect(ui.find(diagnostic, node => node.props?.className === 'dshWbInstallFailed')).toHaveLength(0)
       const icon = ui.find(diagnostic, node => node.props?.className === 'dshWbFailureIcon')[0]
       expect(icon.props['aria-label']).toBe('更新失败详情：Update rejected')
       expect(icon.props['aria-describedby']).toBe(ui.find(diagnostic, node => node.props?.role === 'tooltip')[0].props.id)
       expect(icon.props.tabIndex).toBe(0)
-      expect(ui.find(diagnostic, node => node.props?.role === 'tooltip')[0].props.children).toEqual(['Update rejected'])
+      expect(ui.find(diagnostic, node => node.props?.role === 'tooltip')[0].props.children).toEqual(['更新失败：Update rejected'])
       expect(ui.find(controls, node => node.props?.className === 'dshWbInstallFailed')).toHaveLength(0)
       expect(ui.find(card, node => node.props?.className === 'dshWbRetry')).toHaveLength(0)
       if (tab === 'mine') expect(ui.find(card, node => node.props?.role === 'switch')).toHaveLength(1)
@@ -2811,7 +2812,13 @@ describe('workbench market screenshot and metadata display', () => {
     await service.refreshNative()
     const ui = interactiveMarket(service, 'mine')
     const card = ui.find(ui.render(), node => node.type === 'article' && node.props.key === 'owner/local')[0]
-    expect(ui.find(card, node => node.props?.className === 'dshWbUninstallReason')[0].props.children[0]).toContain('宿主管理')
+    const hint = ui.find(card, node => node.props?.className === 'dshWbFailureHint dshWbRemovalHint')[0]
+    const icon = ui.find(hint, node => node.props?.className === 'dshWbFailureIcon')[0]
+    const tooltip = ui.find(hint, node => node.props?.role === 'tooltip')[0]
+    expect(icon.props.tabIndex).toBe(0)
+    expect(icon.props['aria-describedby']).toBe(tooltip.props.id)
+    expect(icon.props['aria-label']).toContain('宿主管理')
+    expect(tooltip.props.children[0]).toContain('宿主管理')
     expect(ui.find(card, node => node.props?.className === 'dshWbUninstall dshWbLocalUninstall')[0].props.disabled).toBe(true)
   })
 
@@ -2870,7 +2877,7 @@ describe('workbench market screenshot and metadata display', () => {
       expect(diagnostic.props['aria-label']).toBe('加载失败详情：Error: incompatible client API')
       expect(diagnostic.props.tabIndex).toBe(0)
       expect(ui.find(versionActions.props.children[2], node => node === diagnostic)).toHaveLength(1)
-      expect(ui.find(card, node => node.props?.className === 'dshWbFailureHint')[0].props.children[0].props.children).toEqual(['加载失败'])
+      expect(ui.find(card, node => node.props?.className === 'dshWbFailureIcon')[0].props['aria-label']).toContain('加载失败')
       expect(ui.find(card, node => node.props?.className === 'dshWbRetry')).toHaveLength(0)
       const button = ui.find(card, node => node.props?.className === 'dshWbUpdate')[0]
       expect(button.props['aria-label']).toBe('更新Helper至 v1.1.0')
@@ -2975,10 +2982,10 @@ describe('workbench market screenshot and metadata display', () => {
     const ui = interactiveMarket(service, 'market')
     const card = ui.find(ui.render(), node => node.type === 'article')[0]
     const controls = ui.find(card, node => node.props?.className === 'dshWbCardControls')[0]
-    expect(ui.find(controls, node => node.props?.className === 'dshWbFailureHint')[0].props.children[0].props.children).toEqual(['安装失败'])
-    expect(ui.find(controls, node => node.props?.className === 'dshWbFailureTooltip')[0].props.children).toEqual(['Package checksum mismatch'])
-    expect(ui.find(controls, node => node.props?.className === 'dshWbRetry')).toHaveLength(1)
-    const clear = ui.find(controls, node => node.props?.children?.includes?.('清除失败提示'))[0]
+    expect(ui.find(controls, node => node.props?.className === 'dshWbFailureIcon')[0].props['aria-label']).toContain('安装失败')
+    expect(ui.find(controls, node => node.props?.className === 'dshWbFailureTooltip')[0].props.children).toEqual(['安装失败：Package checksum mismatch'])
+    expect(ui.find(controls, node => node.props?.className === 'dshWbRetry' && node.props?.['aria-label'] !== '清除失败提示')).toHaveLength(1)
+    const clear = ui.find(controls, node => node.props?.['aria-label'] === '清除失败提示')[0]
     expect(clear).toBeDefined()
     clear.props.onClick()
     expect(service.installFailures.has('o/helper')).toBe(false)
@@ -3121,8 +3128,8 @@ describe('workbench market screenshot and metadata display', () => {
     const ui = interactiveMarket(service, 'market')
     const card = ui.find(ui.render(), node => node.type === 'article')[0]
     expect(ui.find(card, node => node.props?.className === 'dshWbUpdate')[0].props.children.at(-1).props.children[0]).toBe('更新')
-    expect(ui.find(card, node => node.props?.className === 'dshWbFailureTooltip')[0].props.children).toEqual(['Update rejected'])
-    expect(ui.find(card, node => node.props?.className === 'dshWbFailureHint')[0].props.children[0].props.children).toEqual(['更新失败'])
+    expect(ui.find(card, node => node.props?.className === 'dshWbFailureTooltip')[0].props.children).toEqual(['更新失败：Update rejected'])
+    expect(ui.find(card, node => node.props?.className === 'dshWbFailureIcon')[0].props['aria-label']).toContain('更新失败')
     expect(ui.find(card, node => node.props?.className === 'dshWbInstalled')[0].props.children).toEqual(['已安装'])
     expect(ui.find(ui.find(card, node => node.props?.className === 'dshWbCardControls')[0], node => node.props?.className === 'dshWbInstallFailed')).toHaveLength(0)
     expect(cardButtons(marketCard(service))).not.toContain('打开工作台')
