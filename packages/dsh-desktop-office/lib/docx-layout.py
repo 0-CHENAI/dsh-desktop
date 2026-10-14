@@ -265,10 +265,16 @@ def run(payload):
     raise ValueError('Use a supported Word template operation')
 
 
+def emit(stream, text):
+    # The host clears the child environment, so Windows keeps its charmap code page.
+    # Callers decode these pipes as UTF-8.
+    stream.buffer.write((text + '\n').encode('utf-8'))
+
+
 if __name__ == '__main__':
     try:
         raw = sys.stdin.buffer.read(90 * 1024 * 1024 + 1)
         if len(raw) > 90 * 1024 * 1024: raise ValueError('Use a bounded Word operation')
-        print(json.dumps(run(json.loads(raw)), ensure_ascii=False))
+        emit(sys.stdout, json.dumps(run(json.loads(raw)), ensure_ascii=False))
     except Exception as error:
-        print(str(error), file=sys.stderr); sys.exit(1)
+        emit(sys.stderr, str(error)); sys.exit(1)

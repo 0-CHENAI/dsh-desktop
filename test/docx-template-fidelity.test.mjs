@@ -41,6 +41,29 @@ async function fixture(templateId = 'government-notice') {
   const call = async (name, args) => ctx.tools.execute({ name, arguments: args, callId: randomUUID(), ...exec })
   return { ctx, workflow, prepared, plan, call, delivered, workspace, modes, exec, setMode: value => { mode = value }, clearSelection: () => { selection = {} } }
 }
+it('returns Chinese layout JSON when the Windows code page is charmap', async () => {
+  const { spawn } = await import('node:child_process')
+  const python = resolve('.build/office-runtime/primary-runtime/dependencies/python', process.platform === 'win32' ? 'python.exe' : 'bin/python3')
+  const sourceRoot = resolve('packages/dsh-desktop-office/sources/legacy/government-notice')
+  const source = await readFile(join(sourceRoot, 'example.docx'))
+  const profile = JSON.parse(await readFile(join(sourceRoot, 'generation.json'), 'utf8'))
+  const workspace = await realpath(await mkdtemp(join(tmpdir(), 'docx-encoding-'))); cleanups.push(() => rm(workspace, { recursive: true, force: true }))
+  await writeFile(join(workspace, 'working.docx'), source)
+  const script = await readFile(resolve('packages/dsh-desktop-office/lib/docx-layout.py'), 'utf8')
+  // -I ignores PYTHONIOENCODING, matching the host. Force the charmap code page on the text streams.
+  const forced = "import sys,io\nsys.stdout=io.TextIOWrapper(sys.stdout.buffer,encoding='cp1252')\nsys.stderr=io.TextIOWrapper(sys.stderr.buffer,encoding='cp1252')\n" + script
+  const input = JSON.stringify({ command: 'prepare', args: { path: 'working.docx' }, profile, source: source.toString('base64'), sourceSha256: sha(source) })
+  const stdout = await new Promise((resolvePromise, reject) => {
+    const child = spawn(python, ['-I', '-B', '-c', forced], { cwd: workspace, env: process.env, stdio: ['pipe', 'pipe', 'pipe'] })
+    const out = [], err = []
+    child.stdout.on('data', chunk => out.push(chunk))
+    child.stderr.on('data', chunk => err.push(chunk))
+    child.on('error', reject)
+    child.on('close', code => code === 0 ? resolvePromise(Buffer.concat(out).toString('utf8')) : reject(new Error(Buffer.concat(err).toString('utf8') || `exit ${code}`)))
+    child.stdin.end(input)
+  })
+  expect(JSON.parse(stdout).paragraphs.find(p => p.id === 'p1').text).toBe('中国中车股份有限公司文件')
+})
 it('edits the native template, retains layout and admits it through the real tools pipeline', async () => {
   const f = await fixture()
   expect(f.prepared.paragraphs.find(p => p.id === 'p1').text).toBe('中国中车股份有限公司文件')
