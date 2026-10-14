@@ -115,7 +115,11 @@ export async function apply(ctx) {
         setSandboxMode(resolved.agent.session, 'workspace-write')
         const tool = ctx.tools.get('office_template')
         if (!tool) throw new Error('Template tool unavailable')
-        return Response.json({ type: 'server-response', rpcId: 'office-prepare', result: { ok: true, value: await tool.execute({ template_id: payload.templateId }, { agent: resolved.agent, signal }) } })
+        try {
+          return Response.json({ type: 'server-response', rpcId: 'office-prepare', result: { ok: true, value: await tool.execute({ template_id: payload.templateId }, { agent: resolved.agent, signal }) } })
+        } catch (error) {
+          return Response.json({ type: 'server-response', rpcId: 'office-prepare', result: { ok: false, error: { message: error instanceof Error ? error.message : String(error) } } })
+        }
       } })
       return
     }

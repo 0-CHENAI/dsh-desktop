@@ -5,6 +5,16 @@ import { defineTool } from '@deepseek-ai/dsh-tools'
 import { workspacePolicy } from './template-tool.js'
 import { selectedTemplate } from './modes.js'
 
+/** Environment for the confined Word worker. Credentials stay behind. */
+export function docxWorkerEnvironment(runtime = process) {
+  const env = Object.fromEntries(Object.keys(runtime.env).map(key => [key, undefined]))
+  if (runtime.platform === 'win32') env.SystemRoot = runtime.env.SystemRoot
+  // Windows wraps this command in the ACL runner at process.execPath. Inside the
+  // Electron harness that executable runs the runner only in Node mode.
+  if (runtime.versions.electron) env.ELECTRON_RUN_AS_NODE = '1'
+  return env
+}
+
 /**
  * @typedef {{ source: string, text: string }} NativeTextFragment
  * @typedef {{ id: string, text: string, runs?: NativeTextFragment[] }} ParagraphReplacement
@@ -35,8 +45,7 @@ export function createDocxWorkflow(ctx, library, modes, resources) {
     const profile = item.files['generation.json'] ? JSON.parse((await library.asset(item.id, 'generation.json')).toString('utf8')) : null
     worker ??= await readFile(fileURLToPath(new URL('./docx-layout.py', import.meta.url)), 'utf8')
     const plan = await ctx.sandbox.confine([python, '-I', '-B', '-c', worker], policy)
-    const env = Object.fromEntries(Object.keys(process.env).map(key => [key, undefined]))
-    if (process.platform === 'win32') env.SystemRoot = process.env.SystemRoot
+    const env = docxWorkerEnvironment()
     const signal = AbortSignal.any([AbortSignal.timeout(45_000), ...(exec.signal ? [exec.signal] : [])])
     const facts = { templateId: item.id, revision: item.revision, operation: command, path: args.path ?? args.output_path }
     await modes.record(id, 'office-docx-start', facts)
