@@ -227,6 +227,7 @@ it('reports a missing Office payload during activation and keeps Safe Mode usabl
   const source = await readFile(join(root, 'build/dsh-desktop.patch.yml'), 'utf8')
   const patch = join(home, 'missing-office.patch.yml')
   await writeFile(patch, source.replace('resources: !!js process.env.DSH_DESKTOP_OFFICE_RESOURCES', `resources: ${JSON.stringify(missing)}`))
+  const childClosures = []
   const runtime = new HarnessRuntime({
     dshEntryPath: join(root, 'node_modules/@deepseek-ai/dsh/lib/bin.js'),
     nodeEntryPath: join(root, 'build/harness-node-entry.mjs'),
@@ -236,7 +237,12 @@ it('reports a missing Office payload during activation and keeps Safe Mode usabl
     dshHome: home,
     logPath: join(home, 'harness.log'),
     startupTimeoutMs: 30_000,
-    launchProcess: (executable, args, options) => spawn(executable, args, { ...options, env: { ...options.env, ELECTRON_RUN_AS_NODE: '1' } }),
+    launchProcess: (executable, args, options) => {
+      const child = spawn(executable, args, { ...options, env: { ...options.env, ELECTRON_RUN_AS_NODE: '1' } })
+      // A rejected launch is detached before its asynchronous shutdown finishes.
+      childClosures.push(new Promise(resolve => child.once('close', resolve)))
+      return child
+    },
     onChanged() {}
   })
   try {
@@ -245,10 +251,12 @@ it('reports a missing Office payload during activation and keeps Safe Mode usabl
     expect(runtime.snapshot().logs.join('\n')).toContain(missing)
     expect(runtime.snapshot().logs.join('\n')).toContain('dsh-desktop-office')
     await runtime.stop()
+    await Promise.all(childClosures)
     await ensureSafeModeProfile(home)
     await runtime.start(home, SAFE_MODE_PROFILE)
     expect(runtime.snapshot().phase, runtime.snapshot().logs.join('\n')).toBe('ready')
   } finally {
     await runtime.stop()
+    await Promise.all(childClosures)
   }
 }, 60_000)

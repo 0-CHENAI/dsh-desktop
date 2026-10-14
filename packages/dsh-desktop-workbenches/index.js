@@ -179,7 +179,9 @@ export function apply(ctx, config) {
     }
   })
   const known = (error) => error instanceof MarketInstallError || error instanceof CatalogError || error instanceof StateError
-  const installFailure = (error, fallback) => Response.json({ error: known(error) ? error.message : fallback }, {
+  const installFailure = (error, fallback) => Response.json({ error: known(error) ? error.message : fallback,
+    ...(error instanceof MarketInstallError && error.code ? { code: error.code, params: error.params } : {})
+  }, {
     status: known(error) ? error.status : 500,
     headers: { 'cache-control': 'no-store' }
   })

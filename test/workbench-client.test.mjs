@@ -771,6 +771,7 @@ describe('desktop workbench client navigation', () => {
     let service
     const ctx = {
       fiber: { name: 'external-package', entry: { options: { name: 'external-package' } } },
+      locale: { register: vi.fn() },
       reflect: { provide: (name, value) => { if (name === 'desktopWorkbenches') service = value } },
       effect: (callback, label) => {
         // Exercise registration effects without mounting DOM styles or starting network I/O.

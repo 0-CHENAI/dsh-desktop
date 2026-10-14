@@ -5,6 +5,21 @@ window.__ModuleLoader__.load({
     const { Service } = require('@deepseek-ai/cordis')
     const { Switch, Toast } = require('@deepseek-ai/dsh-client-ui-primitives')
     const h = React.createElement
+    const DOWNLOAD_NS = 'dsh-desktop-workbenches.download'
+    const downloadCopy = {
+      zh: { download_failed: '无法下载工作台安装包', download_interrupted: '工作台安装包下载中断', invalid_download_url: '工作台下载地址无效。', unsafe_download_url: '工作台下载地址必须使用 HTTPS，且不能包含凭据或自定义端口。' },
+      en: { download_failed: 'Could not download the workbench package', download_interrupted: 'Workbench package download interrupted', invalid_download_url: 'The workbench download URL is invalid.', unsafe_download_url: 'The workbench download URL must use HTTPS without credentials or a custom port.' }
+    }
+    function installErrorMessage(ctx, data, status) {
+      if ((data?.code === 'invalid_download_url' || data?.code === 'unsafe_download_url') && ctx.locale?.bind && data.params === undefined) {
+        return ctx.locale.bind(DOWNLOAD_NS)(data.code)
+      }
+      const diagnostic = data?.params?.diagnostic
+      if ((data?.code === 'download_failed' || data?.code === 'download_interrupted') && ctx.locale?.bind && typeof diagnostic === 'string' && /^(?:E[A-Z0-9_]{1,63}|UND_ERR_[A-Z0-9_]{1,55}|TIMEOUT|ABORTED|NETWORK_ERROR)(?:, (?:E[A-Z0-9_]{1,63}|UND_ERR_[A-Z0-9_]{1,55}|TIMEOUT|ABORTED|NETWORK_ERROR))*$/.test(diagnostic)) {
+        return `${ctx.locale.bind(DOWNLOAD_NS)(data.code)}: ${diagnostic}`
+      }
+      return data?.error || `HTTP ${status}`
+    }
     // The host locale is observable. Keep catalog IDs and search/filter state
     // independent of translated labels so switching languages is immediate.
     let hostLocale
@@ -559,7 +574,7 @@ window.__ModuleLoader__.load({
             method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: catalogId, ...options })
           })
           const data = await response.json()
-          if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`)
+          if (!response.ok) throw new Error(installErrorMessage(this.ctx, data, response.status))
           if (data.restartRequired) this.restartNeeded = true
           return data
         } finally {
@@ -2129,6 +2144,7 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
     }
     function apply(ctx) {
       hostLocale = ctx.locale
+      ctx.effect(() => ctx.locale.register(DOWNLOAD_NS, downloadCopy), 'workbenches: download dictionaries')
       const service = new Workbenches(ctx)
       ctx.effect(() => ctx.reflect.provide('desktopWorkbenches', service), 'workbenches: service')
       ctx.effect(() => ctx.modules?.entries?.state?.subscribe?.(() => service.publish()), 'workbenches: client module failures')
