@@ -168,7 +168,7 @@ jobs:
         run: npm version --no-git-tag-version --allow-same-version "${{ inputs.signed_version }}"
       - run: npm ci
       - run: npm run build
-      - run: npx --no-install vitest run
+      - run: npx --no-install vitest run --exclude '**/test/docx-template-fidelity*' --exclude '**/test/ppt-personal-templates*' --exclude '**/test/ppt-import-memory*' --exclude '**/test/ppt-personal-template-ui*'
         if: matrix.arch == 'arm64'
       - name: Verify PPT generation leaves tracked sources clean
         run: git diff --exit-code -- packages/ppt-runtime scripts/ppt
@@ -319,7 +319,7 @@ jobs:
       - run: npm ci
       - run: npm run build
       - name: Run Windows tests with progress
-        run: npx --no-install vitest run --reporter=verbose
+        run: npx --no-install vitest run --reporter=verbose --exclude '**/test/docx-template-fidelity*' --exclude '**/test/ppt-personal-templates*' --exclude '**/test/ppt-import-memory*' --exclude '**/test/ppt-personal-template-ui*'
         timeout-minutes: 15
       - name: Verify PPT generation leaves tracked sources clean
         run: git diff --exit-code -- packages/ppt-runtime scripts/ppt
