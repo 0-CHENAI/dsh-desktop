@@ -86,6 +86,14 @@ function installLayout(document: Document): void {
     body.dsh-desktop-windows-titlebar-layout [data-dsh-sidebar-root][data-dsh-sidebar-wide="true"] {
       padding-top: 6px !important;
     }
+    /* Harness fixes the Windows rail controls to the top-left. Only the wide
+       sidebar toggle belongs in the brand row; keep the collapsed entry fixed. */
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-sidebar-root][data-dsh-sidebar-wide="true"] [data-dsh-sidebar-toggle] {
+      position: static !important;
+      inset: auto !important;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
     body.dsh-desktop-windows-titlebar-layout header[data-slot="conversation.session.header"],
     body.dsh-desktop-windows-titlebar-layout [data-slot="conversation.session.header"] > header {
       box-sizing: border-box !important;

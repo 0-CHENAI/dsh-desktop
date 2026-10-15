@@ -11,7 +11,15 @@ index de89863..383be6f 100644
  			document.head.appendChild(tag);
  		}
  		var SidebarRoot_module_css_default = {
-@@ -288,6 +288,8 @@ window.__ModuleLoader__.load({
+@@ -268,6 +268,7 @@ window.__ModuleLoader__.load({
+ 				children: (0, react_jsx_runtime.jsxs)("button", {
+ 					type: "button",
+ 					className: clsx(SidebarRoot_module_css_default.iconButton, SidebarRoot_module_css_default.toggle),
++					"data-dsh-sidebar-toggle": "",
+ 					"aria-label": toggleLabel,
+ 					"aria-keyshortcuts": shortcut?.aria,
+ 					onClick: () => {
+@@ -288,6 +289,8 @@ window.__ModuleLoader__.load({
  			});
  			return (0, react_jsx_runtime.jsxs)("div", {
  				ref: column,
