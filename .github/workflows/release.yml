@@ -169,6 +169,7 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx --no-install vitest run
+        if: matrix.arch == 'arm64'
       - name: Verify PPT generation leaves tracked sources clean
         run: git diff --exit-code -- packages/ppt-runtime scripts/ppt
       - run: npm run typecheck

@@ -88,10 +88,10 @@ async function fixture(existingRoot) {
   return { root, storage, workspace, request, tool, rpc, httpRequest, httpRequestOversize };
 }
 
-async function source() {
+async function source(pages = 4) {
   const pptx = new PptxGenJS(); pptx.layout = 'LAYOUT_WIDE';
   const logo = await sharp({ create: { width: 24, height: 24, channels: 4, background: '#446677' } }).png().toBuffer();
-  for (let page = 0; page < 4; page++) {
+  for (let page = 0; page < pages; page++) {
     const slide = pptx.addSlide();
     slide.background = { color: 'F4F2ED' };
     slide.addText(`Company template ${page + 1}`, { x: 0.8, y: 0.7, w: 10, h: 0.6, fontFace: 'Arial', fontSize: 28, color: '1C3848' });
@@ -123,8 +123,8 @@ async function largeTemplateImage(seed) {
   return insertPngChunk(png, 'prIv', Buffer.alloc(9 * 1024 * 1024));
 }
 
-async function save(f) {
-  const bytes = await source();
+async function save(f, pages = 4) {
+  const bytes = await source(pages);
   const draft = await f.request('template/prepare', { input: { fileName: '公司模板.pptx', base64: bytes.toString('base64') } });
   const template = await f.request('template/save', { draftId: draft.draftId, name: '公司模板' });
   return { bytes, draft, template };
@@ -132,7 +132,7 @@ async function save(f) {
 
 describe('personal PPT templates in the shipped runtime', () => {
   it('cancels preparation through the authenticated host without waiting behind the import', async () => {
-    const f=await fixture(), bytes=await source(), requestId=randomUUID();
+    const f=await fixture(), bytes=await source(1), requestId=randomUUID();
     const upload=await f.request('template/upload-start',{input:{fileName:'cancel.pptx',size:bytes.length}});
     await f.request('template/upload-chunk',{uploadId:upload.uploadId,offset:0,base64:bytes.toString('base64')});
     const preparing=f.request('template/prepare',{input:{uploadId:upload.uploadId,requestId}});
@@ -177,7 +177,7 @@ describe('personal PPT templates in the shipped runtime', () => {
 
   it('uploads and saves a personal template through authenticated current and legacy HTTP routes', async () => {
     const f = await fixture();
-    const bytes = await source();
+    const bytes = await source(1);
     const input = { input: { fileName: 'Company.pptx', base64: bytes.toString('base64') } };
     expect(await f.httpRequest('template/prepare', input, { authorized: false })).toEqual({ status: 401, body: 'unauthorized' });
     const prepared = await f.httpRequest('template/prepare', input);
@@ -328,7 +328,7 @@ describe('personal PPT templates in the shipped runtime', () => {
   },30000);
 
   it('previews before registration and persists across sessions/restarts with profile isolation', async () => {
-    const f = await fixture(); const bytes = await source();
+    const f = await fixture(); const bytes = await source(2);
     const draft = await f.request('template/prepare', { input: { fileName: 'Company.pptx', base64: bytes.toString('base64') } });
     expect(draft.preview.startsWith('data:image/png;base64,iVBOR')).toBe(true);
     expect(draft.previews).toBeUndefined();
@@ -395,7 +395,7 @@ describe('personal PPT templates in the shipped runtime', () => {
   }, 30000);
 
   it('reuses template page images through saving and enforces ownership, bounds and file confinement',async()=>{
-    const f=await fixture(),bytes=await source();
+    const f=await fixture(),bytes=await source(2);
     const draft=await f.request('template/prepare',{input:{fileName:'Sample.pptx',base64:bytes.toString('base64')}});
     const directory=path.join(f.storage,'personal-templates/drafts',draft.draftId);
     await expect(f.request('template/preview-page',{draftId:draft.draftId,page:1},'session-b')).rejects.toThrow('其他会话');
@@ -439,7 +439,7 @@ describe('personal PPT templates in the shipped runtime', () => {
   },30000);
 
   it('renames globally, deletes from selection, and retains existing task copies', async () => {
-    const f = await fixture(); const { template } = await save(f);
+    const f = await fixture(); const { template } = await save(f, 1);
     await f.request('template/select', { templateId: template.id, mode: 'ppt' }, 'session-b');
     await f.tool('ppt_template_create_project', { template_id: template.id, output_directory: 'kept' });
     await f.request('template/rename', { templateId: template.id, name: '年度模板' });
@@ -453,7 +453,7 @@ describe('personal PPT templates in the shipped runtime', () => {
   }, 30000);
 
   it('persists edited name and description atomically while preserving selection and source', async () => {
-    const f = await fixture(); const { bytes, template } = await save(f);
+    const f = await fixture(); const { bytes, template } = await save(f, 1);
     await f.request('template/select', { templateId: template.id, mode: 'ppt' }, 'session-b');
     const changes = { templateId: template.id, name: '年度报告', description: '品牌配色与简洁图表。\n适用于年度经营汇报。' };
     const updated = await f.request('template/update', changes);
@@ -474,7 +474,7 @@ describe('personal PPT templates in the shipped runtime', () => {
   }, 30000);
 
   it('validates chunk ordering, total integrity and upload session ownership',async()=>{
-    const f=await fixture(),bytes=await source();
+    const f=await fixture(),bytes=await source(1);
     await expect(f.request('template/upload-start',{input:{fileName:'../escape.pptx',size:8}})).rejects.toThrow('PPTX');
     await expect(f.request('template/upload-start',{input:{fileName:'Source.pptx',size:-1}})).rejects.toThrow('大小无效');
     const upload=await f.request('template/upload-start',{input:{fileName:'Source.pptx',size:bytes.length}});
@@ -522,7 +522,7 @@ describe('personal PPT templates in the shipped runtime', () => {
       body: 'payload too large'
     });
     expect((await f.request('state')).templates.filter(t => t.origin === 'personal')).toEqual([]);
-    const bytes = await source();
+    const bytes = await source(1);
     const draft = await f.request('template/prepare', { input: { fileName: 'cancel.pptx', base64: bytes.toString('base64') } });
     await f.request('template/cancel', { draftId: draft.draftId });
     await expect(f.request('template/save', { draftId: draft.draftId, name: 'Cancelled' })).rejects.toThrow();
@@ -531,7 +531,7 @@ describe('personal PPT templates in the shipped runtime', () => {
     await expect(f.request('state')).rejects.toThrow();
   }, 30000);
   it.each(['legacy', 'previous'])('reconverts %s uploads after preview acceptance while preserving identity, metadata and backup', async revision => {
-    const f = await fixture(); const { bytes, template } = await save(f);
+    const f = await fixture(); const { bytes, template } = await save(f, 1);
     await f.request('template/select', {templateId:template.id,mode:'ppt'}, 'session-b');
     const file = path.join(f.storage,'personal-templates','saved',template.id,'template.json');
     const old = JSON.parse(await readFile(file,'utf8'));

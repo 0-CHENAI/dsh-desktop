@@ -135,11 +135,15 @@ it.each(['coffee-market', 'equity-research', 'meeting-minutes'])('retains the na
   expect((await f.call('office_template_write', f.plan)).isError).toBe(false)
   expect((await f.call('present', { files: [{ path: 'result.docx' }] })).isError).toBe(false)
 })
-it.each(['font', 'footer', 'divider', 'text-style', 'page-margins', 'document-grid', 'style-definition', 'table-columns'])('blocks a %s change before delivery', async kind => {
+it('blocks layout and style mutations before delivery', async () => {
   const f = await fixture(); await f.call('office_template_write', f.plan)
+  const resultPath = join(f.workspace, 'result.docx')
+  const original = await readFile(resultPath)
   const { execFile } = await import('node:child_process'); const { promisify } = await import('node:util')
   const python = resolve('.build/office-runtime/primary-runtime/dependencies/python', process.platform === 'win32' ? 'python.exe' : 'bin/python3')
-  await promisify(execFile)(python, ['-I', '-B', '-c', `
+  for (const kind of ['font', 'footer', 'divider', 'text-style', 'page-margins', 'document-grid', 'style-definition', 'table-columns']) {
+    await writeFile(resultPath, original)
+    await promisify(execFile)(python, ['-I', '-B', '-c', `
 import sys,zipfile
 from lxml import etree as E
 p,kind=sys.argv[1:]; ns={'w':'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}; q=lambda x:'{'+ns['w']+'}'+x
@@ -159,10 +163,11 @@ else:
  parts['word/document.xml']=E.tostring(d)
 with zipfile.ZipFile(p,'w',zipfile.ZIP_DEFLATED) as z:
  for name,data in parts.items():z.writestr(name,data)
-`, join(f.workspace, 'result.docx'), kind])
-  expect((await f.call('present', { files: [{ path: 'result.docx' }] })).isError).toBe(true)
-  expect(f.delivered).not.toHaveBeenCalled()
-})
+`, resultPath, kind])
+    expect((await f.call('present', { files: [{ path: 'result.docx' }] })).isError).toBe(true)
+    expect(f.delivered).not.toHaveBeenCalled()
+  }
+}, 60_000)
 
 it('retains mixed heading/body typography with explicit native run references', async () => {
   const f = await fixture()
