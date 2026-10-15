@@ -14,15 +14,14 @@ const hash = bytes => createHash('sha256').update(bytes).digest('hex')
 
 /**
  * One LibreOffice call. annual-business recalculates in a few seconds; macOS CI
- * sometimes blocks until this deadline and exits with the Kit timeout. A longer
- * limit only waits out the same hang.
+ * sometimes blocks. Bounding this deadline allows prompt process recycling.
  */
-export const officeCliTimeoutMs = 240_000
+export const officeCliTimeoutMs = 30_000
 
 /** Fresh process after a hang. The same workbook then finishes on the next attempt. */
 export const officeCliAttempts = 3
 
-/** Electron startup happens before the Kit timer, so the process limit is longer than 240s. */
+/** Electron startup happens before the Kit timer, so the process limit is longer than 30s. */
 export function officeCliCommand(executable, script, args, timeoutMs = officeCliTimeoutMs) {
   return {
     file: executable,

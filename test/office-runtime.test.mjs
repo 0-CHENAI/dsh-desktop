@@ -31,12 +31,12 @@ describe('Office template preview limits', () => {
     stderr, code: 1, killed: false, signal: null,
   })
 
-  it('gives each LibreOffice call 240 seconds and retries a hang in a new process', async () => {
-    expect(officeCliTimeoutMs).toBe(240_000)
+  it('bounds each LibreOffice call to 30 seconds and retries a hang in a new process', async () => {
+    expect(officeCliTimeoutMs).toBe(30_000)
     expect(officeCliAttempts).toBe(3)
     const command = officeCliCommand('electron', 'office-cli.mjs', ['render', '--input', 'book.xlsx', '--dpi', '100'])
-    expect(command.args).toEqual(['office-cli.mjs', 'render', '--input', 'book.xlsx', '--dpi', '100', '--timeout-ms', '240000'])
-    expect(command.timeout).toBe(300_000)
+    expect(command.args).toEqual(['office-cli.mjs', 'render', '--input', 'book.xlsx', '--dpi', '100', '--timeout-ms', '30000'])
+    expect(command.timeout).toBe(90_000)
     const hung = kitTimeout('{"code":"timeout","error":"LibreOffice conversion timed out."}\n')
     expect(officeCliTimedOut(hung)).toBe(true)
     expect(officeCliTimedOut(kitTimeout(Buffer.from(hung.stderr)))).toBe(true)
