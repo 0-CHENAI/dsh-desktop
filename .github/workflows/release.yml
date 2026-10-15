@@ -222,8 +222,8 @@ jobs:
       - name: Restore shared runtime assets
         run: |
           mkdir -p .build
-          cp -R .build/shared-assets/office-template-cache .build/ 2>/dev/null || true
-          cp -R .build/shared-assets/ppt-runtime .build/ 2>/dev/null || true
+          if [ -d .build/shared-assets/office-template-cache ]; then cp -R .build/shared-assets/office-template-cache .build/; fi
+          if [ -d .build/shared-assets/ppt-runtime ]; then cp -R .build/shared-assets/ppt-runtime .build/; fi
       - name: Cache Office runtime downloads
         uses: actions/cache@v4
         with:
@@ -402,8 +402,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p .build
-          cp -R .build/shared-assets/office-template-cache .build/ 2>/dev/null || true
-          cp -R .build/shared-assets/ppt-runtime .build/ 2>/dev/null || true
+          if [ -d .build/shared-assets/office-template-cache ]; then cp -R .build/shared-assets/office-template-cache .build/; fi
+          if [ -d .build/shared-assets/ppt-runtime ]; then cp -R .build/shared-assets/ppt-runtime .build/; fi
       - name: Cache Office runtime downloads
         uses: actions/cache@v4
         with:
