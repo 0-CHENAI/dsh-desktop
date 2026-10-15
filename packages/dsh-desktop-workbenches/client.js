@@ -30,7 +30,7 @@ window.__ModuleLoader__.load({
       '遵循规范开发、安装并验证，也可以准备材料提交到工作台市场。': 'Follow the guidelines to build, install, and test a workbench. You can also prepare a market submission.',
       '有序组织专属界面、会话与资料': 'Organize your dedicated interfaces, conversations, and resources', '市场': 'Market', '全部类型': 'All types', '按推荐值': 'Recommended', '在此切换会话与不同工作台': 'Switch between conversations and workbenches here', '知道了': 'Got it', '停用': 'Disable', '启用': 'Enable', '已收藏': 'Favorited', '查看 GitHub': 'View GitHub', '查看详情': 'View details',
       '刷新目录': 'Refresh catalog', '正在检查更新': 'Checking for updates', '检查更新': 'Check for updates', '正在检查…': 'Checking…',
-      '本地开发': 'Local development', '市场安装': 'Market installation', '来源未知': 'Unknown source', '查看市场版本': 'View market version', '当前工作台来自本地开发。更新会改用市场发布的代码，本地代码修改不会带入新版本。请先保留代码及存放在安装目录中的数据副本。': 'This workbench is a local development installation. Updating will use the published market code; local code changes will not carry over. Back up your code and any data stored in the installation directory first.', '无法确认当前工作台是否有本地修改。更新可能覆盖本地代码，请先保留代码及存放在安装目录中的数据副本。': 'We cannot verify whether this workbench has local changes. Updating may overwrite local code. Back up your code and any data stored in the installation directory first.', '确认更新': 'Confirm update', '需要确认更新本机工作台代码。': 'Confirm updating the installed workbench code.', '工作台集合': 'Workbench collections', '我的收藏': 'Favorites', '已安装': 'Installed', '搜索名称、作者或分类': 'Search name, author, or category', '搜索工作台': 'Search workbenches', '按分类筛选': 'Filter by category',
+      '本地开发': 'Local development', '市场安装': 'Market installation', '来源未知': 'Unknown source', '来源待确认': 'Source unconfirmed', '本地已有': 'Already on this device (local)', '本机已有·来源待确认': 'Already on this device · source unconfirmed', '改用市场版本': 'Switch to market version', '确认改用市场版本': 'Confirm switch to market version', '本机': 'On device', '市场': 'Market', '查看市场版本': 'View market version', '当前工作台来自本地开发。市场版本会替换本地代码，未发布的修改不会带入。请先备份代码及存放在安装目录中的数据。': 'The market version will replace the local code. Unpublished changes will not carry over. Back up your code and any data stored in the installation directory first.', '无法确认当前工作台是否有本地修改。改用市场版本可能覆盖本地代码，请先备份代码及存放在安装目录中的数据。': 'We cannot verify whether this workbench has local changes. Switching to the market version may overwrite local code. Back up your code and any data stored in the installation directory first.', '需要确认更新本机工作台代码。': 'Confirm updating the installed workbench code.', '工作台集合': 'Workbench collections', '我的收藏': 'Favorites', '已安装': 'Installed', '搜索名称、作者或分类': 'Search name, author, or category', '搜索工作台': 'Search workbenches', '按分类筛选': 'Filter by category',
       '全部': 'All', '其他': 'Other', '本地': 'Local', '排序': 'Sort', '工作台排序方式': 'Workbench sort order', '市场顺序': 'Market order', 'Star 数量': 'Stars', '下载量': 'Downloads', '更新时间': 'Recently updated', '名称': 'Name',
       '工作台功能已关闭': 'Workbenches are turned off', '可在 设置 → 通用 中重新开启。': 'Turn them on again in Settings → General.',
       '启用工作台功能': 'Enable workbenches', '开启后可使用工作台市场和已安装的工作台；关闭后所有工作台不加载，不影响已保存的会话和数据。': 'Browse the market and use installed workbenches when enabled. Turning this off does not affect saved sessions or data.',
@@ -251,6 +251,14 @@ window.__ModuleLoader__.load({
         // remains available on the listing even when no install record exists.
         return this.installRecordFor(entry.catalogId || entry.id)?.pluginName || entry.sourcePackage || entry.distribution?.name || this.knownProviders[entry.catalogId || entry.id]?.sourcePackage || null
       }
+      hasUsablePackageAlias(id, entries) {
+        const source = this.knownProviders[id]?.sourcePackage
+        const bundle = source && this.native.bundles[source]
+        if (!source || this.native.status !== NATIVE_STATUS.ready || !bundle || bundle.installed === false || bundle.error) return false
+        // Opening a provider also requires its current ID in state.added. Keep
+        // the old recovery card when only the legacy ID has been added.
+        return entries.some((entry) => entry.id !== id && this.state.added.includes(entry.id) && entry.installed && this.pluginFor(entry) === source)
+      }
       activationFor(entry) {
         const name = this.pluginFor(entry)
         if (!name || this.native.status !== NATIVE_STATUS.ready) return 'unknown'
@@ -378,6 +386,7 @@ window.__ModuleLoader__.load({
           if (visible.has(id) || this.removedWorkbenchIds.has(id) || typeof remembered?.sourcePackage !== 'string') continue
           const bundle = this.native.bundles[remembered.sourcePackage]
           if (!bundle && !this.state.added.includes(id)) continue
+          if (this.hasUsablePackageAlias(id, remote)) continue
           remote.push({ ...remembered, id, catalogId: id, installedMetadata: remembered, listed: false, local: this.packageEvidence?.[remembered.sourcePackage]?.origin === 'local', installed: !!bundle,
             loadFailure: !bundle && this.native.status === NATIVE_STATUS.ready ? '工作台插件当前不可用。' : '' })
         }
@@ -470,6 +479,16 @@ window.__ModuleLoader__.load({
         for (const entry of this.remoteCatalog) {
           for (const legacy of [entry.workbenchId, ...(entry.legacyWorkbenchIds || [])]) {
             if (typeof legacy === 'string' && legacy !== entry.id && referenced(legacy)) migrations[legacy] = entry.id
+          }
+        }
+        if (this.native.status === NATIVE_STATUS.ready) {
+          for (const [legacy, remembered] of Object.entries(this.knownProviders)) {
+            const source = remembered?.sourcePackage
+            const bundle = source && this.native.bundles[source]
+            if (!source || !bundle || bundle.installed === false || bundle.error || this.catalog.has(legacy) || !referenced(legacy) || migrations[legacy]) continue
+            const current = [...this.catalog.values()].filter((provider) => provider.sourcePackage === source &&
+              this.remoteCatalog.some((entry) => entry.id === provider.id))
+            if (current.length === 1 && current[0].id !== legacy) migrations[legacy] = current[0].id
           }
         }
         if (!Object.keys(migrations).length) return
@@ -816,6 +835,7 @@ window.__ModuleLoader__.load({
         if (this.ready) void this.readInstalls().then(() => { if (!this.disposed) this.publish() }).catch(() => { this.packageEvidence = {}; if (!this.disposed) this.publish() })
         this.rebuildProviders()
         this.publish()
+        this.migrateLegacyWorkbenchIds()
         this.reconcileMarketInstalls()
         this.reconcileLocalProviders()
         return () => {
@@ -1625,6 +1645,7 @@ window.__ModuleLoader__.load({
       return h('div', { className: 'dshWbMeta', 'aria-label': tr('工作台信息') }, h(AuthorItem, { entry, showVersion }), h(EntryMetrics, { entry }))
     }
     function EntryMetrics({ entry }) {
+      if (entry.listed !== true) return null
       const downloads = metricValue(entry.metrics?.npmDownloads30d?.value, entry.metrics?.githubReleaseDownloads?.value, entry.installations, entry.installCount)
       const stars = metricValue(entry.metrics?.githubStars?.value, entry.githubStars)
       return h('span', { className: 'dshWbMetrics', 'aria-label': tr('工作台信息') },
@@ -1633,7 +1654,7 @@ window.__ModuleLoader__.load({
     }
     // The card link includes the workbench icon so its underline covers both.
     function EntryTitle({ entry, showIcon = false }) {
-      const href = typeof entry.repository === 'string' && /^https:\/\/github\.com\//.test(entry.repository) ? entry.repository : ''
+      const href = entry.listed === true && typeof entry.repository === 'string' && /^https:\/\/github\.com\//.test(entry.repository) ? entry.repository : ''
       const icon = showIcon && h('span', { className: 'dshWbCardIcon', 'aria-hidden': true }, h(WorkbenchIcon, { entry, size: 15 }))
       const title = h('span', { className: 'dshWbTitleText' }, entry.title)
       return href ? h('a', { className: 'dshWbTitleLink', href, target: '_blank', rel: 'noopener noreferrer', title: both(`在 GitHub 上查看${entry.title || ''}`, `View ${entry.title || ''} on GitHub`) }, icon, title) : h('span', { className: 'dshWbTitleLink' }, icon, title)
@@ -1754,10 +1775,10 @@ window.__ModuleLoader__.load({
       return require('react-dom').createPortal(
         h('div', { className: 'dshWbModalBackdrop', onClick: dismiss },
           h('div', { ref: dialogRef, className: 'dshWbModal', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'dsh-wb-replacement-title', 'aria-describedby': 'dsh-wb-replacement-description', tabIndex: -1, onClick: event => event.stopPropagation() },
-            h('h2', { id: 'dsh-wb-replacement-title' }, tr('确认更新')),
-            h('p', { id: 'dsh-wb-replacement-description' }, tr(origin === 'local' ? '当前工作台来自本地开发。更新会改用市场发布的代码，本地代码修改不会带入新版本。请先保留代码及存放在安装目录中的数据副本。' : '无法确认当前工作台是否有本地修改。更新可能覆盖本地代码，请先保留代码及存放在安装目录中的数据副本。')),
+            h('h2', { id: 'dsh-wb-replacement-title' }, tr('确认改用市场版本')),
+            h('p', { id: 'dsh-wb-replacement-description' }, tr(origin === 'local' ? '当前工作台来自本地开发。市场版本会替换本地代码，未发布的修改不会带入。请先备份代码及存放在安装目录中的数据。' : '无法确认当前工作台是否有本地修改。改用市场版本可能覆盖本地代码，请先备份代码及存放在安装目录中的数据。')),
             h('div', { className: 'dshWbActions' }, h(Button, { autoFocus: true, disabled, onClick: dismiss }, tr('取消')),
-              h(Button, { primary: true, disabled, onClick: onConfirm }, tr('确认更新'))))), document.body)
+              h(Button, { primary: true, disabled, onClick: onConfirm }, tr('确认改用市场版本'))))), document.body)
     }
     function ConfirmRemoveModal({ entry, disabled, uninstall, nativeUninstall, recordOnly, onCancel, onConfirm }) {
       const dialogRef = React.useRef(null)
@@ -1936,7 +1957,12 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
       const unavailableEntry = (id) => ({ id, title: id, category: tr('其他'), categoryId: 'other', unavailable: true, description: both('提供此工作台的插件当前未加载。', 'The plugin for this workbench is not loaded.'), loadFailure: both('工作台插件当前未加载。', 'The workbench plugin is not loaded.') })
       const localizedCatalog = catalog.map((entry) => displayEntry(tab === 'mine' ? service.installedEntry(entry) : entry))
       const marketEntries = localizedCatalog.filter((entry) => entry.listed === true)
-      const installedEntries = [...added.filter((id) => !removedWorkbenchIds.includes(id)).map((id) => localizedCatalog.find((entry) => entry.id === id) || unavailableEntry(id)), ...localizedCatalog.filter((entry) => entry.installed && !added.includes(entry.id))]
+      const installedEntries = [
+        ...added.filter((id) => !removedWorkbenchIds.includes(id) &&
+          (localizedCatalog.some((entry) => entry.id === id) || !service.hasUsablePackageAlias(id, catalog)))
+          .map((id) => localizedCatalog.find((entry) => entry.id === id) || unavailableEntry(id)),
+        ...localizedCatalog.filter((entry) => entry.installed && !added.includes(entry.id))
+      ]
       const allEntries = tab === 'mine'
         ? installedEntries
         : tab === 'favorites'
@@ -2041,20 +2067,30 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
             // Native inventory describes the package actually on disk. The market
             // record survives a stopped provider; the listing is for uninstalled cards.
             const installedVersion = service.installedVersionFor(entry)
-            const cardVersion = tab === 'mine' ? installedVersion : entry.listedVersion || entry.version
+            const marketVersion = entry.listed && (entry.listedVersion || entry.version)
+            const deviceVersionText = typeof installedVersion === 'string' && installedVersion.trim()
+            const marketVersionText = typeof marketVersion === 'string' && marketVersion.trim()
+            const cardVersion = tab === 'mine' ? deviceVersionText : marketVersionText
+            const bothVersions = installed && deviceVersionText && marketVersionText && deviceVersionText !== marketVersionText
+            const versionText = bothVersions
+              ? `${tr('本机')} v${deviceVersionText} · ${tr('市场')} v${marketVersionText}`
+              : cardVersion && `v${cardVersion}`
+            const origin = service.originFor(entry)
             const updateAvailable = installed && service.updateAvailableFor(entry)
             const awaitingRestart = installed && service.pendingRestart.has(catalogId)
             const updating = installed && installing === catalogId
+            const replaceLocal = installed && entry.listed && !!entry.distribution && origin !== 'market' &&
+              (!installedVersion || !marketVersion || !newerVersion(installedVersion, marketVersion))
             const installedFailure = installed && !!entry.loadFailure
-            const canRetryInstalled = installedFailure && entry.failureKind !== 'update' && entry.listed && !!entry.distribution && !updateAvailable && !awaitingRestart
-            const showUpdate = (updateAvailable || updating || awaitingRestart || (installedFailure && entry.failureKind === 'update')) && !canRetryInstalled
-            const updateLabel = awaitingRestart ? tr('重启后生效') : updating ? tr('更新中…') : tr('更新')
-            const updateTitle = awaitingRestart ? both(`${entry.title}安装完成，重启 Harness 后生效`, `${entry.title} installed. Restart Harness to apply.`) : updating ? both(`正在更新${entry.title}`, `Updating ${entry.title}`) : both(`${updateLabel}${entry.title}至 v${entry.listedVersion}`, `Update ${entry.title} to v${entry.listedVersion}`)
+            const canRetryInstalled = installedFailure && entry.failureKind !== 'update' && entry.listed && !!entry.distribution && !updateAvailable && !replaceLocal && !awaitingRestart
+            const showUpdate = (updateAvailable || replaceLocal || updating || awaitingRestart || (installedFailure && entry.failureKind === 'update')) && !canRetryInstalled
+            const updateLabel = awaitingRestart ? tr('重启后生效') : updating ? tr('更新中…') : replaceLocal ? tr('改用市场版本') : tr('更新')
+            const updateTitle = awaitingRestart ? both(`${entry.title}安装完成，重启 Harness 后生效`, `${entry.title} installed. Restart Harness to apply.`) : updating ? both(`正在更新${entry.title}`, `Updating ${entry.title}`) : replaceLocal ? both(`改用${entry.title}的市场版本${marketVersionText ? ` v${marketVersionText}` : ''}`, `Switch ${entry.title} to the market version${marketVersionText ? ` v${marketVersionText}` : ''}`) : both(`${updateLabel}${entry.title}至 v${entry.listedVersion}`, `Update ${entry.title} to v${entry.listedVersion}`)
             return h('article', { key: catalogId, className: 'dshWbCard' },
               h('div', { className: 'dshWbMedia' }, h('button', { type: 'button', className: 'dshWbMediaOpen', 'aria-describedby': `dsh-wb-preview-tooltip-${catalogId}`, 'aria-label': both(`查看${entry.title}详情`, `View ${entry.title} details`), onClick: () => setDetail(catalogId) }, h(Preview, { entry }), h('span', { className: 'dshWbMediaZoom', 'aria-hidden': true }, h(MarketIcon, { name: 'zoom', size: 18 }))), h('span', { id: `dsh-wb-preview-tooltip-${catalogId}`, className: 'dshWbControlTooltip', role: 'tooltip' }, tr('查看详情'))),
               h('div', { className: 'dshWbCardBody' },
-                h('div', { className: 'dshWbCardTitle' }, h('h2', null, h(EntryTitle, { entry })), tab === 'mine' && service.isLocalEntry(entry) && h('span', { className: 'dshWbCategory' }, tr('本地')), tab === 'mine' && h('span', { className: 'dshWbControlHint dshWbSwitchHint' }, h('button', { type: 'button', className: 'dshWbRunSwitch', role: 'switch', 'aria-checked': activation === 'on', 'aria-label': both(`${entry.title}运行状态`, `${entry.title} running state`), 'aria-describedby': `dsh-wb-switch-tooltip-${catalogId}`, disabled: disabled || !!togglingPlugin || !hasNativeControl || activation === 'unknown', onClick: () => service.run(service.setPluginEnabled(pluginName, activation !== 'on')) }), h('span', { id: `dsh-wb-switch-tooltip-${catalogId}`, className: 'dshWbControlTooltip', role: 'tooltip' }, activation === 'unknown' ? tr('原生插件状态暂不可用') : activation === 'on' ? tr('停用') : tr('启用')))),
-                h('div', { className: 'dshWbAuthorRow' }, h(AuthorItem, { entry, showVersion: false }), typeof cardVersion === 'string' && cardVersion.trim() && h('span', { className: 'dshWbCardVersion' }, `v${cardVersion.trim()}`)),
+                h('div', { className: 'dshWbCardTitle' }, h('h2', null, h(EntryTitle, { entry })), tab === 'mine' && h('span', { className: 'dshWbCategory' }, tr(origin === 'local' ? '本地开发' : origin === 'market' ? '市场安装' : '来源待确认')), tab === 'mine' && h('span', { className: 'dshWbControlHint dshWbSwitchHint' }, h('button', { type: 'button', className: 'dshWbRunSwitch', role: 'switch', 'aria-checked': activation === 'on', 'aria-label': both(`${entry.title}运行状态`, `${entry.title} running state`), 'aria-describedby': `dsh-wb-switch-tooltip-${catalogId}`, disabled: disabled || !!togglingPlugin || !hasNativeControl || activation === 'unknown', onClick: () => service.run(service.setPluginEnabled(pluginName, activation !== 'on')) }), h('span', { id: `dsh-wb-switch-tooltip-${catalogId}`, className: 'dshWbControlTooltip', role: 'tooltip' }, activation === 'unknown' ? tr('原生插件状态暂不可用') : activation === 'on' ? tr('停用') : tr('启用')))),
+                h('div', { className: 'dshWbAuthorRow' }, h(AuthorItem, { entry, showVersion: false }), versionText && h('span', { className: 'dshWbCardVersion' }, versionText)),
                 h('div', { className: 'dshWbDescriptionHint' }, h('p', { className: 'dshWbMuted dshWbCardDescription' }, entry.description || tr('这个工作台暂时还没有填写介绍。'))),
                 h('div', { className: 'dshWbActions' },
                   h('div', { className: 'dshWbCardVersionActions' },
@@ -2063,8 +2099,8 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
                     installedFailure && FailureHint({ id: catalogId, kind: entry.failureKind, detail: entry.loadFailure }),
                     canRetryInstalled && h('button', { type: 'button', className: 'dshWbRetry', title: updating ? both(`正在重试安装${entry.title}`, `Retrying installation of ${entry.title}`) : both(`重试安装${entry.title}`, `Retry installing ${entry.title}`), 'aria-label': updating ? both(`正在重试安装${entry.title}`, `Retrying installation of ${entry.title}`) : both(`重试安装${entry.title}`, `Retry installing ${entry.title}`), 'aria-busy': updating, disabled: disabled || !!installing, onClick: () => installMarket(entry) }, h(MarketIcon, { name: 'refresh', size: 17 }))),
                   h('div', { className: 'dshWbCardControls' },
-                  entry.repository && h('span', { className: 'dshWbControlHint' }, h('a', { className: 'dshWbRoundButton', href: entry.repository, target: '_blank', rel: 'noopener noreferrer', 'aria-describedby': `dsh-wb-github-tooltip-${catalogId}`, 'aria-label': both(`在 GitHub 查看${entry.title}`, `View ${entry.title} on GitHub`) }, h(MarketIcon, { name: 'github', size: 16 })), h('span', { id: `dsh-wb-github-tooltip-${catalogId}`, className: 'dshWbControlTooltip', role: 'tooltip' }, tr('查看 GitHub'))),
-                  !entry.local && h('span', { className: 'dshWbControlHint' }, h('button', { type: 'button', className: 'dshWbFavorite', 'aria-describedby': `dsh-wb-favorite-tooltip-${catalogId}`, 'aria-label': isFavorite ? both(`取消收藏${entry.title}`, `Remove ${entry.title} from favorites`) : both(`收藏${entry.title}`, `Add ${entry.title} to favorites`), 'aria-pressed': isFavorite, disabled: disabled, onClick: () => service.run(service.toggleFavorite(catalogId)) }, h(MarketIcon, { name: 'bookmark', size: 17 })), h('span', { id: `dsh-wb-favorite-tooltip-${catalogId}`, className: 'dshWbControlTooltip', role: 'tooltip' }, isFavorite ? tr('已收藏') : both('收藏', 'Favorite'))),
+                  entry.listed === true && entry.repository && h('span', { className: 'dshWbControlHint' }, h('a', { className: 'dshWbRoundButton', href: entry.repository, target: '_blank', rel: 'noopener noreferrer', 'aria-describedby': `dsh-wb-github-tooltip-${catalogId}`, 'aria-label': both(`在 GitHub 查看${entry.title}`, `View ${entry.title} on GitHub`) }, h(MarketIcon, { name: 'github', size: 16 })), h('span', { id: `dsh-wb-github-tooltip-${catalogId}`, className: 'dshWbControlTooltip', role: 'tooltip' }, tr('查看 GitHub'))),
+                  (entry.listed === true || isFavorite) && h('span', { className: 'dshWbControlHint' }, h('button', { type: 'button', className: 'dshWbFavorite', 'aria-describedby': `dsh-wb-favorite-tooltip-${catalogId}`, 'aria-label': isFavorite ? both(`取消收藏${entry.title}`, `Remove ${entry.title} from favorites`) : both(`收藏${entry.title}`, `Add ${entry.title} to favorites`), 'aria-pressed': isFavorite, disabled: disabled, onClick: () => service.run(service.toggleFavorite(catalogId)) }, h(MarketIcon, { name: 'bookmark', size: 17 })), h('span', { id: `dsh-wb-favorite-tooltip-${catalogId}`, className: 'dshWbControlTooltip', role: 'tooltip' }, isFavorite ? tr('已收藏') : both('收藏', 'Favorite'))),
                   tab === 'mine' && !canUninstall && h('span', { className: 'dshWbFailureHint dshWbRemovalHint' },
                     h('span', { className: 'dshWbFailureIcon', tabIndex: 0, 'aria-label': tr(localRemoval?.reason) || tr('原生插件状态未知或不可卸载'), 'aria-describedby': `dsh-wb-uninstall-reason-${catalogId}` }, h(MarketIcon, { name: 'failure', size: 17 })),
                     h('span', { id: `dsh-wb-uninstall-reason-${catalogId}`, className: 'dshWbFailureTooltip', role: 'tooltip', tabIndex: 0 }, tr(localRemoval?.reason) || tr('原生插件状态未知或不可卸载'))),
@@ -2076,10 +2112,10 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
                     : tab === 'mine'
                     ? h('button', { type: 'button', className: !entry.listed ? 'dshWbUninstall dshWbLocalUninstall' : 'dshWbUninstall', title: canUninstall ? both(`${removalLabel}${entry.title}`, `${removalLabel} ${entry.title}`) : tr(localRemoval?.reason) || tr('原生插件状态未知或不可卸载'), 'aria-label': both(`${removalLabel}${entry.title}`, `${removalLabel} ${entry.title}`), 'aria-describedby': !canUninstall ? `dsh-wb-uninstall-reason-${catalogId}` : undefined, disabled: disabled || !!removingPlugin || !canUninstall, onClick: () => setRemoving(entry.id) }, removalLabel)
                     : installed
-                      ? h('span', { className: 'dshWbInstalled', role: 'status' }, tr('已安装'))
+                      ? h('span', { className: 'dshWbInstalled', role: 'status' }, tr(origin === 'local' ? '本地已有' : origin === 'market' ? '已安装' : '本机已有·来源待确认'))
                       : entry.distribution
                         ? h(Button, { primary: true, disabled: disabled || !!installing, onClick: () => installMarket(entry) }, installing === catalogId ? tr('正在安装…') : tr('安装'))
-                        : h('a', { className: 'dshWbBtn dshWbPrimary', href: entry.repository, target: '_blank', rel: 'noopener noreferrer' }, tr('查看安装说明'))))))
+                        : entry.listed === true && entry.repository && h('a', { className: 'dshWbBtn dshWbPrimary', href: entry.repository, target: '_blank', rel: 'noopener noreferrer' }, tr('查看安装说明'))))))
           }), entries.length === 0 && h('div', { className: 'dshWbEmpty' }, h('div', null,
             h('strong', null, tab === 'favorites' && !search ? tr('还没有收藏工作台') : tab === 'mine' && !search ? tr('还没有安装工作台') : tr('没有找到匹配的工作台')),
             h('p', { className: 'dshWbMuted' }, tab === 'favorites' && !search ? tr('把鼠标移到市场卡片上，点击书签即可收藏。') : tab === 'mine' && !search ? tr('到工作台市场选择一个工作台开始。') : tr('试试其他关键词或分类。')))))),

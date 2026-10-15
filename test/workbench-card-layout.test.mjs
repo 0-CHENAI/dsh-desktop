@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import vm from 'node:vm'
 import React from 'react'
+import { createPortal } from 'react-dom'
 import { createRoot } from 'react-dom/client'
 import { JSDOM } from 'jsdom'
 import { describe, expect, it } from 'vitest'
@@ -9,7 +10,7 @@ const code = await readFile(new URL('../packages/dsh-desktop-workbenches/client.
 
 // Mount the public Market component and its real controller. Layout dimensions
 // are verified separately in Electron: jsdom only checks DOM/state/accessibility.
-async function mountCard({ state = 'normal', language = 'zh', request = async () => { throw new Error('Unexpected network request') } } = {}) {
+async function mountCard({ state = 'normal', language = 'zh', listed = true, origin = 'market', favorite = false, request = async () => { throw new Error('Unexpected network request') } } = {}) {
   const dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost' })
   const previous = { window: globalThis.window, document: globalThis.document, act: globalThis.IS_REACT_ACT_ENVIRONMENT }
   globalThis.window = dom.window
@@ -18,23 +19,23 @@ async function mountCard({ state = 'normal', language = 'zh', request = async ()
   dom.window.localStorage.setItem('dsh-workbench-enabled', 'true')
   let client
   dom.window.__ModuleLoader__ = { load({ factory }) {
-    client = factory(name => name === 'react' ? React : name === '@deepseek-ai/cordis' ? { Service: { tracker: Symbol('tracker') } } : { Switch: () => null, Toast: () => null })
+    client = factory(name => name === 'react' ? React : name === 'react-dom' ? { createPortal } : name === '@deepseek-ai/cordis' ? { Service: { tracker: Symbol('tracker') } } : { Switch: () => null, Toast: () => null })
   } }
   vm.runInNewContext(code, { window: dom.window, document: dom.window.document, setTimeout, clearTimeout, AbortController })
   const locale = { active: language }
   const ctx = { fiber: { entry: { options: { name: 'helper' } } }, locale: { getSnapshot: () => locale, subscribe: () => () => {} } }
   const service = new client.Workbenches(ctx, request)
-  service.remoteCatalog = [{ id: 'owner/helper', owner: 'owner', repository: 'helper', name: 'Helper', url: 'https://github.com/owner/helper', category: 'other', categoryName: 'Other', version: state === 'normal' ? '1.0.0' : '1.1.0', distribution: { type: 'npm', name: 'helper', version: '1.1.0' }, description: { zh: 'Description '.repeat(40), en: 'Description '.repeat(40) }, screenshots: [] }]
+  service.remoteCatalog = listed ? [{ id: 'owner/helper', owner: 'owner', repository: 'helper', name: 'Helper', url: 'https://github.com/owner/helper', category: 'other', categoryName: 'Other', version: state === 'normal' ? '1.0.0' : '1.1.0', distribution: { type: 'npm', name: 'helper', version: '1.1.0' }, description: { zh: 'Description '.repeat(40), en: 'Description '.repeat(40) }, screenshots: [], metrics: { githubStars: { value: 7 }, npmDownloads30d: { value: 12 } } }] : []
   const installed = state !== 'install-failure'
   if (installed) {
     service.native = { status: 'ready', bundles: { helper: { name: 'helper', installed: true, enabled: true, version: '1.0.0', removable: true } } }
     service.installs = { 'owner/helper': { catalogId: 'owner/helper', pluginName: 'helper', version: '1.0.0' } }
-    service.packageEvidence = { helper: { origin: 'market' } }
+    service.packageEvidence = { helper: { origin } }
   }
   if (installed) {
     service.state.added = ['owner/helper']
     service.state.pinned = ['owner/helper']
-    if (state !== 'load-failure' && state !== 'restart') service.register({ title: 'Helper', repository: 'https://github.com/owner/helper', version: '1.0.0' }, () => null)
+    if (state !== 'load-failure' && state !== 'restart') service.register({ title: 'Helper', repository: 'https://github.com/owner/helper', version: '1.0.0', metrics: { githubStars: { value: 99 }, npmDownloads30d: { value: 88 } } }, () => null)
   }
   if (state === 'unremovable') {
     service.remoteCatalog = []
@@ -43,6 +44,7 @@ async function mountCard({ state = 'normal', language = 'zh', request = async ()
     service.native.bundles.helper.readOnlyReason = 'management-required'
   }
   service.ready = true
+  if (favorite) service.state.favorites = ['owner/helper']
   if (state === 'loading') service.installing = 'owner/helper'
   if (state === 'restart') service.pendingRestart.add('owner/helper')
   if (state === 'install-failure' || state === 'update-failure') service.installFailures.set('owner/helper', { kind: state.split('-')[0], message: 'Could not download package: fetch failed '.repeat(20) })
@@ -60,6 +62,94 @@ async function mountCard({ state = 'normal', language = 'zh', request = async ()
 }
 
 describe('compact workbench card states', () => {
+  it.each(['local', 'unknown'])('hides market affordances for an unlisted %s provider in card and detail', async origin => {
+    const ui = await mountCard({ listed: false, origin })
+    try {
+      const mine = [...ui.document.querySelectorAll('[role="tab"]')].find(tab => tab.textContent.startsWith('已安装'))
+      await React.act(async () => mine.click())
+      const card = ui.document.querySelector('article.dshWbCard')
+      expect(card.querySelector('.dshWbMetrics')).toBeNull()
+      expect(card.querySelector('.dshWbTitleLink').tagName).toBe('SPAN')
+      expect(card.querySelector('.dshWbRoundButton')).toBeNull()
+      expect(card.querySelector('.dshWbFavorite')).toBeNull()
+      expect(card.querySelector('.dshWbAuthor')).not.toBeNull()
+      expect(card.querySelector('.dshWbCardVersion')).not.toBeNull()
+      expect(card.querySelector('.dshWbRunSwitch')).not.toBeNull()
+      expect(card.querySelector('.dshWbUninstall')).not.toBeNull()
+      await React.act(async () => card.querySelector('.dshWbMediaOpen').click())
+      const detail = ui.document.querySelector('[role="dialog"]')
+      expect(detail).not.toBeNull()
+      expect(detail.querySelector('.dshWbMetrics')).toBeNull()
+      expect(detail.querySelector('.dshWbTitleLink').tagName).toBe('SPAN')
+      expect(detail.querySelector('.dshWbAuthor')).not.toBeNull()
+    } finally { await ui.close() }
+  })
+
+  it('lets a favorite unlisted provider be removed from Favorites without showing market signals', async () => {
+    const ui = await mountCard({ listed: false, favorite: true, request: path => {
+      expect(path).toBe('/api/desktop-workbenches/state/write')
+      return Response.json({ revision: 1 })
+    } })
+    try {
+      const favoritesTab = ui.document.getElementById('dsh-workbench-favorites-tab')
+      await React.act(async () => favoritesTab.click())
+      const card = ui.document.querySelector('article.dshWbCard')
+      expect(card).not.toBeNull()
+      expect(card.querySelector('.dshWbMetrics')).toBeNull()
+      expect(card.querySelector('.dshWbTitleLink').tagName).toBe('SPAN')
+      expect(card.querySelector('.dshWbRoundButton')).toBeNull()
+      const removeFavorite = card.querySelector('.dshWbFavorite')
+      expect(removeFavorite.getAttribute('aria-label')).toBe('取消收藏Helper')
+      expect(removeFavorite.getAttribute('aria-pressed')).toBe('true')
+      await React.act(async () => { removeFavorite.click(); await ui.service.queue })
+      expect(ui.service.state.favorites).toEqual([])
+      expect(ui.document.querySelector('article.dshWbCard')).toBeNull()
+      expect(favoritesTab.textContent).toBe('我的收藏 (0)')
+    } finally { await ui.close() }
+  })
+
+  it('lets an unavailable old favorite be removed from Favorites', async () => {
+    const ui = await mountCard({ request: path => {
+      expect(path).toBe('/api/desktop-workbenches/state/write')
+      return Response.json({ revision: 1 })
+    } })
+    try {
+      ui.service.state.favorites = ['retired/workbench']
+      ui.service.catalog.clear()
+      ui.service.providers.clear()
+      ui.service.knownProviders = {}
+      ui.service.remoteCatalog = []
+      ui.service.installs = {}
+      ui.service.native.bundles = {}
+      ui.service.publish()
+      await React.act(async () => ui.document.getElementById('dsh-workbench-favorites-tab').click())
+      const card = ui.document.querySelector('article.dshWbCard')
+      expect(card).not.toBeNull()
+      expect(card.querySelector('.dshWbMetrics')).toBeNull()
+      expect(card.querySelector('.dshWbRoundButton')).toBeNull()
+      const removeFavorite = card.querySelector('.dshWbFavorite')
+      expect(removeFavorite.getAttribute('aria-pressed')).toBe('true')
+      await React.act(async () => { removeFavorite.click(); await ui.service.queue })
+      expect(ui.service.state.favorites).toEqual([])
+      expect(ui.document.querySelector('article.dshWbCard')).toBeNull()
+    } finally { await ui.close() }
+  })
+
+  it('keeps market metrics, links and favorite for a listed workbench installed locally', async () => {
+    const ui = await mountCard({ listed: true, origin: 'local' })
+    try {
+      const card = ui.document.querySelector('article.dshWbCard')
+      expect(card.querySelector('.dshWbMetrics')).not.toBeNull()
+      expect(card.querySelector('.dshWbTitleLink').tagName).toBe('A')
+      expect(card.querySelector('.dshWbRoundButton')).not.toBeNull()
+      expect(card.querySelector('.dshWbFavorite')).not.toBeNull()
+      await React.act(async () => card.querySelector('.dshWbMediaOpen').click())
+      const detail = ui.document.querySelector('[role="dialog"]')
+      expect(detail.querySelector('.dshWbMetrics')).not.toBeNull()
+      expect(detail.querySelector('.dshWbTitleLink').tagName).toBe('A')
+    } finally { await ui.close() }
+  })
+
   it.each(['normal', 'update', 'loading', 'restart', 'install-failure', 'update-failure', 'load-failure'])('keeps %s actions inside one stable footer structure', async state => {
     const ui = await mountCard({ state })
     try {
