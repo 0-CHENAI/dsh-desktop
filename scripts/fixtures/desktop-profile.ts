@@ -81,9 +81,56 @@ async function main(): Promise<void> {
   assert.equal(pageErrors, 0, 'Harness client emitted console errors during activation')
   await mkdir(outputDirectory, { recursive: true })
   await writeFile(join(outputDirectory, 'client.png'), (await win.webContents.capturePage()).toPNG())
+  if (process.platform === 'win32') await verifySidebarToggle(win)
   await verifySafeModeFrame(win)
   assert.equal(pageErrors, 0, 'Safe Mode emitted console errors on the real Harness host')
   console.log(`Desktop profile: Electron ${process.versions.electron}, authenticated HTML/bootstrap and real client mounted; isolated ${process.platform} profile`)
+}
+
+async function verifySidebarToggle(window: BrowserWindow): Promise<void> {
+  for (const zoom of [0.67, 1, 1.5]) {
+    window.webContents.setZoomFactor(zoom)
+    await new Promise(resolve => setTimeout(resolve, 200))
+    const read = async () => window.webContents.executeJavaScript(`(() => {
+      const root = document.querySelector('[data-dsh-sidebar-root]');
+      const toggle = root?.querySelector('[data-dsh-sidebar-toggle]');
+      const brand = root?.querySelector('[data-dsh-sidebar-brand-identity]');
+      if (!root || !toggle) throw new Error('Sidebar toggle marker missing');
+      const r = toggle.getBoundingClientRect();
+      const b = brand?.getBoundingClientRect();
+      return { wide: root.dataset.dshSidebarWide, count: document.querySelectorAll('[data-dsh-sidebar-toggle]').length,
+        x: r.x + r.width / 2, y: r.y + r.height / 2, right: r.right,
+        edge: root.getBoundingClientRect().right, brandY: b && b.y + b.height / 2,
+        hit: document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)?.closest('[data-dsh-sidebar-toggle]') === toggle,
+        position: getComputedStyle(toggle).position };
+    })()`)
+    const click = async (point: { x: number; y: number }) => {
+      const x = Math.round(point.x * zoom), y = Math.round(point.y * zoom)
+      window.webContents.sendInputEvent({ type: 'mouseDown', button: 'left', x, y, clickCount: 1 })
+      window.webContents.sendInputEvent({ type: 'mouseUp', button: 'left', x, y, clickCount: 1 })
+      await new Promise(resolve => setTimeout(resolve, 350))
+    }
+    const initial = await read()
+    if (initial.wide === 'false') await click(initial)
+    const wide = await read()
+    assert.equal(wide.wide, 'true')
+    assert.equal(wide.count, 1)
+    assert.equal(wide.position, 'static')
+    assert.ok(Math.abs(wide.y - wide.brandY) < 3, 'Toggle must align with the brand row')
+    assert.ok(wide.edge - wide.right >= 0 && wide.edge - wide.right < 24)
+    assert.equal(wide.hit, true)
+    await click(wide)
+    const collapsed = await read()
+    assert.equal(collapsed.wide, 'false')
+    assert.equal(collapsed.count, 1)
+    assert.equal(collapsed.position, 'fixed', 'Keep the collapsed reopen entry reachable')
+    assert.equal(collapsed.hit, true)
+    await click(collapsed)
+    assert.equal((await read()).wide, 'true')
+  }
+  window.webContents.setZoomFactor(1)
+  await writeFile(join(outputDirectory, 'sidebar-toggle.png'), (await window.webContents.capturePage()).toPNG())
+  console.log('Windows sidebar toggle: brand-row alignment and native collapse/reopen at three zoom levels passed')
 }
 
 async function verifySafeModeFrame(window: BrowserWindow): Promise<void> {

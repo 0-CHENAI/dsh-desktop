@@ -47,3 +47,12 @@ it('uses the upstream zero-width column after the Windows preload marks the page
   const webDoc = document.implementation.createHTMLDocument()
   expect(createColumns(webDoc)()).toMatchObject({ sidebar: 56, center: 1144 })
 })
+
+it('provides a stable toggle marker and limits brand-row positioning to the wide Windows sidebar', () => {
+  const sidebar = readFileSync('node_modules/@deepseek-ai/dsh-client-ui-sidebar/lib/client.js', 'utf8')
+  const preload = readFileSync('src/preload/windows-titlebar.ts', 'utf8')
+  expect(sidebar.match(/"data-dsh-sidebar-toggle": ""/g)).toHaveLength(1)
+  expect(preload).toContain('[data-dsh-sidebar-root][data-dsh-sidebar-wide="true"] [data-dsh-sidebar-toggle]')
+  expect(preload).toContain('position: static !important')
+  expect(sidebar).toContain('toggleSidebar();')
+})
