@@ -9,7 +9,7 @@ const code = await readFile(new URL('../packages/dsh-desktop-workbenches/client.
 
 // Mount the public Market component and its real controller. Layout dimensions
 // are verified separately in Electron: jsdom only checks DOM/state/accessibility.
-async function mountCard({ state = 'normal', language = 'zh' } = {}) {
+async function mountCard({ state = 'normal', language = 'zh', request = async () => { throw new Error('Unexpected network request') } } = {}) {
   const dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost' })
   const previous = { window: globalThis.window, document: globalThis.document, act: globalThis.IS_REACT_ACT_ENVIRONMENT }
   globalThis.window = dom.window
@@ -23,12 +23,13 @@ async function mountCard({ state = 'normal', language = 'zh' } = {}) {
   vm.runInNewContext(code, { window: dom.window, document: dom.window.document, setTimeout, clearTimeout, AbortController })
   const locale = { active: language }
   const ctx = { fiber: { entry: { options: { name: 'helper' } } }, locale: { getSnapshot: () => locale, subscribe: () => () => {} } }
-  const service = new client.Workbenches(ctx, async () => { throw new Error('Unexpected network request') })
+  const service = new client.Workbenches(ctx, request)
   service.remoteCatalog = [{ id: 'owner/helper', owner: 'owner', repository: 'helper', name: 'Helper', url: 'https://github.com/owner/helper', category: 'other', categoryName: 'Other', version: state === 'normal' ? '1.0.0' : '1.1.0', distribution: { type: 'npm', name: 'helper', version: '1.1.0' }, description: { zh: 'Description '.repeat(40), en: 'Description '.repeat(40) }, screenshots: [] }]
   const installed = state !== 'install-failure'
   if (installed) {
     service.native = { status: 'ready', bundles: { helper: { name: 'helper', installed: true, enabled: true, version: '1.0.0', removable: true } } }
     service.installs = { 'owner/helper': { catalogId: 'owner/helper', pluginName: 'helper', version: '1.0.0' } }
+    service.packageEvidence = { helper: { origin: 'market' } }
   }
   if (installed) {
     service.state.added = ['owner/helper']
@@ -98,6 +99,39 @@ describe('compact workbench card states', () => {
         await React.act(async () => dismiss.click())
         expect(ui.document.querySelector('.dshWbFailureHint')).toBeNull()
       }
+    } finally { await ui.close() }
+  })
+
+  it.each([
+    ['install-failure', '.dshWbRetry', '正在重试安装Helper'],
+    ['update-failure', '.dshWbUpdate', '正在更新Helper']
+  ])('keeps the %s action spinning while its retry request is pending, then stops on failure', async (state, selector, busyLabel) => {
+    let finishRequest
+    let calls = 0
+    const ui = await mountCard({ state, request: path => {
+      expect(path).toBe('/api/desktop-workbenches/market-install')
+      calls++
+      return new Promise(resolve => { finishRequest = resolve })
+    } })
+    try {
+      const action = () => ui.document.querySelector(`article.dshWbCard ${selector}`)
+      expect(action()).not.toBeNull()
+      expect(action().getAttribute('aria-busy')).toBe('false')
+      await React.act(async () => { action().click() })
+      expect(calls).toBe(1)
+      expect(action()).not.toBeNull()
+      expect(action().disabled).toBe(true)
+      expect(action().getAttribute('aria-busy')).toBe('true')
+      expect(action().getAttribute('aria-label')).toBe(busyLabel)
+      expect(ui.document.querySelector('style').textContent).toContain(`${selector}[aria-busy=true] svg`)
+      expect(ui.document.querySelector('style').textContent).toContain('svg{animation:dshWbSpin .8s linear infinite}')
+      expect(ui.document.querySelector('style').textContent).toContain('@media(prefers-reduced-motion:reduce)')
+      finishRequest(Response.json({ error: 'Still unavailable' }, { status: 502 }))
+      await React.act(async () => {})
+      expect(action()).not.toBeNull()
+      expect(action().disabled).toBe(false)
+      expect(action().getAttribute('aria-busy')).toBe('false')
+      expect(ui.document.querySelector('.dshWbFailureHint').textContent).toContain('Still unavailable')
     } finally { await ui.close() }
   })
 
