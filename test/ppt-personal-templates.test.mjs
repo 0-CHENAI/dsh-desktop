@@ -530,23 +530,25 @@ describe('personal PPT templates in the shipped runtime', () => {
     await symlink(f.workspace, path.join(f.storage, 'personal-templates/saved', `personal-${'a'.repeat(64)}`));
     await expect(f.request('state')).rejects.toThrow();
   }, 30000);
-  it('reconverts legacy uploads after preview acceptance while preserving identity, metadata and backup', async () => {
+  it.each(['legacy', 'previous'])('reconverts %s uploads after preview acceptance while preserving identity, metadata and backup', async revision => {
     const f = await fixture(); const { bytes, template } = await save(f);
     await f.request('template/select', {templateId:template.id,mode:'ppt'}, 'session-b');
     const file = path.join(f.storage,'personal-templates','saved',template.id,'template.json');
     const old = JSON.parse(await readFile(file,'utf8'));
-    delete old.conversionVersion; delete old.previewVersion; old.description='Keep metadata';
+    if(revision==='legacy'){delete old.conversionVersion;delete old.previewVersion;}
+    else {old.conversionVersion=PERSONAL_TEMPLATE_CONVERSION_VERSION-1;old.previewVersion=PERSONAL_TEMPLATE_PREVIEW_VERSION-1;}
+    old.description='Keep metadata';
     await writeFile(file,JSON.stringify(old));
     const draft=await f.request('template/prepare',{input:{fileName:'refresh.pptx',base64:bytes.toString('base64')}});
     expect(draft.duplicate).toBeUndefined();expect(draft.template.id).toBe(template.id);
-    expect(JSON.parse(await readFile(file,'utf8')).conversionVersion).toBeUndefined();
+    expect(JSON.parse(await readFile(file,'utf8')).conversionVersion).toBe(old.conversionVersion);
     const updated=await f.request('template/save',{draftId:draft.draftId,name:old.name});
     expect(updated.conversionVersion).toBe(PERSONAL_TEMPLATE_CONVERSION_VERSION);expect(updated.previewVersion).toBe(PERSONAL_TEMPLATE_PREVIEW_VERSION);expect(updated.description).toBe('Keep metadata');
     expect(updated.createdAt).toBe(old.createdAt);
     expect((await f.request('state',{},'session-b')).selectedTemplateId).toBe(old.id);
     const backups=await readdir(path.join(f.storage,'personal-templates','backups',template.id));
     expect(backups).toHaveLength(1);
-    expect(JSON.parse(await readFile(path.join(f.storage,'personal-templates','backups',template.id,backups[0],'template.json'),'utf8')).conversionVersion).toBeUndefined();
+    expect(JSON.parse(await readFile(path.join(f.storage,'personal-templates','backups',template.id,backups[0],'template.json'),'utf8')).conversionVersion).toBe(old.conversionVersion);
   }, 120000);
 
 });
