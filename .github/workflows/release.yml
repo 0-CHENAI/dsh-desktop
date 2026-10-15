@@ -167,6 +167,15 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && inputs.mode == 'signed' && inputs.signed_version != ''
         run: npm version --no-git-tag-version --allow-same-version "${{ inputs.signed_version }}"
       - run: npm ci
+      - name: Cache Office runtime downloads and template render
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/office-downloads
+            .build/office-template-cache
+          key: office-runtime-${{ runner.os }}-${{ matrix.arch }}-${{ hashFiles('scripts/office-runtime/**', 'packages/office-runtime/**', 'package-lock.json') }}
+          restore-keys: |
+            office-runtime-${{ runner.os }}-${{ matrix.arch }}-
       - run: npm run build
       - run: npx --no-install vitest run --exclude '**/test/docx-template-fidelity*' --exclude '**/test/ppt-personal-templates*' --exclude '**/test/ppt-import-memory*' --exclude '**/test/ppt-personal-template-ui*' --exclude '**/test/ppt-windows-font-layout*'
         if: matrix.arch == 'arm64'
@@ -317,6 +326,15 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && inputs.mode == 'signed' && inputs.signed_version != ''
         run: npm version --no-git-tag-version --allow-same-version "${{ inputs.signed_version }}"
       - run: npm ci
+      - name: Cache Office runtime downloads and template render
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/office-downloads
+            .build/office-template-cache
+          key: office-runtime-${{ runner.os }}-x64-${{ hashFiles('scripts/office-runtime/**', 'packages/office-runtime/**', 'package-lock.json') }}
+          restore-keys: |
+            office-runtime-${{ runner.os }}-x64-
       - run: npm run build
       - name: Run Windows tests with progress
         run: npx --no-install vitest run --reporter=verbose --exclude '**/test/docx-template-fidelity*' --exclude '**/test/ppt-personal-templates*' --exclude '**/test/ppt-import-memory*' --exclude '**/test/ppt-personal-template-ui*' --exclude '**/test/ppt-windows-font-layout*'
