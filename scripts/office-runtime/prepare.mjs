@@ -65,6 +65,21 @@ export async function unpackWheel(archive, destination) {
   }
 }
 
+async function stripUnusedPythonPayload(dependencies, sitePackages) {
+  // Strip C development headers not needed at runtime.
+  await rm(join(dependencies, 'python', 'include'), { recursive: true, force: true })
+  // Strip heavy test suites and development-only modules in site-packages.
+  const unusedDirectories = [
+    join(sitePackages, 'pandas', 'tests'),
+    join(sitePackages, 'numpy', 'tests'),
+    join(sitePackages, 'numpy', 'testing'),
+    join(sitePackages, 'numpy', 'f2py')
+  ]
+  for (const directory of unusedDirectories) {
+    await rm(directory, { recursive: true, force: true })
+  }
+}
+
 /** Always assemble this build's payload. Keep only verified downloads as cache. */
 export async function prepareOfficeRuntime({ target = officeTarget(), output = join(project, '.build/office-runtime'), cache = join(project, '.build/office-downloads') } = {}) {
   const artifact = lock.targets[target]
@@ -86,6 +101,7 @@ export async function prepareOfficeRuntime({ target = officeTarget(), output = j
     for (const wheel of [...artifact.wheels, ...lock.wheels]) {
       await unpackWheel(await downloadAsset(wheel.url, wheel.sha256, cache), sitePackages)
     }
+    await stripUnusedPythonPayload(dependencies, sitePackages)
     const manifest = {
       desktopVersion: version,
       platform: windows ? 'win32' : 'darwin',

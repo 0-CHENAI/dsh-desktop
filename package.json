@@ -324,8 +324,7 @@
       "**/spawn-helper",
       "**/@vscode/ripgrep-*/bin/rg",
       "node_modules/@deepseek-ai/libreoffice-kit-*/**/*",
-      "node_modules/sherpa-onnx-*/**/*",
-      ".build/ppt-runtime/packages/**/*"
+      "node_modules/sherpa-onnx-*/**/*"
     ],
     "npmRebuild": false,
     "compression": "maximum",
@@ -481,6 +480,12 @@
       "icon": "build/icon.icns",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
+      "signIgnore": [
+        "office-runtime/.*\\.(py|pyi|pyc|h|c|f90|f|txt|md|csv|pxd|pxi|json|webp|gif|png|xml|tcl|enc|tm)$",
+        "office-runtime/primary-runtime/dependencies/python/.*/site-packages/tzdata",
+        "office-runtime/templates",
+        "app\\.asar\\.unpacked/.*\\.(jpg|png|webp|svg|pptd|md|json|xml|page|lm|patch|sor|txt|ya?ml|css|html|dtd|soc|sog|soh|soe|sod|sample|odb|rdb|xcd|mod|theme|ui|bau|dbf|dbt|fmt|sdv|sop|thm)$"
+      ],
       "target": [
         "dmg",
         "zip"
