@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto'
 
 const DEFAULT_CATALOG_URL = 'https://market.dshdesktop.com/index.json'
 const MAX_CATALOG_BYTES = 2 * 1024 * 1024
-const FETCH_TIMEOUT_MS = 10_000
+const FETCH_TIMEOUT_MS = 30_000
 const CACHE_MAX_AGE_MS = 15 * 60 * 1000
 
 export class CatalogError extends Error {
