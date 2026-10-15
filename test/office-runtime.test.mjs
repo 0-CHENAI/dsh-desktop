@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 import { officeTarget, downloadAsset, unpackWheel, prepareOfficeRuntime } from '../scripts/office-runtime/prepare.mjs'
-import { officeCliCommand, officeCliTimeoutMs } from '../scripts/office-runtime/prepare-templates.mjs'
+import { officeCliAttempts, officeCliCommand, officeCliTimedOut, officeCliTimeoutMs, runOfficeCli } from '../scripts/office-runtime/prepare-templates.mjs'
 import { HarnessRuntime } from '../src/main/runtime/harness-runtime'
 import { prepareHostPluginSourcesPatch } from '../src/main/state/host-plugin-sources'
 import { ensureSafeModeProfile, SAFE_MODE_PROFILE } from '../src/main/state/safe-mode-profile'
@@ -27,11 +27,38 @@ afterEach(async () => {
 })
 
 describe('Office template preview limits', () => {
-  it('gives each LibreOffice preview 240 seconds', () => {
+  const kitTimeout = stderr => Object.assign(new Error('Command failed'), {
+    stderr, code: 1, killed: false, signal: null,
+  })
+
+  it('gives each LibreOffice call 240 seconds and retries a hang in a new process', async () => {
     expect(officeCliTimeoutMs).toBe(240_000)
+    expect(officeCliAttempts).toBe(3)
     const command = officeCliCommand('electron', 'office-cli.mjs', ['render', '--input', 'book.xlsx', '--dpi', '100'])
     expect(command.args).toEqual(['office-cli.mjs', 'render', '--input', 'book.xlsx', '--dpi', '100', '--timeout-ms', '240000'])
     expect(command.timeout).toBe(300_000)
+    const hung = kitTimeout('{"code":"timeout","error":"LibreOffice conversion timed out."}\n')
+    expect(officeCliTimedOut(hung)).toBe(true)
+    expect(officeCliTimedOut(kitTimeout(Buffer.from(hung.stderr)))).toBe(true)
+    expect(officeCliTimedOut(Object.assign(new Error('killed'), { killed: true, signal: 'SIGTERM' }))).toBe(true)
+    expect(officeCliTimedOut(kitTimeout('{"code":"invalid-document","error":"bad workbook"}'))).toBe(false)
+
+    let calls = 0
+    await expect(runOfficeCli('recalculate', async () => {
+      calls += 1
+      if (calls < 3) throw hung
+      return { ok: true }
+    })).resolves.toEqual({ ok: true })
+    expect(calls).toBe(3)
+
+    await expect(runOfficeCli('recalculate', async () => { throw hung })).rejects.toBe(hung)
+    const invalid = kitTimeout('{"code":"invalid-document","error":"bad workbook"}')
+    let invalidCalls = 0
+    await expect(runOfficeCli('render', async () => {
+      invalidCalls += 1
+      throw invalid
+    })).rejects.toBe(invalid)
+    expect(invalidCalls).toBe(1)
   })
 })
 
