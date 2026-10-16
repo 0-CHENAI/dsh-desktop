@@ -85,8 +85,8 @@ describe('compact workbench card states', () => {
     } finally { await ui.close() }
   })
 
-  it('lets a favorite unlisted provider be removed from Favorites without showing market signals', async () => {
-    const ui = await mountCard({ listed: false, favorite: true, request: path => {
+  it.each([['zh', '取消收藏Helper', '取消收藏'], ['en', 'Remove Helper from favorites', 'Remove favorite']])('lets a favorite unlisted provider be removed in %s without market signals', async (language, label, tooltip) => {
+    const ui = await mountCard({ listed: false, favorite: true, language, request: path => {
       expect(path).toBe('/api/desktop-workbenches/state/write')
       return Response.json({ revision: 1 })
     } })
@@ -99,12 +99,13 @@ describe('compact workbench card states', () => {
       expect(card.querySelector('.dshWbTitleLink').tagName).toBe('SPAN')
       expect(card.querySelector('.dshWbRoundButton')).toBeNull()
       const removeFavorite = card.querySelector('.dshWbFavorite')
-      expect(removeFavorite.getAttribute('aria-label')).toBe('取消收藏Helper')
+      expect(removeFavorite.getAttribute('aria-label')).toBe(label)
       expect(removeFavorite.getAttribute('aria-pressed')).toBe('true')
+      expect(ui.document.getElementById(removeFavorite.getAttribute('aria-describedby')).textContent).toBe(tooltip)
       await React.act(async () => { removeFavorite.click(); await ui.service.queue })
       expect(ui.service.state.favorites).toEqual([])
       expect(ui.document.querySelector('article.dshWbCard')).toBeNull()
-      expect(favoritesTab.textContent).toBe('我的收藏 (0)')
+      expect(favoritesTab.textContent).toBe(`${language === 'zh' ? '我的收藏' : 'Favorites'} (0)`)
     } finally { await ui.close() }
   })
 
@@ -129,6 +130,7 @@ describe('compact workbench card states', () => {
       expect(card.querySelector('.dshWbRoundButton')).toBeNull()
       const removeFavorite = card.querySelector('.dshWbFavorite')
       expect(removeFavorite.getAttribute('aria-pressed')).toBe('true')
+      expect(ui.document.getElementById(removeFavorite.getAttribute('aria-describedby')).textContent).toBe('取消收藏')
       await React.act(async () => { removeFavorite.click(); await ui.service.queue })
       expect(ui.service.state.favorites).toEqual([])
       expect(ui.document.querySelector('article.dshWbCard')).toBeNull()
