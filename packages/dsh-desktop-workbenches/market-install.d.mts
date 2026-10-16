@@ -4,6 +4,7 @@ export interface MarketInstallRecord {
   version: string
   source?: string
   installedAt?: string
+  fingerprint?: string
 }
 
 export interface MarketInstallStore {
@@ -14,3 +15,10 @@ export interface MarketInstallStore {
 }
 
 export function createMarketInstallStore(root: string): MarketInstallStore
+
+export class MarketInstallError extends Error {
+  constructor(message: string, status?: number, code?: 'download_failed' | 'download_interrupted' | 'invalid_download_url' | 'unsafe_download_url', params?: { diagnostic: string })
+  status: number
+  code?: 'download_failed' | 'download_interrupted' | 'invalid_download_url' | 'unsafe_download_url'
+  params?: { diagnostic: string }
+}

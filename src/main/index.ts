@@ -1,3 +1,4 @@
+import { developmentEnvironment } from './development-environment'
 import { initializeDesktopService, desktopDiagnostics } from './desktop-service'
 import { applyMacosWindowBackdrop } from './macos-window-backdrop'
 import { checkBlockingPluginUpdates, selectPluginRecoveryTarget, PluginRecoveryEvidence, planPluginRecovery, runPluginRecoveryPlan, type PluginRecoveryCheck } from './plugin-recovery-market'
@@ -141,6 +142,7 @@ import {
   DesktopStorageManager,
   type DesktopStorageAction
 } from './state/desktop-storage'
+import { registerDesktopNotificationBridge } from './desktop-notification'
 import {
   raiseWindowWithoutStealingFocus,
   type WindowFocusIntent
@@ -374,6 +376,7 @@ function isDevelopmentBuild(): boolean {
 }
 
 const developmentBuild = isDevelopmentBuild()
+const developmentConfig = developmentEnvironment(developmentBuild, DEFAULT_HARNESS_PORT)
 
 /**
  * Record a renderer/GPU process loss in the harness log so the cause survives
@@ -512,7 +515,7 @@ function applyWindowChromeTheme(window: BrowserWindow, isDark: boolean): void {
 function configureAppIdentity(): void {
   if (developmentBuild) {
     app.setName('DSH Desktop Dev')
-    app.setPath('userData', join(app.getPath('appData'), 'dsh-desktop-dev'))
+    app.setPath('userData', join(app.getPath('appData'), developmentConfig.profile))
     return
   }
 
@@ -1680,6 +1683,7 @@ async function uninstallMarketAndRestart(): Promise<{ ok: boolean }> {
 }
 
 function registerHarnessHandlers(): void {
+  registerDesktopNotificationBridge(() => mainWindow, desktopIconPath)
   ipcMain.removeAllListeners('dsh:storage-load-sync')
   ipcMain.on('dsh:storage-load-sync', (event) => {
     event.returnValue = desktopStorageManager?.getAll() ?? {}
@@ -3246,7 +3250,7 @@ async function bootstrap(): Promise<void> {
   installDesktopProtocol(desktopResourcePath)
   if (process.platform === 'darwin') app.dock?.setIcon(desktopIconPath())
   launchDirectory = await ensureLaunchRoot(app.getPath('userData'))
-  registerUpdateHandlers()
+  registerUpdateHandlers({ locale: harnessLocale })
   nativeTheme.themeSource = harnessThemePreference()
   ensureTray()
   const dshHome = join(app.getPath('userData'), 'harness')
@@ -3267,9 +3271,11 @@ async function bootstrap(): Promise<void> {
     dshMarketPatchPath: desktopResourcePath('dsh-desktop-market.patch.yml'),
     dshHome: join(app.getPath('userData'), 'harness'),
     logPath: join(app.getPath('logs'), 'harness.log'),
+    pnpmEntryPath: bundledPnpmEntryPath(),
+    pnpmRunnerPath: bundledPnpmRunnerPath(),
     // Keep the Harness origin stable across launches. These ports are separate
     // from the production/development mobile bridge ports (43127/43128).
-    preferredPort: DEFAULT_HARNESS_PORT + (developmentBuild ? 1 : 0),
+    preferredPort: developmentConfig.harnessPort,
     launchProcess: (executablePath, args, options) =>
       process.platform === 'darwin'
         ? launchDisclaimedUtilityProcess(utilityProcess, args, options, {
@@ -3307,7 +3313,7 @@ async function bootstrap(): Promise<void> {
     cloudflaredCacheDir: join(app.getPath('userData'), 'bin'),
     forceCloudflareFailure: process.env.DSH_TUNNEL_FORCE_PINGGY === '1',
     tunnelLog: (message) => console.warn(message),
-    port: developmentBuild ? 43128 : 43127,
+    port: developmentConfig.mobilePort,
     onReconnectRequested: () => {
       void showMobilePairing().catch(showUnexpectedError)
     },

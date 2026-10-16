@@ -147,7 +147,9 @@ export class DesktopService {
     }
   }
 
-  async checkUpdate(): Promise<UpdateDecision> {
+  // Keep the caller's manual flag for compatibility; presentation is local.
+  // The rollout API accepts only installationId, currentVersion and platform.
+  async checkUpdate(_manual = false): Promise<UpdateDecision> {
     const query = new URLSearchParams({ installationId: this.installationId, currentVersion: this.options.version, platform: this.platform })
     const response = await this.options.request(`${SERVICE_URL}/v1/updates/check?${query}`, { signal: AbortSignal.timeout(5000), redirect: 'error' })
     if (!response.ok) throw new Error(`Update policy unavailable (${response.status})`)

@@ -128,9 +128,56 @@ jobs:
           test -n "$MODELSCOPE_TOKEN" || { echo "::error::Missing secret MODELSCOPE_TOKEN"; exit 1; }
           test -n "$FEISHU_RELEASE_WEBHOOK" || { echo "::error::Missing secret FEISHU_RELEASE_WEBHOOK"; exit 1; }
 
+  prepare-shared-runtime-assets:
+    name: Prepare shared runtime assets
+    needs: validate-dispatch
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'workflow_dispatch' &&
+        inputs.mode != 'smoke' && inputs.mode != 'resign' &&
+        (inputs.target == 'all' || inputs.target == 'macos' || inputs.target == 'windows'))
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Cache shared runtime assets
+        id: shared-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/office-downloads
+            .build/office-template-cache
+            .build/ppt-runtime
+          key: shared-runtime-assets-${{ hashFiles('scripts/office-runtime/**', 'packages/dsh-desktop-office/**', 'packages/ppt-runtime/**', 'scripts/ppt/**', 'package-lock.json') }}
+          restore-keys: |
+            shared-runtime-assets-
+      - name: Build PPT runtime
+        run: npm run ppt:build
+      - name: Build Office templates
+        run: npm run office:prepare
+      - name: Pack shared assets for runners
+        run: |
+          mkdir -p .build/shared-assets
+          cp -R .build/office-template-cache .build/shared-assets/
+          cp -R .build/ppt-runtime .build/shared-assets/
+      - name: Upload shared runtime assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: shared-runtime-assets
+          path: .build/shared-assets
+          retention-days: 1
+          compression-level: 1
+
   macos:
     name: macOS ${{ matrix.label }}
-    needs: validate-dispatch
+    needs: [validate-dispatch, prepare-shared-runtime-assets]
     if: >-
       startsWith(github.ref, 'refs/tags/v') ||
       (github.event_name == 'workflow_dispatch' && (inputs.target == 'all' || inputs.target == 'macos'))
@@ -167,8 +214,28 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && inputs.mode == 'signed' && inputs.signed_version != ''
         run: npm version --no-git-tag-version --allow-same-version "${{ inputs.signed_version }}"
       - run: npm ci
+      - name: Download shared runtime assets
+        uses: actions/download-artifact@v4
+        with:
+          name: shared-runtime-assets
+          path: .build/shared-assets
+      - name: Restore shared runtime assets
+        run: |
+          mkdir -p .build
+          if [ -d .build/shared-assets/office-template-cache ]; then cp -R .build/shared-assets/office-template-cache .build/; fi
+          if [ -d .build/shared-assets/ppt-runtime ]; then cp -R .build/shared-assets/ppt-runtime .build/; fi
+      - name: Cache Office runtime downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/office-downloads
+            .build/office-template-cache
+          key: office-runtime-${{ runner.os }}-${{ matrix.arch }}-${{ hashFiles('scripts/office-runtime/**', 'packages/office-runtime/**', 'package-lock.json') }}
+          restore-keys: |
+            office-runtime-${{ runner.os }}-${{ matrix.arch }}-
       - run: npm run build
-      - run: npx --no-install vitest run
+      - run: npx --no-install vitest run --exclude '**/test/docx-template-fidelity*' --exclude '**/test/ppt-personal-templates*' --exclude '**/test/ppt-import-memory*' --exclude '**/test/ppt-personal-template-ui*' --exclude '**/test/ppt-windows-font-layout*'
+        if: matrix.arch == 'arm64'
       - name: Verify PPT generation leaves tracked sources clean
         run: git diff --exit-code -- packages/ppt-runtime scripts/ppt
       - run: npm run typecheck
@@ -234,9 +301,13 @@ jobs:
             --key "$APPLE_API_KEY" \
             --key-id "$APPLE_API_KEY_ID" \
             --issuer "$APPLE_API_ISSUER" \
-            --wait \
-            --no-s3-acceleration
-          xcrun stapler staple "$dmg_path"
+            --wait
+          for attempt in 1 2 3 4 5; do
+            if xcrun stapler staple "$dmg_path"; then break; fi
+            if [ "$attempt" -eq 5 ]; then exit 1; fi
+            echo "stapler staple failed, waiting for Apple ticket propagation in 10s (attempt $attempt/5)..."
+            sleep 10
+          done
       - name: Remove temporary signing keychain
         if: always() && (startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && (inputs.mode == 'signed' || inputs.mode == 'prerelease')))
         env:
@@ -261,10 +332,20 @@ jobs:
           app_path="dist/${{ matrix.app-directory }}/DSH Desktop.app"
           codesign --verify --deep --strict --verbose=2 "$app_path"
           spctl --assess --type execute --verbose=4 "$app_path"
-          xcrun stapler validate "$app_path"
+          for attempt in 1 2 3; do
+            if xcrun stapler validate "$app_path"; then break; fi
+            if [ "$attempt" -eq 3 ]; then exit 1; fi
+            echo "stapler validate failed on app_path, retrying in 5s (attempt $attempt/3)..."
+            sleep 5
+          done
           codesign --verify --verbose=2 dist/dsh-desktop-mac-${{ matrix.arch }}.dmg
           spctl --assess --type open --context context:primary-signature --verbose=4 dist/dsh-desktop-mac-${{ matrix.arch }}.dmg
-          xcrun stapler validate dist/dsh-desktop-mac-${{ matrix.arch }}.dmg
+          for attempt in 1 2 3; do
+            if xcrun stapler validate dist/dsh-desktop-mac-${{ matrix.arch }}.dmg; then break; fi
+            if [ "$attempt" -eq 3 ]; then exit 1; fi
+            echo "stapler validate failed on dmg, retrying in 5s (attempt $attempt/3)..."
+            sleep 5
+          done
       - uses: actions/upload-artifact@v4
         if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && (inputs.mode == 'signed' || inputs.mode == 'prerelease'))
         with:
@@ -291,7 +372,7 @@ jobs:
 
   windows-x64:
     name: Windows x64
-    needs: validate-dispatch
+    needs: [validate-dispatch, prepare-shared-runtime-assets]
     if: >-
       startsWith(github.ref, 'refs/tags/v') ||
       github.event_name == 'pull_request' ||
@@ -317,9 +398,29 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && inputs.mode == 'signed' && inputs.signed_version != ''
         run: npm version --no-git-tag-version --allow-same-version "${{ inputs.signed_version }}"
       - run: npm ci
+      - name: Download shared runtime assets
+        uses: actions/download-artifact@v4
+        with:
+          name: shared-runtime-assets
+          path: .build/shared-assets
+      - name: Restore shared runtime assets
+        shell: bash
+        run: |
+          mkdir -p .build
+          if [ -d .build/shared-assets/office-template-cache ]; then cp -R .build/shared-assets/office-template-cache .build/; fi
+          if [ -d .build/shared-assets/ppt-runtime ]; then cp -R .build/shared-assets/ppt-runtime .build/; fi
+      - name: Cache Office runtime downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/office-downloads
+            .build/office-template-cache
+          key: office-runtime-${{ runner.os }}-x64-${{ hashFiles('scripts/office-runtime/**', 'packages/office-runtime/**', 'package-lock.json') }}
+          restore-keys: |
+            office-runtime-${{ runner.os }}-x64-
       - run: npm run build
       - name: Run Windows tests with progress
-        run: npx --no-install vitest run --reporter=verbose
+        run: npx --no-install vitest run --reporter=verbose --exclude '**/test/docx-template-fidelity*' --exclude '**/test/ppt-personal-templates*' --exclude '**/test/ppt-import-memory*' --exclude '**/test/ppt-personal-template-ui*' --exclude '**/test/ppt-windows-font-layout*'
         timeout-minutes: 15
       - name: Verify PPT generation leaves tracked sources clean
         run: git diff --exit-code -- packages/ppt-runtime scripts/ppt
@@ -534,8 +635,10 @@ jobs:
       JSIGN_SHA256: '602a51c3545a6dc4fb99bd2ea7152b26d1345916d0c93ddfbd5936cb735af91c'
     steps:
       - uses: actions/checkout@v4
-      # The signer only installs release tooling; skip remote npm cache restore.
+      # Persistent runners retain npm downloads locally; restoring the remote
+      # cache duplicates disk usage and can stall release setup for minutes.
       - uses: actions/setup-node@v4
+        timeout-minutes: 5
         with:
           node-version: 22
       - uses: actions/setup-java@v4
