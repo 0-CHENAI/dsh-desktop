@@ -15,9 +15,14 @@ export const Config = Schema.object({ root: Schema.string().required() })
 export function catalogReadOptions(request) {
   const params = new URL(request.url).searchParams
   for (const key of params.keys()) {
-    if (key !== 'force') throw new CatalogError('Unsupported workbench catalog query.', 400)
+    if (key !== 'force' && key !== 'cache') throw new CatalogError('Unsupported workbench catalog query.', 400)
   }
   const force = params.getAll('force')
+  const cache = params.getAll('cache')
+  if (cache.length) {
+    if (cache.length !== 1 || cache[0] !== '1' || force.length) throw new CatalogError('Invalid workbench catalog cache request.', 400)
+    return { cachedOnly: true }
+  }
   if (force.length === 0) return { force: false }
   if (force.length !== 1 || force[0] !== '1') throw new CatalogError('Invalid workbench catalog refresh request.', 400)
   return { force: true }
@@ -202,7 +207,7 @@ export function apply(ctx, config) {
       try {
         const installs = await marketInstalls.read()
         const requested = new URL(request.url).searchParams.getAll('package').slice(0, 64)
-        const listed = await readCatalog().then(value => value.catalog.workbenches.map(item => item.distribution?.name).filter(Boolean), () => [])
+        const listed = await readCatalog({ cachedOnly: true }).then(value => value.catalog?.workbenches.map(item => item.distribution?.name).filter(Boolean) || [], () => [])
         return Response.json({ installs, packages: await readInstallEvidence(installs, undefined, [...requested, ...listed]) }, { headers: { 'cache-control': 'no-store' } })
       }
       catch (error) { return installFailure(error, 'Could not read workbench market installs.') }
@@ -224,8 +229,10 @@ export function apply(ctx, config) {
           const requireReplacement = async (names) => {
             if (confirmedReplacement === true) return
             const packages = await readInstallEvidence(installs, undefined, names)
-            if (names.some(name => packages[name] && packages[name].origin !== 'market')) {
-              throw new MarketInstallError('Confirm updating the installed workbench code; local changes may be overwritten.', 409)
+            const risk = names.map(name => packages[name]).find(item => item && (item.origin === 'local' || ['local', 'modified'].includes(item.updateRisk)))
+            if (risk) {
+              const updateRisk = risk.origin === 'local' || risk.updateRisk === 'local' ? 'local' : 'modified'
+              throw new MarketInstallError('Confirm updating the installed workbench code; local changes may be overwritten.', 409, 'confirmation_required', { updateRisk })
             }
           }
           // Check known package identities before resolving or downloading the target.

@@ -10,6 +10,9 @@ window.__ModuleLoader__.load({
       zh: { download_failed: '无法下载工作台安装包', download_interrupted: '工作台安装包下载中断', invalid_download_url: '工作台下载地址无效。', unsafe_download_url: '工作台下载地址必须使用 HTTPS，且不能包含凭据或自定义端口。' },
       en: { download_failed: 'Could not download the workbench package', download_interrupted: 'Workbench package download interrupted', invalid_download_url: 'The workbench download URL is invalid.', unsafe_download_url: 'The workbench download URL must use HTTPS without credentials or a custom port.' }
     }
+    function confirmationRisk(error) {
+      return error?.code === 'confirmation_required' && (error.updateRisk === 'local' || error.updateRisk === 'modified') ? error.updateRisk : null
+    }
     function installErrorMessage(ctx, data, status) {
       if ((data?.code === 'invalid_download_url' || data?.code === 'unsafe_download_url') && ctx.locale?.bind && data.params === undefined) {
         return ctx.locale.bind(DOWNLOAD_NS)(data.code)
@@ -29,8 +32,9 @@ window.__ModuleLoader__.load({
       '工作台把专属界面、会话和资料组织在一起。可通过顶部快捷栏在会话与不同工作台之间切换。': 'Workbenches bring dedicated interfaces, sessions, and files together. Use the top switcher to move between sessions and workbenches.',
       '遵循规范开发、安装并验证，也可以准备材料提交到工作台市场。': 'Follow the guidelines to build, install, and test a workbench. You can also prepare a market submission.',
       '有序组织专属界面、会话与资料': 'Organize your dedicated interfaces, conversations, and resources', '市场': 'Market', '全部类型': 'All types', '按推荐值': 'Recommended', '在此切换会话与不同工作台': 'Switch between conversations and workbenches here', '知道了': 'Got it', '停用': 'Disable', '启用': 'Enable', '已收藏': 'Favorited', '查看 GitHub': 'View GitHub', '查看详情': 'View details',
+      '正在更新目录…': 'Updating catalog…', '正在首次读取市场目录…': 'Loading the market catalog for the first time…', '市场目录暂不可用': 'Market catalog unavailable', '请重试读取目录，或使用已安装的工作台。': 'Retry loading the catalog, or use your installed workbenches.',
       '刷新目录': 'Refresh catalog', '正在检查更新': 'Checking for updates', '检查更新': 'Check for updates', '正在检查…': 'Checking…',
-      '本地开发': 'Local development', '市场安装': 'Market installation', '来源未知': 'Unknown source', '来源待确认': 'Source unconfirmed', '本地已有': 'Already on this device (local)', '本机已有·来源待确认': 'Already on this device · source unconfirmed', '改用市场版本': 'Switch to market version', '确认改用市场版本': 'Confirm switch to market version', '本机': 'On device', '市场': 'Market', '查看市场版本': 'View market version', '当前工作台来自本地开发。市场版本会替换本地代码，未发布的修改不会带入。请先备份代码及存放在安装目录中的数据。': 'The market version will replace the local code. Unpublished changes will not carry over. Back up your code and any data stored in the installation directory first.', '无法确认当前工作台是否有本地修改。改用市场版本可能覆盖本地代码，请先备份代码及存放在安装目录中的数据。': 'We cannot verify whether this workbench has local changes. Switching to the market version may overwrite local code. Back up your code and any data stored in the installation directory first.', '需要确认更新本机工作台代码。': 'Confirm updating the installed workbench code.', '工作台集合': 'Workbench collections', '我的收藏': 'Favorites', '已安装': 'Installed', '搜索名称、作者或分类': 'Search name, author, or category', '搜索工作台': 'Search workbenches', '按分类筛选': 'Filter by category',
+      '确认更新': 'Confirm update', '本机': 'On device', '市场': 'Market', '查看市场版本': 'View market version', '当前工作台来自本地开发。更新将改用市场发布的代码，本地修改不会带入新版本。请先备份安装目录中的重要文件。': 'This workbench is locally developed. Updating will use the market release code; local changes will not carry over. Back up important files in the installation directory first.', '检测到当前安装内容已被修改。更新将改用市场发布的代码，请先备份需要保留的修改。': 'The installed content has been modified. Updating will use the market release code. Back up any changes you want to keep first.', '需要确认更新本机工作台代码。': 'Confirm updating the installed workbench code.', '工作台集合': 'Workbench collections', '我的收藏': 'Favorites', '已安装': 'Installed', '搜索名称、作者或分类': 'Search name, author, or category', '搜索工作台': 'Search workbenches', '按分类筛选': 'Filter by category',
       '全部': 'All', '其他': 'Other', '本地': 'Local', '排序': 'Sort', '工作台排序方式': 'Workbench sort order', '市场顺序': 'Market order', 'Star 数量': 'Stars', '下载量': 'Downloads', '更新时间': 'Recently updated', '名称': 'Name',
       '工作台功能已关闭': 'Workbenches are turned off', '可在 设置 → 通用 中重新开启。': 'Turn them on again in Settings → General.',
       '启用工作台功能': 'Enable workbenches', '开启后可使用工作台市场和已安装的工作台；关闭后所有工作台不加载，不影响已保存的会话和数据。': 'Browse the market and use installed workbenches when enabled. Turning this off does not affect saved sessions or data.',
@@ -184,6 +188,9 @@ window.__ModuleLoader__.load({
         this.remoteCatalog = []
         // The market's own category list; submissions choose from it.
         this.marketCategories = []
+        this.catalogLoaded = false
+        this.catalogRevision = 0
+        this.loading = null
         this.catalogError = ''
         this.catalogStale = false
         this.catalogRefreshing = false
@@ -228,6 +235,11 @@ window.__ModuleLoader__.load({
         const id = entry.catalogId || entry.id
         if (this.pendingRestart.has(id)) return 'market'
         return this.packageEvidence?.[this.pluginFor(entry)]?.origin || 'unknown'
+      }
+      updateRiskFor(entry) {
+        if (this.originFor(entry) === 'local') return 'local'
+        const risk = this.packageEvidence?.[this.pluginFor(entry)]?.updateRisk
+        return risk === 'local' || risk === 'modified' ? risk : null
       }
       isLocalEntry(entry) {
         const origin = this.originFor(entry)
@@ -515,7 +527,7 @@ window.__ModuleLoader__.load({
       }
       publish() {
         this.snapshot = { state: this.state, drafts: Object.fromEntries(this.draftNotes), ready: this.ready, error: this.error,
-          catalogError: this.catalogError, catalogStale: this.catalogStale, catalogRefreshing: this.catalogRefreshing, checkingUpdates: this.checkingUpdates, pending: this.pending, marketOpen: this.marketOpen,
+          catalogLoaded: this.catalogLoaded, catalogError: this.catalogError, catalogStale: this.catalogStale, catalogRefreshing: this.catalogRefreshing, checkingUpdates: this.checkingUpdates, pending: this.pending, marketOpen: this.marketOpen,
           catalog: this.marketCatalog(), categories: this.marketCategories, installs: this.installs, installing: this.installing, native: this.native, togglingPlugin: this.togglingPlugin, removingPlugin: this.removingPlugin, removedWorkbenchIds: [...this.removedWorkbenchIds], restartNeeded: this.restartNeeded, switcherHint: this.switcherHint === true }
         for (const listener of this.listeners) listener()
       }
@@ -528,9 +540,10 @@ window.__ModuleLoader__.load({
         return data
       }
       async readCatalog(force = false) {
-        const response = await this.request(force ? `${CATALOG_API}?force=1` : CATALOG_API, { credentials: 'same-origin', cache: 'no-store' })
+        const response = await this.request(force ? `${CATALOG_API}?force=1` : `${CATALOG_API}?cache=1`, { credentials: 'same-origin', cache: 'no-store' })
         const data = await response.json()
         if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`)
+        if (!data.catalog) return null
         const categories = new Map(data.catalog.categories.map(category => [category.id, category.name]))
         return {
           entries: data.catalog.workbenches.map(entry => ({ ...entry, categoryName: categories.get(entry.category)?.zh || entry.category, categoryNames: categories.get(entry.category) })),
@@ -545,6 +558,9 @@ window.__ModuleLoader__.load({
           try {
             const catalog = await this.readCatalog(true)
             if (this.disposed) return
+            if (!catalog) throw new Error('在线市场暂时无法读取，仍可使用已安装的工作台。 ')
+            this.catalogRevision++
+            this.catalogLoaded = true
             this.remoteCatalog = catalog.entries
             this.marketCategories = catalog.categories
             this.catalogError = ''
@@ -555,7 +571,10 @@ window.__ModuleLoader__.load({
             this.reconcileMarketInstalls()
             this.reconcileLocalProviders()
           } catch (error) {
-            if (!this.disposed) this.catalogError = error instanceof Error ? error.message : String(error)
+            if (!this.disposed) {
+              this.catalogError = error instanceof Error ? error.message : String(error)
+              this.catalogStale = this.catalogLoaded || this.remoteCatalog.length > 0
+            }
           } finally {
             if (!this.disposed) {
               this.catalogRefreshing = false
@@ -594,7 +613,14 @@ window.__ModuleLoader__.load({
             method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: catalogId, ...options })
           })
           const data = await response.json()
-          if (!response.ok) throw new Error(installErrorMessage(this.ctx, data, response.status))
+          if (!response.ok) {
+            const error = new Error(installErrorMessage(this.ctx, data, response.status))
+            if (response.status === 409 && data.code === 'confirmation_required' && (data.params?.updateRisk === 'local' || data.params?.updateRisk === 'modified')) {
+              error.code = 'confirmation_required'
+              error.updateRisk = data.params.updateRisk
+            }
+            throw error
+          }
           if (data.restartRequired) this.restartNeeded = true
           return data
         } finally {
@@ -616,7 +642,7 @@ window.__ModuleLoader__.load({
           ? !!bundle && bundle.installed !== false
           : !!installed?.installed || !!this.installRecordFor(catalogId)
         if (installedVersion && newerVersion(installedVersion, entry.version)) throw new Error('本机工作台版本高于市场版本，已取消安装以避免降级。')
-        if (wasInstalled && this.originFor(installed) !== 'market' && confirmedReplacement !== true) throw new Error('需要确认更新本机工作台代码。')
+        if (wasInstalled && this.updateRiskFor(installed) && confirmedReplacement !== true) throw new Error('需要确认更新本机工作台代码。')
         try {
           const data = await this.marketPackage('/api/desktop-workbenches/market-install', catalogId, confirmedReplacement === true ? { confirmedReplacement: true } : {})
           if (data.install?.catalogId !== catalogId || typeof data.install?.pluginName !== 'string') throw new Error('市场安装记录无效。')
@@ -632,6 +658,7 @@ window.__ModuleLoader__.load({
           if (!wasInstalled && !this.disposed) this.showSwitcherHint()
           return result
         } catch (error) {
+          if (confirmationRisk(error)) throw error
           this.installFailures.set(catalogId, { kind: wasInstalled ? 'update' : 'install', message: error instanceof Error ? error.message : String(error) })
           this.pendingRestart.delete(catalogId)
           this.publish()
@@ -736,8 +763,14 @@ window.__ModuleLoader__.load({
           this.publish()
         }
       }
-      async load() {
+      load() {
+        if (this.loading) return this.loading
+        this.loading = this.loadLocal().finally(() => { this.loading = null })
+        return this.loading
+      }
+      async loadLocal() {
         await this.queue
+        const catalogRevision = this.catalogRevision
         const ticket = ++this.navigation
         this.ready = false
         this.error = ''
@@ -754,16 +787,19 @@ window.__ModuleLoader__.load({
           this.state = data.state
           this.revision = data.revision
           this.installs = installs
-          if (catalog.error) this.catalogError = catalog.error instanceof Error ? catalog.error.message : String(catalog.error)
-          else {
+          if (catalog?.error && catalogRevision === this.catalogRevision) this.catalogError = catalog.error instanceof Error ? catalog.error.message : String(catalog.error)
+          else if (catalog && catalogRevision === this.catalogRevision) {
+            this.catalogLoaded = true
             this.remoteCatalog = catalog.entries
             this.marketCategories = catalog.categories
             this.catalogError = ''
-            this.catalogStale = catalog.stale
+            this.catalogStale = false
           }
           this.rebuildProviders()
           this.blocked = false
           this.ready = true
+          // Online discovery must not block local workbenches or cached cards.
+          this.run(this.refreshCatalog())
           this.lastSession = this.currentSession()
           if (!this.state.active) this.rememberNativeSession(this.lastSession)
           this.publish()
@@ -911,8 +947,11 @@ window.__ModuleLoader__.load({
         if (!workbenchPreference.getSnapshot()) return
         this.setMarketOpen(true)
         this.ctx.layout.selectPanel(PANEL)
-        this.run(this.refreshCatalog())
-        this.run(this.refreshNative())
+        if (!this.ready || this.loading) this.run(this.load())
+        else {
+          this.run(this.refreshCatalog())
+          this.run(this.refreshNative())
+        }
       }
       async openNative(startSession) {
         this.setMarketOpen(false)
@@ -1376,6 +1415,7 @@ window.__ModuleLoader__.load({
       .dshWbPanelFailure p{margin:0;font-size:13px;line-height:20px;color:var(--dsw-alias-label-secondary)}
       .dshWbModeNameTooltip{display:none;position:absolute;top:calc(100% + 6px);right:0;width:max-content;max-width:100%;z-index:33;padding:6px 8px;border-radius:6px;background:var(--dsw-alias-label-primary);color:var(--dsw-alias-label-primary-foreground);font-size:12px;line-height:18px;white-space:normal;overflow-wrap:anywhere;pointer-events:none;text-align:left;box-shadow:0 6px 18px rgba(0,0,0,.12)}.dshWbModeSwitch:hover .dshWbModeNameTooltip,.dshWbModeSwitch:focus-visible .dshWbModeNameTooltip{display:block}.dshWbModeSwitch[aria-expanded=true] .dshWbModeNameTooltip{display:none}
       .dshWbInit{width:100%;max-width:440px;min-width:0;box-sizing:border-box;padding:24px;margin:auto;overflow-wrap:anywhere}.dshWbInit h2{font-size:20px;line-height:28px;font-weight:600;margin:0 0 8px}.dshWbInit p{margin:0}.dshWbInit .dshWbInitWorkspace{display:flex;flex-direction:column;gap:8px;margin-top:24px;min-width:0}.dshWbInit label{font-size:13px;line-height:20px;font-weight:500}.dshWbInitWorkspaceRow{display:flex;flex-wrap:wrap;gap:8px;min-width:0}.dshWbInit select{flex:1 1 180px;width:100%;min-width:0;max-width:100%;height:34px;padding:5px 8px;background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l2);border-radius:6px}.dshWbInit .dshWbBtn{min-height:34px;white-space:normal;overflow-wrap:anywhere;flex-shrink:0;max-width:100%}.dshWbInitNew{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin-top:20px;padding-top:20px;border-top:1px solid var(--dsw-alias-border-l2)}.dshWbInitNew:first-of-type{margin-top:24px}.dshWbInitHint{font-size:12px;line-height:18px}
+      .dshWbCatalogProgress{display:flex;align-items:center;gap:6px;color:var(--dsw-alias-label-secondary)}.dshWbCatalogProgress svg{animation:dshWbSpin .8s linear infinite}@media(prefers-reduced-motion:reduce){.dshWbCatalogProgress svg{animation:none}}
       .dshWbNotice{padding:10px 14px;background:var(--dsw-alias-bg-layer-2);font-size:13px;line-height:1.6;overflow-wrap:anywhere}
       .dshWb [hidden]{display:none!important}
       @media(hover:none){.dshWbFavorite{opacity:1;transform:none}}
@@ -1432,8 +1472,8 @@ window.__ModuleLoader__.load({
       return React.useSyncExternalStore(service.subscribe, service.getSnapshot)
     }
     function Button({ children, primary, ...props }) { return h('button', { type: 'button', className: `dshWbBtn${primary ? ' dshWbPrimary' : ''}`, ...props }, children) }
-    function Notice({ service }) {
-      const { error, catalogError, catalogStale, pending, ready, restartNeeded } = useWorkbench(service)
+    function Notice({ service, showCatalogStatus = false }) {
+      const { error, catalogError, catalogStale, catalogLoaded, catalogRefreshing, pending, ready, restartNeeded } = useWorkbench(service)
       const [restarting, setRestarting] = React.useState(false)
       const bridge = globalThis.dshDesktop
       const restart = async () => {
@@ -1446,8 +1486,9 @@ window.__ModuleLoader__.load({
           : tr('请从菜单 Harness → 重启 Harness。'))
       if (error) return h('div', { className: 'dshWbNotice', role: 'alert' }, tr(error), ' ', h(Button, { disabled: pending > 0, onClick: () => service.run(service.load()) }, tr('重新加载')))
       if (!ready) return h('div', { className: 'dshWbNotice', role: 'status' }, tr('正在读取本地工作台…'))
-      if (catalogError) return h('div', { className: 'dshWbNotice', role: 'status' }, tr('在线市场暂时无法读取，仍可使用已安装的工作台。 '), h(Button, { disabled: pending > 0, onClick: () => service.run(service.refreshCatalog()) }, tr('重试')))
-      if (catalogStale) return h('div', { className: 'dshWbNotice', role: 'status' }, tr('在线市场暂时无法更新，正在显示上一次成功读取的目录。'))
+      if (!showCatalogStatus) return null
+      if (catalogRefreshing) return h('div', { className: 'dshWbNotice dshWbCatalogProgress', role: 'status', 'aria-live': 'polite' }, h(MarketIcon, { name: 'refresh', size: 14 }), tr(catalogLoaded || service.remoteCatalog.length > 0 ? '正在更新目录…' : '正在首次读取市场目录…'))
+      if (catalogError || catalogStale) return h('div', { className: 'dshWbNotice', role: 'status' }, tr(catalogLoaded || service.remoteCatalog.length > 0 ? '在线市场暂时无法更新，正在显示上一次成功读取的目录。' : '在线市场暂时无法读取，仍可使用已安装的工作台。 '), h(Button, { disabled: catalogRefreshing, onClick: () => service.run(service.refreshCatalog()) }, tr('重试')))
       return null
     }
     function screenshotsFor(entry) {
@@ -1768,17 +1809,18 @@ window.__ModuleLoader__.load({
         document.body
       )
     }
-    function ConfirmMarketUpdate({ origin, disabled, onCancel, onConfirm }) {
+    function ConfirmMarketUpdate({ entry, risk, disabled, onCancel, onConfirm }) {
       const dialogRef = React.useRef(null)
       const dismiss = () => { if (!disabled) onCancel() }
       useDialogFocus(true, dismiss, dialogRef)
       return require('react-dom').createPortal(
         h('div', { className: 'dshWbModalBackdrop', onClick: dismiss },
-          h('div', { ref: dialogRef, className: 'dshWbModal', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'dsh-wb-replacement-title', 'aria-describedby': 'dsh-wb-replacement-description', tabIndex: -1, onClick: event => event.stopPropagation() },
-            h('h2', { id: 'dsh-wb-replacement-title' }, tr('确认改用市场版本')),
-            h('p', { id: 'dsh-wb-replacement-description' }, tr(origin === 'local' ? '当前工作台来自本地开发。市场版本会替换本地代码，未发布的修改不会带入。请先备份代码及存放在安装目录中的数据。' : '无法确认当前工作台是否有本地修改。改用市场版本可能覆盖本地代码，请先备份代码及存放在安装目录中的数据。')),
+          h('div', { ref: dialogRef, className: 'dshWbModal dshWbConfirm', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'dsh-wb-replacement-title', 'aria-describedby': 'dsh-wb-replacement-description', tabIndex: -1, onClick: event => event.stopPropagation() },
+            h('div', { className: 'dshWbConfirmIcon', 'aria-hidden': true }, h(MarketIcon, { name: 'refresh', size: 18 })),
+            h('h2', { id: 'dsh-wb-replacement-title', style: { fontSize: 18, lineHeight: '26px' } }, both(`更新「${entry.title || entry.id}」？`, `Update “${entry.title || entry.id}”?`)),
+            h('p', { id: 'dsh-wb-replacement-description', className: 'dshWbMuted' }, tr(risk === 'local' ? '当前工作台来自本地开发。更新将改用市场发布的代码，本地修改不会带入新版本。请先备份安装目录中的重要文件。' : '检测到当前安装内容已被修改。更新将改用市场发布的代码，请先备份需要保留的修改。')),
             h('div', { className: 'dshWbActions' }, h(Button, { autoFocus: true, disabled, onClick: dismiss }, tr('取消')),
-              h(Button, { primary: true, disabled, onClick: onConfirm }, tr('确认改用市场版本'))))), document.body)
+              h(Button, { primary: true, disabled, onClick: onConfirm }, tr('确认更新'))))), document.body)
     }
     function ConfirmRemoveModal({ entry, disabled, uninstall, nativeUninstall, recordOnly, onCancel, onConfirm }) {
       const dialogRef = React.useRef(null)
@@ -1928,7 +1970,7 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
     }
     function Market({ service }) {
       useHostLocale(service)
-      const { state, catalog, categories: marketCategories = [], ready, pending, installing, catalogRefreshing, checkingUpdates, native, togglingPlugin, removingPlugin, removedWorkbenchIds = [] } = useWorkbench(service)
+      const { state, catalog, categories: marketCategories = [], ready, pending, installing, catalogLoaded, catalogError, catalogRefreshing, checkingUpdates, native, togglingPlugin, removingPlugin, removedWorkbenchIds = [] } = useWorkbench(service)
       const workbenchEnabled = React.useSyncExternalStore(workbenchPreference.subscribe.bind(workbenchPreference), workbenchPreference.getSnapshot.bind(workbenchPreference))
       const [tab, setTab] = React.useState('market')
       const [search, setSearch] = React.useState('')
@@ -1943,8 +1985,12 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
       const [replacing, setReplacing] = React.useState(null)
       const installMarket = (entry) => {
         const bundle = service.native.bundles[service.pluginFor(entry)]
-        if ((entry.installed || (bundle && bundle.installed !== false) || service.installedVersionFor(entry)) && service.originFor(entry) !== 'market') setReplacing(entry)
-        else service.run(service.installFromMarket(entry.catalogId || entry.id))
+        if ((entry.installed || (bundle && bundle.installed !== false) || service.installedVersionFor(entry)) && service.updateRiskFor(entry)) setReplacing({ entry, risk: service.updateRiskFor(entry) })
+        else service.run(service.installFromMarket(entry.catalogId || entry.id).catch(error => {
+          const risk = confirmationRisk(error)
+          if (!risk) throw error
+          setReplacing({ entry, risk })
+        }))
       }
       if (!workbenchEnabled) return h('section', { className: 'dshWb dshWbMarket', 'aria-label': tr('工作台市场') },
         h('div', { className: 'dshWbDisabledHint' }, h('h1', null, tr('工作台功能已关闭')), h('p', { className: 'dshWbMuted' }, tr('可在 设置 → 通用 中重新开启。'))))
@@ -2001,7 +2047,7 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
           h('div', { className: 'dshWbMarketHeaderActions' },
 
             h(Button, { primary: tab !== 'submit', className: `dshWbBtn${tab !== 'submit' ? ' dshWbPrimary' : ''} dshWbCreate`, onClick: () => { setTab(tab === 'submit' ? 'market' : 'submit'); setDetail(null); setCopyStatus(null) } }, h(MarketIcon, { name: tab === 'submit' ? 'search' : 'plus' }), tab === 'submit' ? tr('返回工作台市场') : tr('制作我的工作台')))),
-        h(Notice, { service }),
+        h(Notice, { service, showCatalogStatus: true }),
         tab !== 'submit' && h('div', { className: 'dshWbToolbar' },
           h('div', { className: 'dshWbTabs' }, h('div', { role: 'tablist', 'aria-label': tr('工作台集合') },
             h(Button, { id: 'dsh-workbench-market-tab', role: 'tab', tabIndex: tab === 'market' ? 0 : -1, 'aria-selected': tab === 'market', 'aria-controls': 'dsh-workbench-market-panel', onKeyDown: navigateCollections, onClick: () => selectCollection('market') }, tr('市场')),
@@ -2075,21 +2121,18 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
             const versionText = bothVersions
               ? `${tr('本机')} v${deviceVersionText} · ${tr('市场')} v${marketVersionText}`
               : cardVersion && `v${cardVersion}`
-            const origin = service.originFor(entry)
             const updateAvailable = installed && service.updateAvailableFor(entry)
             const awaitingRestart = installed && service.pendingRestart.has(catalogId)
             const updating = installed && installing === catalogId
-            const replaceLocal = installed && entry.listed && !!entry.distribution && origin !== 'market' &&
-              (!installedVersion || !marketVersion || !newerVersion(installedVersion, marketVersion))
             const installedFailure = installed && !!entry.loadFailure
-            const canRetryInstalled = installedFailure && entry.failureKind !== 'update' && entry.listed && !!entry.distribution && !updateAvailable && !replaceLocal && !awaitingRestart
-            const showUpdate = (updateAvailable || replaceLocal || updating || awaitingRestart || (installedFailure && entry.failureKind === 'update')) && !canRetryInstalled
-            const updateLabel = awaitingRestart ? tr('重启后生效') : updating ? tr('更新中…') : replaceLocal ? tr('改用市场版本') : tr('更新')
-            const updateTitle = awaitingRestart ? both(`${entry.title}安装完成，重启 Harness 后生效`, `${entry.title} installed. Restart Harness to apply.`) : updating ? both(`正在更新${entry.title}`, `Updating ${entry.title}`) : replaceLocal ? both(`改用${entry.title}的市场版本${marketVersionText ? ` v${marketVersionText}` : ''}`, `Switch ${entry.title} to the market version${marketVersionText ? ` v${marketVersionText}` : ''}`) : both(`${updateLabel}${entry.title}至 v${entry.listedVersion}`, `Update ${entry.title} to v${entry.listedVersion}`)
+            const canRetryInstalled = installedFailure && entry.failureKind !== 'update' && entry.listed && !!entry.distribution && !updateAvailable && !awaitingRestart
+            const showUpdate = (updateAvailable || updating || awaitingRestart || (installedFailure && entry.failureKind === 'update')) && !canRetryInstalled
+            const updateLabel = awaitingRestart ? tr('重启后生效') : updating ? tr('更新中…') : tr('更新')
+            const updateTitle = awaitingRestart ? both(`${entry.title}安装完成，重启 Harness 后生效`, `${entry.title} installed. Restart Harness to apply.`) : updating ? both(`正在更新${entry.title}`, `Updating ${entry.title}`) : both(`${updateLabel}${entry.title}至 v${entry.listedVersion}`, `Update ${entry.title} to v${entry.listedVersion}`)
             return h('article', { key: catalogId, className: 'dshWbCard' },
               h('div', { className: 'dshWbMedia' }, h('button', { type: 'button', className: 'dshWbMediaOpen', 'aria-describedby': `dsh-wb-preview-tooltip-${catalogId}`, 'aria-label': both(`查看${entry.title}详情`, `View ${entry.title} details`), onClick: () => setDetail(catalogId) }, h(Preview, { entry }), h('span', { className: 'dshWbMediaZoom', 'aria-hidden': true }, h(MarketIcon, { name: 'zoom', size: 18 }))), h('span', { id: `dsh-wb-preview-tooltip-${catalogId}`, className: 'dshWbControlTooltip', role: 'tooltip' }, tr('查看详情'))),
               h('div', { className: 'dshWbCardBody' },
-                h('div', { className: 'dshWbCardTitle' }, h('h2', null, h(EntryTitle, { entry })), tab === 'mine' && h('span', { className: 'dshWbCategory' }, tr(origin === 'local' ? '本地开发' : origin === 'market' ? '市场安装' : '来源待确认')), tab === 'mine' && h('span', { className: 'dshWbControlHint dshWbSwitchHint' }, h('button', { type: 'button', className: 'dshWbRunSwitch', role: 'switch', 'aria-checked': activation === 'on', 'aria-label': both(`${entry.title}运行状态`, `${entry.title} running state`), 'aria-describedby': `dsh-wb-switch-tooltip-${catalogId}`, disabled: disabled || !!togglingPlugin || !hasNativeControl || activation === 'unknown', onClick: () => service.run(service.setPluginEnabled(pluginName, activation !== 'on')) }), h('span', { id: `dsh-wb-switch-tooltip-${catalogId}`, className: 'dshWbControlTooltip', role: 'tooltip' }, activation === 'unknown' ? tr('原生插件状态暂不可用') : activation === 'on' ? tr('停用') : tr('启用')))),
+                h('div', { className: 'dshWbCardTitle' }, h('h2', null, h(EntryTitle, { entry })), tab === 'mine' && service.isLocalEntry(entry) && h('span', { className: 'dshWbCategory' }, tr('本地')), tab === 'mine' && h('span', { className: 'dshWbControlHint dshWbSwitchHint' }, h('button', { type: 'button', className: 'dshWbRunSwitch', role: 'switch', 'aria-checked': activation === 'on', 'aria-label': both(`${entry.title}运行状态`, `${entry.title} running state`), 'aria-describedby': `dsh-wb-switch-tooltip-${catalogId}`, disabled: disabled || !!togglingPlugin || !hasNativeControl || activation === 'unknown', onClick: () => service.run(service.setPluginEnabled(pluginName, activation !== 'on')) }), h('span', { id: `dsh-wb-switch-tooltip-${catalogId}`, className: 'dshWbControlTooltip', role: 'tooltip' }, activation === 'unknown' ? tr('原生插件状态暂不可用') : activation === 'on' ? tr('停用') : tr('启用')))),
                 h('div', { className: 'dshWbAuthorRow' }, h(AuthorItem, { entry, showVersion: false }), versionText && h('span', { className: 'dshWbCardVersion' }, versionText)),
                 h('div', { className: 'dshWbDescriptionHint' }, h('p', { className: 'dshWbMuted dshWbCardDescription' }, entry.description || tr('这个工作台暂时还没有填写介绍。'))),
                 h('div', { className: 'dshWbActions' },
@@ -2112,14 +2155,14 @@ ${ACCEPTANCE_READING}先确认要公开的仓库和内容，不得公开密钥�
                     : tab === 'mine'
                     ? h('button', { type: 'button', className: !entry.listed ? 'dshWbUninstall dshWbLocalUninstall' : 'dshWbUninstall', title: canUninstall ? both(`${removalLabel}${entry.title}`, `${removalLabel} ${entry.title}`) : tr(localRemoval?.reason) || tr('原生插件状态未知或不可卸载'), 'aria-label': both(`${removalLabel}${entry.title}`, `${removalLabel} ${entry.title}`), 'aria-describedby': !canUninstall ? `dsh-wb-uninstall-reason-${catalogId}` : undefined, disabled: disabled || !!removingPlugin || !canUninstall, onClick: () => setRemoving(entry.id) }, removalLabel)
                     : installed
-                      ? h('span', { className: 'dshWbInstalled', role: 'status' }, tr(origin === 'local' ? '本地已有' : origin === 'market' ? '已安装' : '本机已有·来源待确认'))
+                      ? h('span', { className: 'dshWbInstalled', role: 'status' }, tr('已安装'))
                       : entry.distribution
                         ? h(Button, { primary: true, disabled: disabled || !!installing, onClick: () => installMarket(entry) }, installing === catalogId ? tr('正在安装…') : tr('安装'))
                         : entry.listed === true && entry.repository && h('a', { className: 'dshWbBtn dshWbPrimary', href: entry.repository, target: '_blank', rel: 'noopener noreferrer' }, tr('查看安装说明'))))))
-          }), entries.length === 0 && h('div', { className: 'dshWbEmpty' }, h('div', null,
-            h('strong', null, tab === 'favorites' && !search ? tr('还没有收藏工作台') : tab === 'mine' && !search ? tr('还没有安装工作台') : tr('没有找到匹配的工作台')),
-            h('p', { className: 'dshWbMuted' }, tab === 'favorites' && !search ? tr('把鼠标移到市场卡片上，点击书签即可收藏。') : tab === 'mine' && !search ? tr('到工作台市场选择一个工作台开始。') : tr('试试其他关键词或分类。')))))),
-        replacing && h(ConfirmMarketUpdate, { origin: service.originFor(replacing), disabled: !!installing, onCancel: () => setReplacing(null), onConfirm: () => { service.run(service.installFromMarket(replacing.catalogId || replacing.id, { confirmedReplacement: true })); setReplacing(null) } }),
+          }), entries.length === 0 && (tab !== 'market' || (ready && !catalogRefreshing) || catalogLoaded) && h('div', { className: 'dshWbEmpty' }, h('div', null,
+            h('strong', null, tab === 'market' && !catalogLoaded && catalogError ? tr('市场目录暂不可用') : tab === 'favorites' && !search ? tr('还没有收藏工作台') : tab === 'mine' && !search ? tr('还没有安装工作台') : tr('没有找到匹配的工作台')),
+            h('p', { className: 'dshWbMuted' }, tab === 'market' && !catalogLoaded && catalogError ? tr('请重试读取目录，或使用已安装的工作台。') : tab === 'favorites' && !search ? tr('把鼠标移到市场卡片上，点击书签即可收藏。') : tab === 'mine' && !search ? tr('到工作台市场选择一个工作台开始。') : tr('试试其他关键词或分类。')))))),
+        replacing && h(ConfirmMarketUpdate, { entry: replacing.entry, risk: replacing.risk, disabled: !!installing, onCancel: () => setReplacing(null), onConfirm: () => { service.run(service.installFromMarket(replacing.entry.catalogId || replacing.entry.id, { confirmedReplacement: true })); setReplacing(null) } }),
         detail != null && h(DetailModal, { entry: selected, onClose: () => setDetail(null) }),
         removing != null && h(ConfirmRemoveModal, { entry: removingEntry, disabled: disabled || !!installing || !!removingPlugin, onCancel: () => setRemoving(null), uninstall: !removingStale && !removingEntry?.unavailable && !!service.marketInstallFor(removing), nativeUninstall: !removingStale && !removingEntry?.unavailable && !service.marketInstallFor(removing), recordOnly: !!removingStale || !!removingEntry?.unavailable, onConfirm: () => service.run((removingEntry?.unavailable ? service.clearUnavailableRecord(removing) : removingStale ? service.removeStaleWorkbenchRecord(removing) : service.removeWorkbench(removing)).then(() => setRemoving(null))) }))
     }
