@@ -1,0 +1,159 @@
+diff --git a/node_modules/@deepseek-ai/dsh-token-meter/lib/index.js b/node_modules/@deepseek-ai/dsh-token-meter/lib/index.js
+index 25a8246..9723064 100644
+--- a/node_modules/@deepseek-ai/dsh-token-meter/lib/index.js
++++ b/node_modules/@deepseek-ai/dsh-token-meter/lib/index.js
+@@ -14,6 +14,15 @@ import { z as z$1 } from "zod";
+ */
+ /** Fixed text-density estimate used until exact tokenization is needed. */
+ const CHARS_PER_TOKEN = 4;
++// Language-aware fallback; keep the public estimate subpath in sync.
++function textUnits(text) {
++	let units = 0;
++	for (const char of text) {
++		const point = char.codePointAt(0);
++		units += point <= 0x7f ? 1 : point <= 0x7ff ? 4 : point <= 0xffff ? 6 : 8;
++	}
++	return units;
++}
+ /** Per-block structural overhead for JSON framing and type tags. */
+ const BLOCK_OVERHEAD = 4;
+ /**
+@@ -27,9 +36,9 @@ const BLOCK_OVERHEAD = 4;
+ function estimateStructuralBlock(block) {
+ 	if (block.type === "image") {
+ 		const { offloaded: _offloaded, ...reference } = block;
+-		return BLOCK_OVERHEAD + Math.ceil(JSON.stringify(reference).length / CHARS_PER_TOKEN);
++		return BLOCK_OVERHEAD + Math.ceil(textUnits(JSON.stringify(reference)) / CHARS_PER_TOKEN);
+ 	}
+-	return BLOCK_OVERHEAD + Math.ceil(JSON.stringify(block).length / CHARS_PER_TOKEN);
++	return BLOCK_OVERHEAD + Math.ceil(textUnits(JSON.stringify(block)) / CHARS_PER_TOKEN);
+ }
+ /**
+ * Price content blocks recursively under the fixed density heuristic.
+@@ -41,10 +50,10 @@ function estimateContent(blocks) {
+ 	for (const block of blocks) switch (block.type) {
+ 		case "text":
+ 		case "reasoning":
+-			tokens += Math.ceil(block.text.length / CHARS_PER_TOKEN) + BLOCK_OVERHEAD;
++			tokens += Math.ceil(textUnits(block.text) / CHARS_PER_TOKEN) + BLOCK_OVERHEAD;
+ 			break;
+ 		case "tool-call":
+-			tokens += Math.ceil(block.name.length / CHARS_PER_TOKEN) + Math.ceil(block.arguments.length / CHARS_PER_TOKEN) + BLOCK_OVERHEAD;
++			tokens += Math.ceil(textUnits(block.name) / CHARS_PER_TOKEN) + Math.ceil(textUnits(block.arguments) / CHARS_PER_TOKEN) + BLOCK_OVERHEAD;
+ 			break;
+ 		default: tokens += estimateStructuralBlock(block);
+ 	}
+@@ -61,7 +70,7 @@ function estimateContent(blocks) {
+ function estimateSystemMessage(message) {
+ 	if (message.content.length === 0) return 0;
+ 	let characters = 0;
+-	for (const block of message.content) characters += block.type === "text" ? block.text.length : JSON.stringify(block).length;
++	for (const block of message.content) characters += textUnits(block.type === "text" ? block.text : JSON.stringify(block));
+ 	return Math.ceil(characters / CHARS_PER_TOKEN) + 4;
+ }
+ /**
+@@ -82,7 +91,7 @@ function estimateMessage(message) {
+ */
+ function estimateToolsTokens(header) {
+ 	if (header?.tools === void 0 || header.tools.length === 0) return 0;
+-	return Math.ceil(JSON.stringify(header.tools).length / CHARS_PER_TOKEN) + BLOCK_OVERHEAD;
++	return Math.ceil(textUnits(JSON.stringify(header.tools)) / CHARS_PER_TOKEN) + BLOCK_OVERHEAD;
+ }
+ //#endregion
+ //#region lib/types/surface-fold.js
+@@ -208,7 +217,7 @@ const breakdownSchema = z$1.object({
+ */
+ const contextBreakdownProjectionDefinition = {
+ 	key: "contextBreakdown",
+-	stateVersion: 5,
++	stateVersion: 6,
+ 	stateSchema: z$1.object({
+ 		nodes: z$1.array(z$1.object({
+ 			seq: sessionSeq,
+diff --git a/node_modules/@deepseek-ai/dsh-token-meter/lib/types/estimate.js b/node_modules/@deepseek-ai/dsh-token-meter/lib/types/estimate.js
+index 7e2968f..a247b4a 100644
+--- a/node_modules/@deepseek-ai/dsh-token-meter/lib/types/estimate.js
++++ b/node_modules/@deepseek-ai/dsh-token-meter/lib/types/estimate.js
+@@ -7,6 +7,16 @@
+  */
+ /** Fixed text-density estimate used until exact tokenization is needed. */
+ const CHARS_PER_TOKEN = 4;
++// A language-aware fallback, not an exact tokenizer. UTF-16 length / 4 badly
++// underprices CJK additions before a provider usage anchor is available.
++function textUnits(text) {
++    let units = 0;
++    for (const char of text) {
++        const point = char.codePointAt(0);
++        units += point <= 0x7f ? 1 : point <= 0x7ff ? 4 : point <= 0xffff ? 6 : 8;
++    }
++    return units;
++}
+ /** Per-block structural overhead for JSON framing and type tags. */
+ const BLOCK_OVERHEAD = 4;
+ /** Role-field framing overhead added to every priced message. */
+@@ -22,9 +32,9 @@ export const ROLE_OVERHEAD = 4;
+ export function estimateStructuralBlock(block) {
+     if (block.type === 'image') {
+         const { offloaded: _offloaded, ...reference } = block;
+-        return BLOCK_OVERHEAD + Math.ceil(JSON.stringify(reference).length / CHARS_PER_TOKEN);
++        return BLOCK_OVERHEAD + Math.ceil(textUnits(JSON.stringify(reference)) / CHARS_PER_TOKEN);
+     }
+-    return BLOCK_OVERHEAD + Math.ceil(JSON.stringify(block).length / CHARS_PER_TOKEN);
++    return BLOCK_OVERHEAD + Math.ceil(textUnits(JSON.stringify(block)) / CHARS_PER_TOKEN);
+ }
+ /**
+  * Price content blocks recursively under the fixed density heuristic.
+@@ -37,11 +47,11 @@ export function estimateContent(blocks) {
+         switch (block.type) {
+             case 'text':
+             case 'reasoning':
+-                tokens += Math.ceil(block.text.length / CHARS_PER_TOKEN) + BLOCK_OVERHEAD;
++                tokens += Math.ceil(textUnits(block.text) / CHARS_PER_TOKEN) + BLOCK_OVERHEAD;
+                 break;
+             case 'tool-call':
+-                tokens += Math.ceil(block.name.length / CHARS_PER_TOKEN)
+-                    + Math.ceil(block.arguments.length / CHARS_PER_TOKEN)
++                tokens += Math.ceil(textUnits(block.name) / CHARS_PER_TOKEN)
++                    + Math.ceil(textUnits(block.arguments) / CHARS_PER_TOKEN)
+                     + BLOCK_OVERHEAD;
+                 break;
+             default:
+@@ -66,7 +76,7 @@ export function estimateSystemMessage(message) {
+         return 0;
+     let characters = 0;
+     for (const block of message.content) {
+-        characters += block.type === 'text' ? block.text.length : JSON.stringify(block).length;
++        characters += textUnits(block.type === 'text' ? block.text : JSON.stringify(block));
+     }
+     return Math.ceil(characters / CHARS_PER_TOKEN) + ROLE_OVERHEAD;
+ }
+@@ -90,6 +100,6 @@ export function estimateMessage(message) {
+ export function estimateToolsTokens(header) {
+     if (header?.tools === undefined || header.tools.length === 0)
+         return 0;
+-    return Math.ceil(JSON.stringify(header.tools).length / CHARS_PER_TOKEN) + BLOCK_OVERHEAD;
++    return Math.ceil(textUnits(JSON.stringify(header.tools)) / CHARS_PER_TOKEN) + BLOCK_OVERHEAD;
+ }
+-//# sourceMappingURL=estimate.js.map
+\ No newline at end of file
++//# sourceMappingURL=estimate.js.map
+diff --git a/node_modules/@deepseek-ai/dsh-token-meter/lib/types/breakdown-projection.js b/node_modules/@deepseek-ai/dsh-token-meter/lib/types/breakdown-projection.js
+index 46a2410..d49e3df 100644
+--- a/node_modules/@deepseek-ai/dsh-token-meter/lib/types/breakdown-projection.js
++++ b/node_modules/@deepseek-ai/dsh-token-meter/lib/types/breakdown-projection.js
+@@ -32,7 +32,7 @@ const contextBreakdownStateSchema = z.object({
+  */
+ export const contextBreakdownProjectionDefinition = {
+     key: 'contextBreakdown',
+-    stateVersion: 5,
++    stateVersion: 6,
+     stateSchema: contextBreakdownStateSchema,
+     init: () => ({
+         nodes: [],
+@@ -65,4 +65,4 @@ export const contextBreakdownProjectionDefinition = {
+         view: state => state.breakdown,
+     },
+ };
+-//# sourceMappingURL=breakdown-projection.js.map
+\ No newline at end of file
++//# sourceMappingURL=breakdown-projection.js.map

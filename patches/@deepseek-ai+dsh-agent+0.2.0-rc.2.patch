@@ -1,0 +1,25 @@
+diff --git a/node_modules/@deepseek-ai/dsh-agent/lib/types/runtime-types.d.ts b/node_modules/@deepseek-ai/dsh-agent/lib/types/runtime-types.d.ts
+index a27ef0a..74a86e5 100644
+--- a/node_modules/@deepseek-ai/dsh-agent/lib/types/runtime-types.d.ts
++++ b/node_modules/@deepseek-ai/dsh-agent/lib/types/runtime-types.d.ts
+@@ -354,6 +354,13 @@ declare module '@deepseek-ai/cordis' {
+             retryPolicy: ResolvedRetryPolicy | undefined;
+             signal: AbortSignal;
+         }, next: () => Promise<RequestErrorAction>): Promise<RequestErrorAction>;
++        /** Awaited after request admission and before streaming; surface changes rebuild the request. @mode serial */
++        'agent/request-ready'(this: Scoped<Agent>, payload: {
++            agent: Agent;
++            turn: number;
++            step: number;
++            signal: AbortSignal;
++        }): Promise<void>;
+         /**
+          * Process-local assistant-stream publication. Chunk frames are transient;
+          * the loop appends one final v2 `assistant/message` or `assistant/attempt`
+@@ -407,4 +414,4 @@ declare module '@deepseek-ai/cordis' {
+         }): void;
+     }
+ }
+-//# sourceMappingURL=runtime-types.d.ts.map
+\ No newline at end of file
++//# sourceMappingURL=runtime-types.d.ts.map

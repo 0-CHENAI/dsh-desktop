@@ -1,0 +1,21 @@
+diff --git a/node_modules/@deepseek-ai/dsh-agent-loop/lib/index.js b/node_modules/@deepseek-ai/dsh-agent-loop/lib/index.js
+index 8513ae4..adb63e1 100644
+--- a/node_modules/@deepseek-ai/dsh-agent-loop/lib/index.js
++++ b/node_modules/@deepseek-ai/dsh-agent-loop/lib/index.js
+@@ -1060,10 +1060,15 @@ var ReactLoopAgent = class {
+ 			}, intent);
+ 			if (firstAttempt) for (const message of decision.messages) this.session.append("user/message", message, { surfaceOp: "append" });
+ 			firstAttempt = false;
+-			const request = this.buildRequest(config, preparedCall, assembly.tools, {
++			let request = this.buildRequest(config, preparedCall, assembly.tools, {
+ 				turn,
+ 				step
+ 			}, startsRequestSeries, signal);
++			// Pressure must see the current route, tools and admitted inputs, including on retries.
++			const generation = this.session.surface.contentGeneration;
++			await this.dispatch.serial("agent/request-ready", { turn, step, signal });
++			signal.throwIfAborted();
++			if (this.session.surface.contentGeneration !== generation) request = this.buildRequest(config, preparedCall, assembly.tools, { turn, step }, false, signal);
+ 			const live = new AssistantStreamAttempt(this.session.id, ++this.assistantAttemptCounter, () => ++this.assistantStreamRevision, turn, step, (frame) => {
+ 				this.dispatch.emit("agent/assistant-stream", { frame });
+ 			});
