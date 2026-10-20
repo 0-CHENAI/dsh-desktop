@@ -147,12 +147,16 @@ async function verifyOfficeTemplateUi(window: BrowserWindow): Promise<void> {
     const actionDeadline = Date.now() + 15_000
     let enabled = false
     while (Date.now() < actionDeadline) {
-      enabled = await window.webContents.executeJavaScript(`Boolean(document.querySelector('[data-office-mode="${mode}"]') && !document.querySelector('[data-office-mode="${mode}"]').disabled)`)
+      enabled = await window.webContents.executeJavaScript(`(() => {
+        const action = document.querySelector('[data-office-mode="${mode}"]')
+        if (!action || action.disabled) return false
+        action.click()
+        return true
+      })()`)
       if (enabled) break
       await new Promise(resolve => setTimeout(resolve, 100))
     }
     assert.ok(enabled, `${mode} mode action did not become enabled`)
-    await window.webContents.executeJavaScript(`document.querySelector('[data-office-mode="${mode}"]').click()`)
     const deadline = Date.now() + 15_000
     let ready = false
     while (Date.now() < deadline) {
@@ -164,7 +168,19 @@ async function verifyOfficeTemplateUi(window: BrowserWindow): Promise<void> {
       const state = await window.webContents.executeJavaScript(`({ pressed: document.querySelector('[data-office-mode="${mode}"]')?.getAttribute('aria-pressed'), disabled: document.querySelector('[data-office-mode="${mode}"]')?.disabled, cards: document.querySelectorAll('[data-office-template]').length, images: Array.from(document.querySelectorAll('[data-office-template] img')).map(image => ({ complete: image.complete, width: image.naturalWidth })) })`)
       throw new Error(`${mode} templates did not load: ${JSON.stringify(state)}`)
     }
-    await window.webContents.executeJavaScript(`document.querySelector('[data-office-template] .dso-card-preview').click()`)
+    const openDeadline = Date.now() + 15_000
+    let opened = false
+    while (Date.now() < openDeadline) {
+      opened = await window.webContents.executeJavaScript(`(() => {
+        const action = document.querySelector('[data-office-dock="${mode}"] [data-office-template] .dso-card-preview')
+        if (!action || action.disabled || document.querySelector('dialog.dso-modal[open]')) return false
+        action.click()
+        return true
+      })()`)
+      if (opened) break
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    assert.ok(opened, `${mode} preview action did not become interactive`)
     const previewDeadline = Date.now() + 15_000
     let preview = false
     while (Date.now() < previewDeadline) {
@@ -172,9 +188,18 @@ async function verifyOfficeTemplateUi(window: BrowserWindow): Promise<void> {
       if (preview) break
       await new Promise(resolve => setTimeout(resolve, 100))
     }
-    assert.ok(preview, `${mode} native template preview did not render`)
+    if (!preview) {
+      const state = await window.webContents.executeJavaScript(`({ dialogs: Array.from(document.querySelectorAll('dialog.dso-modal')).map(dialog => ({ open: dialog.open, width: dialog.clientWidth, height: dialog.clientHeight })), images: Array.from(document.querySelectorAll('dialog.dso-modal .dso-page img')).map(image => ({ complete: image.complete, width: image.naturalWidth, bytes: image.src.length })), errors: Array.from(document.querySelectorAll('dialog.dso-modal [role="alert"]')).map(node => node.textContent.slice(0, 200)) })`)
+      await writeFile(join(outputDirectory, `office-${mode}-failed.png`), (await window.webContents.capturePage()).toPNG())
+      throw new Error(`${mode} native template preview did not render: ${JSON.stringify(state)}`)
+    }
     await writeFile(join(outputDirectory, `office-${mode}.png`), (await window.webContents.capturePage()).toPNG())
     await window.webContents.executeJavaScript(`document.querySelector('dialog.dso-modal[open] .dso-close').click()`)
+    const closeDeadline = Date.now() + 5_000
+    while (await window.webContents.executeJavaScript(`Boolean(document.querySelector('dialog.dso-modal[open]'))`)) {
+      assert.ok(Date.now() < closeDeadline, `${mode} preview did not close`)
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
   }
   console.log('Office UI: real Word/Excel catalogs, authenticated previews and modal close passed')
 }

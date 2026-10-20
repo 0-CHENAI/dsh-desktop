@@ -62,6 +62,20 @@ afterEach(() => {
 const status = (phase: UpdateStatus['phase'], extra: Partial<UpdateStatus> = {}): UpdateStatus => ({ phase, currentVersion: '1.0.0', manual: true, presentationId: 7, ...extra })
 
 describe('desktop update presentation at the IPC boundary', () => {
+  it('refreshes every translated control on locale changes while retaining same-locale progress nodes', async () => {
+    const ui = await mount(Promise.resolve(status('idle', { manual: false })))
+    ui.emit(status('downloading', { availableVersion: '1.1.0', percent: 10, locale: 'zh', manual: false }))
+    const chinese = required(ui.shadow.querySelector('.card'))
+    expect(chinese.textContent).toContain('正在下载更新')
+    ui.emit(status('downloading', { availableVersion: '1.1.0', percent: 20, locale: 'en', manual: false }))
+    const english = required(ui.shadow.querySelector('.card'))
+    expect(english).not.toBe(chinese)
+    expect(english.textContent).toContain('Downloading update')
+    expect(english.textContent).toContain('Ignore')
+    ui.emit(status('downloading', { availableVersion: '1.1.0', percent: 30, locale: 'en', manual: false }))
+    expect(ui.shadow.querySelector('.card')).toBe(english)
+  })
+
   it.each(['up-to-date', 'error', 'unsupported', 'checking'] as const)('does not replay historical manual %s snapshots or same-request events', async phase => {
     const ui = await mount(Promise.resolve(status(phase)))
     expect(ui.host.style.display).toBe('none')

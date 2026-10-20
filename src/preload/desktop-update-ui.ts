@@ -132,6 +132,7 @@ function render(): void {
   const progressValue = progress?.querySelector<HTMLElement>('.progressValue')
   const progressDescription = existingCard?.querySelector<HTMLElement>('.description')
   if (status.phase === 'downloading' && existingCard && existingCard.dataset.version === status.availableVersion &&
+    existingCard.dataset.locale === locale &&
     existingCard.classList.contains('centered') === centered && progress && progressValue && progressDescription) {
     progressDescription.textContent = updateHeadline(status, locale).description
     progress.setAttribute('aria-valuenow', String(Math.round(status.percent ?? 0)))
@@ -140,6 +141,7 @@ function render(): void {
   }
   const card = element('aside', centered ? 'card centered' : 'card notification')
   card.dataset.version = status.availableVersion ?? ''
+  card.dataset.locale = locale
   card.setAttribute('role', centered ? 'dialog' : 'status')
   if (centered) card.setAttribute('aria-modal', 'false')
   card.setAttribute('aria-live', 'polite')
