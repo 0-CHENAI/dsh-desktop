@@ -85,8 +85,8 @@ async function main(): Promise<void> {
   assert.equal(pageErrors, 0, 'Harness client emitted console errors during activation')
   await mkdir(outputDirectory, { recursive: true })
   await writeFile(join(outputDirectory, 'client.png'), (await win.webContents.capturePage()).toPNG())
-  if (process.platform === 'win32') await verifySidebarToggle(win)
   await verifyOfficeTemplateUi(win)
+  if (process.platform === 'win32') await verifySidebarToggle(win)
   await verifyDesktopUpdateUi(win)
   await verifySafeModeFrame(win)
   assert.equal(pageErrors, 0, 'Safe Mode emitted console errors on the real Harness host')
@@ -141,6 +141,17 @@ async function verifySidebarToggle(window: BrowserWindow): Promise<void> {
 
 async function verifyOfficeTemplateUi(window: BrowserWindow): Promise<void> {
   for (const [mode, expected] of [['word', 4], ['excel', 3]] as const) {
+    // Sidebar activation does not mean the Office catalog request has settled.
+    // macOS skips the Windows zoom exercise and can reach this before load()
+    // enables the mode buttons; clicking a disabled button is intentionally ignored.
+    const actionDeadline = Date.now() + 15_000
+    let enabled = false
+    while (Date.now() < actionDeadline) {
+      enabled = await window.webContents.executeJavaScript(`Boolean(document.querySelector('[data-office-mode="${mode}"]') && !document.querySelector('[data-office-mode="${mode}"]').disabled)`)
+      if (enabled) break
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    assert.ok(enabled, `${mode} mode action did not become enabled`)
     await window.webContents.executeJavaScript(`document.querySelector('[data-office-mode="${mode}"]').click()`)
     const deadline = Date.now() + 15_000
     let ready = false
@@ -149,7 +160,10 @@ async function verifyOfficeTemplateUi(window: BrowserWindow): Promise<void> {
       if (ready) break
       await new Promise(resolve => setTimeout(resolve, 100))
     }
-    assert.ok(ready, `${mode} templates did not load through the authenticated Office service`)
+    if (!ready) {
+      const state = await window.webContents.executeJavaScript(`({ pressed: document.querySelector('[data-office-mode="${mode}"]')?.getAttribute('aria-pressed'), disabled: document.querySelector('[data-office-mode="${mode}"]')?.disabled, cards: document.querySelectorAll('[data-office-template]').length, images: Array.from(document.querySelectorAll('[data-office-template] img')).map(image => ({ complete: image.complete, width: image.naturalWidth })) })`)
+      throw new Error(`${mode} templates did not load: ${JSON.stringify(state)}`)
+    }
     await window.webContents.executeJavaScript(`document.querySelector('[data-office-template] .dso-card-preview').click()`)
     const previewDeadline = Date.now() + 15_000
     let preview = false
