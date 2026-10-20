@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from 'electron'
 import { execFile } from 'node:child_process'
+import { strict as assert } from 'node:assert'
 import { existsSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { DesktopService } from '../../src/main/desktop-service/service'
@@ -7,11 +8,11 @@ import { attachDiagnostics } from '../../src/main/desktop-service/diagnostics'
 
 // This process owns an isolated profile and one hidden window. Never send
 // shutdown messages to any other window, or invoke Windows shutdown/logoff.
-const [stateDir, mode] = process.argv.slice(2)
-if (!stateDir || !mode) throw new Error('Missing test arguments')
+const [stateDir, mode, messageProbe, projectRoot] = process.argv.slice(2)
+if (!stateDir || !mode || !messageProbe || !projectRoot) throw new Error('Missing test arguments')
 app.setPath('userData', stateDir)
 app.disableHardwareAcceleration()
-const observation = { beforeQuit: false, willQuit: false, sessionEnd: false, marker: true, reports: [] as string[], requests: 0, error: '' }
+const observation = { beforeQuit: false, willQuit: false, sessionEnd: false, marker: true, reports: [] as string[], requests: 0, probeRejections: 0, error: '' }
 const marker = join(stateDir, 'session.json')
 const record = () => {
   observation.marker = existsSync(marker)
@@ -28,12 +29,14 @@ const service = new DesktopService({
   confirmUpload: async body => { observation.reports.push(JSON.parse(body).kind); return false }
 })
 
-async function send(window: BrowserWindow, message: number): Promise<void> {
+async function send(window: BrowserWindow, message: number, owner = process.pid): Promise<void> {
   const handle = window.getNativeWindowHandle().readBigUInt64LE()
-  const command = `Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public static class DshTestMessage { [DllImport("user32.dll", EntryPoint="SendMessageW")] public static extern IntPtr Send(IntPtr window, uint message, UIntPtr wParam, IntPtr lParam); }'; [DshTestMessage]::Send([IntPtr]::new(${handle}), ${message}, [UIntPtr]::new(${message === 0x16 ? 1 : 0}), [IntPtr]::Zero) | Out-Null`
   await new Promise<void>((resolve, reject) => {
-    execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', command],
-      { windowsHide: true, timeout: 8_000 }, error => error ? reject(error) : resolve())
+    execFile(process.execPath, [messageProbe, projectRoot, String(handle), String(message), String(owner)],
+      { env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, windowsHide: true, timeout: 8_000 },
+      (error, _stdout, stderr) => error
+        ? reject(new Error(`Native message probe failed (${error.code}, ${error.signal}, killed=${error.killed}): ${stderr.slice(0, 1000)}`, { cause: error }))
+        : resolve())
   })
 }
 
@@ -56,7 +59,14 @@ void app.whenReady().then(async () => {
     observation.sessionEnd = true
     record()
   })
-  if (mode === 'clean-quit') {
+  if (mode === 'probe-guard') {
+    await assert.rejects(send(window, 0x16, process.pid + 1), /only message its parent/)
+    observation.probeRejections++
+    await assert.rejects(send(window, 0x10), /Invalid isolated Windows message probe arguments/)
+    observation.probeRejections++
+    assert.equal(observation.sessionEnd, false)
+    app.quit()
+  } else if (mode === 'clean-quit') {
     app.quit()
   } else if (mode === 'tray-close') {
     window.once('close', event => {
