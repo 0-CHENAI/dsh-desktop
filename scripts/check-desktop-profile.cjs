@@ -9,7 +9,7 @@ const temp = mkdtempSync(join(tmpdir(), 'dsh-desktop-profile-'))
 try {
   const worker = join(temp, 'main.cjs')
   buildSync({ entryPoints: ['scripts/fixtures/desktop-profile-preload.ts'], outfile: join(temp, 'preload.cjs'),
-    bundle: true, platform: 'node', format: 'cjs', external: ['electron'] })
+    bundle: true, platform: 'node', format: 'cjs', loader: { '.svg': 'text' }, external: ['electron'] })
   buildSync({
     entryPoints: ['scripts/fixtures/desktop-profile.ts'], outfile: worker,
     bundle: true, platform: 'node', format: 'cjs', external: ['electron']

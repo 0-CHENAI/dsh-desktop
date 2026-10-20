@@ -126,7 +126,7 @@ export async function fetchAvailableReleases(
         tag: release.tag,
         archiveUrl: archiveFeedUrl(release.version)
       }))
-      .filter((release) => compareVersions(release.version, currentVersion) !== 0)
+      .filter((release) => compareVersions(release.version, currentVersion) < 0)
       .sort((a, b) => compareVersions(b.version, a.version))
   } finally {
     clearTimeout(timer)

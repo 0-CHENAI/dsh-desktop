@@ -29,7 +29,7 @@ describe('Esc dismiss does not leave a focus ring', () => {
   it('blurs leftover focus after Escape closes any remaining dialog', async () => {
     const preload = await readFile(path.join(projectRoot, 'src', 'preload', 'index.ts'), 'utf8')
 
-    expect(preload).toContain('function overlayStillOpen()')
+    expect(preload).toContain('desktopUpdateOverlayOpen()')
     expect(preload).toContain("document.querySelector('[role=\"dialog\"], [aria-modal=\"true\"]')")
     expect(preload).toContain('function blurFocusAfterEscapeDismiss()')
     expect(preload).toContain("if (event.key !== 'Escape') return")

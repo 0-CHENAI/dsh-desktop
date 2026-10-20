@@ -21,6 +21,43 @@ describe('bundled workbench development guide', () => {
     expect(read(GUIDE_TARGET)).toBe(renderGuideFromSource(read))
   })
 
+  it('guides progressive requirements conversations in both languages without a combined questionnaire', () => {
+    for (const path of [GUIDE_SOURCE, GUIDE_EN_SOURCE, QUICKSTART_SOURCE, QUICKSTART_EN_SOURCE]) {
+      const guide = read(path)
+      expect(guide).not.toContain('合并问题')
+      expect(guide).not.toContain('combined question')
+      if (path.endsWith('.zh.md')) {
+        expect(guide).toContain('每次只问一个')
+        expect(guide).toContain('暂定名')
+        expect(guide).toContain('这个工作台想叫什么名字？')
+      } else {
+        expect(guide).toContain('one necessary question at a time')
+        expect(guide).toContain('provisional name')
+        expect(guide).toContain('What would you like to call this workbench?')
+      }
+    }
+  })
+
+  it('offers independent trial and continued Agent verification after restart in both languages', () => {
+    for (const path of [GUIDE_SOURCE, GUIDE_EN_SOURCE, QUICKSTART_SOURCE, QUICKSTART_EN_SOURCE]) {
+      const guide = read(path)
+      for (const phrase of path.endsWith('.zh.md')
+        ? ['两条可选路径', '重启好了', '不必返回对话', '不存在单独的「添加」按钮', '安装成功不能表述为全部验收通过']
+        : ['two optional paths', 'Restart complete', 'without returning to the conversation', 'no separate “Add” button', 'installation success does not mean all acceptance checks passed']) expect(guide).toContain(phrase)
+    }
+  })
+
+  it('keeps user-facing choices in business language while preserving technical guidance', () => {
+    for (const path of [GUIDE_SOURCE, GUIDE_EN_SOURCE, QUICKSTART_SOURCE, QUICKSTART_EN_SOURCE]) {
+      const guide = read(path)
+      expect(guide).toContain(path.endsWith('.zh.md') ? '面向用户的沟通' : 'Communication with users')
+      expect(guide).toContain(path.endsWith('.zh.md') ? '不要要求普通用户确认' : 'Do not ask ordinary users to confirm')
+      expect(guide).toContain(path.endsWith('.zh.md') ? '不得捏造真实仓库' : 'a real repository must never be fabricated')
+    }
+    expect(read(GUIDE_SOURCE)).toContain('customFrame: true')
+    expect(read(GUIDE_EN_SOURCE)).toContain('customFrame: true')
+  })
+
   it('covers development and the local self-test only', () => {
     const guide = read(GUIDE_TARGET)
     expect(guide).toBe(read(GUIDE_SOURCE))
@@ -98,6 +135,20 @@ describe('bundled workbench development guide', () => {
       expect(englishAcceptance.status).toBe(200)
       expect(await englishAcceptance.text()).toBe(read(ACCEPTANCE_EN_TARGET))
       expect(routes.some(value => value.path === '/api/desktop-workbenches/submissions')).toBe(false)
+    } finally { await rm(root, { recursive: true, force: true }) }
+  })
+
+  it('serves the bundled market header image through a fixed local route', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-workbench-header-'))
+    try {
+      const routes = []
+      apply({ effect: fn => fn(), inject() {}, reflect: { provide() {} }, connection: { fetch: { register(route) { routes.push(route) } } } }, { root })
+      const route = routes.find(value => value.path === '/api/desktop-workbenches/assets/market-header.png')
+      expect(route.methods).toEqual(['GET'])
+      const response = await route.fetch(new Request('http://localhost/api/desktop-workbenches/assets/market-header.png'))
+      expect(response.status).toBe(200)
+      expect(response.headers.get('content-type')).toBe('image/png')
+      expect(Buffer.from(await response.arrayBuffer())).toEqual(readFileSync(join(import.meta.dirname, '../packages/dsh-desktop-workbenches/assets/market-header.png')))
     } finally { await rm(root, { recursive: true, force: true }) }
   })
 

@@ -88,13 +88,13 @@ describe('fetchAvailableReleases', () => {
   const ok = () =>
     Promise.resolve({ ok: true, json: () => Promise.resolve(index) } as Response)
 
-  it('drops the current version and sorts descending from GitHub Releases', async () => {
+  it('returns older releases from this fork in descending order', async () => {
     const releases = await fetchAvailableReleases('1.1.0', ok as unknown as typeof fetch)
-    expect(releases.map((r) => r.version)).toEqual(['1.2.0', '1.0.0'])
+    expect(releases.map((r) => r.version)).toEqual(['1.0.0'])
     expect(releases[0]).toEqual({
-      version: '1.2.0',
-      tag: 'v1.2.0',
-      archiveUrl: archiveFeedUrl('1.2.0')
+      version: '1.0.0',
+      tag: 'v1.0.0',
+      archiveUrl: archiveFeedUrl('1.0.0')
     })
   })
 
@@ -106,6 +106,22 @@ describe('fetchAvailableReleases', () => {
     await expect(
       fetchAvailableReleases('1.0.0', fetchImpl as unknown as typeof fetch)
     ).resolves.toEqual([])
+  })
+
+  it('returns no rollback options when only current and newer releases exist', async () => {
+    const releases = await fetchAvailableReleases('1.0.0', ok as unknown as typeof fetch)
+    expect(releases).toEqual([])
+  })
+
+  it('keeps prereleases below the running release in numeric order', async () => {
+    const response = () => Promise.resolve({ ok: true, json: async () => [
+      { tag_name: 'v1.2.0-rc.9', draft: false },
+      { tag_name: 'v1.2.0-rc.10', draft: false },
+      { tag_name: 'v1.2.0', draft: false },
+      { tag_name: 'v1.3.0', draft: false }
+    ] } as Response)
+    const releases = await fetchAvailableReleases('1.2.0', response as unknown as typeof fetch)
+    expect(releases.map(release => release.version)).toEqual(['1.2.0-rc.10', '1.2.0-rc.9'])
   })
 
   it('throws when the request fails', async () => {

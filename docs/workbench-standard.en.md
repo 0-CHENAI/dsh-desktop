@@ -1,6 +1,6 @@
 # Workbench Development Standard
 
-Version: 2026-09-29 · The website is authoritative; DSH Desktop bundles a copy for offline use.
+Version: 2026-10-12 · The website is authoritative; DSH Desktop bundles a copy for offline use.
 
 Official page: https://dshdesktop.com/workbench/docs/development-en/
 
@@ -18,7 +18,9 @@ Rule levels are **required** (failure prevents installation or loading), **recom
 
 ## 1. Execution principles
 
-**Requirements confirmation gate (before code)**: First establish the workbench's business scenario, target users, and smallest core workflow. Copying Desktop's generic “development instructions,” opening a directory, or finding projects or dependencies inside it cannot replace the user's statement of what to develop now. Do not infer the product direction solely from a directory name or existing code. If the current request and already confirmed context do not establish all three, ask **one combined question**, for example: “Who is this workbench for, what business scenario should it address, and what are the core steps from entry to task completion?” **Wait for the user's answer and remain at requirements confirmation.** Until then, read-only checks of directories, versions, scripts, and host capabilities are allowed; creating or editing business code or UI, building, packing, installing, or submitting are not. An empty directory is not confirmed requirements. Starting implementation from generic instructions alone is an agent execution error.
+**Communication with users**: Use business language for requirements discovery, layout suggestions, confirmation choices, and installation or completion status, such as “Show the business content on a full page and open AI conversation when needed” or “Talk while viewing supporting information.” Do not ask ordinary users to confirm code fields such as `customFrame`, `register()`, `repository`, `dshHomePath`, or `reconcileLocalProviders`, internal identities, or placeholder repository URLs; do not present lengthy implementation details as choices. The Agent handles technical fields during development under this standard. Missing publication identity must not block confirmed local development, and a real repository must never be fabricated. Ask only for practical information affecting the business or installation, such as “Which folder should hold the data?” Explain technical details briefly when the user asks. Lead completion reports with what works, how to open it, actual operations tested, and items still pending verification; put changed files and technical checks in a short appendix.
+
+**Requirements conversation (before code)**: Discover the workbench through progressive conversation, asking only one necessary question at a time that affects the next step. Reuse the current request and confirmed context; do not repeat information the user already provided. If the name is unknown, first ask “What would you like to call this workbench?” A provisional name is fine and naming must not block implementation. Then fill gaps about the intended users, main functions, or business scenario as needed, without a fixed questionnaire or several questions bundled together. If the user cannot describe the core workflow, suggest a minimal flow based on their answers and ask them to confirm or adjust it; do not require a complete requirements form. Start once the business goal and smallest implementation scope are sufficiently clear and confirmed, without filling every formal field. Generic development instructions, directory names, existing code, or dependencies do not establish intent by themselves. While business intent or implementation scope remains unclear, wait for the current answer. Read-only checks of directories, versions, scripts, and host capabilities are allowed; creating or editing business code, UI, or package files, building, packing, installing, or submitting are not.
 
 Once requirements are clear, read project name, author, version, description, and test commands from the project; ask only for necessary information that cannot be found and affects implementation. A development request does not authorize publication of code, business data, or credentials.
 
@@ -29,14 +31,16 @@ Before development, check:
 
 ### One-page execution flow
 
-1. **Confirm requirements**: Record scenario, users, and one complete task flow from the current request and confirmed context. Generic instructions and the project directory do not count. If any is unclear, use the gate above and wait.
+1. **Confirm requirements**: Reuse confirmed information and ask only one necessary follow-up at a time. Names may be provisional; suggest and confirm the flow. Start when the business goal and minimal scope are clear, without requiring every field. Generic instructions or a directory alone are not confirmation.
 2. **Inspect project**: Identify root; run `pwd` and, for a Git repository, `git status --short`; inspect code, package manager, uncommitted work, and target Desktop version. Preserve unrelated changes.
-3. **Define the smallest business flow**: Write down entry point, main action, completion state, and failure recovery before choosing panels and host capabilities.
+3. **Define the smallest business flow and layout**: Write down entry point, main action, completion state, and failure recovery. Under Section 4, choose a standard split or `customFrame` and define the first-use path without a session before choosing host capabilities.
 4. **Implement**: Create the plugin package and registration under Section 3; follow Sections 4–7 for applicable responsibilities and capabilities.
 5. **Verify package**: Run `pnpm pack`; inspect `package.json`, declared entries, `cordis.patch.yml`, size, and sensitive files inside the tarball.
-6. **Install and test locally**: Check installation capabilities under Section 3.6, install that tarball, restart Harness, and record real UI and loading evidence under Section 8.
+6. **Install and test locally**: Check installation capabilities under Section 3.6, install that tarball, complete the required restart, and record real UI and loading evidence under Section 8. If the agent runs inside the target DSH Desktop, ask the user to restart it manually under the boundary below.
 
-**Empty-directory exercise**: If the directory is empty and the user only pasted Desktop's “development instructions” or said “make a workbench,” Step 1 has not passed. Ask one combined question: “Who is this workbench for, what business scenario should it address, and what are the core steps from entry to task completion?” `pwd`, directory inspection, and Desktop capability checks are allowed. Until the answer arrives, stop at Step 1: do not create `package.json`, components, or business pages; do not build, install, or submit.
+**Restart boundary inside the target app**: Do not close or restart DSH Desktop or Harness yourself or use process probes such as `ps` or `pgrep` to manage the restart; ask the user to restart manually. After fully quitting and reopening DSH Desktop, offer two optional paths: (1) Try it directly: expand the sidebar, click the current workbench name / switch area to the right of “Workbenches” at the upper left, and select the new workbench. If it is missing, check its entry and running state in Workbench Market → Installed, then switch after it loads or is enabled. New local workbenches are added to the switch menu automatically when loaded; there is no separate “Add” button. (2) Continue Agent verification: return to the original development conversation and tell the Agent “Restart complete”; the Agent then follows Section 8 to check loading, the installed list, the switch entry, and the real business UI. Users may try it independently without returning to the conversation. Checks the Agent has not actually performed remain pending verification; installation success does not mean all acceptance checks passed. An Agent outside the target app may follow the normal restart process.
+
+**Empty-directory exercise**: If the directory is empty and the user only pasted generic development instructions or said “make a workbench,” reuse any context already provided. If the name is unknown, ask only “What would you like to call this workbench?” and allow a provisional name. On the next turn, ask the one business question that most affects implementation, such as “What should it mainly help you do?” If the purpose is already clear, skip that question and suggest a minimal flow for confirmation. Read-only directory and Desktop capability checks are allowed. Until the business goal and scope are sufficiently clear, do not create package files, business code, or pages, or build, install, or submit. A name alone is not a business brief.
 
 ## 2. What a workbench is
 
@@ -152,14 +156,14 @@ window.__ModuleLoader__.load({
 - `require` can access only the shared baseline (React, Cordis, etc.), loaded plugins, and modules listed in `dsh.client.external`. Bundle other dependencies into the client file at build time.
 - `register()` **must** provide a `title`, business component, and canonical GitHub `repository` URL. New packages **must not specify** `register({ id })`. Desktop resolves `owner/repo` from `repository` and cross-checks the caller client package, market distribution, or installation record. A source conflict prevents provider exposure. An old package's `id` is only for migration, not the new protocol.
 - `workbench.json` and submission YAML `workbenchId` are not required for new workbenches. The runtime package name must correspond to `window.__ModuleLoader__.load({ id })`.
-- Optional registration fields: `description`, `panelTitle`, `icon`, `audience`, `requirements`, `layout` (`businessSide` is `left` or `right`; `businessWidth` is 0.25–0.7), `customFrame` (boolean; Section 4), and `initialization`.
+- Optional registration fields: `description`, `panelTitle`, `icon`, `audience`, `requirements`, `layout` (`businessSide` is `left` or `right`; `businessWidth` is 0.25–0.7), `customFrame` (boolean; Section 4), `headerLayout` (Section 4), and `initialization`.
 - Give the unregister function returned by registration to `ctx.effect`.
 
 ### 3.6 Build and local installation
 
 - The client file **must** already be built as a single file. Desktop does not build it for you.
 - **Detect capabilities first; do not guess from a version number.** Record the version shown in Desktop About, platform, and architecture. Look for local installation in “Workbench management / Installed workbenches”; then check whether the installed version's plugin installation UI or `dsh plugin add --help` accepts local `.tgz`. Install only when the UI or command explicitly supports this input. Do not infer capability from the website publication date. Record the entry point and output used.
-- Install the `.tgz` produced by `pnpm pack` through a confirmed supported path. For CLI, follow its actual `--help` syntax. Restart Harness as instructed, confirm the entry under “Installed workbenches,” open it from the sidebar, and inspect the real business panel. `dsh --profile web --dump-config` showing a plugin layer proves configuration only, not UI loading.
+- Install the `.tgz` produced by `pnpm pack` through a confirmed supported path. For CLI, follow its actual `--help` syntax. Complete the restart indicated by Desktop, then use either optional path in Section 1 for independent trial or continued Agent verification; during verification, confirm the Installed entry, switch entry, and real business panel. If the agent is running inside the target DSH Desktop, follow the Section 1 restart boundary: the user must fully quit and reopen the app. `dsh --profile web --dump-config` showing a plugin layer proves configuration only, not UI loading.
 - If the current Desktop lacks a local package installer, CLI support is absent, or installation fails, deliver the verified `.tgz` and package contents/check record. State Desktop version, capability findings, and failure reason. Mark “install, load after restart, installed list, sidebar entry, business operation” individually **untested**; do not claim local acceptance passed.
 - If installation or build scripts need to run (pnpm 10 blocks them by default), understand each script and obtain separate authorization.
 
@@ -169,9 +173,55 @@ A workbench is a plugin for a specific business scenario. This standard governs 
 
 Authors or users may define business panel layout, content, toolbar, and operations. When integrating an existing workbench, reuse its existing UI and business binding flow where possible. A universal top toolbar, session dropdown, business-area collapse control, or “generic chat” button is not required.
 
+### 4.1 Choose the layout for the primary task
+
+When advising the user, say: “I suggest showing the business content on a full page and opening AI conversation when needed. If talking with AI is your main task, you can talk while viewing supporting information.” Confirm the experience tradeoff only; the Agent implements the APIs and layout parameters below rather than presenting them as confirmation choices.
+
+Do not treat a persistent conversation pane as the default product design for every workbench. Confirm the user's primary task first; when requirements are unclear, suggest a business-first full page or a conversation split and explain the tradeoffs. Omitting `customFrame` still selects the standard split technically, but authors should choose deliberately rather than inherit that default.
+
+- **Business-first full page with conversation on demand (`customFrame: true`)**: For content review, renovation management, reports, dashboards, or wide tables, recommend a usable business home first. Decide whether and where a conversation entry belongs based on the task; a permanent entry or reserved chat pane is not required for every workbench. Create or restore a workbench session and show the conversation only when the user explicitly requests AI help; closing it returns to the business view. Place the host-provided `conversation` node when needed; do not duplicate the chat UI. This mode does not show the host's generic no-session guidance. Design the first-entry and no-session business states yourself. Do not automatically create a session on first entry to fill the interface.
+- **Standard split**: Use when conversation is the primary task and the business content is a compact companion tool, status panel, or reference. By default, the host native conversation is on the left and the business panel occupies 36% of the main content area on the right. In `register()`, `layout` may set `businessSide: 'left' | 'right'` and `businessWidth: 0.25–0.7`; this proportion does not guarantee enough space for every column inside the business panel. When no session is bound to the current workbench, the host shows optional AI-help guidance in the conversation area. The business panel must remain usable, and independent business actions must not require creating a session first. Do not simply enlarge `businessWidth` to squeeze a report into the split at the expense of the guidance or conversation.
+
+In either layout, make the business UI respond to the **actual width of its own container**. Window-wide media queries alone do not reflect the space left by the sidebar, split, or embedding. Use container queries or measure the business root; rearrange columns, collapse secondary information, or provide bounded scrolling when space is tight. Long Chinese headings, English identifiers, numbers, and action buttons must stay readable and usable, without single-character vertical wrapping, clipped controls, or page-wide horizontal overflow.
+
 DSH reserves shared entrances for the market, workbench switcher, and settings; the business panel must not cover them. A `customFrame` (Section 3.5) must stay within the host-assigned main content area. Its root should fill that area using normal flex layout. Internal absolute positioning, maximization, or drag-based repositioning must remain inside the host container's positioning and clipping boundaries, never cover Desktop's left session sidebar. Put the host-provided `conversation` node into the business layout for native sessions; do not build a second chat UI. Native conversation capabilities and mode switching continue to follow Desktop rules.
 
-On macOS, after the sidebar collapses, window controls and the sidebar expansion button occupy the upper-left of main content. The host reserves `--dsh-frame-leading-clearance` width for a left-side embedded business panel and a semantic `<header>` that is the first child of a `customFrame` root. The toolbar may stay in the original 48px top row; the whole content need not move down. A custom toolbar with a different structure should use the same variable in its own styles to clear the controls. Do not cover window controls or `shell.leading`.
+### Header layout: default and compact
+
+`register()` accepts `headerLayout: 'default' | 'compact'`; omission means `default` and other values fail registration. With the sidebar expanded, the host preserves the existing layout and adds no blank row. It makes only unoccupied pieces of the existing top band (`--dsh-frame-top-clearance`, normally 48px) draggable, subtracting actual rectangles for controls, menus, iframes and custom `data-dsh-no-drag` areas. Default mode reserves a separate system-controls row only on macOS outside fullscreen with the sidebar collapsed; business content starts below it regardless of nested header markup. Windows keeps its separate title bar; fullscreen adds no row. Existing providers default to this mode. The host does not infer the first `<header>` as a toolbar or clear provider-owned heading padding.
+
+Any `customFrame: true` provider, or a standard split with `layout.businessSide: 'left'` (`embedded` is not required), can opt into compact mode:
+
+```js
+ctx.desktopWorkbenches.register({
+  title: 'Business tool', repository: 'https://github.com/your-org/your-workbench',
+  customFrame: true, headerLayout: 'compact'
+}, BusinessPanel)
+// Exactly one same-document toolbar rendered by BusinessPanel:
+React.createElement('header', { 'data-dsh-workbench-toolbar': '' },
+  React.createElement('span', null, 'Business tool'),
+  React.createElement('button', { onClick: refresh }, 'Refresh'))
+```
+
+Ordinary left splits retain their side and bottom content gutters. Only valid compact mode removes the top gutter and makes the toolbar sticky while content scrolls. Toolbar ancestors must span the content height, without extra top margin/padding or an independent scroll container.
+
+The marked toolbar must be the top row and span the host content width; nested wrappers are supported. For ordinary left splits, the host uses existing blank space above the right conversation without adding a row. For custom frames the toolbar must span the entire custom frame, including the conversation area, rather than only a business subpanel. The host sets minimum row height and leading clearance, makes blank space draggable, and excludes buttons, links, form controls and standard interactive roles. Add `data-dsh-no-drag` to custom interactions, expanded menus and popovers. `data-dsh-compact-toolbar` and `data-dsh-compact-valid` are host-owned internal markers. Do not duplicate system-controls padding or override the entire drag/no-drag policy.
+
+Missing or multiple markers, right-side splits safely fall back to the default row. Iframe documents are outside this protocol: an iframe-based provider may place its unique toolbar in a same-document outer wrapper; marking the whole iframe does not make its contents a draggable toolbar. Reflow by business container width; truncate long titles, move descriptions below the toolbar, and keep actions usable.
+
+Verify both modes with expanded/collapsed sidebar, narrow containers, realistic Chinese/English headings, entering/leaving fullscreen, and no duplicated space or covered controls. Click buttons, edit inputs, open menus and check keyboard focus. Verify actual native window movement from blank space; DOM/CSS checks do not replace native drag acceptance.
+
+### Existing-provider migration and compatibility limits
+
+This is an explicit opt-in contract. The host cannot both prevent system controls from overlapping arbitrary legacy DOM and automatically preserve every legacy compact arrangement. Unmigrated providers remain loadable with the safe default layout. Only the collapsed sidebar on macOS outside fullscreen adds the default controls row; expanded layouts retain their original geometry.
+
+| Existing provider | Migration | Before migration |
+| --- | --- | --- |
+| Default business heading and description | May omit the declaration; review and remove provider-owned system-controls clearance while keeping normal business padding | Original expanded layout; separate row when collapsed |
+| Custom frame or left split that should share the top row | Declare `headerLayout: 'compact'`, mark exactly one same-document `data-dsh-workbench-toolbar`, and remove duplicate system-controls clearance | Original expanded layout; separate collapsed row, no toolbar inference |
+| Toolbar inside an iframe, right split, or multiple markers | Move a single toolbar to a supported same-document position or retain default mode | Safe fallback to default mode |
+
+Migration uses only the public registration field and toolbar marker, with no provider-name allowlist or semantic-header inference. External maintainers must publish their own migration releases; host updates do not modify installed external packages. Only valid compact declarations remove the host's 18px top gutter in ordinary left splits. Default mode and provider-owned header padding retain their existing values.
 
 ## 5. Workbenches, sessions, and workspaces
 
@@ -214,11 +264,13 @@ Check each applicable responsibility after development. “Host responsibility�
 **Package and loading**
 
 - [ ] **Plugin**: All required items in Section 3 pass. Run `pnpm pack`; use `tar -tzf <artifact.tgz>` to confirm `package.json`, server and client entries, and `cordis.patch.yml`. Install that artifact rather than running only from source.
-- [ ] **Plugin**: Install under 3.6 and restart Harness. Find the plugin layer in `dsh --profile web --dump-config`, the entry in Desktop “Workbench management / Installed workbenches,” and the real business panel opened from the sidebar. Record configuration, list, and UI evidence separately.
+- [ ] **Plugin**: Install under 3.6 and complete the required restart. If the agent runs inside the target DSH Desktop, the user must fully quit and reopen the app; perform Agent checks once the user chooses continued verification and confirms the restart; independent trial does not require returning to the conversation. Find the plugin layer in `dsh --profile web --dump-config`, the entry in Desktop “Workbench management / Installed workbenches,” and the real business panel opened from the sidebar. Record configuration, list, and UI evidence separately; keep post-restart loading and UI checks pending until restart is confirmed.
 
 **Section 4: UI boundary**
 
 - [ ] **Plugin**: Open the panel, resize the window, switch between native session and workbench modes, and verify the panel does not cover sidebar, market, or management controls; business actions are keyboard reachable.
+- [ ] **Plugin**: Check the business entry point and session-related actions both on first entry without a workbench session and with an owned session open. In a standard split, check the host generic guidance beside the business panel. With `customFrame`, check the workbench's own first-use and no-session actions.
+- [ ] **Plugin**: With the sidebar expanded and collapsed and the window narrowed, check realistic Chinese and English headings, identifiers, numbers, and buttons. Avoid single-character vertical wrapping, clipped primary controls, and page-wide horizontal overflow. Verify that columns respond to the business container width, not only the window width.
 - [ ] **Only if used; plugin**: With `customFrame`, narrow the window and operate layouts, overlays, and drag actions. Everything stays in host main content; native `conversation` works.
 
 **Sections 5–6: workspaces and sessions**

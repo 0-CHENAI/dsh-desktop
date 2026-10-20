@@ -35,6 +35,9 @@ async function main(): Promise<void> {
     dshEntryPath: join(runtimeRoot, 'node_modules/@deepseek-ai/dsh/lib/bin.js'),
     nodeEntryPath: join(resources, 'harness-node-entry.mjs'),
     nodeExecutablePath: executableArg || electronNodeExecutable(process.execPath),
+    pnpmEntryPath: join(runtimeRoot, 'node_modules/pnpm/bin/pnpm.cjs'),
+    pnpmRunnerPath: join(runtimeRoot, 'node_modules/dsh-desktop-market-installer/pnpm-runner.mjs'),
+    hideConsoleBootstrapPath: join(resources, 'windows-hide-console-import.mjs'),
     dshPatchPath: join(resources, 'dsh-desktop.patch.yml'),
     dshSafePatchPath: join(resources, 'dsh-desktop-safe.patch.yml'),
     dshMarketPatchPath: join(resources, 'dsh-desktop-market.patch.yml'),
@@ -61,18 +64,28 @@ async function main(): Promise<void> {
   ipcMain.on('dsh:storage-load-sync', event => { event.returnValue = {} })
   ipcMain.on('dsh:storage-sync', () => {})
   ipcMain.handle('updates:status', () => ({ phase: 'idle', currentVersion: '0.0.0', manual: false }))
+  ipcMain.handle('updates:dismiss', () => {})
   ipcMain.handle('mobile:status', () => ({ connected: false }))
   ipcMain.handle('safe-mode:status', () => ({ active: false }))
   ipcMain.handle('harness:renderer-healthy', () => ({ ok: true }))
   let pageErrors = 0
-  win.webContents.on('console-message', details => { if (details.level === 'error') pageErrors++ })
+  win.webContents.on('console-message', details => {
+    if (details.level !== 'error') return
+    pageErrors++
+    // This Profile is synthetic; still redact its generated launch token and
+    // bound diagnostics so a failed executeJavaScript has useful, safe context.
+    console.error(`Harness client renderer error: ${details.message.replaceAll(state.authToken, '[redacted]').slice(0, 1000)}`)
+  })
   const url = new URL(state.url)
   url.searchParams.set('token', state.authToken)
   await win.loadURL(url.href)
   const deadline = Date.now() + 30_000
   let mounted = false
   while (Date.now() < deadline) {
-    mounted = await win.webContents.executeJavaScript(`Boolean(document.querySelector('[data-dsh-sidebar-root]') && document.querySelector('#root')?.childElementCount && !Array.from(document.querySelectorAll('[role="status"]')).some(el => /Loading local workbenches|正在读取本地工作台/.test(el.textContent || '')))`)
+    // The fresh Profile asynchronously binds its initial blank session. The
+    // sessionless hero is a different slot owner and is intentionally unmounted
+    // at that boundary; do not start a session-scoped preview on its old DOM.
+    mounted = await win.webContents.executeJavaScript(`Boolean(document.querySelector('[data-dsh-sidebar-root]') && document.querySelector('[data-conversation-session]')?.dataset.conversationSession && document.querySelector('#root')?.childElementCount && !Array.from(document.querySelectorAll('[role="status"]')).some(el => /Loading local workbenches|正在读取本地工作台/.test(el.textContent || '')))`)
     if (mounted) break
     await new Promise(resolve => setTimeout(resolve, 100))
   }
@@ -81,7 +94,9 @@ async function main(): Promise<void> {
   assert.equal(pageErrors, 0, 'Harness client emitted console errors during activation')
   await mkdir(outputDirectory, { recursive: true })
   await writeFile(join(outputDirectory, 'client.png'), (await win.webContents.capturePage()).toPNG())
+  await verifyOfficeTemplateUi(win)
   if (process.platform === 'win32') await verifySidebarToggle(win)
+  await verifyDesktopUpdateUi(win)
   await verifySafeModeFrame(win)
   assert.equal(pageErrors, 0, 'Safe Mode emitted console errors on the real Harness host')
   console.log(`Desktop profile: Electron ${process.versions.electron}, authenticated HTML/bootstrap and real client mounted; isolated ${process.platform} profile`)
@@ -131,6 +146,87 @@ async function verifySidebarToggle(window: BrowserWindow): Promise<void> {
   window.webContents.setZoomFactor(1)
   await writeFile(join(outputDirectory, 'sidebar-toggle.png'), (await window.webContents.capturePage()).toPNG())
   console.log('Windows sidebar toggle: brand-row alignment and native collapse/reopen at three zoom levels passed')
+}
+
+async function verifyOfficeTemplateUi(window: BrowserWindow): Promise<void> {
+  for (const [mode, expected] of [['word', 4], ['excel', 3]] as const) {
+    // Sidebar activation does not mean the Office catalog request has settled.
+    // macOS skips the Windows zoom exercise and can reach this before load()
+    // enables the mode buttons; clicking a disabled button is intentionally ignored.
+    const actionDeadline = Date.now() + 15_000
+    let enabled = false
+    while (Date.now() < actionDeadline) {
+      enabled = await window.webContents.executeJavaScript(`(() => {
+        const action = document.querySelector('[data-office-mode="${mode}"]')
+        if (!action || action.disabled) return false
+        action.click()
+        return true
+      })()`)
+      if (enabled) break
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    assert.ok(enabled, `${mode} mode action did not become enabled`)
+    const deadline = Date.now() + 15_000
+    let ready = false
+    while (Date.now() < deadline) {
+      ready = await window.webContents.executeJavaScript(`document.querySelectorAll('[data-office-dock="${mode}"] [data-office-template]').length === ${expected} && Array.from(document.querySelectorAll('[data-office-template] img')).every(image => image.complete && image.naturalWidth > 0)`)
+      if (ready) break
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    if (!ready) {
+      const state = await window.webContents.executeJavaScript(`({ pressed: document.querySelector('[data-office-mode="${mode}"]')?.getAttribute('aria-pressed'), disabled: document.querySelector('[data-office-mode="${mode}"]')?.disabled, cards: document.querySelectorAll('[data-office-template]').length, images: Array.from(document.querySelectorAll('[data-office-template] img')).map(image => ({ complete: image.complete, width: image.naturalWidth })) })`)
+      throw new Error(`${mode} templates did not load: ${JSON.stringify(state)}`)
+    }
+    const openDeadline = Date.now() + 15_000
+    let opened = false
+    while (Date.now() < openDeadline) {
+      opened = await window.webContents.executeJavaScript(`(() => {
+        const action = document.querySelector('[data-office-dock="${mode}"] [data-office-template] .dso-card-preview')
+        if (!action || action.disabled || document.querySelector('dialog.dso-modal[open]')) return false
+        action.click()
+        return true
+      })()`)
+      if (opened) break
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    assert.ok(opened, `${mode} preview action did not become interactive`)
+    const previewDeadline = Date.now() + 15_000
+    let preview = false
+    while (Date.now() < previewDeadline) {
+      preview = await window.webContents.executeJavaScript(`Boolean(document.querySelector('dialog.dso-modal[open] .dso-page img')?.naturalWidth)`)
+      if (preview) break
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    if (!preview) {
+      const state = await window.webContents.executeJavaScript(`({ dialogs: Array.from(document.querySelectorAll('dialog.dso-modal')).map(dialog => ({ open: dialog.open, width: dialog.clientWidth, height: dialog.clientHeight })), images: Array.from(document.querySelectorAll('dialog.dso-modal .dso-page img')).map(image => ({ complete: image.complete, width: image.naturalWidth, bytes: image.src.length })), errors: Array.from(document.querySelectorAll('dialog.dso-modal [role="alert"]')).map(node => node.textContent.slice(0, 200)) })`)
+      await writeFile(join(outputDirectory, `office-${mode}-failed.png`), (await window.webContents.capturePage()).toPNG())
+      throw new Error(`${mode} native template preview did not render: ${JSON.stringify(state)}`)
+    }
+    await writeFile(join(outputDirectory, `office-${mode}.png`), (await window.webContents.capturePage()).toPNG())
+    await window.webContents.executeJavaScript(`document.querySelector('dialog.dso-modal[open] .dso-close').click()`)
+    const closeDeadline = Date.now() + 5_000
+    while (await window.webContents.executeJavaScript(`Boolean(document.querySelector('dialog.dso-modal[open]'))`)) {
+      assert.ok(Date.now() < closeDeadline, `${mode} preview did not close`)
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+  }
+  console.log('Office UI: real Word/Excel catalogs, authenticated previews and modal close passed')
+}
+
+async function verifyDesktopUpdateUi(window: BrowserWindow): Promise<void> {
+  window.webContents.send('updates:status-changed', { phase: 'available', currentVersion: '0.0.0', availableVersion: '0.0.1', manual: false, source: 'startup', locale: 'en' })
+  await new Promise(resolve => setTimeout(resolve, 100))
+  assert.equal(await window.webContents.executeJavaScript(`document.getElementById('dsh-desktop-update-root')?.style.right`), '20px')
+  window.webContents.send('updates:status-changed', { phase: 'available', currentVersion: '0.0.0', availableVersion: '0.0.1', manual: true, presentationId: 1, locale: 'zh', canInstall: false, manualUpdateReason: 'unsigned-macos' })
+  await new Promise(resolve => setTimeout(resolve, 100))
+  assert.equal(await window.webContents.executeJavaScript(`document.getElementById('dsh-desktop-update-root')?.style.left`), '50%')
+  await writeFile(join(outputDirectory, 'update-manual.png'), (await window.webContents.capturePage()).toPNG())
+  window.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'Escape' })
+  window.webContents.sendInputEvent({ type: 'keyUp', keyCode: 'Escape' })
+  await new Promise(resolve => setTimeout(resolve, 100))
+  assert.equal(await window.webContents.executeJavaScript(`document.getElementById('dsh-desktop-update-root')?.style.display`), 'none')
+  window.webContents.send('updates:status-changed', { phase: 'idle', currentVersion: '0.0.0', manual: false, locale: 'en' })
+  console.log('Update UI: real preload/IPCs, automatic corner offer, manual dialog and Escape dismissal passed')
 }
 
 async function verifySafeModeFrame(window: BrowserWindow): Promise<void> {
