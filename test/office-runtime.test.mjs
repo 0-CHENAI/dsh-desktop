@@ -7,6 +7,7 @@ import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 import { officeTarget, downloadAsset, unpackWheel, prepareOfficeRuntime } from '../scripts/office-runtime/prepare.mjs'
+import { officeCliAttempts, officeCliCommand, officeCliTimedOut, officeCliTimeoutMs, runOfficeCli } from '../scripts/office-runtime/prepare-templates.mjs'
 import { HarnessRuntime } from '../src/main/runtime/harness-runtime'
 import { prepareHostPluginSourcesPatch } from '../src/main/state/host-plugin-sources'
 import { ensureSafeModeProfile, SAFE_MODE_PROFILE } from '../src/main/state/safe-mode-profile'
@@ -23,6 +24,42 @@ const temporary = async () => {
 }
 afterEach(async () => {
   await Promise.all(scratch.splice(0).map(path => rm(path, { recursive: true, force: true })))
+})
+
+describe('Office template preview limits', () => {
+  const kitTimeout = stderr => Object.assign(new Error('Command failed'), {
+    stderr, code: 1, killed: false, signal: null,
+  })
+
+  it('bounds each LibreOffice call to 30 seconds and retries a hang in a new process', async () => {
+    expect(officeCliTimeoutMs).toBe(30_000)
+    expect(officeCliAttempts).toBe(3)
+    const command = officeCliCommand('electron', 'office-cli.mjs', ['render', '--input', 'book.xlsx', '--dpi', '100'])
+    expect(command.args).toEqual(['office-cli.mjs', 'render', '--input', 'book.xlsx', '--dpi', '100', '--timeout-ms', '30000'])
+    expect(command.timeout).toBe(90_000)
+    const hung = kitTimeout('{"code":"timeout","error":"LibreOffice conversion timed out."}\n')
+    expect(officeCliTimedOut(hung)).toBe(true)
+    expect(officeCliTimedOut(kitTimeout(Buffer.from(hung.stderr)))).toBe(true)
+    expect(officeCliTimedOut(Object.assign(new Error('killed'), { killed: true, signal: 'SIGTERM' }))).toBe(true)
+    expect(officeCliTimedOut(kitTimeout('{"code":"invalid-document","error":"bad workbook"}'))).toBe(false)
+
+    let calls = 0
+    await expect(runOfficeCli('recalculate', async () => {
+      calls += 1
+      if (calls < 3) throw hung
+      return { ok: true }
+    })).resolves.toEqual({ ok: true })
+    expect(calls).toBe(3)
+
+    await expect(runOfficeCli('recalculate', async () => { throw hung })).rejects.toBe(hung)
+    const invalid = kitTimeout('{"code":"invalid-document","error":"bad workbook"}')
+    let invalidCalls = 0
+    await expect(runOfficeCli('render', async () => {
+      invalidCalls += 1
+      throw invalid
+    })).rejects.toBe(invalid)
+    expect(invalidCalls).toBe(1)
+  })
 })
 
 describe('Office runtime assembly', () => {
@@ -97,7 +134,7 @@ it('mounts Office skills and queries the immutable runtime in a real Harness sub
   const diagnostic = join(home, 'office-probe.mjs')
   await writeFile(diagnostic, `
 export const name = 'office-probe'
-export const inject = ['skills', 'tools']
+export const inject = ['skills', 'tools', 'connection', 'officeModes', 'sessionController', 'webServer']
 export async function apply(ctx) {
   for (let attempt = 0; attempt < 100; attempt++) {
     const skills = await ctx.skills.list()
@@ -106,6 +143,21 @@ export async function apply(ctx) {
       const deps = await tool.execute({})
       const loaded = await ctx.skills.get('office-docx')
       console.log('OFFICE_PROBE:' + JSON.stringify({ names: skills.map(skill => skill.name), deps, content: loaded.content }))
+      ctx.connection.fetch.register({ path: '/api/office-probe', methods: ['POST'], requestBody: 'buffered', async fetch(request) {
+        const { payload } = await request.json(); const signal = request.signal; const endpoint = payload.endpoint
+        if (endpoint !== 'prepare') throw new Error('Unknown probe')
+        const resolved = await ctx.sessionController.resolveAgent(payload.sessionId)
+        if (resolved.error) throw new Error(JSON.stringify(resolved.error))
+        const { setSandboxMode } = await import(${JSON.stringify(pathToFileURL(join(root, 'node_modules/@deepseek-ai/dsh-sandbox-policy/lib/index.js')).href)})
+        setSandboxMode(resolved.agent.session, 'workspace-write')
+        const tool = ctx.tools.get('office_template')
+        if (!tool) throw new Error('Template tool unavailable')
+        try {
+          return Response.json({ type: 'server-response', rpcId: 'office-prepare', result: { ok: true, value: await tool.execute({ template_id: payload.templateId }, { agent: resolved.agent, signal }) } })
+        } catch (error) {
+          return Response.json({ type: 'server-response', rpcId: 'office-prepare', result: { ok: false, error: { message: error instanceof Error ? error.message : String(error) } } })
+        }
+      } })
       return
     }
     await new Promise(resolve => setTimeout(resolve, 50))
@@ -174,6 +226,36 @@ export async function apply(ctx) {
     await togglePpt(false)
     const restored = await rpc('skills/list', { sessionId: session.sessionId })
     expect(restored.skills.find(skill => skill.name === 'office-pptx')?.modelInvocable).toBe(true)
+    const officeRpc = async (endpoint, payload, method = 'office-templates') => {
+      const response = await fetch(new URL('/api/' + method, snapshot.url), {
+        method: 'POST', headers: { Cookie: cookie, 'content-type': 'application/json' },
+        body: JSON.stringify({ type: 'client-request', rpcId: 'office-' + endpoint, method, payload: { endpoint, ...payload } })
+      })
+      const envelope = await response.json()
+      expect(envelope.result?.ok, JSON.stringify(envelope)).toBe(true)
+      return envelope.result.value
+    }
+    const officeCatalog = await officeRpc('catalog', {})
+    expect(officeCatalog.templates).toHaveLength(7)
+    const officeSession = await rpc('session/create', { cwd: neutral })
+    await officeRpc('mode', { sessionId: officeSession.sessionId, mode: 'word' })
+    for (const id of ['government-notice', 'meeting-minutes']) {
+      const template = officeCatalog.templates.find(item => item.id === id)
+      await officeRpc('select', { sessionId: officeSession.sessionId, templateId: id, revision: template.revision })
+      const copied = await officeRpc('prepare', { sessionId: officeSession.sessionId, templateId: id }, 'office-probe')
+      expect(copied.workspace_path).toMatch(new RegExp(`^office-templates/${id}-[a-f0-9-]+/example\\.docx$`))
+      const bytes = await readFile(join(neutral, copied.workspace_path))
+      expect(createHash('sha256').update(bytes).digest('hex')).toBe(copied.files.find(file => file.workspace_path === copied.workspace_path).sha256)
+      if (id === 'meeting-minutes') {
+        expect(bytes).toEqual(await readFile(join(root, 'packages/dsh-desktop-office/sources/curated/meeting-minutes/example.docx')))
+        const preview = await officeRpc('preview', { templateId: id, revision: template.revision, page: 3 })
+        expect(preview).toMatchObject({ page: 3, pages: 3 })
+        expect(preview.image).toMatch(/^data:image\/webp;base64,/)
+      }
+    }
+    expect(probe.names).toEqual(expect.arrayContaining(['gov-doc-writing', 'meeting-recap', 'research-writer', 'saas-metrics-coach', 'dataset-health-audit', 'data-viz-gen']))
+    await officeRpc('mode', { sessionId: officeSession.sessionId, mode: 'excel' })
+    expect((await officeRpc('state', { sessionId: officeSession.sessionId })).selectedTemplateId).toBeNull()
     await exec(electronExecutable(root), [join(root, 'build/office-cli.mjs'), 'capabilities', '--json'], { cwd: neutral, env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, timeout: 30_000 })
   } finally {
     await runtime.stop()
@@ -186,6 +268,7 @@ it('reports a missing Office payload during activation and keeps Safe Mode usabl
   const source = await readFile(join(root, 'build/dsh-desktop.patch.yml'), 'utf8')
   const patch = join(home, 'missing-office.patch.yml')
   await writeFile(patch, source.replace('resources: !!js process.env.DSH_DESKTOP_OFFICE_RESOURCES', `resources: ${JSON.stringify(missing)}`))
+  const childClosures = []
   const runtime = new HarnessRuntime({
     dshEntryPath: join(root, 'node_modules/@deepseek-ai/dsh/lib/bin.js'),
     nodeEntryPath: join(root, 'build/harness-node-entry.mjs'),
@@ -195,7 +278,12 @@ it('reports a missing Office payload during activation and keeps Safe Mode usabl
     dshHome: home,
     logPath: join(home, 'harness.log'),
     startupTimeoutMs: 30_000,
-    launchProcess: (executable, args, options) => spawn(executable, args, { ...options, env: { ...options.env, ELECTRON_RUN_AS_NODE: '1' } }),
+    launchProcess: (executable, args, options) => {
+      const child = spawn(executable, args, { ...options, env: { ...options.env, ELECTRON_RUN_AS_NODE: '1' } })
+      // A rejected launch is detached before its asynchronous shutdown finishes.
+      childClosures.push(new Promise(resolve => child.once('close', resolve)))
+      return child
+    },
     onChanged() {}
   })
   try {
@@ -204,10 +292,12 @@ it('reports a missing Office payload during activation and keeps Safe Mode usabl
     expect(runtime.snapshot().logs.join('\n')).toContain(missing)
     expect(runtime.snapshot().logs.join('\n')).toContain('dsh-desktop-office')
     await runtime.stop()
+    await Promise.all(childClosures)
     await ensureSafeModeProfile(home)
     await runtime.start(home, SAFE_MODE_PROFILE)
     expect(runtime.snapshot().phase, runtime.snapshot().logs.join('\n')).toBe('ready')
   } finally {
     await runtime.stop()
+    await Promise.all(childClosures)
   }
 }, 60_000)

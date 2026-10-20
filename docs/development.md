@@ -21,7 +21,15 @@ npm run dev
 
 `npm ci` runs the repository's `postinstall` hook. It reapplies the tracked `patch-package` patches, installs DSH brand assets into the pinned Harness frontend, and installs Electron.
 
-Development builds use the separate application name `DSH Desktop Dev` and the separate user-data directory `dsh-desktop-dev`, so they do not reuse production DSH Desktop data. Multiple development worktrees still share that development profile by default; avoid running them at the same time when testing profile, plugin, migration, or recovery changes.
+Development builds use the separate application name `DSH Desktop Dev` and the separate user-data directory `dsh-desktop-dev`, so they do not reuse production DSH Desktop data. Concurrent worktrees must choose separate development profiles and ports using the overrides below.
+
+To run another worktree concurrently, set a distinct `DSH_DEV_PROFILE` directory name and unused loopback ports using `DSH_DEV_HARNESS_PORT` and `DSH_DEV_MOBILE_PORT`. For example, on macOS:
+
+```bash
+DSH_DEV_PROFILE=dsh-desktop-dev-workbench DSH_DEV_HARNESS_PORT=43132 DSH_DEV_MOBILE_PORT=43133 npm run dev
+```
+
+On PowerShell, set the same names through `$env:DSH_DEV_PROFILE`, `$env:DSH_DEV_HARNESS_PORT` and `$env:DSH_DEV_MOBILE_PORT` before `npm run dev`. The profile must be a directory name, separate from `dsh-desktop`; ports must be distinct integers from 1024 to 65535. These overrides are ignored by production builds. Defaults remain `dsh-desktop-dev`, Harness port 43130 and mobile port 43128.
 
 ## Validation
 
@@ -106,7 +114,7 @@ npm run package:win
 
 Do not invoke `electron-builder --win` from macOS or Linux for a distributable Windows package. The target verification scripts intentionally reject host/target mismatches.
 
-For isolated development-channel packages, use the corresponding `package:dev:*` command. macOS packages are ad-hoc signed because this fork has no Apple Developer Program credentials; run `scripts/verify-macos-package.mjs` against the unpacked app, ZIP, and DMG before handing one off. Before handing off a Windows installer, verify that `resources/app/node_modules/node/bin/node.exe` exists in `win-unpacked` and require the packaged Windows Harness smoke test to pass.
+For isolated development-channel packages, use the corresponding `package:dev:*` command. macOS packages are ad-hoc signed because this fork has no Apple Developer Program credentials; run `scripts/verify-macos-package.mjs` against the unpacked app, ZIP, and DMG before handing one off. Windows runs Harness using the packaged Electron executable in Node mode; require the packaged Windows Harness smoke test to pass.
 
 Formal release artifacts are built, package-verified, and published by the tag workflow. Windows installers use the configured UKey signature. macOS packages use ad-hoc signatures and require one-time approval in System Settings because they are not Apple-notarized. A local build or pull-request check is not formal release evidence.
 

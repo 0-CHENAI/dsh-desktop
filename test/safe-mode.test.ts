@@ -10,7 +10,10 @@ import {
 import type { ProfileCompatibilityIssue } from '../src/main/state/profile-compatibility'
 import {
   ensureSafeModeProfile,
+  extractSafeModePatch,
   SAFE_MODE_BUNDLES,
+  SAFE_MODE_MODEL_ENTRY_IDS,
+  SAFE_MODE_PATCH,
   SAFE_MODE_PROFILE
 } from '../src/main/state/safe-mode-profile'
 
@@ -337,6 +340,87 @@ describe('Safe Mode', () => {
     })
     expect(model.pluginItems[0]).toMatchObject({ name: 'plugin-a', disabled: false })
     expect(model.pluginItems[0]).not.toHaveProperty('enableButtonLabel')
+  })
+
+  it('extracts only model configurations and drops third-party plugins in safe mode patch', () => {
+    const rawPatch = `- id: ui-settings-general
+  name: "@deepseek-ai/dsh-client-ui-settings-general"
+  config:
+    welcomeNoticeVersion: 2026-08-13.1
+- id: llm-pi-ai
+  name: "@deepseek-ai/dsh-llm-pi-ai"
+  config:
+    providers:
+      vol:
+        apiKeyEnv: VOL_API_KEY
+        api: openai-completions
+        baseURL: https://ark.cn-beijing.volces.com/api/coding/v3
+        models:
+          - id: deepseek-v4-1-flash-260910
+            name: deepseek-v4-1-flash
+- id: dsh-market
+  disabled: false
+- id: agent-default-model
+  name: "@deepseek-ai/dsh-agent-default-model"
+  config:
+    provider: vol
+    model: deepseek-v4-1-flash-260910
+`
+    const result = extractSafeModePatch(rawPatch)
+    expect(result).toContain('id: llm-pi-ai')
+    expect(result).toContain('id: agent-default-model')
+    expect(result).not.toContain('dsh-market')
+    expect(result).not.toContain('ui-settings-general')
+  })
+
+  it('rejects malformed YAML and implementation replacements in model rows', () => {
+    expect(extractSafeModePatch('- id: llm\n  config: [broken')).toBe(SAFE_MODE_PATCH)
+    const patch = extractSafeModePatch(`- id: llm-pi-ai
+  insert: local-plugin
+- id: llm-retry
+  module: local-plugin
+- id: llm
+  name: local-plugin
+- id: agent-default-model
+  config: { provider: custom, model: custom-model }
+`)
+    expect(patch).not.toContain('local-plugin')
+    expect(patch).toContain('custom-model')
+    const aliased = extractSafeModePatch('- id: unrelated\n  config: &model { provider: custom, model: aliased-model }\n- id: agent-default-model\n  config: *model\n')
+    expect(aliased).toContain('aliased-model')
+    expect(aliased).not.toContain('unrelated')
+  })
+
+  it('inherits model configuration from the normal profile into safe mode profile', async () => {
+    const dshHome = join(__dirname, '.temp-safe-mode-model-inherit')
+    try {
+      const webProfileDir = join(dshHome, 'profiles', 'web')
+      const { mkdir } = await import('node:fs/promises')
+      await mkdir(webProfileDir, { recursive: true })
+      await writeFile(join(webProfileDir, 'cordis.patch.yml'), `- id: llm-pi-ai
+  name: "@deepseek-ai/dsh-llm-pi-ai"
+  config:
+    providers:
+      custom:
+        api: openai-completions
+        baseURL: https://api.custom.com/v1
+- id: third-party-tool
+  disabled: false
+- id: agent-default-model
+  config:
+    provider: custom
+    model: custom-model
+`)
+
+      const directory = await ensureSafeModeProfile(dshHome)
+      const safePatch = await readFile(join(directory, 'cordis.patch.yml'), 'utf8')
+      expect(safePatch).toContain('id: llm-pi-ai')
+      expect(safePatch).toContain('id: agent-default-model')
+      expect(safePatch).toContain('baseURL: https://api.custom.com/v1')
+      expect(safePatch).not.toContain('third-party-tool')
+    } finally {
+      await rm(dshHome, { recursive: true, force: true })
+    }
   })
 
   it('creates a managed core-only profile and repairs later modifications', async () => {

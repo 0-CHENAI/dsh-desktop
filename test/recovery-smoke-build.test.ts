@@ -11,7 +11,7 @@ it('bundles the actual native recovery and client smoke gates after host migrati
     const result = await build({
       absWorkingDir: path.resolve(import.meta.dirname, '..'),
       entryPoints: [entry], bundle: true, write: false,
-      platform: 'node', format: 'cjs', external: ['electron']
+      platform: 'node', format: 'cjs', loader: { '.svg': 'text' }, external: ['electron']
     })
     expect(result.outputFiles?.length, entry).toBe(1)
   }

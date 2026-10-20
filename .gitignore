@@ -21,15 +21,9 @@ build/icon-1024.png
 __pycache__/
 *.pyc
 
-# Native recovery UI smoke-test output
-/artifacts/recovery-ui/
+# Local test artifacts, diagnostics and smoke-test output
+/artifacts/
 .local/agent-work/
-
-# Scratch verification outputs and one-off issue drafts (harness-rc2-migration/ stays tracked)
-/artifacts/macos-titlebar/
-/artifacts/windows-titlebar/
-/artifacts/chat-handoff/
-/artifacts/tmp-issue-*/
 
 # Local-only design docs
 docs/plugin-management.zh.md

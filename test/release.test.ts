@@ -398,7 +398,7 @@ describe('GitHub release contract', () => {
     expect(developmentConfig).toContain(
       "artifactName: 'dsh-desktop-dev-windows-${arch}-setup.${ext}'"
     )
-    expect(main).toContain("app.setPath('userData', join(app.getPath('appData'), 'dsh-desktop-dev'))")
+    expect(main).toContain("app.setPath('userData', join(app.getPath('appData'), developmentConfig.profile))")
     expect(main).toContain("app.setPath('userData', join(app.getPath('appData'), 'dsh-desktop'))")
     expect(main).toContain('startUpdateManager({')
     expect(main).not.toContain('if (!developmentBuild) {\n    startUpdateManager')

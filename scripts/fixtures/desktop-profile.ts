@@ -35,6 +35,9 @@ async function main(): Promise<void> {
     dshEntryPath: join(runtimeRoot, 'node_modules/@deepseek-ai/dsh/lib/bin.js'),
     nodeEntryPath: join(resources, 'harness-node-entry.mjs'),
     nodeExecutablePath: executableArg || electronNodeExecutable(process.execPath),
+    pnpmEntryPath: join(runtimeRoot, 'node_modules/pnpm/bin/pnpm.cjs'),
+    pnpmRunnerPath: join(runtimeRoot, 'node_modules/dsh-desktop-market-installer/pnpm-runner.mjs'),
+    hideConsoleBootstrapPath: join(resources, 'windows-hide-console-import.mjs'),
     dshPatchPath: join(resources, 'dsh-desktop.patch.yml'),
     dshSafePatchPath: join(resources, 'dsh-desktop-safe.patch.yml'),
     dshMarketPatchPath: join(resources, 'dsh-desktop-market.patch.yml'),
@@ -61,6 +64,7 @@ async function main(): Promise<void> {
   ipcMain.on('dsh:storage-load-sync', event => { event.returnValue = {} })
   ipcMain.on('dsh:storage-sync', () => {})
   ipcMain.handle('updates:status', () => ({ phase: 'idle', currentVersion: '0.0.0', manual: false }))
+  ipcMain.handle('updates:dismiss', () => {})
   ipcMain.handle('mobile:status', () => ({ connected: false }))
   ipcMain.handle('safe-mode:status', () => ({ active: false }))
   ipcMain.handle('harness:renderer-healthy', () => ({ ok: true }))
@@ -82,6 +86,8 @@ async function main(): Promise<void> {
   await mkdir(outputDirectory, { recursive: true })
   await writeFile(join(outputDirectory, 'client.png'), (await win.webContents.capturePage()).toPNG())
   if (process.platform === 'win32') await verifySidebarToggle(win)
+  await verifyOfficeTemplateUi(win)
+  await verifyDesktopUpdateUi(win)
   await verifySafeModeFrame(win)
   assert.equal(pageErrors, 0, 'Safe Mode emitted console errors on the real Harness host')
   console.log(`Desktop profile: Electron ${process.versions.electron}, authenticated HTML/bootstrap and real client mounted; isolated ${process.platform} profile`)
@@ -131,6 +137,48 @@ async function verifySidebarToggle(window: BrowserWindow): Promise<void> {
   window.webContents.setZoomFactor(1)
   await writeFile(join(outputDirectory, 'sidebar-toggle.png'), (await window.webContents.capturePage()).toPNG())
   console.log('Windows sidebar toggle: brand-row alignment and native collapse/reopen at three zoom levels passed')
+}
+
+async function verifyOfficeTemplateUi(window: BrowserWindow): Promise<void> {
+  for (const [mode, expected] of [['word', 4], ['excel', 3]] as const) {
+    await window.webContents.executeJavaScript(`document.querySelector('[data-office-mode="${mode}"]').click()`)
+    const deadline = Date.now() + 15_000
+    let ready = false
+    while (Date.now() < deadline) {
+      ready = await window.webContents.executeJavaScript(`document.querySelectorAll('[data-office-dock="${mode}"] [data-office-template]').length === ${expected} && Array.from(document.querySelectorAll('[data-office-template] img')).every(image => image.complete && image.naturalWidth > 0)`)
+      if (ready) break
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    assert.ok(ready, `${mode} templates did not load through the authenticated Office service`)
+    await window.webContents.executeJavaScript(`document.querySelector('[data-office-template] .dso-card-preview').click()`)
+    const previewDeadline = Date.now() + 15_000
+    let preview = false
+    while (Date.now() < previewDeadline) {
+      preview = await window.webContents.executeJavaScript(`Boolean(document.querySelector('dialog.dso-modal[open] .dso-page img')?.naturalWidth)`)
+      if (preview) break
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    assert.ok(preview, `${mode} native template preview did not render`)
+    await writeFile(join(outputDirectory, `office-${mode}.png`), (await window.webContents.capturePage()).toPNG())
+    await window.webContents.executeJavaScript(`document.querySelector('dialog.dso-modal[open] .dso-close').click()`)
+  }
+  console.log('Office UI: real Word/Excel catalogs, authenticated previews and modal close passed')
+}
+
+async function verifyDesktopUpdateUi(window: BrowserWindow): Promise<void> {
+  window.webContents.send('updates:status-changed', { phase: 'available', currentVersion: '0.0.0', availableVersion: '0.0.1', manual: false, source: 'startup', locale: 'en' })
+  await new Promise(resolve => setTimeout(resolve, 100))
+  assert.equal(await window.webContents.executeJavaScript(`document.getElementById('dsh-desktop-update-root')?.style.right`), '20px')
+  window.webContents.send('updates:status-changed', { phase: 'available', currentVersion: '0.0.0', availableVersion: '0.0.1', manual: true, presentationId: 1, locale: 'zh', canInstall: false, manualUpdateReason: 'unsigned-macos' })
+  await new Promise(resolve => setTimeout(resolve, 100))
+  assert.equal(await window.webContents.executeJavaScript(`document.getElementById('dsh-desktop-update-root')?.style.left`), '50%')
+  await writeFile(join(outputDirectory, 'update-manual.png'), (await window.webContents.capturePage()).toPNG())
+  window.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'Escape' })
+  window.webContents.sendInputEvent({ type: 'keyUp', keyCode: 'Escape' })
+  await new Promise(resolve => setTimeout(resolve, 100))
+  assert.equal(await window.webContents.executeJavaScript(`document.getElementById('dsh-desktop-update-root')?.style.display`), 'none')
+  window.webContents.send('updates:status-changed', { phase: 'idle', currentVersion: '0.0.0', manual: false, locale: 'en' })
+  console.log('Update UI: real preload/IPCs, automatic corner offer, manual dialog and Escape dismissal passed')
 }
 
 async function verifySafeModeFrame(window: BrowserWindow): Promise<void> {

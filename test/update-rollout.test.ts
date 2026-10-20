@@ -10,12 +10,16 @@ vi.mock('../src/main/update/update-policy', async importOriginal => ({ ...await 
 let manager: typeof import('../src/main/update/update-manager')
 beforeEach(async () => {
   vi.resetModules(); vi.clearAllMocks(); mocks.handlers.clear()
+  mocks.updater.checkForUpdates.mockReset().mockResolvedValue(undefined)
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify([
+    { tag_name: 'v0.7.0', draft: false }
+  ]), { status: 200 })))
   mocks.updater.on.mockImplementation((event, callback) => { mocks.handlers.set(event, callback) })
   mocks.updater.downloadUpdate.mockResolvedValue([])
   manager = await import('../src/main/update/update-manager')
   manager.startUpdateManager({ prepareToInstall: async () => {} })
 })
-afterEach(() => manager.stopUpdateManager())
+afterEach(() => { manager.stopUpdateManager(); vi.unstubAllGlobals() })
 it('keeps packaged update checks on this fork release channel', async () => {
   await manager.checkForUpdates(true)
   expect(mocks.policy).not.toHaveBeenCalled()
@@ -34,18 +38,18 @@ it('holds the existing lock and waits for user acceptance to download', async ()
     return { updateInfo: { version: '0.9.0' } }
   })
   const checking = manager.checkForUpdates()
-  await manager.checkForUpdates(true)
+  const manual = manager.checkForUpdates(true)
   expect(mocks.updater.checkForUpdates).toHaveBeenCalledTimes(1)
   expect(manager.getUpdateStatus().phase).toBe('available')
   expect(mocks.updater.downloadUpdate).not.toHaveBeenCalled()
   resolve()
-  await checking
+  await Promise.all([checking, manual])
   await manager.downloadAvailableUpdate()
   expect(mocks.updater.downloadUpdate).toHaveBeenCalledTimes(1)
 })
 it('blocks mismatched metadata before it can enter the download UI', async () => {
-  mocks.updater.checkForUpdates.mockImplementation(async () => { mocks.handlers.get('update-available')!({ version: '0.10.0' }); expect(manager.getUpdateStatus().phase).toBe('error'); return { updateInfo: { version: '0.10.0' } } })
-  await manager.installSpecificVersion('0.9.0')
+  mocks.updater.checkForUpdates.mockImplementation(async () => { mocks.handlers.get('update-available')!({ version: '0.6.0' }); expect(manager.getUpdateStatus().phase).toBe('error'); return { updateInfo: { version: '0.6.0' } } })
+  await manager.installSpecificVersion('0.7.0')
   await manager.downloadAvailableUpdate()
   expect(mocks.updater.downloadUpdate).not.toHaveBeenCalled()
 })
