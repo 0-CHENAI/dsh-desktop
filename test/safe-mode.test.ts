@@ -389,6 +389,9 @@ describe('Safe Mode', () => {
     const aliased = extractSafeModePatch('- id: unrelated\n  config: &model { provider: custom, model: aliased-model }\n- id: agent-default-model\n  config: *model\n')
     expect(aliased).toContain('aliased-model')
     expect(aliased).not.toContain('unrelated')
+    const disabledCore = extractSafeModePatch('- id: llm\n  disabled: true\n  config: { defaultProvider: custom }\n')
+    expect(disabledCore).toContain('defaultProvider: custom')
+    expect(disabledCore).not.toContain('disabled:')
   })
 
   it('inherits model configuration from the normal profile into safe mode profile', async () => {

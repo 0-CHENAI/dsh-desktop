@@ -54,7 +54,10 @@ export function extractSafeModePatch(sourcePatchText: string): string {
     if (typeof id === 'string' && SAFE_MODE_MODEL_ENTRY_IDS.has(id) &&
       (row.name === undefined || row.name === MODEL_PACKAGES[id]) &&
       Object.keys(row).every(key => ['id', 'name', 'config', 'disabled'].includes(key))) {
-      kept.push(row)
+      // Recovery owns activation of its bundled core services. Copying a
+      // normal profile's disabled flag can disable llm itself and make recovery
+      // fail for the same reason as the original profile.
+      kept.push({ id, ...(Object.hasOwn(row, 'config') ? { config: row.config } : {}) })
     }
   }
 
