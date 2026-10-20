@@ -29,6 +29,9 @@ let prepare = vi.fn(async () => {})
 let recover = vi.fn(async () => {})
 beforeEach(async () => {
   vi.resetModules()
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify([
+    { tag_name: 'v0.9.0', draft: false }
+  ]), { status: 200 })))
   mocks.handlers.clear()
   mocks.send.mockClear()
   mocks.updater = Object.assign(new EventEmitter(), {
@@ -45,7 +48,7 @@ beforeEach(async () => {
     recoverFromInstallFailure: recover
   })
 })
-afterEach(() => manager.stopUpdateManager())
+afterEach(() => { manager.stopUpdateManager(); vi.unstubAllGlobals() })
 
 async function accept() {
   mocks.updater.emit('update-available', { version: '1.1.0' })
@@ -53,8 +56,8 @@ async function accept() {
   expect(manager.getUpdateStatus().phase).toBe('downloading')
   return { download }
 }
-function complete() {
-  mocks.updater.emit('update-downloaded', { version: '1.1.0' })
+function complete(version = '1.1.0') {
+  mocks.updater.emit('update-downloaded', { version })
   finish()
 }
 it('installs an accepted update once, after preparation, including a cached download without progress', async () => {
@@ -82,9 +85,10 @@ it.each(['updates:dismiss', 'updates:skip'])('revokes automatic installation on 
   expect(manager.getUpdateStatus().phase).toBe(channel === 'updates:skip' ? 'idle' : 'downloaded')
 })
 it('keeps a historical version download awaiting explicit installation', async () => {
-  const download = manager.installSpecificVersion('1.1.0')
+  mocks.updater.checkForUpdates.mockImplementation(async () => { mocks.updater.emit('update-available', { version: '0.9.0' }) })
+  const download = manager.installSpecificVersion('0.9.0')
   await vi.waitFor(() => expect(mocks.updater.downloadUpdate).toHaveBeenCalled())
-  complete()
+  complete('0.9.0')
   await download
   expect(manager.getUpdateStatus().phase).toBe('downloaded')
   expect(prepare).not.toHaveBeenCalled()

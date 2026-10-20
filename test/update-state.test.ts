@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   initialUpdateStatus,
+  normalizeReleaseNotes,
   reduceUpdateStatus
 } from '../src/main/update/update-state'
 
@@ -17,7 +18,8 @@ describe('desktop update state', () => {
       availableVersion: '1.1.0',
       percent: 52.4,
       manual: false,
-      canInstall: true
+      canInstall: true,
+      source: 'runtime'
     })
 
     status = reduceUpdateStatus(status, { type: 'downloaded', version: '1.1.0' })
@@ -26,7 +28,8 @@ describe('desktop update state', () => {
       currentVersion: '1.0.0',
       availableVersion: '1.1.0',
       manual: false,
-      canInstall: true
+      canInstall: true,
+      source: 'runtime'
     })
   })
 
@@ -70,4 +73,22 @@ describe('desktop update state', () => {
       reduceUpdateStatus(status, { type: 'progress', percent: Number.NaN }).percent
     ).toBe(0)
   })
+})
+
+
+it('preserves startup source and release notes through download completion', () => {
+  let status = reduceUpdateStatus(initialUpdateStatus('1.0.0'), { type: 'check', manual: false, source: 'startup' })
+  status = reduceUpdateStatus(status, { type: 'available', version: '1.1.0', releaseNotes: 'Fixes' })
+  status = reduceUpdateStatus(status, { type: 'progress', percent: 20 })
+  status = reduceUpdateStatus(status, { type: 'downloaded', version: '1.1.0' })
+  expect(status.source).toBe('startup')
+  expect(status.releaseNotes).toBe('Fixes')
+  expect(reduceUpdateStatus(status, { type: 'present-manual' })).toMatchObject({ phase: 'downloaded', source: 'manual', manual: true, releaseNotes: 'Fixes' })
+})
+
+it('normalizes only supported release notes and bounds external text', () => {
+  expect(normalizeReleaseNotes([{ note: 'first' }, { note: 4 }, null, { note: 'second' }])).toBe('first\n\nsecond')
+  expect(normalizeReleaseNotes(' A\r\nB ')).toBe('A\nB')
+  expect(normalizeReleaseNotes({ html: '<script>' })).toBeUndefined()
+  expect(normalizeReleaseNotes('x'.repeat(30_000))?.length).toBe(20_000)
 })

@@ -1,14 +1,18 @@
 import { defineConfig } from 'vitest/config'
 
+// Keep this policy pure: spoofing process.platform while importing Vitest can
+// make Rollup try to load a native binary for a different host.
+export function nativeTestFileParallelism(platform: NodeJS.Platform, ci: string | undefined): boolean {
+  return !(ci && (platform === 'darwin' || platform === 'win32'))
+}
+
 export default defineConfig({
   test: {
     include: ['test/**/*.{test,spec}.{ts,js,mjs}'],
-    // Native Intel runners and Windows CI contend for CPU and disk while integration suites
-    // unpack archives and launch subprocesses (hitting EBUSY locks). Keep every test, but serialize files.
-    fileParallelism: !(
-      process.env.CI &&
-      ((process.platform === 'darwin' && process.arch === 'x64') || process.platform === 'win32')
-    ),
+    // Native suites launch Office/Electron helpers as well as unpacking archives.
+    // Bound CI contention on both Mac architectures and Windows; keep every
+    // assertion and timeout instead of excluding native integration coverage.
+    fileParallelism: nativeTestFileParallelism(process.platform, process.env.CI),
     testTimeout: 60_000
   }
 })

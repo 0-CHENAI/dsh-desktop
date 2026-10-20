@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest'
 import type { UpdateStatus } from '../src/shared/contracts'
 import {
   isUpdateDismissed,
+  rollbackReleases,
+  rollbackEmptyMessage,
+  isNewManualPresentation,
   shouldShowUpdate,
   updateHeadline,
   updateMessage
@@ -97,7 +100,7 @@ describe('accepting an update is what starts the download', () => {
     expect(updateMessage(available, 'en')).toContain('Download the installer yourself')
   })
 
-  it('explains the one-time migration from an unsigned macOS build', () => {
+  it('explains manual updates for ad-hoc macOS builds without promising a signing migration', () => {
     const available: UpdateStatus = {
       phase: 'available',
       currentVersion: '0.2.2',
@@ -107,8 +110,9 @@ describe('accepting an update is what starts the download', () => {
       manualUpdateReason: 'unsigned-macos'
     }
     expect(updateHeadline(available, 'zh').description).toContain('Developer ID')
-    expect(updateHeadline(available, 'zh').description).toContain('手动安装一次')
-    expect(updateMessage(available, 'en')).toContain('enable future automatic updates')
+    expect(updateHeadline(available, 'zh').description).toContain('手动下载安装包')
+    expect(updateMessage(available, 'en')).toContain('install the update manually')
+    expect(updateMessage(available, 'en')).not.toContain('enable future automatic updates')
   })
 
   it('tells a macOS user to leave a disk image before updating', () => {
@@ -125,3 +129,51 @@ describe('accepting an update is what starts the download', () => {
   })
 })
 
+
+
+describe('manual update presentation lifecycle', () => {
+  it('reopens a cached release only for a new manual request', () => {
+    const previous: UpdateStatus = { ...downloading, manual: true, presentationId: 1 }
+    expect(isNewManualPresentation({ ...previous, percent: 80 }, previous)).toBe(false)
+    expect(isNewManualPresentation({ ...previous, phase: 'downloaded' }, previous)).toBe(false)
+    expect(isNewManualPresentation({ ...previous, presentationId: 2 }, previous)).toBe(true)
+    expect(isNewManualPresentation({ ...previous, manual: false, source: 'runtime', presentationId: 2 }, previous)).toBe(false)
+  })
+
+  it('opens the first live manual result and supports older producers without IDs', () => {
+    expect(isNewManualPresentation({ ...downloaded, manual: true })).toBe(true)
+    expect(isNewManualPresentation({ ...downloaded, manual: true, phase: 'checking' }, downloaded)).toBe(true)
+    expect(isNewManualPresentation({ ...downloading, manual: true }, { ...downloading, manual: true })).toBe(false)
+  })
+
+  it('distinguishes bootstrap snapshots from live manual requests without changing their request identity', () => {
+    const historical: UpdateStatus = { ...downloaded, phase: 'up-to-date', manual: true, presentationId: 7 }
+    expect(isNewManualPresentation(historical, undefined, 'snapshot')).toBe(false)
+    expect(isNewManualPresentation(historical, historical)).toBe(false)
+    expect(shouldShowUpdate(historical, false)).toBe(false)
+    expect(shouldShowUpdate({ ...historical, phase: 'available' }, false)).toBe(true)
+    expect(isNewManualPresentation({ ...historical, presentationId: 8 }, historical)).toBe(true)
+  })
+
+  it('names the available version in the notification title in both languages', () => {
+    const status: UpdateStatus = { ...downloaded, phase: 'available' }
+    expect(updateHeadline(status, 'zh').title).toBe('检测到新版本 v1.1.0')
+    expect(updateHeadline(status, 'en').title).toBe('New version v1.1.0 available')
+  })
+})
+
+describe('About rollback choices', () => {
+  const releases = ['0.13.0', '0.12.0', '0.11.0', '0.12.0-rc.10', '0.12.0-rc.9'].map(version => ({ version, tag: `v${version}`, archiveUrl: `https://example.invalid/${version}/` }))
+
+  it('filters out the current and future versions from a mixed catalogue', () => {
+    expect(rollbackReleases(releases, '0.12.0').map(release => release.version)).toEqual(['0.12.0-rc.10', '0.12.0-rc.9', '0.11.0'])
+    expect(releases[0]?.version).toBe('0.13.0')
+  })
+
+  it('returns an empty state when no historical versions exist', () => {
+    expect(rollbackReleases(releases, '0.11.0')).toEqual([])
+    expect(rollbackReleases([], '0.12.0')).toEqual([])
+    expect(rollbackEmptyMessage('zh')).toBe('暂无可回退的历史版本')
+    expect(rollbackEmptyMessage('en')).toBe('No older versions available to roll back to')
+  })
+})

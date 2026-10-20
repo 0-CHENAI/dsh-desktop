@@ -67,7 +67,26 @@ jobs:
           git fetch --force --tags
           node scripts/next-release-version.mjs --apply
       - run: npm ci
+      - name: Cache native Office and PPT build inputs
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/office-downloads
+            .build/office-template-cache
+            .build/ppt-runtime
+          key: desktop-runtime-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/office-runtime/**', 'scripts/*ppt*', 'scripts/ppt/**', 'packages/dsh-desktop-office/**', 'packages/ppt-runtime/**', 'packages/office-runtime/**', 'patches/**', 'package-lock.json') }}
+          restore-keys: |
+            desktop-runtime-${{ runner.os }}-${{ runner.arch }}-
       - run: npm test
+        env:
+          DSH_PPT_FONT_EVIDENCE: ${{ runner.temp }}/ppt-font-evidence
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: release-ppt-font-evidence-macos
+          path: ${{ runner.temp }}/ppt-font-evidence
+          if-no-files-found: ignore
+          retention-days: 7
       - run: npm run typecheck
       - name: Build and check the actual Harness client on native macOS
         run: |
@@ -159,6 +178,16 @@ jobs:
           git fetch --force --tags
           node scripts/next-release-version.mjs --apply
       - run: npm ci
+      - name: Cache native Office and PPT build inputs
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/office-downloads
+            .build/office-template-cache
+            .build/ppt-runtime
+          key: desktop-runtime-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/office-runtime/**', 'scripts/*ppt*', 'scripts/ppt/**', 'packages/dsh-desktop-office/**', 'packages/ppt-runtime/**', 'packages/office-runtime/**', 'patches/**', 'package-lock.json') }}
+          restore-keys: |
+            desktop-runtime-${{ runner.os }}-${{ runner.arch }}-
       - run: npm test
       - run: npm run typecheck
       - run: npm run build

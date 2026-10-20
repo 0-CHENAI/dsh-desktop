@@ -60,9 +60,9 @@ describe('skipping one update', () => {
   })
 
   it('offers the button wherever a version is on the table, and skips through IPC', async () => {
-    const preload = await readFile(join(process.cwd(), 'src', 'preload', 'index.ts'), 'utf8')
-    expect(preload).toContain("'跳过此版本'")
-    expect(preload).toContain("'Skip this version'")
+    const preload = await readFile(join(process.cwd(), 'src', 'preload', 'desktop-update-ui.ts'), 'utf8')
+    expect(preload).toContain("'忽略'")
+    expect(preload).toContain("'Ignore'")
     expect(preload).toContain("ipcRenderer.invoke('updates:skip', version)")
 
     const manager = await readFile(
@@ -74,9 +74,9 @@ describe('skipping one update', () => {
     // simply left alone — never costs a download.
     expect(manager).toContain('autoUpdater.autoDownload = false')
     expect(manager).toContain("ipcMain.handle('updates:download'")
-    expect(preload).toContain("'同意更新'")
+    expect(preload).toContain("'下载并重启'")
     expect(preload).toContain("ipcRenderer.invoke('updates:download')")
     expect(preload).toContain("'打开下载页'")
-    expect(preload).toContain('status.canInstall !== false')
+    expect(preload).toContain('status.canInstall === false')
   })
 })
