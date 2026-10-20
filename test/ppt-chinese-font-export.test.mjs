@@ -2,7 +2,19 @@ import { expect, it } from 'vitest';
 import { unzipSync, strFromU8 } from 'fflate';
 import yaml from 'js-yaml';
 import { resolveFontFace } from '../packages/ppt-runtime/core/lib/font-family.js';
+import { templateOfficeFontOptions } from '../packages/ppt-runtime/core/lib/office-font-options.js';
 import { parsePptdProject, renderPptdProject } from '../packages/ppt-runtime/core/lib/pptd.js';
+
+it('gives missing PingFang weight names an explicit CJK fallback without changing authored faces', () => {
+  for (const weight of ['Ultralight','Thin','Light','Regular','Medium','Semibold']) {
+    const family = `PingFang SC ${weight}`;
+    const group = templateOfficeFontOptions.fontFallbacks.find(group => group[0] === family);
+    expect(group?.slice(0, 2)).toEqual([family, 'PingFang SC']);
+    expect(group).toContain('Microsoft YaHei');
+    expect(group).toContain('Noto Sans CJK SC');
+    expect(resolveFontFace(family, 'Arial', '北京', 'darwin')).toBe(family);
+  }
+});
 
 it('selects Chinese faces by platform and preserves explicit design choices', () => {
   for (const [platform, face] of [['darwin', 'PingFang SC'], ['win32', 'Microsoft YaHei'], ['linux', 'Noto Sans CJK SC']]) {

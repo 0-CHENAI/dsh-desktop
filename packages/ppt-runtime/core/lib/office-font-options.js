@@ -4,6 +4,12 @@ const sansCjk=['Microsoft YaHei','Microsoft YaHei UI','微软雅黑','PingFang S
 export const templateOfficeFontOptions={
   initialFontFamilies:['Microsoft YaHei','PingFang SC','Noto Sans CJK SC'],
   fontFallbacks:[
+    // Some macOS inventories expose PingFang only under its base family. Keep
+    // installed authored faces first, but give missing weight-qualified names a
+    // CJK substitute before the SDK's generic Latin fallback.
+    ...['Ultralight','Thin','Light','Regular','Medium','Semibold'].map(weight=>[
+      `PingFang SC ${weight}`,'PingFang SC',...sansCjk
+    ]),
     ['Calibri','Carlito'],
     ['Calibri Light','Carlito','Calibri'],
     ['Cambria','Caladea'],

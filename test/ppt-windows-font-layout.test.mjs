@@ -120,7 +120,18 @@ it('renders the imported Chinese heading at its authored width through Office an
     if (process.env.DSH_PPT_FONT_EVIDENCE) {
       const destination = process.env.DSH_PPT_FONT_EVIDENCE;
       await mkdir(destination, { recursive: true });
-      await writeFile(path.join(destination, 'metrics.json'), JSON.stringify({ platform: process.platform, inkWidth, width: info.width, height: info.height, ...metadata }, null, 2));
+      let fontCatalog;
+      if (process.platform === 'darwin') {
+        try {
+          const cache = JSON.parse(await readFile(path.join(os.homedir(), 'Library/Caches/libreoffice-kit/font-metadata.json'), 'utf8'));
+          // CI evidence contains only font names, never user directories or
+          // complete metadata/cache records. No document text is collected.
+          fontCatalog = { files: cache.records.length, faces: cache.records.flatMap(file => file.faces)
+            .filter(face => /PingFang|CJK|Songti|Heiti|Han Sans/i.test([face.family, ...face.aliases].join(' ')))
+            .map(({ family, style, weight }) => ({ family, style, weight })) };
+        } catch (error) { fontCatalog = { unavailable: error.code ?? 'invalid-cache' }; }
+      }
+      await writeFile(path.join(destination, 'metrics.json'), JSON.stringify({ platform: process.platform, inkWidth, width: info.width, height: info.height, ...metadata, fontCatalog }, null, 2));
       await copyFile(path.join(root, 'preview/pages/page-1.png'), path.join(destination, 'preview.png'));
       await copyFile(path.join(root, 'preview-deck.pptx'), path.join(destination, 'preview-deck.pptx'));
     }
