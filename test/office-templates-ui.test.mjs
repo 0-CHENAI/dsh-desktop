@@ -18,14 +18,18 @@ const templates = [
 let root, container, cleanup = []
 afterEach(async () => { if (root) await act(async () => root.unmount()); for (const dispose of cleanup.splice(0)) dispose?.(); container?.remove(); root = null; delete window.__ModuleLoader__ })
 
-async function fixture({ bound = true, remote = {}, english = false, deferState = false, examples = templates, blank = true } = {}) {
+async function fixture({ bound = true, remote = {}, english = false, deferState = false, examples = templates, blank = true, previewOnCommit = false, checkPreviewGeometry = false } = {}) {
   let plugin, dictionaries, store, sessionId = bound ? 'session-a' : undefined
   let leading = true
   const seats = new Map(), calls = [], held = new Map(), failures = new Map(), states = new Map([['session-a', { mode: null, ...remote }]])
   const hooks = new Map()
   let releaseInitial
   if (deferState) held.set('state', new Promise(resolve => { releaseInitial = resolve }))
-  window.__ModuleLoader__ = { load({ factory }) { plugin = factory(name => { if (name === 'react') return React; throw new Error(name) }) } }
+  const renderer = checkPreviewGeometry ? { ...React, createElement(type, props, ...children) {
+    if (type === 'figure') expect(Number.isFinite(props.style.width), 'Each rendered preview must use the current page geometry').toBe(true)
+    return React.createElement(type, props, ...children)
+  } } : React
+  window.__ModuleLoader__ = { load({ factory }) { plugin = factory(name => { if (name === 'react') return renderer; throw new Error(name) }) } }
   new Function(source)()
   const connection = { rpc: { async call(channel, endpoint, payload, signal) {
     expect(channel).toBe('/api'); expect(endpoint).toBe('office-templates'); endpoint = payload.endpoint; const { endpoint: operation, ...args } = payload; payload = args; calls.push({ endpoint, payload, signal })
@@ -48,12 +52,21 @@ async function fixture({ bound = true, remote = {}, english = false, deferState 
   plugin.apply(ctx)
   container = document.createElement('div'); document.body.append(container); root = createRoot(container)
   const t = key => dictionaries[english ? 'en' : 'zh'][key] ?? key
+  function EarlyPreview() {
+    const state = React.useSyncExternalStore(listener => store.subscribe(sessionId, listener), () => store.snapshot(sessionId))
+    // Exercise the commit-to-passive-effect gap deterministically instead of
+    // relying on runner speed or adding a delay before the first click.
+    React.useLayoutEffect(() => {
+      if (previewOnCommit && state.mode) container.querySelector(typeof previewOnCommit === 'string' ? previewOnCommit : '.dso-card-preview')?.click()
+    }, [state.mode, state.selectedTemplateId, blank, leading])
+    return null
+  }
   function render() {
     const names = ['conversation.hero.modeActions', 'conversation.input.accessory', 'conversation.hero.dock']
     if (seats.has('conversation.chat.userMessageFooter')) names.push('conversation.chat.userMessageFooter')
     root.render(React.createElement(React.Fragment, null, ...names.map(seat => React.createElement(seats.get(seat), {
       key: seat, sessionId, session: { blank }, leading: blank ? false : leading, store, t
-    }))))
+    })), previewOnCommit ? React.createElement(EarlyPreview) : null))
   }
   await act(async () => render())
   async function click(label) {
@@ -68,6 +81,42 @@ async function fixture({ bound = true, remote = {}, english = false, deferState 
     async setLeading(value) { leading = value; await act(async () => render()) },
     async switchSession(id) { sessionId = id; await act(async () => render()) } }
 }
+
+it('keeps a preview opened on the first interactive commit when the mode changes', async () => {
+  const f = await fixture({ bound: false, previewOnCommit: true })
+  await f.click('Word')
+  expect(container.querySelector('dialog[open]')).not.toBeNull()
+  expect(container.querySelectorAll('.dso-page img')).toHaveLength(2)
+  await f.click('关闭预览')
+  await f.click('Excel')
+  expect(container.querySelector('dialog[open]')?.getAttribute('aria-label')).toBe('年度经营与客户分析')
+})
+
+it('keeps the selected example preview opened on its first interactive commit', async () => {
+  const f = await fixture({ bound: false, previewOnCommit: '.dso-selected-preview' })
+  await f.click('Word')
+  await f.click('选用案例 中国现制咖啡市场调研报告')
+  expect(container.querySelector('dialog[open]')?.getAttribute('aria-label')).toBe('中国现制咖啡市场调研报告')
+})
+
+it('keeps the opening message preview opened on its first interactive commit', async () => {
+  const f = await fixture({ previewOnCommit: '.dso-opening-title' })
+  await f.click('Word')
+  await f.click('选用案例 中国现制咖啡市场调研报告')
+  await f.setBlank(false)
+  expect(container.querySelector('dialog[open]')?.getAttribute('aria-label')).toBe('中国现制咖啡市场调研报告')
+})
+
+it('does not render the old spread with an odd last page geometry while its request is pending', async () => {
+  const examples = [{ ...templates[0], pages: 3, pageAspectRatios: Array(3).fill(0.707) }]
+  const f = await fixture({ examples, checkPreviewGeometry: true })
+  await f.click('Word'); await f.click('查看案例 公文写作 · 通知')
+  const release = f.hold('preview:3')
+  await f.click('下一组')
+  expect(container.querySelectorAll('.dso-page img')).toHaveLength(0)
+  await release()
+  expect(container.querySelectorAll('.dso-page img')).toHaveLength(1)
+})
 
 it.each([
   ['Word', 'coffee-market', '中国现制咖啡市场调研报告'],

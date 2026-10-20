@@ -491,7 +491,9 @@ function selectVersionFromAbout(release: AvailableRelease, currentVersion: strin
 }
 
 function dismissCurrent(): void {
-  if (!currentStatus || installing || accepting) return
+  // Escape belongs to other dialogs when the updater has no visible offer.
+  // Do not revoke consent or send a dismissal for an idle/already-hidden UI.
+  if (!currentStatus || !host || host.style.display === 'none' || installing || accepting) return
   void ipcRenderer.invoke('updates:dismiss', currentStatus.availableVersion).catch((error: unknown) => {
     console.error('[updater] unable to cancel automatic installation', error)
   })

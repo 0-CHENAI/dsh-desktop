@@ -69,14 +69,23 @@ async function main(): Promise<void> {
   ipcMain.handle('safe-mode:status', () => ({ active: false }))
   ipcMain.handle('harness:renderer-healthy', () => ({ ok: true }))
   let pageErrors = 0
-  win.webContents.on('console-message', details => { if (details.level === 'error') pageErrors++ })
+  win.webContents.on('console-message', details => {
+    if (details.level !== 'error') return
+    pageErrors++
+    // This Profile is synthetic; still redact its generated launch token and
+    // bound diagnostics so a failed executeJavaScript has useful, safe context.
+    console.error(`Harness client renderer error: ${details.message.replaceAll(state.authToken, '[redacted]').slice(0, 1000)}`)
+  })
   const url = new URL(state.url)
   url.searchParams.set('token', state.authToken)
   await win.loadURL(url.href)
   const deadline = Date.now() + 30_000
   let mounted = false
   while (Date.now() < deadline) {
-    mounted = await win.webContents.executeJavaScript(`Boolean(document.querySelector('[data-dsh-sidebar-root]') && document.querySelector('#root')?.childElementCount && !Array.from(document.querySelectorAll('[role="status"]')).some(el => /Loading local workbenches|正在读取本地工作台/.test(el.textContent || '')))`)
+    // The fresh Profile asynchronously binds its initial blank session. The
+    // sessionless hero is a different slot owner and is intentionally unmounted
+    // at that boundary; do not start a session-scoped preview on its old DOM.
+    mounted = await win.webContents.executeJavaScript(`Boolean(document.querySelector('[data-dsh-sidebar-root]') && document.querySelector('[data-conversation-session]')?.dataset.conversationSession && document.querySelector('#root')?.childElementCount && !Array.from(document.querySelectorAll('[role="status"]')).some(el => /Loading local workbenches|正在读取本地工作台/.test(el.textContent || '')))`)
     if (mounted) break
     await new Promise(resolve => setTimeout(resolve, 100))
   }

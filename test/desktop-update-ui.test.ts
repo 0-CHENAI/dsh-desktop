@@ -62,6 +62,20 @@ afterEach(() => {
 const status = (phase: UpdateStatus['phase'], extra: Partial<UpdateStatus> = {}): UpdateStatus => ({ phase, currentVersion: '1.0.0', manual: true, presentationId: 7, ...extra })
 
 describe('desktop update presentation at the IPC boundary', () => {
+  it('ignores Escape while hidden and dismisses a visible offer only once', async () => {
+    const ui = await mount(Promise.resolve(status('idle', { manual: false })))
+    const escape = () => window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape' }))
+    const dismissals = () => ipc.invoke.mock.calls.filter(([channel]) => channel === 'updates:dismiss')
+    escape()
+    expect(dismissals()).toHaveLength(0)
+    ui.emit(status('available', { availableVersion: '1.1.0', manual: false }))
+    escape()
+    expect(ui.host.style.display).toBe('none')
+    expect(dismissals()).toHaveLength(1)
+    escape()
+    expect(dismissals()).toHaveLength(1)
+  })
+
   it('refreshes every translated control on locale changes while retaining same-locale progress nodes', async () => {
     const ui = await mount(Promise.resolve(status('idle', { manual: false })))
     ui.emit(status('downloading', { availableVersion: '1.1.0', percent: 10, locale: 'zh', manual: false }))

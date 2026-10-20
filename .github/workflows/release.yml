@@ -78,6 +78,15 @@ jobs:
           restore-keys: |
             desktop-runtime-${{ runner.os }}-${{ runner.arch }}-
       - run: npm test
+        env:
+          DSH_PPT_FONT_EVIDENCE: ${{ runner.temp }}/ppt-font-evidence
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: release-ppt-font-evidence-macos
+          path: ${{ runner.temp }}/ppt-font-evidence
+          if-no-files-found: ignore
+          retention-days: 7
       - run: npm run typecheck
       - name: Build and check the actual Harness client on native macOS
         run: |

@@ -125,9 +125,14 @@ window.__ModuleLoader__.load({ id: 'dsh-desktop-office', factory: require => {
 
   function Preview({ item, store, sessionId, t, choose, close, busy, actionError }) {
     const dialog = React.useRef(), stage = React.useRef(), opener = React.useRef(document.activeElement), active = React.useRef(true)
-    const [page, setPage] = React.useState(1), [preview, setPreview] = React.useState(null), [error, setError] = React.useState(''), [retry, setRetry] = React.useState(0)
+    const [page, setPage] = React.useState(1), [result, setResult] = React.useState(null), [retry, setRetry] = React.useState(0)
     const [bounds, setBounds] = React.useState({ width: 0, height: 0 })
     const spread = item.pages > 1, step = spread ? 2 : 1, endPage = Math.min(page + step - 1, item.pages)
+    // Page identity must change during render, not in the later request effect:
+    // otherwise an old two-page spread is briefly paired with one-page geometry.
+    const requestKey = JSON.stringify([sessionId, item.id, item.revision, page, endPage, retry])
+    const preview = result?.key === requestKey ? result.values : null
+    const error = result?.key === requestKey ? result.error : ''
     React.useEffect(() => { if (stage.current) { stage.current.scrollTop = 0; stage.current.scrollLeft = 0 } }, [page])
     React.useEffect(() => { active.current = true; const element = dialog.current; element.showModal(); element.querySelector('button')?.focus(); return () => { active.current = false; element.close(); if (opener.current?.isConnected) opener.current.focus() } }, [])
     React.useLayoutEffect(() => {
@@ -140,13 +145,13 @@ window.__ModuleLoader__.load({ id: 'dsh-desktop-office', factory: require => {
       return () => { observer?.disconnect(); window.removeEventListener('resize', measure) }
     }, [spread])
     React.useEffect(() => {
-      const controller = new AbortController(); setPreview(null); setError('')
+      const controller = new AbortController()
       const pages = Array.from({ length: endPage - page + 1 }, (_, index) => page + index)
       Promise.all(pages.map(page => store.call(sessionId, 'preview', { templateId: item.id, revision: item.revision, page }, controller.signal))).then(
-        values => { if (!controller.signal.aborted) setPreview(values) },
-        error => { if (!controller.signal.aborted) { setError(error.message); controller.abort() } })
+        values => { if (!controller.signal.aborted) setResult({ key: requestKey, values, error: '' }) },
+        error => { if (!controller.signal.aborted) { setResult({ key: requestKey, values: null, error: error.message }); controller.abort() } })
       return () => controller.abort()
-    }, [store, sessionId, item.id, item.revision, page, endPage, retry])
+    }, [store, sessionId, item.id, item.revision, page, endPage, requestKey])
     const move = value => { const bounded = Math.min(item.pages, Math.max(1, value)); setPage(spread && item.mode === 'word' ? bounded - (bounded - 1) % 2 : bounded); dialog.current?.focus() }
     const pageLabel = page === endPage ? t('page').replace('{page}', page).replace('{total}', item.pages)
       : t('spread').replace('{start}', page).replace('{end}', endPage).replace('{total}', item.pages)
@@ -197,8 +202,10 @@ window.__ModuleLoader__.load({ id: 'dsh-desktop-office', factory: require => {
     const state = useOffice(store, sessionId), [opened, setOpened] = React.useState(null)
     const root = React.useRef(), panel = React.useRef(), visible = !!state.mode && (session == null || session.blank === true)
     useDockGeometry(root, panel, visible)
-    React.useEffect(() => setOpened(null), [sessionId, state.mode])
-    React.useEffect(() => { if (opened && state.templates.find(item => item.id === opened.id)?.revision !== opened.revision) setOpened(null) }, [state.templates, opened])
+    // Close stale context before the new controls become interactive. A passive
+    // reset can otherwise erase a preview opened immediately after this commit.
+    React.useLayoutEffect(() => setOpened(null), [sessionId, state.mode])
+    React.useLayoutEffect(() => { if (opened && state.templates.find(item => item.id === opened.id)?.revision !== opened.revision) setOpened(null) }, [state.templates, opened])
     if (!visible) return null
     const items = state.templates.filter(item => item.mode === state.mode)
     return h('div', { ref: root, className: 'dso-dock-root' }, h('section', { ref: panel, className: 'dso-dock', 'data-office-dock': state.mode, 'aria-label': t('templates') },
@@ -213,7 +220,7 @@ window.__ModuleLoader__.load({ id: 'dsh-desktop-office', factory: require => {
   }
   function Accessory({ store, sessionId, session, t }) {
     const state = useOffice(store, sessionId), [opened, setOpened] = React.useState(false)
-    React.useEffect(() => setOpened(false), [sessionId, state.selectedTemplateId, session?.blank])
+    React.useLayoutEffect(() => setOpened(false), [sessionId, state.selectedTemplateId, session?.blank])
     const item = state.templates.find(item => item.id === state.selectedTemplateId && item.mode === state.mode)
     if (session?.blank !== true || !item) return null
     return h('div', { className: 'dso-selected', 'data-office-selected': item.id },
@@ -224,7 +231,7 @@ window.__ModuleLoader__.load({ id: 'dsh-desktop-office', factory: require => {
   function OpeningTemplate({ store, sessionId, leading, t }) {
     const state = useOffice(store, sessionId), [opened, setOpened] = React.useState(false)
     const item = state.templates.find(item => item.id === state.selectedTemplateId && item.mode === state.mode)
-    React.useEffect(() => setOpened(false), [sessionId, state.selectedTemplateId, leading])
+    React.useLayoutEffect(() => setOpened(false), [sessionId, state.selectedTemplateId, leading])
     if (leading !== true || !item) return null
     return h(React.Fragment, null,
       h('div', { className: 'dso-opening-row', 'data-office-opening-template': item.id, 'data-mode': item.mode },
