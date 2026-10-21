@@ -20,9 +20,13 @@ if (!process.versions.electron) {
     entryPoints: ['src/preload/windows-titlebar.ts'], bundle: true,
     format: 'iife', globalName: 'TitlebarLayout', write: false
   }).outputFiles[0].text
-  // Exercise the shipped Harness header CSS, not an approximation of its layout.
+  // Exercise both shipped frame and header CSS: a header-only fixture misses
+  // Harness reserving a second caption row inside the desktop content viewport.
   const harness = readFileSync('node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js', 'utf8')
   const css = JSON.parse(harness.match(/const css\$4 = ("[^\n]+");/)[1])
+  const layout = readFileSync('node_modules/@deepseek-ai/dsh-client-ui-layout/lib/client.js', 'utf8')
+  const frameCss = JSON.parse(layout.match(/const css = ("[^\n]+");/)[1])
+  const frameClasses = JSON.parse(layout.match(/var AppFrame_module_css_default = (\{[^;]+\});/)[1])
   const output = join(process.cwd(), 'artifacts', 'windows-titlebar')
   mkdirSync(output, { recursive: true })
   app.setPath('userData', join(output, 'profile'))
@@ -72,21 +76,26 @@ if (!process.versions.electron) {
       await setFullscreen(fullscreen)
       syncMenu()
       await win.loadURL('data:text/html,' + encodeURIComponent(`<!doctype html><style>
-        ${css} body{margin:0} #root{display:flex} .conversation{flex:1;min-width:0}
+        ${frameCss} ${css} body{margin:0} .conversation{min-width:0}
         .wSkVaW_titleCluster{flex:1;min-width:0} button{height:28px;min-width:28px}
         aside{width:180px;flex:none} #backdrop{position:fixed;inset:0;background:#0003;display:none}
         #settings{position:absolute;inset:10px;background:white} #close{position:absolute;right:0;top:0}
-        </style><div id="root"><aside id="left-sidebar">Sidebar</aside><div class="conversation"><div data-slot="conversation.session.header">
+        </style><div id="root"><div data-dsh-layout-frame class="${frameClasses.frame}"
+        style="grid-template-columns:180px minmax(0,1fr) ${sidebar ? 180 : 0}px">
+        <aside id="left-sidebar" class="${frameClasses.sidebarCol}">Sidebar</aside><div class="conversation"><div data-slot="conversation.session.header">
         <header class="wSkVaW_header"><div class="wSkVaW_titleRow">
         <div class="wSkVaW_titleCluster">Session title</div>
         <div class="wSkVaW_headerUtilities"><button>Folder</button><button>More</button></div>
         <div class="wSkVaW_headerCorner" data-conversation-header-corner><button id="corner">Sidebar</button></div>
         </div><div role="tablist">Chat · Activity</div></header></div></div>
-        ${sidebar ? '<aside data-sidebar-right-panel data-sidebar-right-open></aside>' : ''}</div>
+        ${sidebar ? '<aside data-sidebar-right-panel data-sidebar-right-open></aside>' : ''}
+        <div data-dsh-layout-resize-handle="sidebar" class="${frameClasses.handle}" style="left:180px"></div></div></div>
         <div id="backdrop"><section id="settings"><button id="close">Close</button></section></div>`))
       win.webContents.setZoomFactor(zoom)
       await win.webContents.executeJavaScript(`${source}
         window.fullscreenListener=()=>{};
+        TitlebarLayout.markWindowsTitlebar(document);
+        document.body.toggleAttribute('data-ds-dark-theme', ${sidebar});
         TitlebarLayout.mountWindowsTitlebarLayout({document,ipcRenderer:{invoke:async()=>${fullscreen},on:(_name,fn)=>window.fullscreenListener=fn}});
         window.inputLog=[];for(const t of ['mousemove','mousedown','mouseup','click'])document.addEventListener(t,e=>window.inputLog.push([t,e.clientX,e.clientY,e.target.id]));
         window.clicked=false;document.getElementById('corner').onclick=()=>window.clicked=true;void 0;`)
@@ -102,9 +111,17 @@ if (!process.versions.electron) {
       const content = await win.webContents.executeJavaScript(`(() => {
         const root=document.getElementById('root').getBoundingClientRect();
         const sidebar=document.getElementById('left-sidebar').getBoundingClientRect();
-        return {top:root.top,leftTop:sidebar.top,bottom:root.bottom,viewport:innerHeight};})()`)
+        const frame=document.querySelector('[data-dsh-layout-frame]');
+        const handle=document.querySelector('[data-dsh-layout-resize-handle]').getBoundingClientRect();
+        return {top:root.top,leftTop:sidebar.top,bottom:root.bottom,viewport:innerHeight,
+          padding:getComputedStyle(frame).paddingTop,pseudo:getComputedStyle(frame,'::before').content,
+          handleTop:handle.top,clearance:getComputedStyle(frame).getPropertyValue('--dsh-frame-chrome-top').trim()};})()`)
       assert.ok(Math.abs(content.top * zoom - (fullscreen ? 0 : 36)) < 2)
       assert.equal(content.leftTop, content.top)
+      assert.equal(content.padding, '0px')
+      assert.equal(content.pseudo, 'none')
+      assert.equal(content.clearance, '0px')
+      assert.equal(content.handleTop, content.top)
       assert.ok(Math.abs(content.bottom - content.viewport) < 2)
       assert.ok(rect.edge - rect.right >= 0 && rect.edge - rect.right <= 20, JSON.stringify({width,zoom,sidebar,fullscreen,rect}))
       assert.equal(rect.hit, true, JSON.stringify({width,zoom,sidebar,fullscreen,rect,content}))
