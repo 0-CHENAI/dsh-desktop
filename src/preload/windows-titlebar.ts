@@ -66,6 +66,10 @@ function installLayout(document: Document): void {
     html, body { height: 100% !important; }
     body.dsh-desktop-windows-titlebar-layout:has(> #root) {
       --dsh-titlebar-inset: env(titlebar-area-height, ${WINDOWS_TITLEBAR_HEIGHT}px);
+      /* Descendants and portals already live below the native caption row. */
+      --dsh-frame-top-clearance: 0px;
+      --dsh-frame-chrome-top: 0px;
+      --dsh-frame-overlay-top: 20px;
       box-sizing: border-box !important;
       position: absolute !important;
       top: var(--dsh-titlebar-inset) !important;
@@ -82,6 +86,18 @@ function installLayout(document: Document): void {
     body.dsh-desktop-windows-titlebar-layout > #root {
       height: 100% !important;
       min-height: 0 !important;
+    }
+    /* Harness 0.2 also reserves a caption inside AppFrame. The body owns that
+       inset here so fixed portals stay contained; do not reserve it twice.
+       Keep the titlebar-height token intact for collapsed sidebar controls. */
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-frame] {
+      padding-top: 0 !important;
+    }
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-frame]::before {
+      content: none !important;
+    }
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-resize-handle] {
+      top: 0 !important;
     }
     body.dsh-desktop-windows-titlebar-layout [data-dsh-sidebar-root][data-dsh-sidebar-wide="true"] {
       padding-top: 6px !important;

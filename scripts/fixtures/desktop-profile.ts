@@ -11,6 +11,7 @@ import { electronNodeExecutable } from '../../src/main/runtime/electron-node-exe
 import { SafeModeFrame } from '../../src/main/safe-mode-frame'
 import { buildSafeModeViewModel } from '../../src/main/safe-mode'
 import { desktopResourceUrl, installDesktopProtocol, registerDesktopScheme, SAFE_MODE_PAGE } from '../../src/main/desktop-protocol'
+import { WINDOWS_TITLEBAR_HEIGHT } from '../../src/shared/desktop-menu'
 
 const [appRoot, resourcesArg, executableArg, output] = process.argv.slice(2)
 if (!appRoot || !output) throw new Error('Missing application root or output directory')
@@ -55,6 +56,8 @@ async function main(): Promise<void> {
   // Assert real unauthenticated rejection before using the process-local token.
   assert.equal((await fetch(new URL('/api/session/list', state.url), { method: 'POST' })).status, 401)
   win = new BrowserWindow({ width: 1380, height: 900, show: false,
+    ...(process.platform === 'win32' ? { titleBarStyle: 'hidden' as const,
+      titleBarOverlay: { height: WINDOWS_TITLEBAR_HEIGHT, color: '#ffffff' } } : {}),
     webPreferences: { sandbox: true, contextIsolation: true, offscreen: true,
       backgroundThrottling: false,
       preload: join(app.getAppPath(), 'preload.cjs') } })
@@ -94,12 +97,40 @@ async function main(): Promise<void> {
   assert.equal(pageErrors, 0, 'Harness client emitted console errors during activation')
   await mkdir(outputDirectory, { recursive: true })
   await writeFile(join(outputDirectory, 'client.png'), (await win.webContents.capturePage()).toPNG())
+  if (process.platform === 'win32') await verifyWindowsContentInset(win)
   await verifyOfficeTemplateUi(win)
   if (process.platform === 'win32') await verifySidebarToggle(win)
   await verifyDesktopUpdateUi(win)
   await verifySafeModeFrame(win)
   assert.equal(pageErrors, 0, 'Safe Mode emitted console errors on the real Harness host')
   console.log(`Desktop profile: Electron ${process.versions.electron}, authenticated HTML/bootstrap and real client mounted; isolated ${process.platform} profile`)
+}
+
+async function verifyWindowsContentInset(window: BrowserWindow): Promise<void> {
+  for (const zoom of [0.67, 1, 1.5]) {
+    window.webContents.setZoomFactor(zoom)
+    await new Promise(resolve => setTimeout(resolve, 200))
+    const geometry = await window.webContents.executeJavaScript(`(() => {
+      const sidebar = document.querySelector('[data-dsh-sidebar-root]');
+      const header = document.querySelector('header[data-window-drag]');
+      const frame = document.querySelector('[data-dsh-layout-frame]');
+      if (!sidebar || !header || !frame) throw new Error('Windows content markers missing');
+      return { bodyTop: document.body.getBoundingClientRect().top,
+        sidebarTop: sidebar.getBoundingClientRect().top,
+        headerTop: header.getBoundingClientRect().top,
+        framePadding: getComputedStyle(frame).paddingTop,
+        frameBefore: getComputedStyle(frame, '::before').content };
+    })()`)
+    assert.ok(Math.abs(geometry.bodyTop * zoom - WINDOWS_TITLEBAR_HEIGHT) < 2, JSON.stringify({ zoom, geometry }))
+    assert.ok(Math.abs(geometry.sidebarTop - geometry.bodyTop) < 2,
+      `Windows sidebar must not reserve a second caption row: ${JSON.stringify({ zoom, geometry })}`)
+    assert.ok(Math.abs(geometry.headerTop - geometry.bodyTop) < 2,
+      `Windows conversation must begin below exactly one caption row: ${JSON.stringify({ zoom, geometry })}`)
+    assert.equal(geometry.framePadding, '0px')
+    assert.equal(geometry.frameBefore, 'none')
+  }
+  window.webContents.setZoomFactor(1)
+  console.log('Windows content inset: real Harness sidebar and conversation reserve exactly one native caption row at three zoom levels')
 }
 
 async function verifySidebarToggle(window: BrowserWindow): Promise<void> {

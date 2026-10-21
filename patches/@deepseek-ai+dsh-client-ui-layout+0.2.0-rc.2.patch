@@ -1,5 +1,5 @@
 diff --git a/node_modules/@deepseek-ai/dsh-client-ui-layout/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-layout/lib/client.js
-index e90615e..a958dcc 100644
+index e90615e..a420b3e 100644
 --- a/node_modules/@deepseek-ai/dsh-client-ui-layout/lib/client.js
 +++ b/node_modules/@deepseek-ai/dsh-client-ui-layout/lib/client.js
 @@ -15,6 +15,7 @@ window.__ModuleLoader__.load({
@@ -10,7 +10,23 @@ index e90615e..a958dcc 100644
  		/**
  		* Clamp a panel width into its contract range.
  		* @param px - requested width.
-@@ -691,4 +692,4 @@ window.__ModuleLoader__.load({
+@@ -193,6 +194,7 @@ window.__ModuleLoader__.load({
+ 			}, [endDrag]);
+ 			return (0, react_jsx_runtime.jsx)("div", {
+ 				className: AppFrame_module_css_default.handle,
++				"data-dsh-layout-resize-handle": props.side,
+ 				style: { left: props.left },
+ 				"data-side": props.side,
+ 				"data-dragging": dragging || void 0,
+@@ -315,6 +317,7 @@ window.__ModuleLoader__.load({
+ 			return (0, react_jsx_runtime.jsxs)("div", {
+ 				ref: frameRef,
+ 				className: AppFrame_module_css_default.frame,
++				"data-dsh-layout-frame": "",
+ 				style: {
+ 					...document.documentElement.hasAttribute("data-windows-titlebar") ? { "--dsh-windows-sidebar-width": `${cols.sidebar}px` } : {},
+ 					gridTemplateColumns: `${cols.sidebar}px minmax(${cols.rightbar === 0 ? 0 : 400}px, 1fr) minmax(0px, ${rightbarMax}px)`
+@@ -691,4 +694,4 @@ window.__ModuleLoader__.load({
  	}
  });
  
