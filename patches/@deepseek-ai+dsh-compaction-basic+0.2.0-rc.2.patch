@@ -1,5 +1,5 @@
 diff --git a/node_modules/@deepseek-ai/dsh-compaction-basic/lib/index.js b/node_modules/@deepseek-ai/dsh-compaction-basic/lib/index.js
-index 68c560b..d13e289 100644
+index 68c560b..1d3b79a 100644
 --- a/node_modules/@deepseek-ai/dsh-compaction-basic/lib/index.js
 +++ b/node_modules/@deepseek-ai/dsh-compaction-basic/lib/index.js
 @@ -5,6 +5,7 @@ import { assertNever, deepFreeze } from "@deepseek-ai/dsh-util-values";
@@ -36,7 +36,17 @@ index 68c560b..d13e289 100644
  	if (pressureBudgetTokens <= 0) throw new TargetPressureConfigError(targetKey, `compaction-basic: ${targetKey} reserves ${reservedCompletionTokens} completion tokens and ${policy.headroomTokens} headroom tokens of its ${contextWindow}-token context window, leaving no pressure budget; reduce the effective request maxTokens or compaction headroomTokens, or configure a larger adapter model contextWindow`);
  	const thresholdTokens = Math.floor(Math.min(contextWindow * policy.thresholdRatio, pressureBudgetTokens));
  	const retainTokens = policy.retainTokens === void 0 ? Math.floor(messageBudgetTokens * policy.retainRatio) : policy.retainTokens;
-@@ -320,6 +324,16 @@ async function summarizeWithLlm(ctx, config, input, agent, signal) {
+@@ -312,6 +316,9 @@ async function summarizeWithLlm(ctx, config, input, agent, signal) {
+ 	const options = {
+ 		provider: target.provider,
+ 		model: target.model,
++		// The same routed model must not fall back from a working turn effort to
++		// different adapter defaults. A dedicated summary model owns its defaults.
++		...latest?.provider === target.provider && latest.model === target.model && latest.reasoningEffort !== void 0 ? { reasoningEffort: latest.reasoningEffort } : {},
+ 		messages,
+ 		toolHistory: agent.session.toolHistory(),
+ 		...input.tools === void 0 ? {} : { tools: [...input.tools] },
+@@ -320,6 +327,16 @@ async function summarizeWithLlm(ctx, config, input, agent, signal) {
  		purpose: "compaction",
  		...signal === void 0 ? {} : { signal }
  	};
@@ -53,7 +63,7 @@ index 68c560b..d13e289 100644
  	for await (const chunk of ctx.llm.stream(options)) assembler.push(chunk);
  	const error = finishError(assembler.finish);
  	if (error !== void 0) throw error;
-@@ -332,7 +346,7 @@ async function summarizeWithLlm(ctx, config, input, agent, signal) {
+@@ -332,7 +349,7 @@ async function summarizeWithLlm(ctx, config, input, agent, signal) {
  		llmStreamCall: true,
  		provider: options.provider,
  		model: options.model,
@@ -62,7 +72,7 @@ index 68c560b..d13e289 100644
  		...assembler.usage === void 0 ? {} : { usage: assembler.usage }
  	};
  }
-@@ -836,19 +850,26 @@ var BasicCompactionEngine = class extends CompactionEngine {
+@@ -836,19 +853,30 @@ var BasicCompactionEngine = class extends CompactionEngine {
  		const logResult = (result, trigger) => {
  			ctx.logger.info(`compaction (${trigger}): shadowed ${result.shadowedSeqs.length} surface nodes (seqs ${result.shadowedRange.start}-${result.shadowedRange.end}, ~${result.shadowedTokenCount} tokens)`);
  		};
@@ -79,6 +89,10 @@ index 68c560b..d13e289 100644
 -				}
 +				signal.throwIfAborted();
 +				if (error instanceof TargetPressureConfigError) throw error;
++				// Parameter/authentication rejections cannot heal between tool steps.
++				// Keep their original failure facts instead of hiding them until the
++				// hard context budget is exhausted. Transient failures keep the old path.
++				if (error instanceof LlmError && ["INVALID_REQUEST", "AUTH", "FORBIDDEN", "UNSUPPORTED_REASONING_EFFORT", "UNSUPPORTED_OPTION"].includes(error.code)) throw error;
  				const message = error instanceof Error ? error.message : String(error);
 -				ctx.logger.warn(`step compaction failed: ${message}; continuing the turn`);
 +				ctx.logger.warn(`request compaction failed: ${message}; checking remaining context budget`);
@@ -96,6 +110,26 @@ index 68c560b..d13e289 100644
  		});
  		ctx.on("agent/status", ({ agent, status }) => {
  			if (status === "idle") this.overflowRetries.delete(agent);
+diff --git a/node_modules/@deepseek-ai/dsh-compaction-basic/lib/types/index.d.ts b/node_modules/@deepseek-ai/dsh-compaction-basic/lib/types/index.d.ts
+index 5547de3..1fcdffd 100644
+--- a/node_modules/@deepseek-ai/dsh-compaction-basic/lib/types/index.d.ts
++++ b/node_modules/@deepseek-ai/dsh-compaction-basic/lib/types/index.d.ts
+@@ -41,6 +41,8 @@ export declare class BasicCompactionEngine extends CompactionEngine {
+      * `ctx.llm.stream()` call whose prefix reuses the conversation's own system
+      * prompt, tools, and messages so the provider's KV cache is not invalidated.
+      * Override this sole hook for a template or remote summarizer.
++     * The same routed provider/model inherits its latest request's explicit
++     * reasoning effort; a separately configured summarizer keeps its own defaults.
+      * @param input - replayed conversation prefix (system, tools, and leading messages) to condense.
+      * @param agent - supplies routed-model history, fallback model, and session id.
+      * @param signal - optional cancellation forwarded to the adapter.
+@@ -81,4 +83,4 @@ export declare class BasicCompactionEngine extends CompactionEngine {
+     private regionDependencies;
+ }
+ export default BasicCompactionEngine;
+-//# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
++//# sourceMappingURL=index.d.ts.map
 diff --git a/node_modules/@deepseek-ai/dsh-compaction-basic/lib/types/types.d.ts b/node_modules/@deepseek-ai/dsh-compaction-basic/lib/types/types.d.ts
 index 8958b41..fa70aa3 100644
 --- a/node_modules/@deepseek-ai/dsh-compaction-basic/lib/types/types.d.ts

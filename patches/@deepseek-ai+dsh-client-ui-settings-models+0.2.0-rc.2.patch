@@ -1,5 +1,5 @@
 diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js
-index c5252c1..cee2a3f 100644
+index c5252c1..e3320ca 100644
 --- a/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js
 +++ b/node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js
 @@ -64,6 +64,38 @@ window.__ModuleLoader__.load({
@@ -221,7 +221,7 @@ index c5252c1..cee2a3f 100644
 +		}
 +		/**
 +		* Build the next persisted capability map. Existing wire values are retained;
-+		* newly entered IDs use identity mapping.
++		* newly entered IDs use identity mapping (off omits the wire parameter).
 +		* @param model - the current model row.
 +		* @param ids - cleaned ids from the comma-separated field.
 +		* @returns the next reasoning-efforts map, or undefined to drop it.
@@ -229,7 +229,7 @@ index c5252c1..cee2a3f 100644
 +		function nextReasoningEfforts(model, ids) {
 +			if (ids.length === 0) return void 0;
 +			const configured = configuredReasoningEfforts(model);
-+			return Object.fromEntries(ids.map((id) => [id, Object.prototype.hasOwnProperty.call(configured, id) ? configured[id] : id]));
++			return Object.fromEntries(ids.map((id) => [id, Object.prototype.hasOwnProperty.call(configured, id) ? configured[id] : id === "off" ? null : id]));
 +		}
 +		/**
 +		* Render the per-model reasoning effort declaration control. One

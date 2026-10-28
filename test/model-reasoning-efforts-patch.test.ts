@@ -166,6 +166,22 @@ describe('settings model reasoning effort field', () => {
     })
   })
 
+  it('defaults a newly added off capability to omission, not the literal wire value off', async () => {
+    const { nextReasoningEfforts } = await loadReasoningHelpers()
+
+    expect(nextReasoningEfforts({}, ['off', 'high', 'max'])).toEqual({
+      off: null,
+      high: 'high',
+      max: 'max'
+    })
+    // Explicit provider aliases remain authoritative, including gateways that
+    // really accept the string off. Editing other IDs must not rewrite them.
+    expect(nextReasoningEfforts({ reasoningEfforts: { off: 'disabled' } }, ['off', 'high']))
+      .toEqual({ off: 'disabled', high: 'high' })
+    expect(nextReasoningEfforts({ reasoningEfforts: { off: 'off' } }, ['off', 'high']))
+      .toEqual({ off: 'off', high: 'high' })
+  })
+
   it('preserves existing wire aliases and edited ID order', async () => {
     const { nextReasoningEfforts } = await loadReasoningHelpers()
 
