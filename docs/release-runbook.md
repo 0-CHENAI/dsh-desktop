@@ -1,5 +1,13 @@
 # Desktop release runbook
 
+## Actions does not create any runs
+
+Check the repository's **Actions** page before changing workflow triggers. GitHub can disable workflows on a fork even while the repository permissions API reports `enabled: true` and individual workflows report `active`. A manual dispatch returning `422: Actions has been disabled for this repository` and the page banner **Workflows on this fork have been disabled** identify this state.
+
+After reviewing the configured workflows, use **I understand my workflows, go ahead and re-enable them** on that page. Confirm **Actions Enabled**, then retrigger the missing check through a new PR update or a workflow's supported manual dispatch. Verify a new run actually starts; the settings value alone does not prove recovery. Missed events are not evidence of a successful build or release. A PR build does not publish the main-channel installer.
+
+The PPT font matrix covers Windows, Intel Mac (`macos-15-intel`) and Apple Silicon (`macos-15`). GitHub retired all `macos-14` images on November 2, 2026; jobs using those labels can terminate before checkout with an unsupported-configuration error. See the [runner retirement announcement](https://github.com/actions/runner-images/issues/13518) and [Intel runner availability](https://github.com/actions/runner-images/issues/13045). Keep both Mac architectures when replacing retired labels.
+
 ## macOS release without Apple Developer Program
 
 This fork does not have Apple Developer Program credentials. Its macOS configuration therefore sets `identity: "-"` for explicit ad-hoc signing and disables hardened runtime, which otherwise rejects Electron frameworks carrying a different Team ID. Ad-hoc signing gives every executable a coherent local code signature and prevents publishing an accidentally unsigned or structurally invalid app, but it does not establish a trusted publisher and cannot be submitted for Apple notarization.
