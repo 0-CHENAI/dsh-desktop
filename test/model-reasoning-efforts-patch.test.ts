@@ -166,6 +166,22 @@ describe('settings model reasoning effort field', () => {
     })
   })
 
+  it('defaults a newly added off capability to omission, not the literal wire value off', async () => {
+    const { nextReasoningEfforts } = await loadReasoningHelpers()
+
+    expect(nextReasoningEfforts({}, ['off', 'high', 'max'])).toEqual({
+      off: null,
+      high: 'high',
+      max: 'max'
+    })
+    // Explicit provider aliases remain authoritative, including gateways that
+    // really accept the string off. Editing other IDs must not rewrite them.
+    expect(nextReasoningEfforts({ reasoningEfforts: { off: 'disabled' } }, ['off', 'high']))
+      .toEqual({ off: 'disabled', high: 'high' })
+    expect(nextReasoningEfforts({ reasoningEfforts: { off: 'off' } }, ['off', 'high']))
+      .toEqual({ off: 'off', high: 'high' })
+  })
+
   it('preserves existing wire aliases and edited ID order', async () => {
     const { nextReasoningEfforts } = await loadReasoningHelpers()
 
@@ -215,7 +231,7 @@ describe('settings model reasoning effort field', () => {
       /props\.onChange\(nextReasoningEfforts\(props\.model, parseEffortList\(event\.target\.value\)\)\);/
     )
     expect(client).toContain(
-      'patch(index, { reasoningEfforts: next, reasoning: void 0 });'
+      'else next.reasoningEfforts = reasoningEfforts;'
     )
     expect(customProviderCard).toContain(
       'models: models.map((model) => ({ ...model }))'
@@ -279,8 +295,8 @@ describe('settings model reasoning effort field', () => {
     expect(patch).toContain('function configuredReasoningEfforts(model)')
     expect(patch).toContain('function reasoningEffortIds(model)')
     expect(patch).toContain('function nextReasoningEfforts(model, ids)')
-    expect(patch).toContain('reasoningEfforts: next')
-    expect(patch).toContain('reasoning: void 0')
+    expect(patch).toContain('else next.reasoningEfforts = reasoningEfforts;')
+    expect(patch).toContain('delete next.reasoning;')
     expect(patch).not.toContain(staleReasoningWrite)
     expect(patch).not.toContain(staleDefaultLocaleKey)
   })

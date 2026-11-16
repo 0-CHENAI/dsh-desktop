@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { adaptMarketGenerationSource } from '../build/market-generation-compat.mjs'
 import { legacyMarketFixture } from './market-legacy-fixture.ts'
-import { electronExecutable } from '../scripts/electron-node-loader.mjs'
+import { electronExecutable } from '../scripts/verify/electron-node-loader.mjs'
 
 function update(...args) {
   const output = execFileSync(process.execPath, ['test/fixtures/market-generation-update.mjs', ...args], { encoding: 'utf8' })

@@ -1,21 +1,28 @@
 import { EventEmitter } from 'node:events'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { beforeEach, afterEach, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   updater: null as any,
   handlers: new Map<string, (...args: any[]) => any>(),
-  send: vi.fn()
+  send: vi.fn(),
+  dataPath: '',
+  canInstall: true,
+  openExternal: vi.fn(async (_url: string) => {})
 }))
 vi.mock('electron', () => ({
-  app: { getVersion: () => '1.0.0', isPackaged: true, getPath: () => '/tmp', isReady: () => true },
+  app: { getVersion: () => '1.0.0', isPackaged: true, getPath: () => mocks.dataPath, isReady: () => true },
   BrowserWindow: { getAllWindows: () => [{ isDestroyed: () => false, webContents: { send: mocks.send } }] },
   ipcMain: { handle: (name: string, handler: (...args: any[]) => any) => mocks.handlers.set(name, handler) },
   powerMonitor: { on: vi.fn(), removeListener: vi.fn() },
-  shell: { openExternal: vi.fn() }
+  shell: { openExternal: mocks.openExternal },
+  net: { fetch: (...args: Parameters<typeof fetch>) => fetch(...args) }
 }))
 vi.mock('../src/main/update/update-policy', async (importOriginal) => ({
   ...await importOriginal<typeof import('../src/main/update/update-policy')>(),
-  supportsAutoUpdates: () => true
+  supportsAutoUpdates: (_packaged: boolean, _platform: string, eligible?: boolean) => eligible === undefined || mocks.canInstall
 }))
 vi.mock('electron-updater', () => ({ default: { get autoUpdater() { return mocks.updater } } }))
 vi.mock('../src/main/update/skipped-version', () => ({
@@ -29,14 +36,21 @@ let prepare = vi.fn(async () => {})
 let recover = vi.fn(async () => {})
 beforeEach(async () => {
   vi.resetModules()
-  vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify([
-    { tag_name: 'v0.9.0', draft: false }
-  ]), { status: 200 })))
+  mocks.canInstall = true
+  mocks.openExternal.mockReset().mockResolvedValue(undefined)
+  mocks.dataPath = await mkdtemp(join(tmpdir(), 'dsh-update-manager-'))
+  vi.stubGlobal('fetch', vi.fn(async (url: string | URL | Request) => new Response(JSON.stringify(
+    String(url).endsWith('/latest') ? { tag_name: 'v1.1.0', draft: false }
+      : [{ tag_name: 'v0.9.0', draft: false }]
+  ), { status: 200 })))
   mocks.handlers.clear()
   mocks.send.mockClear()
   mocks.updater = Object.assign(new EventEmitter(), {
     setFeedURL: vi.fn(), quitAndInstall: vi.fn(),
-    checkForUpdates: vi.fn(async () => { mocks.updater.emit('update-available', { version: '1.1.0' }) }),
+    checkForUpdates: vi.fn(async () => {
+      mocks.updater.emit('update-available', { version: '1.1.0' })
+      return { updateInfo: { version: '1.1.0' } }
+    }),
     downloadUpdate: vi.fn(() => new Promise<void>((resolve) => { finish = resolve }))
   })
   manager = await import('../src/main/update/update-manager')
@@ -47,8 +61,14 @@ beforeEach(async () => {
     prepareToInstall: prepare,
     recoverFromInstallFailure: recover
   })
+  await manager.checkForUpdates(true)
+  mocks.updater.checkForUpdates.mockClear()
 })
-afterEach(() => { manager.stopUpdateManager(); vi.unstubAllGlobals() })
+afterEach(async () => {
+  manager.stopUpdateManager()
+  vi.unstubAllGlobals()
+  await rm(mocks.dataPath, { recursive: true, force: true, maxRetries: 3 })
+})
 
 async function accept() {
   mocks.updater.emit('update-available', { version: '1.1.0' })
@@ -60,6 +80,36 @@ function complete(version = '1.1.0') {
   mocks.updater.emit('update-downloaded', { version })
   finish()
 }
+
+async function manualOnlyManager() {
+  manager.stopUpdateManager()
+  vi.resetModules()
+  mocks.canInstall = false
+  manager = await import('../src/main/update/update-manager')
+  manager.startUpdateManager({ prepareToInstall: prepare, installFailed: recover })
+}
+
+it('opens the offered fork release once requested, without using the native installer in manual mode', async () => {
+  await manualOnlyManager()
+  await manager.downloadAvailableUpdate(true)
+  expect(mocks.openExternal).not.toHaveBeenCalled()
+  await manager.checkForUpdates(true)
+  await manager.downloadAvailableUpdate(true)
+  expect(mocks.openExternal).toHaveBeenCalledWith('https://github.com/0-CHENAI/dsh-desktop/releases/tag/v1.1.0')
+  expect(mocks.updater.downloadUpdate).not.toHaveBeenCalled()
+  expect(manager.getUpdateStatus()).toMatchObject({ phase: 'available', canInstall: false })
+})
+
+it('opens only a verified historical fork release in manual mode', async () => {
+  await manualOnlyManager()
+  await manager.installSpecificVersion('0.8.0')
+  expect(manager.getUpdateStatus().phase).toBe('error')
+  expect(mocks.openExternal).not.toHaveBeenCalled()
+  await manager.installSpecificVersion('0.9.0')
+  expect(mocks.openExternal).toHaveBeenCalledWith('https://github.com/0-CHENAI/dsh-desktop/releases/tag/v0.9.0')
+  expect(mocks.updater.downloadUpdate).not.toHaveBeenCalled()
+  expect(manager.getUpdateStatus().phase).toBe('idle')
+})
 it('installs an accepted update once, after preparation, including a cached download without progress', async () => {
   let ready!: () => void
   prepare.mockImplementation(() => new Promise<void>((resolve) => { ready = resolve }))
@@ -69,7 +119,7 @@ it('installs an accepted update once, after preparation, including a cached down
   expect(mocks.updater.quitAndInstall).not.toHaveBeenCalled()
   mocks.updater.emit('update-downloaded', { version: '1.1.0' })
   await manager.installDownloadedUpdate()
-  expect(prepare).toHaveBeenCalledTimes(1)
+  await vi.waitFor(() => expect(prepare).toHaveBeenCalledTimes(1))
   ready()
   await download
   expect(mocks.updater.quitAndInstall).toHaveBeenCalledExactlyOnceWith(true, true)
@@ -85,7 +135,11 @@ it.each(['updates:dismiss', 'updates:skip'])('revokes automatic installation on 
   expect(manager.getUpdateStatus().phase).toBe(channel === 'updates:skip' ? 'idle' : 'downloaded')
 })
 it('keeps a historical version download awaiting explicit installation', async () => {
-  mocks.updater.checkForUpdates.mockImplementation(async () => { mocks.updater.emit('update-available', { version: '0.9.0' }) })
+  manager.skipUpdate('1.1.0')
+  mocks.updater.checkForUpdates.mockImplementation(async () => {
+    mocks.updater.emit('update-available', { version: '0.9.0' })
+    return { updateInfo: { version: '0.9.0' } }
+  })
   const download = manager.installSpecificVersion('0.9.0')
   await vi.waitFor(() => expect(mocks.updater.downloadUpdate).toHaveBeenCalled())
   complete('0.9.0')
@@ -157,6 +211,7 @@ it('does not quit or allow another update when an error interrupts preparation',
   prepare.mockImplementation(() => new Promise<void>((resolve) => { ready = resolve }))
   const { download } = await accept()
   complete()
+  await vi.waitFor(() => expect(prepare).toHaveBeenCalledOnce())
   mocks.updater.emit('error', new Error('installer failed'))
   await manager.checkForUpdates(true)
   expect(mocks.updater.checkForUpdates).not.toHaveBeenCalled()

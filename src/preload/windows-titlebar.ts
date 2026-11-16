@@ -1,49 +1,58 @@
 import type { IpcRenderer } from 'electron'
 import { WINDOWS_TITLEBAR_HEIGHT } from '../shared/desktop-menu'
+import { mountWindowsMenuBar } from './windows-menu-bar'
 
 const LAYOUT_STYLE_ID = 'dsh-desktop-windows-titlebar-layout-style'
-const SIDEBAR_WIDTH_PROPERTY = '--dsh-desktop-windows-sidebar-width'
-
-/** Stamp before Harness computes its collapsed sidebar geometry. */
-export function markWindowsTitlebar(document: Document): void {
-  const mark = (): boolean => {
-    const root = document.documentElement
-    if (!root) return false
-    root.setAttribute('data-windows-titlebar', '')
-    root.style.setProperty('--dsh-windows-titlebar-height', `${WINDOWS_TITLEBAR_HEIGHT}px`)
-    return true
-  }
-  if (mark()) return
-  const observer = new MutationObserver(() => { if (mark()) observer.disconnect() })
-  observer.observe(document, { childList: true })
-}
+const DRAG_REGION_ID = 'dsh-desktop-windows-drag-region'
+const MODAL_OPEN_ATTRIBUTE = 'data-dsh-modal-open'
 
 interface TitlebarLayoutMountOptions {
   document: Document
-  ipcRenderer: Pick<IpcRenderer, 'invoke' | 'on'>
+  ipcRenderer: Pick<IpcRenderer, 'invoke'>
 }
 
+/** Harness reads this marker while creating its first layout frame.
+ * Its Windows-named seam is also used for the Linux overlay; data-platform stays Linux.
+ */
+export function markWindowsTitlebar(document: Document): void {
+  const apply = (root: HTMLElement): void => {
+    root.dataset.windowsTitlebar = ''
+    // Electron exposes this in CSS pixels, including the current page zoom.
+    root.style.setProperty('--dsh-windows-titlebar-height', `env(titlebar-area-height, ${WINDOWS_TITLEBAR_HEIGHT}px)`)
+  }
+  const root = document.documentElement as HTMLElement | null
+  if (root) {
+    apply(root)
+    return
+  }
+  // Preload can run before the parser creates <html>. Mark it the moment it
+  // exists so every Harness script, including its first layout, sees it.
+  const observer = new MutationObserver(() => {
+    const created = document.documentElement as HTMLElement | null
+    if (!created) return
+    observer.disconnect()
+    apply(created)
+  })
+  observer.observe(document, { childList: true })
+}
+
+/**
+ * Windows/Linux chrome: AppFrame supplies the layout markers, while Desktop
+ * shares the conversation header with native controls and gives the sidebar
+ * a toolbar above its brand. Standalone recovery pages retain a separate drag
+ * strip; dialogs release native drag areas without moving their React nodes.
+ */
 export function mountWindowsTitlebarLayout(options: TitlebarLayoutMountOptions): void {
   const { document, ipcRenderer } = options
+  markWindowsTitlebar(document)
   if (!document.body) return
 
+  const standalone = document.location.protocol === 'file:'
+  document.body.toggleAttribute('data-dsh-standalone-titlebar', standalone)
   installLayout(document)
-  trackSidebarLayout(document)
-  let fullscreenEventReceived = false
-  const fullscreenChanged = (_event: unknown, fullscreen: boolean): void => {
-    fullscreenEventReceived = true
-    document.body.classList.toggle('dsh-desktop-fullscreen', fullscreen === true)
-  }
-  ipcRenderer.on('desktop-titlebar:fullscreen', fullscreenChanged)
-  void ipcRenderer.invoke('desktop-titlebar:is-fullscreen').then(value => {
-    if (!fullscreenEventReceived) fullscreenChanged(undefined, value === true)
-  }).catch(() => {})
-
-  document.addEventListener('pointerdown', () => {
-    void ipcRenderer.invoke('desktop-titlebar:close-menu').catch((error: unknown) => {
-      console.warn('[desktop-titlebar] unable to close the application menu', error)
-    })
-  })
+  if (document.location.protocol === 'file:') installDragRegion(document)
+  trackModals(document)
+  mountWindowsMenuBar({ document, ipcRenderer })
 
   syncTheme(document, ipcRenderer)
   const themeObserver = new MutationObserver(() => syncTheme(document, ipcRenderer))
@@ -64,54 +73,126 @@ function installLayout(document: Document): void {
   style.id = LAYOUT_STYLE_ID
   style.textContent = `
     html, body { height: 100% !important; }
-    body.dsh-desktop-windows-titlebar-layout:has(> #root) {
-      --dsh-titlebar-inset: env(titlebar-area-height, ${WINDOWS_TITLEBAR_HEIGHT}px);
+    body.dsh-desktop-windows-titlebar-layout {
       box-sizing: border-box !important;
-      position: absolute !important;
-      top: var(--dsh-titlebar-inset) !important;
-      width: 100% !important;
-      height: calc(100% - var(--dsh-titlebar-inset)) !important;
-      margin: 0 !important;
+      height: 100% !important;
       padding-top: 0 !important;
-      /* Keep fixed settings/backdrop portals inside the content viewport. */
-      transform: translateZ(0);
     }
-    body.dsh-desktop-windows-titlebar-layout.dsh-desktop-fullscreen:has(> #root) {
-      --dsh-titlebar-inset: 0px;
+    /* Local recovery pages do not have Harness AppFrame to reserve a caption
+       row. Keep their logo/actions below both the menu and native controls. */
+    body.dsh-desktop-windows-titlebar-layout[data-dsh-standalone-titlebar] {
+      padding-top: var(--dsh-windows-titlebar-height) !important;
+    }
+    body.dsh-desktop-windows-titlebar-layout[data-dsh-standalone-titlebar] > .shell {
+      height: 100% !important;
+      min-height: 0 !important;
     }
     body.dsh-desktop-windows-titlebar-layout > #root {
       height: 100% !important;
       min-height: 0 !important;
     }
-    body.dsh-desktop-windows-titlebar-layout [data-dsh-sidebar-root][data-dsh-sidebar-wide="true"] {
-      padding-top: 6px !important;
-    }
-    /* Harness fixes the Windows rail controls to the top-left. Only the wide
-       sidebar toggle belongs in the brand row; keep the collapsed entry fixed. */
-    body.dsh-desktop-windows-titlebar-layout [data-dsh-sidebar-root][data-dsh-sidebar-wide="true"] [data-dsh-sidebar-toggle] {
-      position: static !important;
-      inset: auto !important;
-      margin-left: auto;
-      flex-shrink: 0;
-    }
-    body.dsh-desktop-windows-titlebar-layout header[data-slot="conversation.session.header"],
-    body.dsh-desktop-windows-titlebar-layout [data-slot="conversation.session.header"] > header {
-      box-sizing: border-box !important;
-      padding-top: 6px !important;
-    }
-    body.dsh-desktop-windows-titlebar-layout [data-sidebar-right-panel] {
-      box-sizing: border-box;
+    /* Share the first header row with native controls instead of reserving a
+       separate strip across the work area. Electron reports zoom-aware bounds. */
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-frame] {
       padding-top: 0;
+      --dsh-frame-top-clearance: 0px;
+      --dsh-frame-chrome-top: 0px;
+      --dsh-windows-leading-inset: 0px;
+      --dsh-windows-toolbar-height: max(40px, var(--dsh-windows-titlebar-height));
+      --dsh-windows-controls-inset: max(0px, calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, calc(100vw - 140px))));
     }
-    /* A narrow conversation between two sidebars still needs reachable actions.
-       Wrap the native row instead of letting its fixed-size controls overflow. */
-    body.dsh-desktop-windows-titlebar-layout [data-slot="conversation.session.header"] > header > :has(> [data-conversation-header-corner]) {
-      flex-wrap: wrap;
-      row-gap: 6px;
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-frame]::before {
+      display: none;
     }
-    body.dsh-desktop-windows-titlebar-layout [data-conversation-header-corner] {
-      margin-left: auto;
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-frame][data-sidebar-collapsed] {
+      --dsh-frame-leading-clearance: 120px;
+      --dsh-windows-leading-inset: 120px;
     }
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-frame]:not([data-rightbar-collapsed]) {
+      --dsh-windows-controls-inset: 0px;
+    }
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-sidebar] {
+      position: relative;
+      z-index: 1;
+    }
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-sidebar]::before {
+      content: '';
+      position: absolute;
+      inset: 0 0 auto;
+      height: var(--dsh-windows-toolbar-height);
+      -webkit-app-region: drag;
+    }
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-sidebar-root][data-dsh-sidebar-wide="true"] {
+      position: relative;
+      padding-top: calc(var(--dsh-windows-toolbar-height) + 8px) !important;
+    }
+    /* The menu and collapse control belong to the toolbar, above the brand. */
+    body.dsh-desktop-windows-titlebar-layout:has([data-dsh-sidebar-root][data-dsh-sidebar-wide="true"]) [data-dsh-windows-menu]:not([data-standalone]) {
+      left: 12px;
+      height: max(40px, var(--dsh-windows-titlebar-height));
+    }
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-sidebar-root][data-dsh-sidebar-wide="false"] [data-dsh-sidebar-toggle],
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-sidebar-root][data-dsh-sidebar-wide="false"] [data-dsh-sidebar-new-session] {
+      top: max(0px, calc((var(--dsh-windows-titlebar-height) - 28px) / 2)) !important;
+    }
+    html[data-fullscreen][data-windows-titlebar] {
+      --dsh-windows-titlebar-height: 0px !important;
+    }
+    html[data-fullscreen] body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-frame][data-sidebar-collapsed] {
+      --dsh-frame-leading-clearance: 84px;
+      --dsh-windows-leading-inset: 84px;
+    }
+    html[data-fullscreen] [data-dsh-sidebar-root][data-dsh-sidebar-wide="false"] [data-dsh-sidebar-toggle],
+    html[data-fullscreen] [data-dsh-sidebar-root][data-dsh-sidebar-wide="false"] [data-dsh-sidebar-new-session] {
+      top: 10px !important;
+    }
+    html[data-fullscreen] [data-dsh-windows-menu] { display: none !important; }
+    /* Preserve the existing React control and its state while changing its
+       native-chrome seat; collapsed controls stay reachable in the header. */
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-sidebar-root][data-dsh-sidebar-wide="true"] [data-dsh-sidebar-toggle] {
+      position: absolute !important;
+      inset: calc((var(--dsh-windows-toolbar-height) - 28px) / 2) 12px auto auto !important;
+      flex-shrink: 0;
+      z-index: 1;
+    }
+    body.dsh-desktop-windows-titlebar-layout header:has([data-conversation-header-leading]) {
+      --dsh-frame-leading-clearance: 0px;
+      grid-template-rows: var(--dsh-windows-toolbar-height) auto;
+      padding-top: 0;
+      padding-bottom: 0;
+      padding-left: 0;
+      padding-right: calc(28px + var(--dsh-windows-controls-inset));
+      -webkit-app-region: drag;
+    }
+    /* Collapsed controls live in a zero-width sidebar column. Their own
+       no-drag boxes can be clipped out of Electron's native hit map; reserve
+       a real leading box in the header that owns the overlapping drag area.
+       Keep slot contributions interactive and include the original inset. */
+    body.dsh-desktop-windows-titlebar-layout [data-conversation-header-leading] {
+      box-sizing: border-box;
+      min-width: var(--dsh-windows-leading-inset);
+      min-height: var(--dsh-windows-toolbar-height);
+      padding-left: 20px;
+      -webkit-app-region: no-drag;
+    }
+    body.dsh-desktop-windows-titlebar-layout [data-plugin-panel] > header[data-window-drag] {
+      box-sizing: border-box;
+      min-height: var(--dsh-windows-toolbar-height);
+      padding-right: calc(28px + var(--dsh-windows-controls-inset));
+    }
+    /* The dock surface is absolutely anchored to AppFrame, so column padding
+       cannot move it. Offset the real panel in both push and expanded modes. */
+    body.dsh-desktop-windows-titlebar-layout [data-sidebar-right-panel] {
+      top: var(--dsh-windows-titlebar-height);
+    }
+    /* A drag region wins over a dialog's buttons in the caption row, so both
+       Harness's caption strip and Desktop's own give way while one is open. */
+    html[${MODAL_OPEN_ATTRIBUTE}] :has(> [data-shell-overlay])::before,
+    html[${MODAL_OPEN_ATTRIBUTE}] [data-dsh-layout-sidebar]::before,
+    html[${MODAL_OPEN_ATTRIBUTE}] [data-window-drag] {
+      -webkit-app-region: no-drag !important;
+    }
+    html[${MODAL_OPEN_ATTRIBUTE}] #${DRAG_REGION_ID} { display: none !important; }
     body.dsh-desktop-windows-titlebar-layout button,
     body.dsh-desktop-windows-titlebar-layout a,
     body.dsh-desktop-windows-titlebar-layout input,
@@ -119,43 +200,66 @@ function installLayout(document: Document): void {
     body.dsh-desktop-windows-titlebar-layout textarea,
     body.dsh-desktop-windows-titlebar-layout [role="button"],
     body.dsh-desktop-windows-titlebar-layout [role="tab"],
-    body.dsh-desktop-windows-titlebar-layout summary,
-    body.dsh-desktop-windows-titlebar-layout [contenteditable="true"],
+    body.dsh-desktop-windows-titlebar-layout [role="menuitem"],
     body.dsh-desktop-windows-titlebar-layout [data-dsh-no-drag] {
       -webkit-app-region: no-drag !important;
+    }
+    #${DRAG_REGION_ID} {
+      position: fixed;
+      z-index: 10;
+      top: 0;
+      left: 0;
+      right: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, calc(100vw - 140px)));
+      height: var(--dsh-windows-titlebar-height);
+      background: transparent;
+      pointer-events: none;
+      user-select: none;
+      -webkit-app-region: drag;
     }
   `
   document.head.appendChild(style)
 }
 
-function trackSidebarLayout(document: Document): void {
-  let observedSidebarColumn: HTMLElement | null = null
-  const resizeObserver = new ResizeObserver(() => updateSidebarWidth())
+/** Desktop's local pages have no Harness caption strip, so they get their own. */
+function installDragRegion(document: Document): void {
+  if (document.getElementById(DRAG_REGION_ID)) return
+  const dragRegion = document.createElement('div')
+  dragRegion.id = DRAG_REGION_ID
+  dragRegion.setAttribute('aria-hidden', 'true')
+  document.body.appendChild(dragRegion)
+}
 
-  const updateSidebarWidth = (): void => {
-    if (!observedSidebarColumn) {
-      document.documentElement.style.setProperty(SIDEBAR_WIDTH_PROPERTY, '0px')
-      return
-    }
-    const width = observedSidebarColumn.getBoundingClientRect().width
-    document.documentElement.style.setProperty(SIDEBAR_WIDTH_PROPERTY, `${Math.max(0, width)}px`)
+function trackModals(document: Document): void {
+  // Only semantic dialog markers count: class-name guesses match permanent
+  // elements and would release the drag area for good.
+  const modalSelector = 'dialog[open], [role="dialog"], [role="alertdialog"], [aria-modal="true"]'
+  const update = (): void => {
+    const hasModal = Array.from(document.querySelectorAll<HTMLElement>(modalSelector)).some((el) => {
+      if (el.offsetWidth === 0 || el.offsetHeight === 0) return false
+      const style = window.getComputedStyle(el)
+      return style.visibility !== 'hidden' && style.opacity !== '0'
+    })
+    document.documentElement.toggleAttribute(MODAL_OPEN_ATTRIBUTE, hasModal)
   }
 
-  const sync = (): void => {
-    const sidebarRoot = document.querySelector<HTMLElement>('[data-dsh-sidebar-root]')
-    const sidebarColumn = sidebarRoot?.parentElement ?? null
-
-    if (sidebarColumn !== observedSidebarColumn) {
-      if (observedSidebarColumn) resizeObserver.unobserve(observedSidebarColumn)
-      observedSidebarColumn = sidebarColumn
-      if (sidebarColumn) resizeObserver.observe(sidebarColumn)
-    }
-    updateSidebarWidth()
+  // Streaming output mutates the DOM continuously; check at most once a frame.
+  let scheduled = false
+  const scheduleUpdate = (): void => {
+    if (scheduled) return
+    scheduled = true
+    requestAnimationFrame(() => {
+      scheduled = false
+      update()
+    })
   }
-
-  const observer = new MutationObserver(sync)
-  observer.observe(document.documentElement, { childList: true, subtree: true })
-  sync()
+  const observer = new MutationObserver(scheduleUpdate)
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['open', 'style', 'class', 'hidden', 'aria-hidden', 'aria-modal', 'role']
+  })
+  update()
 }
 
 function syncTheme(document: Document, ipcRenderer: Pick<IpcRenderer, 'invoke'>): void {

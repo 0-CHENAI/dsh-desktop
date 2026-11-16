@@ -49,11 +49,11 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: node scripts/verify-target.mjs ${{ runner.os == 'Windows' && 'win32' || 'darwin' }} ${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}
+      - run: node scripts/verify/verify-target.mjs ${{ runner.os == 'Windows' && 'win32' || 'darwin' }} ${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}
       - run: npm run build
       - run: node scripts/check-desktop-profile.cjs
       - if: runner.os == 'macOS'
-        run: node scripts/verify-image-electron.mjs
+        run: node scripts/verify/verify-image-electron.mjs
       - if: runner.os == 'Windows'
         run: node scripts/check-windows-titlebar-layout.cjs
       - run: npm run package:dev:dir

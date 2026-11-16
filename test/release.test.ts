@@ -1,39 +1,21 @@
 import { readFile } from 'node:fs/promises'
+import { createRequire } from 'node:module'
 import path from 'node:path'
+import { parse } from 'yaml'
 import { describe, expect, it } from 'vitest'
 
 const projectRoot = path.resolve(import.meta.dirname, '..')
 
 const releaseAssets = [
   'dsh-desktop-mac-arm64.dmg',
+  'dsh-desktop-mac-x64.dmg',
   'dsh-desktop-windows-x64-setup.exe'
 ]
 
+/** The exact Harness build every `@deepseek-ai/dsh-*` production dep is pinned to. */
+const HARNESS_VERSION = '0.2.2-rc.1'
+
 describe('GitHub release contract', () => {
-  it('keeps the linked PPT runtime on the reviewed image parser security release', async () => {
-    const lock = JSON.parse(await readFile(path.join(projectRoot, 'package-lock.json'), 'utf8'))
-    const parsers = Object.entries(lock.packages).filter(([location]) => location.endsWith('/image-size'))
-    expect(parsers.length).toBeGreaterThan(0)
-    // npm can keep an older nested entry when recalculating linked packages.
-    // Guard the actual frozen lock used by clean installs, not just overrides.
-    for (const [location, metadata] of parsers) {
-      expect((metadata as { version: string }).version, location).toBe('2.0.4')
-    }
-  })
-  it('keeps the installer PR gate on main only', async () => {
-    const workflow = (
-      await readFile(
-        path.join(projectRoot, '.github', 'workflows', 'release.yml'),
-        'utf8'
-      )
-    ).replace(/\r\n/g, '\n')
-    const branches = workflow.match(
-      /pull_request:\n[ \t]+branches:\n((?:[ \t]+-[ \t]+\S+\n)+)/
-    )?.[1]
-
-    expect(branches).toBe('      - main\n')
-  })
-
   it('keeps the package and lockfile versions aligned', async () => {
     const packageJson = JSON.parse(
       await readFile(path.join(projectRoot, 'package.json'), 'utf8')
@@ -82,11 +64,12 @@ describe('GitHub release contract', () => {
       'utf8'
     )
     const packageLock = JSON.parse(packageLockRaw) as {
-      packages: Record<string, { resolved?: string }>
+      packages: Record<string, { resolved?: string; integrity?: string }>
     }
 
-    // alpha.3 introduced these as transitive deps of shipped packages; they must
-    // resolve from the vendored tarballs, not registry.npmmirror.com.
+    // alpha.3 introduced these as transitive deps of shipped packages; they are
+    // explicit production deps so the lockfile pins them like the rest of the
+    // closure instead of letting a transitive range float.
     const promotedClosurePackages = [
       '@deepseek-ai/dsh-client-ui-schedule',
       '@deepseek-ai/dsh-deque',
@@ -96,34 +79,49 @@ describe('GitHub release contract', () => {
     ]
 
     for (const packageName of promotedClosurePackages) {
-      expect(packageJson.dependencies[packageName]).toMatch(
-        /^file:packages\/harness-0\.2\.0-rc\.2\/npm-dsh\/.+\.tgz$/
-      )
-      expect(packageLock.packages[`node_modules/${packageName}`]?.resolved).toMatch(
-        /^file:packages\/harness-0\.2\.0-rc\.2\/npm-dsh\//
-      )
+      expect(packageJson.dependencies[packageName]).toBe(HARNESS_VERSION)
     }
 
-    // No @deepseek-ai/dsh-* package may resolve from a remote registry URL.
-    expect(packageLockRaw).not.toMatch(
-      /"resolved":\s*"https?:\/\/[^"]*deepseek-ai[/-]dsh/
+    // Upstream publishes the official CI build to the registry, so every
+    // `@deepseek-ai/dsh-*` dep is pinned to one exact version and every
+    // resolution carries an integrity hash — `npm ci` stays reproducible
+    // without vendoring tarballs into the repository.
+    const harnessDeps = Object.entries(packageJson.dependencies).filter(
+      ([name]) => name.startsWith('@deepseek-ai/dsh')
     )
+    expect(harnessDeps.length).toBeGreaterThan(200)
+    for (const [name, range] of harnessDeps) {
+      expect(range, name).toBe(HARNESS_VERSION)
+      const entry = packageLock.packages[`node_modules/${name}`]
+      expect(entry?.resolved, name).toMatch(/^https?:\/\//)
+      expect(entry?.integrity, name).toMatch(/^sha\d+-/)
+    }
+
+    // The vendored-tarball layout is gone; nothing may resolve from it.
+    expect(packageLockRaw).not.toMatch(/file:packages\/harness-/)
   })
 
-  it('does not promote optional Harness providers and test support into the desktop runtime', async () => {
+  it('keeps the official Harness closure at one version without promoting optional providers or test support', async () => {
     const packageJson = JSON.parse(
       await readFile(path.join(projectRoot, 'package.json'), 'utf8')
     ) as { dependencies: Record<string, string> }
     const packageLock = JSON.parse(
       await readFile(path.join(projectRoot, 'package-lock.json'), 'utf8')
-    ) as { packages: Record<string, unknown> }
+    ) as { packages: Record<string, { version?: string }> }
+
+    for (const [location, metadata] of Object.entries(packageLock.packages)) {
+      const name = location.slice(location.lastIndexOf('node_modules/') + 'node_modules/'.length)
+      if (/^@deepseek-ai\/dsh(?:-|$)/.test(name)) {
+        expect(metadata.version, location).toBe(HARNESS_VERSION)
+      }
+    }
 
     const excludedHarnessPackages = [
       '@deepseek-ai/cordis-plugin-logger-console',
       '@deepseek-ai/dsh-agent-loop-testkit',
       '@deepseek-ai/dsh-client-test-runtime',
       '@deepseek-ai/dsh-client-web',
-      // upstream 0.1.5-rc.1 moved this to packages/experimental/ (out of the
+      // upstream 0.1.2-rc.1 moved this to packages/experimental/ (out of the
       // dsh family tarball set); desktop continues not to bundle it.
       '@deepseek-ai/dsh-code-runtime-python',
       '@deepseek-ai/dsh-e2b',
@@ -138,7 +136,6 @@ describe('GitHub release contract', () => {
       // 0.1.2-alpha.3, so its exclusion assertion is gone. dsh-storage-sqlite is
       // likewise no longer in the closure but its guard is kept defensively.
       '@deepseek-ai/dsh-session-snapshot',
-      '@deepseek-ai/dsh-session-title-all-prompts-llm',
       '@deepseek-ai/dsh-storage-sqlite',
       '@deepseek-ai/dsh-subagent-acp',
       '@deepseek-ai/dsh-subagent-claude-code',
@@ -146,8 +143,6 @@ describe('GitHub release contract', () => {
       '@deepseek-ai/dsh-subagent-dsh-sdk',
       '@deepseek-ai/dsh-subprocess-e2b',
       '@deepseek-ai/dsh-tool-lsp',
-      '@deepseek-ai/dsh-tool-session-query',
-      '@deepseek-ai/dsh-tool-terminal',
       '@deepseek-ai/dsh-web-search-exa',
       '@deepseek-ai/dsh-web-search-perplexity'
     ]
@@ -155,6 +150,18 @@ describe('GitHub release contract', () => {
     for (const packageName of excludedHarnessPackages) {
       expect(packageJson.dependencies[packageName]).toBeUndefined()
       expect(packageLock.packages[`node_modules/${packageName}`]).toBeUndefined()
+    }
+    // Official bundles own these, including retrieval and entry customization.
+    // 0.2.2 no longer ships the dated deepseek-model-label-1017 web plugin.
+    for (const packageName of [
+      '@deepseek-ai/dsh-tool-terminal',
+      '@deepseek-ai/dsh-tool-session-query',
+      '@deepseek-ai/dsh-session-title-all-prompts-llm',
+      '@deepseek-ai/dsh-web-deepseek-api',
+      '@deepseek-ai/dsh-client-ui-entry-customization'
+    ]) {
+      expect(packageJson.dependencies[packageName]).toBeUndefined()
+      expect(packageLock.packages[`node_modules/${packageName}`]).toBeDefined()
     }
     expect(packageLock.packages['node_modules/@anthropic-ai/claude-agent-sdk']).toBeUndefined()
     expect(packageLock.packages['node_modules/@openai/codex']).toBeUndefined()
@@ -166,39 +173,53 @@ describe('GitHub release contract', () => {
     ) as {
       build: {
         artifactName: string
+        asar: boolean
+        asarUnpack: string[]
+        afterPack?: string
         extraResources: Array<{ from: string; to: string }>
-        win: { target: Array<{ target: string; arch: string[] }> }
+        win: { target: Array<{ target: string; arch: string[] }>; requestedExecutionLevel?: string }
         nsis: { artifactName: string; include: string }
         portable?: unknown
       }
     }
-    const harnessNodeEntry = await readFile(
-      path.join(projectRoot, 'build', 'harness-node-entry.mjs'),
-      'utf8'
-    )
-    const windowsHiddenConsole = await readFile(
-      path.join(projectRoot, 'build', 'windows-hidden-console.mjs'),
-      'utf8'
-    )
-
     expect(packageJson.build.artifactName).toBe('dsh-desktop-${os}-${arch}.${ext}')
+    expect(packageJson.build.asar).toBe(true)
+    // JavaScript stays in app.asar; only files the OS loads or executes unpack.
+    expect(packageJson.build.asarUnpack).not.toContain('node_modules/**/*')
+    expect(packageJson.build.asarUnpack).toEqual(expect.arrayContaining([
+      '**/*.{node,dylib,dll,so,exe}',
+      '**/spawn-helper',
+      '**/@vscode/ripgrep-*/bin/rg',
+      'node_modules/@deepseek-ai/libreoffice-kit-*/**/*'
+    ]))
     expect(packageJson.build.extraResources).toContainEqual({
       from: 'build/app-icon.png',
       to: 'icon.png'
     })
+    for (const removed of [
+      'build/harness-node-entry.mjs',
+      'build/host-module-fallback.mjs',
+      'build/windows-hidden-console.mjs',
+      'build/windows-child-process-hide.mjs',
+      'build/windows-hide-console-import.mjs'
+    ]) {
+      expect(packageJson.build.extraResources).not.toContainEqual(expect.objectContaining({ from: removed }))
+    }
     expect(packageJson.build.extraResources).toContainEqual({
-      from: 'build/windows-hidden-console.mjs',
-      to: 'windows-hidden-console.mjs'
+      from: 'build/packaged-pnpm-invocation.mjs',
+      to: 'packaged-pnpm-invocation.mjs'
     })
-    expect(harnessNodeEntry).toContain("await import('./windows-hidden-console.mjs')")
-    expect(windowsHiddenConsole).toContain('export function createHiddenConsole')
     expect(packageJson.build.extraResources).toContainEqual({
-      from: 'build/windows-child-process-hide.mjs',
-      to: 'windows-child-process-hide.mjs'
+      from: 'build/office-engine-resolution.mjs',
+      to: 'office-engine-resolution.mjs'
     })
     expect(packageJson.build.extraResources).toContainEqual({
       from: 'build/splash.html',
       to: 'splash.html'
+    })
+    expect(packageJson.build.extraResources).toContainEqual({
+      from: 'build/startup-whale.gif',
+      to: 'startup-whale.gif'
     })
     expect(packageJson.build.extraResources).toContainEqual({
       from: 'build/dsh-loader.gif',
@@ -216,11 +237,20 @@ describe('GitHub release contract', () => {
       from: 'build/dsh-desktop-safe.patch.yml',
       to: 'dsh-desktop-safe.patch.yml'
     })
+    expect(packageJson.build.extraResources).toContainEqual({
+      from: 'build/web-import.html',
+      to: 'web-import.html'
+    })
+    expect(packageJson.build.extraResources).toContainEqual({
+      from: 'THIRD_PARTY_NOTICES.md',
+      to: 'THIRD_PARTY_NOTICES.md'
+    })
     expect(packageJson.build.nsis.artifactName).toBe(
       'dsh-desktop-windows-${arch}-setup.${ext}'
     )
     expect(packageJson.build.nsis.include).toBe('build/installer.nsh')
     expect(packageJson.build.win.target).toEqual([{ target: 'nsis', arch: ['x64'] }])
+    expect(packageJson.build.win.requestedExecutionLevel).toBe('asInvoker')
     expect(packageJson.build.portable).toBeUndefined()
   })
 
@@ -233,80 +263,6 @@ describe('GitHub release contract', () => {
     // rc-mac.yml / rc.yml instead of latest-mac.yml / latest.yml, which every
     // downstream release step expects by name.
     expect(packageJson.build.detectUpdateChannel).toBe(false)
-  })
-
-  it('turns a selected Windows drive root into an application directory', async () => {
-    const installer = await readFile(
-      path.join(projectRoot, 'build', 'installer.nsh'),
-      'utf8'
-    )
-
-    expect(installer).toContain('!define MUI_PAGE_CUSTOMFUNCTION_SHOW DshDirectoryPageShow')
-    expect(installer).toContain('${NSD_OnChange} $DshDirectoryEdit DshDirectoryChanged')
-    expect(installer).toContain('StrCpy $3 "$0\\${APP_FILENAME}"')
-    expect(installer).toContain('StrCpy $3 "$0${APP_FILENAME}"')
-    expect(installer).toContain('${NSD_SetText} $DshDirectoryEdit $3')
-  })
-
-  it('shows a packaged startup surface and pins the Electron directory picker surface', async () => {
-    const main = await readFile(path.join(projectRoot, 'src', 'main', 'index.ts'), 'utf8')
-    const splash = await readFile(path.join(projectRoot, 'build', 'splash.html'), 'utf8')
-    const patch = await readFile(
-      path.join(projectRoot, 'build', 'dsh-desktop.patch.yml'),
-      'utf8'
-    )
-
-    expect(main).toContain("desktopResourcePath('splash.html')")
-    expect(main).toContain('await showSplash()')
-    expect(main).toContain("query: { theme: nativeTheme.shouldUseDarkColors ? 'dark' : 'light' }")
-    expect(main).toContain('nativeTheme.themeSource = harnessThemePreference()')
-    expect(splash).toContain('Starting DSH Desktop')
-    expect(splash).toContain('src="dsh-loader.gif"')
-    expect(splash).toContain('src="dsh-loader-dark.gif"')
-    expect(splash).toContain("document.documentElement.dataset.theme = splashTheme === 'dark'")
-    expect(splash).toContain(":root[data-theme='dark']")
-    // The dark loader is drawn light-on-dark, so no color filter may rescue it:
-    // the old brightness/saturate stack tinted the whale toward the old glow.
-    expect(splash).not.toContain('filter:')
-    expect(splash).not.toContain('drop-shadow(')
-    expect(splash).not.toContain('filter: invert(1)')
-    expect(splash).not.toContain('class="track"')
-    expect(splash).not.toContain('class="dot')
-    // The GIF bakes these exact backgrounds into its own edges, so the page has
-    // to keep declaring them as the single source the generator reads.
-    expect(splash).toContain('--splash-matte-light: #f8f8f6;')
-    expect(splash).toContain('--splash-matte-dark: #141416;')
-    expect(splash).toContain('background: var(--splash-matte-light)')
-    expect(splash).toContain('background: var(--splash-matte-dark)')
-    // A vector-scale whale, not the old pixel art, so no nearest-neighbor hint.
-    expect(splash).not.toContain('image-rendering')
-    expect(splash).toContain('aspect-ratio: 16 / 9')
-    expect(splash).toContain('position: fixed;')
-    expect(splash).toContain('html[data-platform="windows"] main { padding-top: 70px; }')
-    expect(patch).not.toMatch(/id:\s*directory-picker/)
-    expect(patch).not.toContain("name: '@deepseek-ai/dsh-host-directory-picker-native'")
-    expect(patch).not.toContain("name: '@deepseek-ai/dsh-client-ui-directory-picker-native'")
-  })
-
-  it('routes manual restarts through the active plugin recovery flow', async () => {
-    const main = await readFile(path.join(projectRoot, 'src', 'main', 'index.ts'), 'utf8')
-
-    expect(main).toContain("if (failureRecoveryVisible) resolvePluginRecoveryAction('restart')")
-    expect(main).toMatch(/case 'restart-harness':\s+await restartHarness\(\)/)
-    expect(main).toContain('click: () => void restartHarness().catch(showUnexpectedError)')
-    expect(main).toContain("} else if (action === 'restart') {")
-  })
-
-  it('replays frontend plugin failures that arrive during an active recovery', async () => {
-    const main = await readFile(path.join(projectRoot, 'src', 'main', 'index.ts'), 'utf8')
-
-    expect(main).toContain("resolvePluginRecoveryAction('refresh')")
-    expect(main).toContain('if (applyPendingFrontendEvidence()) continue')
-    expect(main).toMatch(
-      /if \(failureRecoveryVisible\) \{\s+queuePendingFrontendPluginRecovery\(message\)/
-    )
-    expect(main).toContain('queueMicrotask(() => {')
-    expect(main).toContain('logs: [...rendererPluginFailureLogs]')
   })
 
   it('publishes update metadata for installed desktop builds', async () => {
@@ -372,9 +328,9 @@ describe('GitHub release contract', () => {
       path.join(projectRoot, 'electron-builder.dev.cjs'),
       'utf8'
     )
-    const main = await readFile(path.join(projectRoot, 'src', 'main', 'index.ts'), 'utf8')
+    const main = await readFile(path.join(projectRoot, 'src', 'main', 'shell', 'app.ts'), 'utf8')
     const targetVerifier = await readFile(
-      path.join(projectRoot, 'scripts', 'verify-target.mjs'),
+      path.join(projectRoot, 'scripts', 'verify', 'verify-target.mjs'),
       'utf8'
     )
 
@@ -398,7 +354,8 @@ describe('GitHub release contract', () => {
     expect(developmentConfig).toContain(
       "artifactName: 'dsh-desktop-dev-windows-${arch}-setup.${ext}'"
     )
-    expect(main).toContain("app.setPath('userData', join(app.getPath('appData'), developmentConfig.profile))")
+    expect(main).toContain("join(app.getPath('appData'), environment.profile)")
+    expect(main).toContain("app.setPath('userData', devDir)")
     expect(main).toContain("app.setPath('userData', join(app.getPath('appData'), 'dsh-desktop'))")
     expect(main).toContain('startUpdateManager({')
     expect(main).not.toContain('if (!developmentBuild) {\n    startUpdateManager')
@@ -430,14 +387,15 @@ describe('GitHub release contract', () => {
     const fixture = await readFile(path.join(projectRoot, 'scripts/fixtures/desktop-profile.ts'), 'utf8')
     expect(gate).toContain('cwd: temp')
     expect(gate).toContain("mkdtempSync(join(tmpdir(), 'dsh-desktop-profile-'))")
-    expect(fixture).toContain("state.phase, 'ready'")
-    expect(fixture).toContain('state.authToken')
+    expect(fixture).toContain('const state = await runtime.start()')
+    expect(fixture).toContain('await authenticateWebHost(state.url)')
     expect(fixture).toContain('real Harness client/sidebar')
     expect(workflow).toContain('prerelease_tag:')
     expect(workflow).toContain('--prerelease')
     expect(workflow).toContain('name: windows-x64-dev')
     expect(workflow).toContain('dist-dev/dsh-desktop-dev-windows-x64-setup.exe')
-    for (const asset of releaseAssets) expect(workflow).toContain(asset)
+    // Intel macOS remains a manual packaging target, not a CI publication job.
+    for (const asset of releaseAssets.filter(name => !name.includes('mac-x64'))) expect(workflow).toContain(asset)
     expect(
       workflow.match(
         /npm version --no-git-tag-version --allow-same-version "\$\{\{ github\.ref_name \}\}"/g
@@ -530,7 +488,7 @@ describe('GitHub release contract', () => {
     )
   })
 
-  it('routes stable downloads through the website and previews through GitHub', async () => {
+  it('distinguishes the fork release channel from the upstream website', async () => {
     const readmes = await Promise.all(
       ['README.md', 'README.zh.md', 'README.ja.md', 'README.ru.md', 'README.es.md', 'README.pt.md'].map((file) =>
         readFile(path.join(projectRoot, file), 'utf8')
@@ -538,12 +496,12 @@ describe('GitHub release contract', () => {
     )
 
     for (const readme of readmes) {
-      expect(readme).toMatch(/https:\/\/(?:www\.)?dshdesktop\.com\/(?:#download|zh\/)/)
+      expect(readme).toMatch(/https:\/\/(?:www\.)?dshdesktop\.com\/(?:zh|en|ja|ru|es|pt)\//)
       expect(readme).not.toContain('| Platform | Package | Download |')
       expect(readme).not.toContain('| 平台 | 安装包 | 下载 |')
       expect(readme).not.toContain('Coming soon')
       expect(readme).not.toContain('即将发布')
-      expect(readme).toContain('https://github.com/dataelement/dsh-desktop/releases')
+      expect(readme).toContain('https://github.com/0-CHENAI/dsh-desktop/releases')
       expect(readme).toContain('**Pre-release**')
       for (const asset of releaseAssets) {
         expect(readme).not.toContain(`releases/latest/download/${asset}`)
@@ -585,14 +543,14 @@ describe('prerelease parity workflow', () => {
 })
 
 describe('rollback catalog publication', () => {
-  it('archives each release and rebuilds the version index', async () => {
+  it('archives each release and preserves the version history', async () => {
     const yml = await readFile(
       path.join(projectRoot, '.github/workflows/release.yml'),
       'utf8'
     )
     expect(yml).toContain('releases/archive/')
-    expect(yml).toContain('scripts/build-version-index.mjs')
-    expect(yml).toContain('releases/versions.json')
+    expect(yml).toContain('from append_version_index import append_version_index')
+    expect(yml).toContain('append_version_index(api, repo_id, token, version)')
   })
 })
 

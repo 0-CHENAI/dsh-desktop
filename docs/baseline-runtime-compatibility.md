@@ -24,28 +24,44 @@ Harness 0.1.7 可以通过运行时 resolver 将宿主依赖解析到当前安�
 
 验证：内置 Fetch 的 gzip JSON、对象/数组响应头、重复 Set-Cookie、分块 SSE、HTTP/1.1 数组保持原样、trailers；在 Electron Node 24.17.0 中通过 Harness 代理向 Google OAuth token 端点发送无凭据诊断请求，修复前得到 gzip 字节且无响应头，修复后能解析预期的 HTTP 400 JSON。该检查不代表真实账号认证或模型推理验收。
 
-### Windows caption after rc.2
+### Windows caption and native menu
 
-Harness 0.1.7 owns the Windows caption row once preload marks
-`<html data-windows-titlebar>` and sets `--dsh-windows-titlebar-height` (40
-DIP, matching the upstream Desktop): AppFrame reserves, paints and drags the
-row, the sidebar collapses to zero width and its toggle sits in the caption.
-Desktop no longer patches the conversation header or pads the expanded sidebar
-for the caption; the former `data-dsh-conversation-header` marker and the
-sidebar's non-macOS padding were removed from their patches.
+Desktop marks `<html data-windows-titlebar>` and uses the zoom-aware
+`titlebar-area-*` bounds for Electron's 36 DIP native controls. Both columns
+start at the window top. The conversation header shares the native caption
+row, with trailing space reserved for window controls; an open rightbar
+reserves that space in its own column. The layout patch only supplies stable
+markers; host chrome owns the CSS without moving React nodes or slots.
+The collapsed controls sit in a zero-width sidebar column, so their own
+no-drag styles alone do not establish a reliable native hit region. The
+conversation header reserves a real leading no-drag box over their position.
+The right panel is absolutely positioned against AppFrame: its own
+`data-sidebar-right-panel` receives the caption offset; column padding cannot
+move that surface or protect its controls from native caption buttons.
 
-The caption menubar ("应用" / "编辑") sits in the upstream seat beside the
-sidebar toggle (`--dsh-windows-menu-start`) and opens native popup menus from
-the main process. The application menu carries every Desktop command the former
-dropdown offered (phone pairing, Harness restart, Safe Mode, log, session
-export, view and zoom, updates, about, exit); edit commands are delivered as key
-events so editor-owned history receives them. Desktop's own local pages, which
-have no AppFrame, get the menubar at the caption's left edge and a drag strip.
+A single menu icon and sidebar collapse control share the sidebar's top
+toolbar. The brand and new-session button occupy the next rows, following the
+reference macOS structure while retaining Windows native window controls.
+The sidebar footer stays at the bottom and its resize handle spans the full
+height. A collapsed sidebar keeps the menu clear of the reopen/new-session
+buttons (`--dsh-windows-menu-start`).
+The native popup groups Application and Edit commands. Phone pairing, restart,
+Safe Mode, logs, view/zoom, updates, about, enterprise and exit remain available;
+editing keys still reach the focused editor and its own undo history.
+The icon has a localized accessible name and supports keyboard opening.
+Local recovery pages keep it at the caption's left edge and retain their drag
+strip. Fullscreen hides the native menu while preserving the sidebar toggle.
 
 Regression: `test/windows-titlebar.test.ts` (menu contents, commands, key
 events, request validation) and `test/windows-menu-bar.test.ts` (seat,
-labels, popup request). Visual checks on Windows (DPI, zoom, maximize,
-collapsed sidebar, caption buttons) are still required.
+labels, focus/selection, duplicate mounts and popup failures).
+`node scripts/check-windows-titlebar-layout.cjs` checks 24 real Windows layouts:
+two window widths, three zoom levels, expanded/collapsed sidebar and fullscreen,
+including menu/brand separation, leading no-drag geometry, actual panel/control
+clearance and renderer input. It also checks navigation from Plugins using
+collapsed controls. OS mouse clicks require separate real-window verification;
+renderer input does not exercise Windows non-client hit testing. Installed-build
+and other-platform qualification remain separate.
 
 ## 插件 Harness 版本声明采用告警策略
 

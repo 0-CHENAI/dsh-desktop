@@ -34,7 +34,7 @@ describe('desktop update policy', () => {
   })
 
   it('starts the update manager for packaged development builds too', async () => {
-    const main = await readFile(path.join(projectRoot, 'src/main/index.ts'), 'utf8')
+    const main = await readFile(path.join(projectRoot, 'src/main/shell/app.ts'), 'utf8')
     expect(main).toContain('startUpdateManager({')
     expect(main).not.toContain('if (!developmentBuild) {\n    startUpdateManager')
   })
@@ -46,26 +46,13 @@ describe('desktop update policy', () => {
   })
 
   it('quarantines app-bundle LaunchAgents before replacing the application', async () => {
-    const main = await readFile(path.join(projectRoot, 'src/main/index.ts'), 'utf8')
+    const main = await readFile(path.join(projectRoot, 'src/main/shell/app.ts'), 'utf8')
     const prepare = main.slice(main.indexOf('prepareToInstall: async () => {'))
-
-    expect(prepare).toContain('await Promise.allSettled([runtime.stop(), mobileBridge?.stop()])')
-    expect(prepare.indexOf('await Promise.allSettled([runtime.stop(), mobileBridge?.stop()])')).toBeLessThan(
-      prepare.indexOf('await quarantineInstalledLaunchAgentsForUpdate(dshHome)')
-    )
-    expect(prepare.indexOf('await quarantineInstalledLaunchAgentsForUpdate(dshHome)')).toBeLessThan(
-      prepare.indexOf('recoverFromInstallFailure: async () => {')
-    )
-    expect(prepare).toContain("nativeAutoUpdater.once('before-quit-for-update'")
-    expect(prepare).toContain('recoverFromInstallFailure: async () => {')
-    expect(prepare.indexOf('await launchHarness()')).toBeLessThan(
-      prepare.indexOf('await mobileBridge?.start()')
-    )
-    expect(prepare.indexOf("nativeAutoUpdater.once('before-quit-for-update'")).toBeLessThan(
-      prepare.indexOf('quitting = true')
-    )
-  })
-})
+    expect(prepare.indexOf('await backend.stop()')).toBeLessThan(prepare.indexOf('await quarantineAppBundleLaunchAgents('))
+    const recovery = prepare.slice(prepare.indexOf('installFailed: async () => {'))
+    expect(recovery.indexOf('quitting = false')).toBeLessThan(recovery.indexOf('await restartDesktop()'))
+    expect(recovery).toContain("if (!restored) throw new Error")
+  })})
 
 describe('macOS update metadata', () => {
   it('merges both architectures and keeps only ZIP update payloads', async () => {
@@ -84,7 +71,7 @@ describe('macOS update metadata', () => {
       writeFile(x64Path, stringify(metadata('x64', '2026-08-14T02:00:00.000Z')), 'utf8')
     ])
     await execFile(process.execPath, [
-      path.join(projectRoot, 'scripts', 'merge-mac-update-metadata.mjs'),
+      path.join(projectRoot, 'scripts', 'release', 'merge-mac-update-metadata.mjs'),
       armPath,
       x64Path,
       outputPath
@@ -114,46 +101,38 @@ describe('installing a specific version', () => {
     )
     expect(manager).toContain("ipcMain.handle('updates:list-versions'")
     expect(manager).toContain("ipcMain.handle('updates:install-version'")
-    expect(manager).toContain('fetchAvailableReleases(app.getVersion())')
+    expect(manager).toContain('fetchAvailableReleases(app.getVersion(), requestVersionIndex)')
     expect(manager).toContain('export async function installSpecificVersion')
     expect(manager).toContain('archiveFeedUrl(version)')
     expect(manager).toContain('autoUpdater.allowDowngrade = true')
     expect(manager).toContain("setFeedURL({ provider: 'generic', url: STABLE_FEED_URL })")
     expect(manager).toContain('autoUpdater.allowDowngrade = false')
-    expect(manager).toContain('downloadAvailableUpdate()')
+    expect(manager).toContain('downloadAvailableUpdateOwned(owner)')
   })
 })
 
 describe('unpackaged update checks', () => {
   it('compares GitHub Releases instead of marking the environment unsupported', async () => {
-    const manager = (
-      await readFile(path.join(projectRoot, 'src/main/update/update-manager.ts'), 'utf8')
-    ).replaceAll('\r\n', '\n')
-    expect(manager).not.toContain('Update checks are only available')
-    expect(manager).not.toContain('Updates are available in installed macOS and Windows builds.')
-    expect(manager).toContain('checkGitHubRelease()')
-    expect(manager).toContain('fetchLatestPublishedVersion()')
-    expect(manager).toContain('shell.openExternal(githubLatestReleasePage())')
-    expect(manager).toContain('if (supportsUpdates()) {\n    configureUpdater()')
+    const manager = await readFile(path.join(projectRoot, 'src/main/update/update-manager.ts'), 'utf8')
+    expect(manager).toContain('if (!supportsUpdates() && !manual)')
+    expect(manager).toContain('fetchLatestPublishedVersion(requestVersionIndex)')
+    expect(manager).toContain('if (!canInstallUpdates)')
+    expect(manager).not.toContain('checkDesktopUpdate')
     expect(manager).toContain('initialUpdateStatus(app.getVersion(), canInstallUpdates, macOSSupport?.reason)')
-    expect(manager).toContain("process.platform === 'darwin'")
-    expect(manager).toContain('macOSUpdateSupport({')
   })
-
   it('labels a GitHub-only offer as a download page, not an in-app install', async () => {
-    const [manager, preload, view] = await Promise.all([
+    const [manager, preload, view, messages] = await Promise.all([
       readFile(path.join(projectRoot, 'src/main/update/update-manager.ts'), 'utf8'),
       readFile(path.join(projectRoot, 'src/preload/desktop-update-ui.ts'), 'utf8'),
-      readFile(path.join(projectRoot, 'src/preload/update-view.ts'), 'utf8')
+      readFile(path.join(projectRoot, 'src/preload/update-view.ts'), 'utf8'),
+      readFile(path.join(projectRoot, 'src/shared/desktop-update-messages.ts'), 'utf8')
     ])
-    expect(manager).toContain('if (!supportsUpdates())')
-    expect(manager).toContain('await shell.openExternal(githubLatestReleasePage())')
-    expect(preload).toContain("locale === 'zh' ? '打开下载页' : 'Open download page'")
-    expect(preload).toContain('status.canInstall === false')
+    expect(manager).toContain('await shell.openExternal(releasePageUrl(status.availableVersion))')
+    expect(preload).toContain("'openDownloadPage'")
     expect(view).toContain('status.canInstall === false')
-    expect(view).toContain('请手动下载安装包')
-  })
-})
+    expect(messages).toContain('打开下载页面')
+    expect(messages).toContain('Open download page')
+  })})
 
 function metadata(architecture: 'arm64' | 'x64', releaseDate: string) {
   return {

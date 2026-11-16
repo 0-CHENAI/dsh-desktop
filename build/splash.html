@@ -3,82 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title></title>
-    <script>
-      const splashTheme = new URLSearchParams(location.search).get('theme')
-      document.documentElement.dataset.theme = splashTheme === 'dark' ? 'dark' : 'light'
-      if (navigator.platform.toLowerCase().startsWith('win')) {
-        document.documentElement.dataset.platform = 'windows'
-      }
-    </script>
+    <title>DSH Desktop</title>
     <style>
-      :root {
-        /* scripts/generate-splash-loader.mjs reads these two colors and bakes
-           them into the loader GIFs' anti-aliased edges. Declare each once. */
-        --splash-matte-light: #f8f8f6;
-        --splash-matte-dark: #141416;
-        color-scheme: light dark;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      }
+      :root { color-scheme: light; --splash-matte-light: #f8f8f6; --splash-matte-dark: #141416; }
       * { box-sizing: border-box; }
       html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
-      body { color: #17181a; background: var(--splash-matte-light); }
+      body { background: var(--splash-matte-light); }
+      @media (prefers-color-scheme: dark) {
+        :root { color-scheme: dark; }
+        body { background: var(--splash-matte-dark); }
+      }
       main {
         position: fixed;
         inset: 0;
         display: grid;
         align-content: center;
         justify-items: center;
-        gap: 12px;
         padding: 32px;
-        text-align: center;
       }
-      html[data-platform="windows"] main { padding-top: 70px; }
-      /* The loader canvas is 640x360 (SPLASH_LOADER in scripts/whale-brand.mjs).
-         Reserving that box keeps the copy below from jumping when the first
-         frame decodes, because the grid re-centers whatever the mark weighs. */
-      .markFrame { display: grid; place-items: center; aspect-ratio: 16 / 9; }
-      .mark { grid-area: 1 / 1; width: 196px; height: auto; }
-      .markDark { display: none; }
-      .title { margin: 0; font-size: 23px; font-weight: 650; letter-spacing: -0.02em; }
-      .status { margin: -4px 0 0; color: #777a80; font-size: 13px; }
-      :root[data-theme='dark'] {
-        color-scheme: dark;
-      }
-      :root[data-theme='dark'] body {
-        color: #f3f4f6;
-        background: var(--splash-matte-dark);
-      }
-      :root[data-theme='dark'] .markLight { display: none; }
-      /* The dark loader is already drawn light-on-dark, so it needs no color
-         correction at all. The old brightness, saturation and glow stack only
-         existed to rescue a black mark shared between both themes. */
-      :root[data-theme='dark'] .markDark { display: block; }
-      :root[data-theme='dark'] .status {
-        color: #9ca0a8;
-      }
-      @media (prefers-color-scheme: dark) {
-        :root:not([data-theme]) body { color: #f3f4f6; background: var(--splash-matte-dark); }
-        :root:not([data-theme]) .markLight { display: none; }
-        :root:not([data-theme]) .markDark { display: block; }
-        :root:not([data-theme]) .status { color: #9ca0a8; }
-      }
+      .markFrame { display: grid; place-items: center; width: 100%; transform: translateY(-80px); }
+      .mark { display: block; width: min(280px, 100%); height: auto; object-fit: contain; }
     </style>
   </head>
   <body>
-    <main>
+    <main aria-label="DSH Desktop">
       <div class="markFrame" aria-hidden="true">
-        <img class="mark markLight" src="dsh-loader.gif" alt="" />
-        <img class="mark markDark" src="dsh-loader-dark.gif" alt="" />
+        <!-- Original animation, including its embedded caption, is preserved byte-for-byte. -->
+        <img class="mark" src="startup-whale.gif" width="480" height="276" alt="" />
       </div>
-      <h1 class="title" id="title">Starting DSH Desktop</h1>
-      <p class="status" id="status">First launch may take a moment.</p>
     </main>
-    <script>
-      if (navigator.language.toLowerCase().startsWith('zh')) {
-        document.getElementById('title').textContent = '正在启动 DSH Desktop'
-        document.getElementById('status').textContent = '首次启动可能需要一点时间。'
-      }
-    </script>
   </body>
 </html>

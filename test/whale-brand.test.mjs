@@ -42,10 +42,10 @@ describe('official whale brand assets', () => {
 
   it('rebuilds committed brand rasters from FishLogo', async () => {
     const generator = await readFile(
-      path.join(projectRoot, 'scripts', 'generate-app-icons.mjs'),
+      path.join(projectRoot, 'scripts', 'release', 'generate-app-icons.mjs'),
       'utf8'
     )
-    expect(generator).toContain("from './whale-brand.mjs'")
+    expect(generator).toContain("from '../whale-brand.mjs'")
     expect(generator).toContain('FishLogo.d.ts')
     expect(generator).toContain("'logo-light.png'")
     expect(generator).toContain("'logo-dark.png'")

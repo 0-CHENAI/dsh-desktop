@@ -1,8 +1,13 @@
 # Dependency patches preserve the upstream bundle's mixed indentation so that
-# patch-package can match and replay it exactly.
+# patch-package can match and replay it exactly. A blank unified-diff context
+# line is a required single space, not trailing whitespace in maintained source.
 patches/*.patch whitespace=-space-before-tab,-blank-at-eol
 artifacts/harness-020-migration/deltas/*.patch whitespace=-space-before-tab,-blank-at-eol
 artifacts/harness-rc2-migration/deltas/*.patch whitespace=-space-before-tab,-blank-at-eol
 
 # Preserve pinned third-party inputs byte-for-byte, including upstream whitespace.
 packages/ppt-runtime/upstream/** -whitespace
+
+# This reviewed license is checked by byte digest during Office preparation.
+# CRLF checkout conversion would change its identity on Windows.
+packages/dsh-desktop-office/sources/curated/government-notice/OFL.txt -text

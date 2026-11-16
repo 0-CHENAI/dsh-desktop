@@ -26,14 +26,11 @@ describe('Esc dismiss does not leave a focus ring', () => {
     expect(installed).toContain('useModalLayer)(panel, true, onClose)')
   })
 
-  it('blurs leftover focus after Escape closes any remaining dialog', async () => {
-    const preload = await readFile(path.join(projectRoot, 'src', 'preload', 'index.ts'), 'utf8')
-
-    expect(preload).toContain('desktopUpdateOverlayOpen()')
-    expect(preload).toContain("document.querySelector('[role=\"dialog\"], [aria-modal=\"true\"]')")
-    expect(preload).toContain('function blurFocusAfterEscapeDismiss()')
-    expect(preload).toContain("if (event.key !== 'Escape') return")
-    expect(preload).toContain('active.blur()')
-    expect(preload).toContain('blurFocusAfterEscapeDismiss()')
+  it('mounts the shared Escape handler in the current shipped preload', async () => {
+    const preload = await readFile(path.join(projectRoot, 'src/preload/app.ts'), 'utf8')
+    expect(preload).toContain('mountEscapeDismissFocus(document, desktopUpdateOverlayOpen)')
+    const handler = await readFile(path.join(projectRoot, 'src/preload/escape-dismiss-focus.ts'), 'utf8')
+    expect(handler).toContain('active.blur()')
+    expect(handler).toContain("event.key !== 'Escape'")
   })
 })

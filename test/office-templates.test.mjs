@@ -11,8 +11,8 @@ import { workspacePolicy, templateTool } from '../packages/dsh-desktop-office/li
 import { registerOfficeContext, registerOfficeRoutes } from '../packages/dsh-desktop-office/lib/modes.js'
 import { registerBusinessSkills } from '../packages/dsh-desktop-office/lib/business-skills.js'
 import { apply as applyPpt } from 'dsh-ppt'
-import { electronExecutable } from '../scripts/electron-node-loader.mjs'
-import { officeCliAttempts, officeCliCommand, officeCliTimeoutMs, runOfficeCli } from '../scripts/office-runtime/prepare-templates.mjs'
+import { electronExecutable } from '../scripts/verify/electron-node-loader.mjs'
+import { officeCliCommand, runOfficeCli } from '../scripts/office-runtime/prepare-templates.mjs'
 
 const scratch = []
 afterEach(async () => { for (const directory of scratch.splice(0)) await rm(directory, { recursive: true, force: true }) })
@@ -20,25 +20,21 @@ async function temporary() { const root = await realpath(await mkdtemp(join(tmpd
 const resources = resolve('.build/office-runtime/templates')
 const library = await createTemplateLibrary(resources)
 
-// Two independent outputs may each use the production three-attempt recovery.
-// The per-engine deadline stays 30s; only the complete workflow budget accounts
-// for those attempts and cleanup. Every workbook-semantic assertion is retained.
 it('produces the same workbook semantics across repeated official Kit recalculations', async () => {
   const directory = await temporary()
   const python = resolve('.build/office-runtime/primary-runtime/dependencies/python', process.platform === 'win32' ? 'python.exe' : 'bin/python3')
+  const input = join(resources, 'annual-business/example.xlsx')
   const outputs = []
   for (const filename of ['first.xlsx', 'second.xlsx']) {
     const output = join(directory, filename)
     outputs.push(output)
-    await runOfficeCli(`recalculate ${filename}`, async () => {
-      // Use the same bounded engine lifecycle as template preparation. Killing
-      // Electron after 30s while Kit still has its default 120s budget can leave
-      // a native helper behind instead of exercising timeout cleanup/recovery.
+    // Electron starts before the Kit timer. macOS CI sometimes blocks inside LibreOffice;
+    // packaging retries that hang in a fresh process instead of failing the workbook.
+    await runOfficeCli('recalculate', async () => {
       await rm(output, { force: true })
-      const command = officeCliCommand(electronExecutable(resolve('.')), resolve('build/office-cli.mjs'),
-        ['recalculate', '--input', join(resources, 'annual-business/example.xlsx'), '--output', output])
+      const command = officeCliCommand(electronExecutable(resolve('.')), resolve('build/office-cli.mjs'), ['recalculate', '--input', input, '--output', output])
       await promisify(execFile)(command.file, command.args, {
-        env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, timeout: command.timeout
+        env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, timeout: command.timeout, maxBuffer: 4 * 1024 * 1024, windowsHide: true
       })
     })
     await promisify(execFile)(python, ['-I', '-B', resolve('scripts/office-runtime/normalize-package.py'), output])
@@ -63,7 +59,7 @@ for path in sys.argv[1:]:
 assert snapshot(sys.argv[1], False) == snapshot(sys.argv[2], False)
 assert snapshot(sys.argv[1], True) == snapshot(sys.argv[2], True)
 `, ...outputs])
-}, 2 * officeCliAttempts * officeCliTimeoutMs + 30_000)
+}, 300_000)
 
 it('normalizes platform-specific chart-axis ID serialization', async () => {
   const directory = await temporary()
@@ -90,10 +86,93 @@ it('independently verifies recalculated values, charts, original frozen panes an
   const python = resolve('.build/office-runtime/primary-runtime/dependencies/python', process.platform === 'win32' ? 'python.exe' : 'bin/python3')
   const { stdout } = await promisify(execFile)(python, ['-I', '-B', resolve('scripts/office-runtime/check-templates.py'), resources, resolve('packages/dsh-desktop-office/sources')])
   const result = JSON.parse(stdout)
-  expect(result.templates).toBe(7); expect(result.preview_pages).toBe(55)
+  expect(result.templates).toBe(7); expect(result.preview_pages).toBe(52)
   expect(result.numeric_checks).toBe(9)
   expect(result.preview_visual_checks).toBe(1)
   expect(result.excel_error_cells).toBe(0)
+})
+
+it('accepts only the renamed notice subset and rejects a commercial font name', async () => {
+  const python = resolve('.build/office-runtime/primary-runtime/dependencies/python', process.platform === 'win32' ? 'python.exe' : 'bin/python3')
+  const directory = await temporary()
+  await promisify(execFile)(python, ['-I', '-B', '-c', `
+import importlib.util, json, shutil, sys
+from pathlib import Path
+spec = importlib.util.spec_from_file_location('check_templates', sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+source = Path(sys.argv[2])
+approved = module.audit_docx(source / 'example.docx', source, 'government-notice')
+assert approved['family'] == 'DSH Gov Song' and 0 < approved['embedded_fonts'] <= 10 * 1024 * 1024
+mutated = Path(sys.argv[3])
+shutil.copytree(source, mutated)
+import zipfile
+package = mutated / 'example.docx'
+with zipfile.ZipFile(package) as archive:
+    parts = {name: archive.read(name) for name in archive.namelist()}
+parts['word/fontTable.xml'] = parts['word/fontTable.xml'].replace(b'DSH Gov Song', b'FangS-SC')
+with zipfile.ZipFile(package, 'w') as archive:
+    for name, data in parts.items():
+        archive.writestr(name, data)
+try:
+    module.audit_docx(package, mutated, 'government-notice')
+except AssertionError as error:
+    if 'FangS-SC' not in str(error):
+        raise SystemExit(f'unexpected rejection: {error}')
+    print(json.dumps({'rejected': True}))
+else:
+    raise SystemExit('commercial font name was accepted')
+`, resolve('scripts/office-runtime/check-templates.py'), resolve('packages/dsh-desktop-office/sources/curated/government-notice'), join(directory, 'mutated')])
+})
+
+it('pins the approved notice font independently of its editable manifest', async () => {
+  const python = resolve('.build/office-runtime/primary-runtime/dependencies/python', process.platform === 'win32' ? 'python.exe' : 'bin/python3')
+  const directory = await temporary()
+  await promisify(execFile)(python, ['-I', '-B', '-c', `
+import hashlib, importlib.util, json, shutil, sys, zipfile
+from pathlib import Path
+from lxml import etree
+spec = importlib.util.spec_from_file_location('check_templates', sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+source, root = Path(sys.argv[2]), Path(sys.argv[3])
+
+def reject(directory):
+    try:
+        module.audit_docx(directory / 'example.docx', directory, 'government-notice')
+    except AssertionError as error:
+        if 'manifest does not match the approved notice font' not in str(error):
+            raise SystemExit(f'unexpected rejection: {error}')
+    else:
+        raise SystemExit('unapproved font manifest was accepted')
+
+manifest_only = root / 'manifest-only'
+shutil.copytree(source, manifest_only)
+manifest = json.loads((manifest_only / 'font-source.json').read_text(encoding='utf-8'))
+manifest['subsetSha256'] = '0' * 64
+(manifest_only / 'font-source.json').write_text(json.dumps(manifest), encoding='utf-8')
+reject(manifest_only)
+
+synchronized = root / 'font-and-manifest'
+shutil.copytree(source, synchronized)
+package = synchronized / 'example.docx'
+with zipfile.ZipFile(package) as archive:
+    parts = {name: archive.read(name) for name in archive.namelist()}
+font_table = etree.fromstring(parts['word/fontTable.xml'])
+embed = font_table.xpath('//w:embedRegular', namespaces=module.W_NS)[0]
+font_key = embed.get('{%s}fontKey' % module.W_NS['w'])
+font_name = next(name for name in parts if name.startswith('word/fonts/'))
+payload = bytearray(module.deobfuscate_font(parts[font_name], font_key))
+payload[-1] ^= 1
+parts[font_name] = module.deobfuscate_font(bytes(payload), font_key)
+with zipfile.ZipFile(package, 'w') as archive:
+    for name, data in parts.items():
+        archive.writestr(name, data)
+manifest = json.loads((synchronized / 'font-source.json').read_text(encoding='utf-8'))
+manifest['subsetSha256'] = hashlib.sha256(payload).hexdigest()
+(synchronized / 'font-source.json').write_text(json.dumps(manifest), encoding='utf-8')
+reject(synchronized)
+`, resolve('scripts/office-runtime/check-templates.py'), resolve('packages/dsh-desktop-office/sources/curated/government-notice'), directory])
 })
 
 it('rejects partial Chinese glyph coverage even when every resource hash is current', async () => {
@@ -175,7 +254,7 @@ it('routes bounded, versioned choices through the authenticated Connection owner
   expect(route.path).toBe('/api/office-templates')
   const rpc = async (endpoint, payload, signal) => (await (await route.fetch(new Request('http://localhost/api/office-templates', { method: 'POST', headers: { 'content-type': 'application/json' }, signal, body: JSON.stringify({ type: 'client-request', rpcId: 'test-' + endpoint, method: 'office-templates', payload: { endpoint, ...payload } }) }))).json()).result
   const signal = new AbortController().signal
-  const item = library.entry('government-notice'), payload = { sessionId: 'session-route', templateId: item.id, revision: item.revision }
+  const item = library.entry('meeting-minutes'), payload = { sessionId: 'session-route', templateId: item.id, revision: item.revision }
   expect((await rpc('select', payload, signal)).ok).toBe(false)
   expect((await rpc('mode', { sessionId: payload.sessionId, mode: 'word' }, signal)).ok).toBe(true)
   expect((await rpc('select', { ...payload, revision: 'old' }, signal)).ok).toBe(false)
@@ -216,11 +295,18 @@ it('restores selected Office context after compaction and retires it when switch
     const seq = events.size + 1; events.set(seq, { type, data }); surface.nodes.add(seq)
     if (options?.surfaceOp?.op === 'replace') surface.nodes.delete(options.surfaceOp.startSeq)
   } }
-  const ctx = { on(_name, run) { hook = run }, skills: { get: async name => ({ name, provider: 'test', content: `Official or business content: ${name}` }) } }
+  let current = f.root
+  const ctx = { workingDirectory: { ensure: async () => current }, on(_name, run) { hook = run }, skills: { get: async name => ({ name, provider: 'test', content: `Official or business content: ${name}` }) } }
   registerOfficeContext(ctx, library, f.modes)
   const run = () => hook({ agent: { id, session }, step: 7, signal: new AbortController().signal }, async () => ({ kind: 'enter', messages: [] }))
   const first = await run(); expect(first.messages[0].content[0].text).toContain('office_template')
   session.append('user/message', first.messages[0])
+  expect((await run()).messages).toHaveLength(0)
+  current = join(f.root, 'worktree')
+  const changed = await run()
+  expect(changed.messages).toHaveLength(1)
+  expect(changed.messages[0].source.cwd).toBe(current)
+  session.append('user/message', changed.messages[0])
   expect((await run()).messages).toHaveLength(0)
   surface.nodes.clear(); expect((await run()).messages).toHaveLength(1)
   surface.nodes.add(1); await f.modes.select(id, 'excel')
@@ -247,7 +333,10 @@ it('binds the reviewed meeting to built-in business and Office skills and copies
   await f.modes.select(id, 'word')
   await f.modes.selectTemplate(id, { id: item.id, mode: item.mode, revision: item.revision })
   let hook; const loaded = []
-  registerOfficeContext({ on(_name, callback) { hook = callback }, skills: { get: async name => {
+  const current = join(f.root, 'current')
+  await mkdir(current)
+  registerOfficeContext({ workingDirectory: { ensure: async () => current }, on(_name, callback) { hook = callback }, skills: { get: async (name, options) => {
+    expect(options.cwd).toBe(current)
     loaded.push(name); return { name, provider: 'test', content: `Built-in workflow ${name}` }
   } } }, library, f.modes)
   const result = await hook({ agent: { id, session: { header: { cwd: f.root }, surface: { nodes: new Set() } } },
@@ -265,7 +354,25 @@ it('requires the session write policy before starting the sandbox worker', async
   const root = await temporary(), outside = await temporary()
   const exec = { agent: { id: 'policy-session', session: { header: { cwd: root } } }, signal: new AbortController().signal }
   await expect(workspacePolicy({ sandboxPolicy: { resolve: () => ({ mode: 'read-only', workspaceRoot: root }) } }, exec)).rejects.toThrow('write permission')
-  await expect(workspacePolicy({ sandboxPolicy: { resolve: () => ({ mode: 'workspace-write', workspaceRoot: outside }) } }, exec)).rejects.toThrow('covered')
+  await expect(workspacePolicy({ workingDirectory: { ensure: async () => root }, sandboxPolicy: { resolve: () => ({ mode: 'workspace-write', workspaceRoot: outside }) } }, exec)).rejects.toThrow('covered')
   const tool = templateTool({}, library, { state: async () => ({ documentMode: 'word' }) })
   await expect(tool.execute({ template_id: 'government-notice' }, exec)).rejects.toThrow('current Word')
+})
+
+it('uses the effective Office directory without granting access outside the authorized root', async () => {
+  const root = await temporary(), outside = await temporary(), child = join(root, 'worktree')
+  await mkdir(child)
+  const exec = { agent: { session: { header: { cwd: root } } }, signal: new AbortController().signal }
+  let current = child, mode = 'workspace-write'
+  const ctx = { workingDirectory: { ensure: async () => current }, sandboxPolicy: { resolve: () => ({ mode, workspaceRoot: root }) } }
+  expect(await workspacePolicy(ctx, exec)).toMatchObject({ cwd: child, workspaceRoot: root, mode })
+  current = outside
+  await expect(workspacePolicy(ctx, exec)).rejects.toThrow('covered')
+  const link = join(root, 'escape')
+  await symlink(outside, link, process.platform === 'win32' ? 'junction' : 'dir')
+  current = link
+  await expect(workspacePolicy(ctx, exec)).rejects.toThrow('covered')
+  current = child; mode = 'read-only'
+  await expect(workspacePolicy(ctx, exec)).rejects.toThrow('write permission')
+  expect(await workspacePolicy(ctx, exec, false)).toMatchObject({ cwd: child, workspaceRoot: root, mode })
 })
