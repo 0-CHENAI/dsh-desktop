@@ -42,9 +42,10 @@ it('discovers every installed OAuth provider without changing API-key-only provi
   const directory = ctx.llm.listConfigurableProviders()
   const oauthProviders = ['anthropic', 'github-copilot', 'kimi-coding', 'openai-codex', 'openrouter', 'xai']
   for (const provider of oauthProviders) {
-    expect(directory.find(p => p.provider === provider).authFlow).toBe(`llm-pi-ai/${provider}`)
+    expect(directory.find(p => p.provider === provider).nativeAuth.oauth).toBe(true)
+    expect(ctx.authorization.describe(`llm-pi-ai/${provider}`)).toBeDefined()
   }
-  expect(directory.find(p => p.provider === 'google').authFlow).toBeUndefined()
+  expect(directory.find(p => p.provider === 'google').nativeAuth.oauth).toBe(false)
   expect(ctx.authorization.describe('llm-pi-ai/openai-codex').label).toBe('ChatGPT')
   for (const { provider } of directory) {
     const slug = providerIconSlug(provider)

@@ -1,8 +1,10 @@
 import { readFile } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
 import { projectRoot } from './patch-path'
+import { buildDesktopProductPatch } from '../src/main/shell/product-patch'
 
 const profileConfigTags = [
   {
@@ -13,7 +15,7 @@ const profileConfigTags = [
 
 async function readProfilePatch(): Promise<{ name?: string; insert?: { name?: string }[] }[]> {
   return parseYaml(
-    await readFile(path.join(projectRoot, 'build', 'dsh-desktop.patch.yml'), 'utf8'),
+    buildDesktopProductPatch(),
     { customTags: profileConfigTags }
   ) as { name?: string; insert?: { name?: string }[] }[]
 }
@@ -49,8 +51,9 @@ describe('desktop plugin closure', () => {
       if (closure.has(name)) continue
       const manifest = JSON.parse(await readFile(path.join(projectRoot, 'node_modules', name, 'package.json'), 'utf8'))
       closure.set(name, manifest.version)
-      pending.push(...Object.keys(manifest.dependencies ?? {}).filter(dependency =>
-        dependency.startsWith('@deepseek-ai/') || mounted.includes(dependency)))
+      pending.push(...Object.keys({ ...manifest.dependencies, ...manifest.optionalDependencies }).filter(dependency =>
+        (dependency.startsWith('@deepseek-ai/') || mounted.includes(dependency)) &&
+        (dependency in (manifest.dependencies ?? {}) || existsSync(path.join(projectRoot, 'node_modules', dependency, 'package.json')))))
     }
     for (const name of mounted) {
       expect(closure.has(name), name).toBe(true)

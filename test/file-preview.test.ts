@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
-import { describe, expect, it } from 'vitest'
+import vm from 'node:vm'
+import { describe, expect, it, vi } from 'vitest'
 import { patchPath, projectRoot } from './patch-path'
 
 async function packageClient(name: string, file = 'lib/client.js'): Promise<string> {
@@ -8,6 +9,83 @@ async function packageClient(name: string, file = 'lib/client.js'): Promise<stri
 }
 
 describe('uploaded file preview', () => {
+  it('finds only file receipts in the exact Session with the 0.2.2 attachment union', async () => {
+    const source = await packageClient('dsh-client-file-upload', 'lib/index.js')
+    const method = source.match(/findStagedFile\(agent, attachmentId\) \{[\s\S]*?\n\t\t\}/)?.[0]
+    expect(method).toBeDefined()
+    const find = new Function(`return ({ ${method} }).findStagedFile`)() as (this: unknown, agent: { session: object }, id: string) => unknown
+    const session = {}
+    const file = { attachmentId: 'same-id', name: 'report.pdf' }
+    const stagedFiles = new WeakMap([[session, new Map([
+      ['image', { attachment: { type: 'image', attachment: { attachmentId: 'same-id', mimeType: 'image/png' } } }],
+      ['file', { attachment: { type: 'file', attachment: file } }]
+    ])]])
+    const host = { stagedFiles, assertOrdinaryAgent() {} }
+    expect(find.call(host, { session }, 'same-id')).toBe(file)
+    expect(find.call(host, { session: {} }, 'same-id')).toBeUndefined()
+    expect(find.call(host, { session }, 'missing')).toBeUndefined()
+    expect(() => find.call({ ...host, assertOrdinaryAgent() { throw new Error('subagent cannot upload') } }, { session }, 'same-id')).toThrow('subagent cannot upload')
+  })
+
+  it('opens relative links in the live working directory and keeps attachment-name precedence', async () => {
+    const source = await packageClient('dsh-client-ui-chat')
+    const helpersStart = source.indexOf('const FILE_ADDRESS_PREFIX =')
+    const helpersEnd = source.indexOf('\n\t\t//#endregion', helpersStart)
+    const callbackStart = source.indexOf('openFile: async (path, options) => {') + 'openFile: '.length
+    // rc.1 inserts resolveFilePath between openFile and openExternalLink.
+    const callbackEnd = source.lastIndexOf(',', source.indexOf('resolveFilePath:', callbackStart))
+    expect(callbackEnd).toBeGreaterThan(callbackStart)
+    let workingDirectory = '/workspace/nested'
+    let attached = false
+    const opened: unknown[] = []
+    const revealed: unknown[] = []
+    const session = {
+      projections: { faceOf: () => ({ getSnapshot: () => workingDirectory }) },
+      readFileHostPath: async () => attached ? { ok: true, value: { path: '/uploads/report.txt' } } : { ok: false }
+    }
+    const ctx = {
+      sessions: { list: { getSnapshot: () => ({ byId: { session: { cwd: '/workspace' } } }) } },
+      sidebarRightTabs: { candidates: () => ['preview'] },
+      sidebarRight: { openResource: (...args: unknown[]) => opened.push(args) },
+      remote: { session: { openWorkspacePath: async (request: unknown) => { revealed.push(request); return { ok: true } } } }
+    }
+    const open = new Function('ctx', 'session', 'sessionId', `${source.slice(helpersStart, helpersEnd)}; return (${source.slice(callbackStart, callbackEnd)});`)(ctx, session, 'session') as (path: string, options?: { line?: number; revealInFileManager?: boolean }) => Promise<void>
+    await open('./report.txt', { line: 7 })
+    // Preserve the Host path when renderer session.cwd still names the old root.
+    expect(opened.pop()).toEqual(['dsh-resource://file/session/session//workspace/nested/report.txt', { params: { line: 7 } }])
+    workingDirectory = '/workspace/changed'
+    await open('report.txt')
+    expect(opened.pop()).toEqual(['dsh-resource://file/session/session//workspace/changed/report.txt'])
+    await open('/workspace/nested/report.txt')
+    expect(opened.pop()).toEqual(['dsh-resource://file/session/session//workspace/nested/report.txt'])
+    attached = true
+    await open('report.txt', { line: 7 })
+    expect(opened.pop()).toEqual(['dsh-resource://file/session/session//uploads/report.txt'])
+    await open('./folder/', { revealInFileManager: true })
+    expect(revealed).toEqual([{ path: '/workspace/changed/folder/' }])
+  })
+
+  it('propagates native opener failures and preserves preview line options', async () => {
+    const chat = await packageClient('dsh-client-ui-chat')
+    const start = chat.indexOf('async function openResolvedHostFile(')
+    const end = chat.indexOf('\n\t\t//#endregion', start)
+    const open = new Function('fileAddressFor', `${chat.slice(start, end)}; return openResolvedHostFile`)(
+      () => 'authorized-file-address'
+    ) as (ctx: unknown, sessionId: string, cwd: string, path: string, options?: { line: number }) => Promise<void>
+    const opened: unknown[] = []
+    const nativeError = { code: 'open-failed', message: 'native opener failed' }
+    const ctx = {
+      sidebarRightTabs: { candidates: () => [] as string[] },
+      sidebarRight: { openResource: (...args: unknown[]) => opened.push(args) },
+      remote: { session: { openWorkspacePath: async () => ({ ok: false, error: nativeError }) } }
+    }
+    await expect(open(ctx, 'session', '/workspace', '/workspace/file')).rejects.toEqual(nativeError)
+    expect(opened).toEqual([])
+    ctx.sidebarRightTabs.candidates = () => ['preview']
+    await open(ctx, 'session', '/workspace', '/workspace/file', { line: 17 })
+    expect(opened).toEqual([['authorized-file-address', { params: { line: 17 } }]])
+  })
+
   it('exposes a session-authorized host path instead of file bytes', async () => {
     const host = await packageClient('dsh-api-session-controller', 'lib/index.js')
     const client = await packageClient('dsh-api-session-controller')
@@ -47,7 +125,7 @@ describe('uploaded file preview', () => {
     expect(chat).toContain('ctx.remote.session.openWorkspacePath({ path: hostPath })')
     expect(chat).toContain('ctx.sidebarRight.openResource')
     expect(chat).toContain('"sidebarRightTabs"')
-    expect(chat).toContain('opener.open(sessionId, attachmentId)')
+    expect(chat).toContain('ctx.get("openUploadedAttachment").open(sessionId, attachmentId)')
     expect(chat).toContain('onOpenUploadedFile(attachment.file.attachmentId)')
     expect(chat).not.toContain('openFile(attachment.file.name)')
     expect(chat).not.toContain('openFile(attachment.name)')
@@ -146,7 +224,46 @@ describe('uploaded file preview', () => {
     expect(preview).toContain('renderSlot("sidebar.right.tab.document.unpreviewable", fileOwner)')
     expect(desktop).toContain("ctx.slots.inject('sidebar.right.tab.document.unpreviewable'")
     expect(desktop).toContain("'data-textpreview-open-local': true")
-    expect(desktop).toContain("ctx.remote.session.openWorkspacePath({ path })")
+    type Element = { props: Record<string, unknown>; children: Element[] }
+    let plugin: { apply(ctx: unknown): void } | undefined
+    let localOpen: { inject(): { openWorkspacePath(request: unknown): Promise<unknown> }; component(props: unknown): Element } | undefined
+    const openWorkspacePath = vi.fn(async (_request: unknown) => ({ ok: true }))
+    vm.runInNewContext(desktop, {
+      document: { documentElement: { dataset: { platform: 'darwin' } } },
+      window: { clearTimeout() {}, setTimeout: () => 0, __ModuleLoader__: { load({ factory }: { factory(require: (name: string) => unknown): typeof plugin }) {
+        plugin = factory(name => name === 'react' ? {
+          createElement: (_type: unknown, props: unknown, ...children: unknown[]) => ({ props, children }),
+          useState: (initial: unknown) => [initial, () => {}],
+          useRef: (current: unknown) => ({ current }), useEffect() {}
+        } : {})
+      } } }
+    })
+    if (!plugin) throw new Error('Desktop client factory was not loaded')
+    plugin.apply({
+      effect() {}, locale: { bind: () => (key: string) => key }, remote: { session: { openWorkspacePath } },
+      slots: {
+        inject(name: string, callback: () => unknown) { if (name === 'sidebar.right.tab.document.unpreviewable') callback() },
+        register(config: { inject: NonNullable<typeof localOpen>['inject'] }, component: NonNullable<typeof localOpen>['component']) {
+          localOpen = { inject: config.inject, component }
+        }
+      }
+    })
+    if (!localOpen) throw new Error('Local-open slot was not registered')
+    const injected = localOpen.inject()
+    const file = localOpen.component({ ...injected, absolutePath: '/workspace/report.docx', t: (key: string) => key })
+    const fileButton = file.children[0]
+    expect(fileButton?.props['data-textpreview-open-local']).toBe(true)
+    ;(fileButton?.props.onClick as () => void)()
+    await Promise.resolve()
+    expect(openWorkspacePath).toHaveBeenCalledExactlyOnceWith({ path: '/workspace/report.docx' })
+    // Archives use the same callback but reveal the authorized path instead of
+    // starting an extractor that can appear to do nothing in the preview pane.
+    for (const absolutePath of ['/workspace/report.zip', 'C:\\workspace\\REPORT.7Z', '/workspace/report.tar.gz']) {
+      const archive = localOpen.component({ ...injected, absolutePath, t: (key: string) => key })
+      ;(archive.children[0]?.props.onClick as () => void)()
+      await Promise.resolve()
+      expect(openWorkspacePath).toHaveBeenLastCalledWith({ path: absolutePath, action: 'reveal' })
+    }
     expect(desktop).toContain('Open with local app')
     expect(desktop).toContain('用本地应用打开')
   })

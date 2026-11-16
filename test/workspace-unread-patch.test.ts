@@ -64,7 +64,7 @@ it('marks search results read while preserving search exit and reveal navigation
   const source = await readFile(new URL('../node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js', import.meta.url), 'utf8')
   const search = source.match(/const openSearchResult = \(sessionId\) => \{[\s\S]*?\n\t\t\t\};/)![0]
   const calls: unknown[][] = []
-  const handler = new Function('actions', 'open', 'archivedSessionIds', 'notifyArchivedNotOpenable', 'setRevealSessionId', 'setQuery', 'setSearchExpanded', `${search}\nreturn openSearchResult;`)(
+  const handler = new Function('actions', 'open', 'archivedSessionIds', 'notifyArchivedNotOpenable', 'setRevealSessionId', 'setQuery', 'changeSearchExpanded', `${search}\nreturn openSearchResult;`)(
     { markSessionRead: (id: string) => calls.push(['read', id]) },
     (id: string) => calls.push(['open', id]),
     [], () => { throw new Error('Archived sessions must not open') },

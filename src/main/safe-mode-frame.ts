@@ -1,7 +1,8 @@
 import type { BrowserWindow } from 'electron'
+import { DESKTOP_IPC } from './shell/window/ipc'
 
-export const SAFE_MODE_FRAME_CHANNEL = 'safe-mode:frame'
-export const SAFE_MODE_FRAME_UPDATE_CHANNEL = 'safe-mode:frame-update'
+export const SAFE_MODE_FRAME_CHANNEL = DESKTOP_IPC.safeModeFrame
+export const SAFE_MODE_FRAME_UPDATE_CHANNEL = DESKTOP_IPC.safeModeFrameUpdate
 
 /** A later view model for the page already showing `seq`, applied in place. */
 export interface SafeModeFrameUpdate {

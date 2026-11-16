@@ -53,7 +53,7 @@ it('limits unknown empty errors to one durable retry and respects disabled retry
   let listener
   let state = {}
   const append = vi.fn()
-  apply({ sessionProjections: { register() {}, stateOf: () => state },
+  await apply({ fiber: { uid: 1 }, sessionProjections: { register: () => ({ stateOf: () => state }) },
     on: (_name, fn) => { listener = fn; return () => {} }, effect() {} })
   const policy = { mode: 'normal', retryableCodes: ['EMPTY_RESPONSE'], maxRetries: 3,
     initialDelayMs: 0, maxDelayMs: 1, jitterRatio: 0 }
@@ -111,12 +111,13 @@ it('cancels a pending retry without starting another attempt', async () => {
   let listener
   const append = vi.fn()
   const controller = new AbortController()
-  apply({ sessionProjections: { register() {}, stateOf: () => ({}) },
+  await apply({ fiber: { uid: 1 }, sessionProjections: { register: () => ({ stateOf: () => ({}) }) },
     on: (_name, fn) => { listener = fn; return () => {} }, effect() {} })
   const pending = listener({ agent: { session: { append } }, provider: 'order', turn: 1, step: 1,
     failure: { code: 'PI_AI_EMPTY_ERROR', message: 'unknown' },
     retryPolicy: { mode: 'normal', retryableCodes: ['EMPTY_RESPONSE'], maxRetries: 3,
       initialDelayMs: 60000, maxDelayMs: 60000, jitterRatio: 0 }, signal: controller.signal }, vi.fn())
+  await Promise.resolve()
   expect(append.mock.calls[0][1].maxRetries).toBe(1)
   controller.abort()
   expect(await pending).toBeUndefined()

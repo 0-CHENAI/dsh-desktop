@@ -29,32 +29,14 @@ function elementStub(options: {
 }
 
 describe('macOS titlebar drag layout', () => {
-  it('moves header actions below a transparent drag strip instead of covering them', async () => {
-    const [main, preload, index] = await Promise.all([
-      readFile(path.join(projectRoot, 'src', 'main', 'index.ts'), 'utf8'),
-      readFile(path.join(projectRoot, 'src', 'preload', 'macos-titlebar.ts'), 'utf8'),
-      readFile(path.join(projectRoot, 'src', 'preload', 'index.ts'), 'utf8')
-    ])
-
-    expect(MACOS_DRAG_STRIP_HEIGHT).toBe(24)
-    expect(MACOS_TRAFFIC_LIGHT_INSET).toBe(80)
-    expect(MACOS_HEADER_PADDING_TOP).toBe(28)
-    expect(MACOS_HEADER_PADDING_TOP).toBeGreaterThan(MACOS_DRAG_STRIP_HEIGHT)
-
-    expect(index).toContain('mountMacosWindowChrome(document,')
-    expect(index).not.toContain('mountMacosTitlebarLayout(document)')
-    expect(main).not.toContain('dsh-desktop-drag-region')
-    expect(preload).toContain("const DRAG_REGION_ID = 'dsh-desktop-drag-region'")
-    expect(preload).toContain('dragRegion.id = DRAG_REGION_ID')
-    expect(preload).toContain("dragRegion.style.setProperty('-webkit-app-region', 'drag')")
-    expect(preload).toContain('padding-top: ${MACOS_HEADER_PADDING_TOP}px !important')
-    expect(preload).toContain('-webkit-app-region: drag')
-    expect(preload).toContain('-webkit-app-region: no-drag !important')
-    expect(preload).toContain('${HEADER_SLOT} > header')
-    expect(preload).toContain('[data-slot="conversation.session.header"]')
-    expect(preload).not.toContain('[data-dsh-sidebar-root]')
-    expect(preload).not.toContain("right: '220px'")
-    expect(preload).not.toContain("zIndex: '18'")
+  it('uses the native macOS caption and leaves the legacy preload drag strip unmounted', async () => {
+    const { desktopWindowChrome } = await import('../src/main/shell/window-chrome')
+    expect(desktopWindowChrome('darwin')).toMatchObject({
+      titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 16, y: 18 }
+    })
+    const preload = await readFile(path.join(projectRoot, 'src/preload/app.ts'), 'utf8')
+    expect(preload).not.toContain('mountMacosWindowChrome')
+    expect(preload).toContain('markDesktopPlatform(document, process.platform)')
   })
 
   it('keeps the drag handler clear of traffic lights and header controls', () => {

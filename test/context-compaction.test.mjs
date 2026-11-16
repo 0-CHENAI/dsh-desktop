@@ -10,7 +10,8 @@ import { Context } from '@deepseek-ai/cordis'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import AgentRegistry from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import ToolRuntime, { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
+import ToolRuntime, { defineTool } from '@deepseek-ai/dsh-tools'
+import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import LlmRuntime, { LlmAdapter, LlmError, createUserMessage, resolveRetryPolicy } from '@deepseek-ai/dsh-llm'
 import { PiAiAdapter } from '@deepseek-ai/dsh-llm-pi-ai'
@@ -94,6 +95,7 @@ async function runtime(config = {}, model = 'small', adapter) {
   }
   for (const plugin of [SessionStore, SessionProjectionRegistry, AgentRegistry, LlmRuntime, ToolRuntime]) fibers.push(await ctx.plugin(plugin))
   fibers.push(await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false, includeRuntimeContext: false }))
+  fibers.push(await ctx.plugin(NativeToolExecutor))
   const release = ctx.llm.registerAdapter(['fixture'], adapter ?? new Adapter())
   fibers.push(await ctx.plugin(TokenMeter, {}))
   fibers.push(await ctx.plugin(BasicCompactionEngine, config))
@@ -157,7 +159,9 @@ async function wireRuntime({ config = {}, effort = 'max', defaultEffort, rejectS
   try {
     const adapter = new PiAiAdapter({ profiles: () => profiles, resolveApiKey: async () => 'synthetic-only', auth: {} })
     const harness = await runtime(config, 'small', adapter)
-    harness.ctx.on('agent/request', async (_payload, next) => ({ ...await next(), reasoningEffort: effort }))
+    // Harness 0.2.2 captures model intent before tools and prompt preparation.
+    // Exercise that public boundary, not a late request-envelope mutation.
+    harness.agent.model.select({ provider: 'fixture', model: 'small', reasoningEffort: effort })
     return { ...harness, requests, wireControls: controls, async close() {
       try { await harness.close() } finally {
         const closed = new Promise(resolve => server.close(resolve))
@@ -177,7 +181,7 @@ it('inherits the active effort for same-model compaction through the actual pi-a
     await send(harness.agent, 'a'.repeat(12000))
     await send(harness.agent, 'b'.repeat(12000))
     const summaries = harness.requests.filter(request => request.summary)
-    expect(summaries).toHaveLength(1)
+    expect(summaries, JSON.stringify(harness.endings)).toHaveLength(1)
     expect(summaries[0].body.reasoning_effort).toBe('max')
     expect(harness.requests).toHaveLength(3)
     expect(harness.endings.at(-1)).toMatchObject({ kind: 'completed' })
@@ -191,7 +195,7 @@ it('keeps a separately configured summarizer on its own reasoning defaults', asy
     await send(harness.agent, 'a'.repeat(12000))
     await send(harness.agent, 'b'.repeat(12000))
     const summaries = harness.requests.filter(request => request.summary)
-    expect(summaries).toHaveLength(1)
+    expect(summaries, JSON.stringify(harness.endings)).toHaveLength(1)
     expect(summaries[0].body.model).toBe('summary')
     expect(summaries[0].body.reasoning_effort).toBe('low')
     expect(harness.endings.at(-1)).toMatchObject({ kind: 'completed' })
@@ -203,7 +207,7 @@ it('honors explicitly disabled reasoning without falling back to the route defau
   try {
     await send(harness.agent, 'a'.repeat(12000))
     await send(harness.agent, 'b'.repeat(12000))
-    expect(harness.requests.filter(request => request.summary)).toHaveLength(1)
+    expect(harness.requests.filter(request => request.summary), JSON.stringify(harness.endings)).toHaveLength(1)
     expect(harness.requests.every(request => !Object.hasOwn(request.body, 'reasoning_effort'))).toBe(true)
     expect(harness.endings.at(-1)).toMatchObject({ kind: 'completed' })
   } finally { await harness.close() }
@@ -214,7 +218,7 @@ it('stops on a rejected summary instead of repeating it until the context budget
   try {
     await send(harness.agent, 'a'.repeat(12000))
     await send(harness.agent, 'b'.repeat(12000))
-    expect(harness.requests).toHaveLength(2)
+    expect(harness.requests, JSON.stringify(harness.endings)).toHaveLength(2)
     expect(harness.endings.at(-1)).toMatchObject({ kind: 'error', error: { code: 'INVALID_REQUEST' } })
     const history = JSON.stringify(harness.agent.session.deriveMessages())
     expect(history).toContain('a'.repeat(12000))
@@ -286,7 +290,7 @@ it('uses the newly routed smaller model rather than the previous header', async 
   const harness = await runtime({}, 'large')
   try {
     await send(harness.agent, 'a'.repeat(12000))
-    harness.ctx.on('agent/request', async (_payload, next) => ({ ...await next(), model: 'small' }))
+    harness.agent.model.select({ provider: 'fixture', model: 'small' })
     await send(harness.agent, 'b'.repeat(12000))
     expect(harness.calls.some(call => call.purpose === 'compaction' && call.model === 'small')).toBe(true)
     expect(harness.calls.at(-1).model).toBe('small')
@@ -338,9 +342,10 @@ it('keeps exact-target headroom overrides explicit and isolates other targets', 
 it('compacts after a large tool result without separating its call/result pair', async () => {
   const harness = await runtime()
   const result = 'tool result '.repeat(1500)
-  const unregister = harness.ctx.tools.register(defineContentToolFixture({
+  const unregister = harness.ctx.tools.register(defineTool({
     name: 'large_result', description: 'Return fixture text', parameters: {},
-    execute: async () => [{ type: 'text', text: result }]
+    output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
+    execute: async () => result
   }))
   try {
     await send(harness.agent, 'a'.repeat(8000))

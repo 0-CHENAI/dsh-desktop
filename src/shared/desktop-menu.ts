@@ -3,6 +3,11 @@ export const WINDOWS_CAPTION_CONTROLS_WIDTH = 140
 export const WINDOWS_MENU_BUTTON_WIDTH = 44
 export const WINDOWS_HEADER_ACTIONS_GAP = 16
 
+/** Linux reuses Harness's Windows-named caption seam, without changing its platform identity. */
+export function usesDesktopCaption(platform: string): boolean {
+  return platform === 'win32' || platform === 'linux'
+}
+
 export const desktopMenuCommands = [
   'connect-phone',
   'restart-harness',
@@ -22,6 +27,7 @@ export const desktopMenuCommands = [
   'zoom-out',
   'toggle-fullscreen',
   'about',
+  'explore-enterprise',
   'quit'
 ] as const
 

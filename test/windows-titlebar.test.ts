@@ -1,160 +1,117 @@
-import { readFile } from 'node:fs/promises'
+import type { MenuItemConstructorOptions } from 'electron'
 import { describe, expect, it } from 'vitest'
 import {
-  WINDOWS_HEADER_ACTIONS_GAP,
-  WINDOWS_TITLEBAR_HEIGHT,
   desktopMenuCommands,
-  formatZoomPercentage,
-  isDesktopMenuCommand
+  isDesktopMenuCommand,
+  type DesktopMenuCommand
 } from '../src/shared/desktop-menu'
 import {
-  WINDOWS_CAPTION_CONTROLS_WIDTH,
-  WINDOWS_MENU_BUTTON_WIDTH,
-  WINDOWS_MENU_PANEL_WIDTH,
-  windowsMenuViewBounds
-} from '../src/main/windows-menu-view'
-import {
-  formatWindowsMenuZoomPercentage,
-  WINDOWS_MENU_PRELOAD_BUTTON_WIDTH,
-  WINDOWS_MENU_PRELOAD_TITLEBAR_HEIGHT
-} from '../src/preload/windows-menu-model'
+  parseWindowsMenuRequest,
+  windowsMenuTemplate,
+  type EditingKey
+} from '../src/main/windows-menu'
 
-describe('Windows titlebar menu', () => {
-  it('uses a Windows-only overlay while preserving the macOS frame behavior', async () => {
-    const main = await readFile('src/main/index.ts', 'utf8')
+function record(): { run: DesktopMenuCommand[]; keys: EditingKey[]; actions: Parameters<typeof windowsMenuTemplate>[3] } {
+  const run: DesktopMenuCommand[] = []
+  const keys: EditingKey[] = []
+  return { run, keys, actions: { run: (command) => run.push(command), sendEditingKey: (key) => keys.push(key) } }
+}
 
-    expect(main).toContain("const isWindows = process.platform === 'win32'")
-    expect(main).toContain("titleBarStyle: 'hidden'")
-    expect(main).toContain("titleBarStyle: 'hidden' as const")
-    expect(main).toContain('titleBarOverlay: windowsTitleBarOverlay')
-    expect(main).toContain('autoHideMenuBar: true')
-    expect(main).toContain('window.setMenuBarVisibility(false)')
-    expect(main).toContain('Menu.setApplicationMenu(Menu.buildFromTemplate(template))')
-  })
+function clickAll(items: MenuItemConstructorOptions[]): void {
+  for (const item of items) {
+    if (Array.isArray(item.submenu)) clickAll(item.submenu)
+    // The template's handlers ignore Electron's arguments.
+    else (item.click as (() => void) | undefined)?.()
+  }
+}
 
-  it('reserves a global titlebar and contains fixed overlays below it', async () => {
-    const main = await readFile('src/main/index.ts', 'utf8')
-    const preload = await readFile('src/preload/windows-titlebar.ts', 'utf8')
+function labels(items: MenuItemConstructorOptions[]): string[] {
+  return items.flatMap((item) => [
+    ...(item.label === undefined ? [] : [item.label]),
+    ...(Array.isArray(item.submenu) ? labels(item.submenu) : [])
+  ])
+}
 
-    expect(WINDOWS_TITLEBAR_HEIGHT).toBe(36)
-    expect(main).toContain("color: isDark ? '#141416' : '#ffffff'")
-    expect(preload).not.toContain(`padding-top: \${WINDOWS_TITLEBAR_HEIGHT}px !important`)
-    expect(preload).toContain('padding-top: 0 !important')
-    expect(preload).toContain('[data-dsh-sidebar-root][data-dsh-sidebar-wide="true"]')
-    expect(preload).toContain('padding-top: 6px !important')
-    expect(preload).toContain('trackSidebarLayout(document)')
-    expect(preload).toContain("document.documentElement.style.setProperty(SIDEBAR_WIDTH_PROPERTY")
-    expect(preload).not.toContain('installDragRegion')
-    expect(preload).toContain('transform: translateZ(0)')
-    expect(preload).toContain('body.dsh-desktop-windows-titlebar-layout > #root')
-    expect(preload).not.toContain('position: fixed')
-    expect(preload).not.toContain('pointer-events: none')
-    expect(preload).toContain('body.dsh-desktop-windows-titlebar-layout button')
-    expect(preload).toContain('-webkit-app-region: no-drag !important')
-    expect(preload).toContain('height: calc(100% - var(--dsh-titlebar-inset))')
-    expect(preload).toContain('[data-dsh-layout-frame]::before')
-    expect(preload).toContain('content: none !important')
-    expect(preload).toContain('[data-dsh-layout-resize-handle]')
-    expect(preload).toContain('--dsh-titlebar-inset: 0px')
-    expect(preload).not.toContain('padding-right: var(')
-    expect(preload).toContain('[data-sidebar-right-panel]')
-    expect(preload).toContain("document.documentElement.style.setProperty(SIDEBAR_WIDTH_PROPERTY, '0px')")
-    expect(preload).toContain('header[data-slot="conversation.session.header"]')
-    expect(WINDOWS_HEADER_ACTIONS_GAP).toBe(16)
-  })
-
-  it('accepts only the fixed menu command allowlist', async () => {
-    const main = await readFile('src/main/index.ts', 'utf8')
-
-    expect(desktopMenuCommands).toContain('connect-phone')
-    expect(desktopMenuCommands).toContain('safe-mode')
-    expect(await readFile('src/preload/windows-menu.ts', 'utf8')).toContain(
-      "label: zh ? '以安全模式重启…' : 'Restart as Safe Mode…'"
-    )
-    expect(desktopMenuCommands).toContain('check-for-updates')
-    expect(desktopMenuCommands).toContain('toggle-fullscreen')
+describe('Windows caption menus', () => {
+  it('accepts only the fixed menu command allowlist', () => {
     expect(isDesktopMenuCommand('copy')).toBe(true)
+    expect(isDesktopMenuCommand('export-session')).toBe(false)
     expect(isDesktopMenuCommand('run-shell-command')).toBe(false)
     expect(isDesktopMenuCommand({ command: 'quit' })).toBe(false)
-    expect(main).toContain("ipcMain.handle('desktop-menu:execute'")
-    expect(main).toContain("ipcMain.handle('desktop-menu:get-zoom-factor'")
-    expect(main).toContain('assertTrustedMainWindowEvent(event)')
-    expect(main).toContain('assertTrustedDesktopMenuEvent(event)')
-    expect(main).toContain('event.sender !== windowsMenuView.webContents')
-    expect(main).toContain('if (!isDesktopMenuCommand(command))')
   })
 
-  it('hosts the menu in a fixed-zoom child view instead of counter-scaling Harness content', async () => {
-    const main = await readFile('src/main/index.ts', 'utf8')
-    const layoutPreload = await readFile('src/preload/windows-titlebar.ts', 'utf8')
-    const menuPreload = await readFile('src/preload/windows-menu.ts', 'utf8')
-    const viteConfig = await readFile('electron.vite.config.ts', 'utf8')
+  it('keeps every Desktop command in the application menu, including the View group', () => {
+    const { run, actions } = record()
+    clickAll(windowsMenuTemplate('application', 'zh', 1, actions))
+    const editing = new Set<DesktopMenuCommand>(['undo', 'redo', 'cut', 'copy', 'paste', 'select-all'])
+    expect(new Set(run)).toEqual(new Set(desktopMenuCommands.filter((command) => !editing.has(command))))
+  })
 
-    expect(formatZoomPercentage(1)).toBe('100%')
-    expect(formatZoomPercentage(Math.sqrt(1.2))).toBe('110%')
-    expect(formatZoomPercentage(1 / Math.sqrt(1.2))).toBe('91%')
-    expect(formatWindowsMenuZoomPercentage(1)).toBe(formatZoomPercentage(1))
-    expect(formatWindowsMenuZoomPercentage(Math.sqrt(1.2))).toBe(
-      formatZoomPercentage(Math.sqrt(1.2))
+  it('sends editing shortcuts as key events so editor-owned history receives them', () => {
+    const { run, keys, actions } = record()
+    clickAll(windowsMenuTemplate('edit', 'en', 1, actions))
+    expect(run).toEqual([])
+    expect(keys).toEqual([
+      { keyCode: 'Z', modifiers: ['control'] },
+      { keyCode: 'Y', modifiers: ['control'] },
+      { keyCode: 'X', modifiers: ['control'] },
+      { keyCode: 'C', modifiers: ['control'] },
+      { keyCode: 'V', modifiers: ['control'] },
+      { keyCode: 'Delete', modifiers: [] },
+      { keyCode: 'A', modifiers: ['control'] }
+    ])
+  })
+
+  it('combines both localized groups without losing commands or editor shortcuts', () => {
+    for (const locale of ['zh', 'en']) {
+      const { run, keys, actions } = record()
+      const items = windowsMenuTemplate('main', locale, 1.25, actions)
+      expect(items.map(item => item.label)).toEqual(locale === 'zh' ? ['应用', '编辑'] : ['Application', 'Edit'])
+      expect(items[0]?.submenu).toEqual(windowsMenuTemplate('application', locale, 1.25, actions).map(item =>
+        expect.objectContaining({ ...(item.label ? { label: item.label } : {}), ...(item.type ? { type: item.type } : {}) })
+      ))
+      clickAll(items)
+      const application = record()
+      clickAll(windowsMenuTemplate('application', locale, 1.25, application.actions))
+      const edit = record()
+      clickAll(windowsMenuTemplate('edit', locale, 1.25, edit.actions))
+      expect(run).toEqual(application.run)
+      expect(keys).toEqual(edit.keys)
+    }
+  })
+
+  it('labels the menus in the app language and shows the current zoom', () => {
+    const { actions } = record()
+    expect(labels(windowsMenuTemplate('application', 'zh', 1.25, actions))).toContain('实际大小（当前 125%）')
+    expect(labels(windowsMenuTemplate('application', 'en', 0.9, actions))).toContain('Actual Size (now 90%)')
+    const chinese = labels(windowsMenuTemplate('application', 'zh', 1, actions))
+    const english = labels(windowsMenuTemplate('application', 'en', 1, actions))
+    expect(chinese.indexOf('了解企业版')).toBe(chinese.indexOf('关于 DSH Desktop') + 1)
+    expect(english.indexOf('Explore Enterprise')).toBe(english.indexOf('About DSH Desktop') + 1)
+    expect(chinese).not.toContain('导出 Session 日志…')
+    expect(labels(windowsMenuTemplate('application', 'en', 1, actions))).not.toContain('Export Session Log…')
+    expect(labels(windowsMenuTemplate('edit', 'zh', 1, actions))).toEqual(
+      ['撤销', '重做', '剪切', '复制', '粘贴', '删除', '全选']
     )
-    expect(WINDOWS_MENU_PRELOAD_BUTTON_WIDTH).toBe(WINDOWS_MENU_BUTTON_WIDTH)
-    expect(WINDOWS_MENU_PRELOAD_TITLEBAR_HEIGHT).toBe(WINDOWS_TITLEBAR_HEIGHT)
-    expect(main).toContain('contents.getZoomFactor()')
-    expect(main).toContain('new WebContentsView')
-    expect(main).toContain('window.contentView.addChildView(menuView)')
-    expect(main).toContain('menuView.webContents.setZoomFactor(1)')
-    expect(main).toContain("preload: join(import.meta.dirname, '../preload/windows-menu.cjs')")
-    expect(menuPreload).toContain("ipcRenderer.invoke('desktop-menu:get-zoom-factor')")
-    expect(menuPreload).toContain('formatWindowsMenuZoomPercentage(zoomFactor)')
-    expect(menuPreload).toContain('applicationMenuIcon')
-    expect(menuPreload).toContain('border-bottom:1px solid var(--chrome-divider)')
-    expect(menuPreload).toContain('-webkit-app-region:drag')
-    expect(menuPreload).toContain('button, .menu { -webkit-app-region:no-drag; }')
-    expect(layoutPreload).not.toContain('INVERSE_ZOOM_PROPERTY')
-    expect(layoutPreload).not.toContain('menuButton')
-    expect(viteConfig).toContain("'windows-menu': resolve('src/preload/windows-menu.ts')")
   })
 
-  it('keeps the closed menu button aligned beside native caption controls at every page zoom', () => {
-    expect(WINDOWS_CAPTION_CONTROLS_WIDTH).toBe(140)
-    expect(WINDOWS_MENU_BUTTON_WIDTH).toBe(44)
-    expect(WINDOWS_MENU_PANEL_WIDTH).toBe(304)
-
-    const closedAt100Percent = windowsMenuViewBounds({ width: 1380, height: 900 }, false)
-    const closedAt69Percent = windowsMenuViewBounds({ width: 1380, height: 900 }, false)
-    expect(closedAt100Percent).toEqual({ x: 0, y: 0, width: 1240, height: 36 })
-    expect(closedAt69Percent).toEqual(closedAt100Percent)
-
-    expect(windowsMenuViewBounds({ width: 1380, height: 900 }, true)).toEqual({
-      x: 936,
-      y: 0,
-      width: 304,
-      height: 760
-    })
-    expect(windowsMenuViewBounds({ width: 900, height: 640 }, false, true)).toEqual({
-      x: 0,
-      y: 0,
-      width: 0,
-      height: 0
-    })
+  it('does not register popup accelerators over the application menu shortcuts', () => {
+    const { actions } = record()
+    const flatten = (items: MenuItemConstructorOptions[]): MenuItemConstructorOptions[] =>
+      items.flatMap((item) => (Array.isArray(item.submenu) ? flatten(item.submenu) : [item]))
+    for (const name of ['main', 'application', 'edit'] as const) {
+      for (const item of flatten(windowsMenuTemplate(name, 'en', 1, actions))) {
+        if (item.accelerator !== undefined) expect(item.registerAccelerator).toBe(false)
+      }
+    }
   })
 
-  it('shows the bundled Harness version and offers an update check from About', async () => {
-    const main = await readFile('src/main/index.ts', 'utf8')
-
-    expect(main).toContain('bundledHarnessVersion(app.getAppPath())')
-    expect(main).toContain('if (result.response === 0) await checkForUpdates(true)')
-    expect(main).toContain('void showAbout(mainWindow).catch(showUnexpectedError)')
-  })
-
-  it('synchronizes the native controls with Harness light and dark themes', async () => {
-    const main = await readFile('src/main/index.ts', 'utf8')
-    const preload = await readFile('src/preload/windows-titlebar.ts', 'utf8')
-
-    expect(main).toContain('window.setTitleBarOverlay(windowsTitleBarOverlay(isDark))')
-    expect(main).toContain("ipcMain.handle('desktop-titlebar:set-theme'")
-    expect(main).toContain("windowsMenuView.webContents.send('desktop-titlebar:theme-changed', isDark)")
-    expect(preload).toContain("attributeFilter: ['data-ds-dark-theme', 'class', 'style']")
-    expect(preload).toContain("ipcRenderer.invoke('desktop-titlebar:set-theme', isDark)")
+  it('rejects popup requests outside the native menu allowlist or the window', () => {
+    expect(parseWindowsMenuRequest('main', 12, 76)).toEqual({ name: 'main', x: 12, y: 76 })
+    expect(parseWindowsMenuRequest('application', 48, 34)).toEqual({ name: 'application', x: 48, y: 34 })
+    expect(() => parseWindowsMenuRequest('view', 48, 34)).toThrow()
+    expect(() => parseWindowsMenuRequest('edit', -1, 34)).toThrow()
+    expect(() => parseWindowsMenuRequest('edit', 48, Number.NaN)).toThrow()
+    expect(() => parseWindowsMenuRequest('edit', '48', 34)).toThrow()
   })
 })

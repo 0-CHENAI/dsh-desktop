@@ -1,15 +1,16 @@
 // Keep the Office engine's metric-compatible defaults and explicit CJK aliases.
 // Exact installed source faces take priority over every fallback in these groups.
 const sansCjk=['Microsoft YaHei','Microsoft YaHei UI','微软雅黑','PingFang SC','Noto Sans CJK SC','Noto Sans SC','Source Han Sans SC','SimHei','黑体','Heiti SC','STHeiti'];
+// Fontconfig aliases are emitted for each group's first family. Give Office's
+// full/PostScript PingFang face names their own groups: listing them only as
+// alternatives leaves absent source faces falling back to Latin glyphs. Keep
+// the source name first so an installed exact face still wins; substitutions
+// preserve CJK advances without claiming identical source weight metrics.
+const pingFangAliases=['Ultralight','Thin','Light','Regular','Medium','Semibold'].flatMap(weight=>[`PingFang SC ${weight}`,`PingFangSC-${weight}`]);
 export const templateOfficeFontOptions={
   initialFontFamilies:['Microsoft YaHei','PingFang SC','Noto Sans CJK SC'],
   fontFallbacks:[
-    // Some macOS inventories expose PingFang only under its base family. Keep
-    // installed authored faces first, but give missing weight-qualified names a
-    // CJK substitute before the SDK's generic Latin fallback.
-    ...['Ultralight','Thin','Light','Regular','Medium','Semibold'].map(weight=>[
-      `PingFang SC ${weight}`,'PingFang SC',...sansCjk
-    ]),
+    ...pingFangAliases.map(face=>[face,'PingFang SC','Heiti SC','STHeiti','Noto Sans CJK SC',...sansCjk]),
     ['Calibri','Carlito'],
     ['Calibri Light','Carlito','Calibri'],
     ['Cambria','Caladea'],

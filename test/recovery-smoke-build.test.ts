@@ -4,7 +4,7 @@ import { expect, it } from 'vitest'
 
 it('bundles the actual native recovery and client smoke gates after host migrations', async () => {
   for (const entry of [
-    'scripts/recovery-ui-smoke.ts',
+    'scripts/verify/recovery-ui-smoke.ts',
     'scripts/fixtures/desktop-profile.ts',
     'scripts/fixtures/desktop-profile-preload.ts'
   ]) {
