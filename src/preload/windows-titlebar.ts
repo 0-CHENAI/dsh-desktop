@@ -177,7 +177,7 @@ function installLayout(document: Document): void {
       padding-left: 20px;
       -webkit-app-region: no-drag;
     }
-    body.dsh-desktop-windows-titlebar-layout [data-plugin-panel] > header[data-window-drag] {
+    body.dsh-desktop-windows-titlebar-layout [data-plugin-panel] header[data-window-drag] {
       box-sizing: border-box;
       min-height: var(--dsh-windows-toolbar-height);
       padding-right: calc(28px + var(--dsh-windows-controls-inset));

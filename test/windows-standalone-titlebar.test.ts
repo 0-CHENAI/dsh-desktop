@@ -57,3 +57,18 @@ it('keeps sidebar caption controls above a sticky plugin header and below overla
   expect(Number(getComputedStyle(sidebar).zIndex)).toBeGreaterThan(Number(getComputedStyle(header).zIndex))
   expect(Number(getComputedStyle(sidebar).zIndex)).toBeLessThan(Number(getComputedStyle(overlay).zIndex))
 })
+
+it('applies native caption clearance to nested plugin headers', () => {
+  vi.stubGlobal('MutationObserver', class extends MutationObserver {
+    constructor(callback: MutationCallback) {
+      super(callback)
+      observers.push(this)
+    }
+  })
+  vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: vi.fn() }))
+  document.body.innerHTML = '<div data-dsh-layout-frame><section data-plugin-panel><div><header data-window-drag></header></div></section></div>'
+  mountWindowsTitlebarLayout({ document, ipcRenderer: { invoke: vi.fn(async () => undefined) } })
+  const header = document.querySelector<HTMLElement>('header[data-window-drag]')
+  if (!header) throw new Error('nested plugin header missing')
+  expect(getComputedStyle(header).boxSizing).toBe('border-box')
+})

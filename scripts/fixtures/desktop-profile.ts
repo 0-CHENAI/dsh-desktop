@@ -259,6 +259,25 @@ async function verifyWindowsTitlebarMatrix(window: BrowserWindow): Promise<void>
   assert.equal(await window.webContents.executeJavaScript("Boolean(document.querySelector('[data-global-panel]'))"), true)
   await window.webContents.executeJavaScript("document.querySelector('[data-plugin-body]').scrollTop = 120")
   await pause()
+  async function verifyPluginCaptionClearance(): Promise<void> {
+    const geometry = await window.webContents.executeJavaScript(`(() => {
+      const area=document.createElement('div');
+      area.style.cssText='position:fixed;left:env(titlebar-area-x,0px);width:env(titlebar-area-width,calc(100vw - 140px));height:env(titlebar-area-height,36px);visibility:hidden;pointer-events:none';
+      document.body.append(area); const native=area.getBoundingClientRect(); area.remove();
+      const buttons=Array.from(document.querySelectorAll('[data-plugin-panel] header[data-window-drag] button'))
+        .filter(button=>getComputedStyle(button).visibility!=='hidden')
+        .map(button=>button.getBoundingClientRect()).filter(rect=>rect.width>0&&rect.height>0)
+        .map(rect=>({right:rect.right,top:rect.top,bottom:rect.bottom}));
+      return {controlsLeft:native.right,nativeHeight:native.height,buttons};
+    })()`)
+    assert.ok(geometry.buttons.length > 0, 'Plugin header controls missing')
+    for (const button of geometry.buttons) {
+      if (button.top < geometry.nativeHeight && button.bottom > 0) {
+        assert.ok(button.right <= geometry.controlsLeft - 4, JSON.stringify(geometry))
+      }
+    }
+  }
+  await verifyPluginCaptionClearance()
   // HeaderLeadingControls and SidebarRoot share the new-session marker. A
   // different seat, even earlier in DOM order, must not become the click target.
   await window.webContents.executeJavaScript(`(() => {
@@ -268,6 +287,7 @@ async function verifyWindowsTitlebarMatrix(window: BrowserWindow): Promise<void>
     other.hidden=true; document.body.prepend(other);
   })()`)
   await click('[data-dsh-sidebar-toggle]')
+  await verifyPluginCaptionClearance()
   const globalControls = await window.webContents.executeJavaScript(`(() => {
     const column=document.querySelector('[data-dsh-layout-sidebar]');
     return { overflow:getComputedStyle(column).overflow, controls:['data-dsh-sidebar-toggle','data-dsh-sidebar-new-session'].map(marker=>{
