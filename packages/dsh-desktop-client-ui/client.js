@@ -185,14 +185,6 @@ window.__ModuleLoader__.load({
       }
     }
 
-    const ENTERPRISE_NS = 'dsh-desktop-enterprise-entry'
-    function EnterpriseEntry({ t }) {
-      return React.createElement('a', {
-        href: 'https://dshdesktop.com/zh/enterprise/', target: '_blank', rel: 'noopener noreferrer',
-        'data-dsh-enterprise-entry': true
-      }, t('learnMore'), React.createElement('span', { 'aria-hidden': true }, ' ↗'))
-    }
-
     const REPAIR_NS = 'dsh-desktop-repair'
     function DesktopUtilityActions({ t, wide }) {
       const [busy, setBusy] = React.useState(false)
@@ -326,17 +318,7 @@ window.__ModuleLoader__.load({
       applyRepair(ctx)
       ctx.effect(() => ctx.locale.register(ACTIONS_NS, actionMessages))
       const actionText = ctx.locale.bind(ACTIONS_NS)
-      ctx.effect(() => ctx.locale.register(ENTERPRISE_NS, {
-        zh: { learnMore: '了解企业版' }, en: { learnMore: 'Explore Enterprise' },
-        ja: { learnMore: 'エンタープライズ版について' }, es: { learnMore: 'Conocer la edición empresarial' },
-        fr: { learnMore: 'Découvrir la version entreprise' }, de: { learnMore: 'Enterprise-Version entdecken' },
-        ru: { learnMore: 'Корпоративная версия' }, pt: { learnMore: 'Conhecer a versão empresarial' }
-      }))
-      const enterpriseText = ctx.locale.bind(ENTERPRISE_NS)
-      ctx.slots.inject('settings.sidebar.footer', () => ctx.slots.register({
-        name: 'settings.sidebar.footer', id: 'desktop-enterprise-entry', locale: ENTERPRISE_NS,
-        inject: () => ({ t: enterpriseText })
-      }, EnterpriseEntry))
+
 
       ctx.effect(() => {
         const id = 'dsh-desktop-preset-toolbar-style'
@@ -353,14 +335,9 @@ window.__ModuleLoader__.load({
           [data-dsh-market-nav-icon] svg,
           [data-dsh-better-sidebar-settings-nav] span[class*="navIcon"],
           [data-dsh-better-sidebar-settings-nav] svg { display:none !important; }
-          [data-dsh-enterprise-entry] {
-            display:flex; align-items:center; gap:4px; min-height:36px; padding:0 12px;
-            border-radius:8px; color:var(--dsw-alias-label-secondary); font-size:13px;
-            line-height:20px; text-decoration:none;
-          }
-          [data-dsh-enterprise-entry]:hover { color:var(--dsw-alias-label-primary); background:var(--dsw-alias-interactive-bg-hover); }
-          [data-dsh-enterprise-entry]:focus-visible { outline:2px solid var(--dsw-alias-state-business-primary); outline-offset:1px; }
+
           :root { --dsh-page-title-top-spacing:56px; }
+          [data-conversation-tabs] { grid-column:2; padding-inline-start:8px; }
           /* Keep Desktop actions beside Settings, without relocating other slot contributions. */
           [data-dsh-sidebar-settings]:has([data-dsh-desktop-utilities]) {
             display:flex; flex-direction:row; align-items:center; gap:4px;

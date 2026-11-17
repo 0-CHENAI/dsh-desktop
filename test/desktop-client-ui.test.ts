@@ -92,7 +92,6 @@ describe('DSH Desktop client slot occupants', () => {
     expect(registrations.map(({ config }) => config.name)).toEqual([
       'conversation.input.dock',
       'sidebar.settings.action',
-      'settings.sidebar.footer',
       'sidebar.brand.mark',
       'sidebar.brand.name',
       'conversation.hero.brand.mark',
@@ -101,14 +100,8 @@ describe('DSH Desktop client slot occupants', () => {
       'sidebar.workspaces.session.menu.item',
       'sidebar.workspaces.session.menu.item'
     ])
-    const enterprise = registrations.find(({ config }) => config.name === 'settings.sidebar.footer')
-    expect(enterprise?.config.id).toBe('desktop-enterprise-entry')
-    const entry = enterprise!.component({ t: () => '了解企业版' }) as { type: unknown; props: Record<string, unknown> }
-    expect(entry.type).toBe('a')
-    expect(entry.props.href).toBe('https://dshdesktop.com/zh/enterprise/')
-    expect(entry.props.target).toBe('_blank')
-    expect(entry.props.rel).toBe('noopener noreferrer')
-    expect(entry.props.children).toContain('了解企业版')
+    expect(registrations.some(({ config }) => config.id === 'desktop-enterprise-entry')).toBe(false)
+
     // Desktop toolbar styles have an owned lifetime; branding stays in currentColor.
     expect(appended).toHaveLength(2)
     expect(appended[0]?.textContent).toContain('.ghc-card')

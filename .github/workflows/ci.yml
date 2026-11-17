@@ -30,9 +30,20 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm test
+      - name: Cache native Office and PPT build inputs
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/office-downloads
+            .build/office-template-cache
+            .build/ppt-runtime
+          key: desktop-runtime-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/office-runtime/**', 'scripts/*ppt*', 'scripts/ppt/**', 'packages/dsh-desktop-office/**', 'packages/ppt-runtime/**', 'packages/office-runtime/**', 'patches/**', 'package-lock.json') }}
+          restore-keys: |
+            desktop-runtime-${{ runner.os }}-${{ runner.arch }}-
       - run: npm run typecheck
       - run: npm run build
+      # Build prepared the native payload; run the same full suite without pretest.
+      - run: npm exec -- vitest run
 
   native-runtime:
     name: Native Harness/Office (${{ matrix.os }})
@@ -49,6 +60,16 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - name: Cache native Office and PPT build inputs
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/office-downloads
+            .build/office-template-cache
+            .build/ppt-runtime
+          key: desktop-runtime-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/office-runtime/**', 'scripts/*ppt*', 'scripts/ppt/**', 'packages/dsh-desktop-office/**', 'packages/ppt-runtime/**', 'packages/office-runtime/**', 'patches/**', 'package-lock.json') }}
+          restore-keys: |
+            desktop-runtime-${{ runner.os }}-${{ runner.arch }}-
       - run: node scripts/verify/verify-target.mjs ${{ runner.os == 'Windows' && 'win32' || 'darwin' }} ${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}
       - run: npm run build
       - run: node scripts/check-desktop-profile.cjs
@@ -56,7 +77,8 @@ jobs:
         run: node scripts/verify/verify-image-electron.mjs
       - if: runner.os == 'Windows'
         run: node scripts/check-windows-titlebar-layout.cjs
-      - run: npm run package:dev:dir
+      # Package this job's validated build without rebuilding the Office payload.
+      - run: npm exec -- electron-builder --dir --config electron-builder.dev.cjs
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
           CSC_FOR_PULL_REQUEST: 'true'

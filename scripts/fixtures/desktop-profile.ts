@@ -106,7 +106,7 @@ export function apply() { writeFileSync(process.env.DSH_SMOKE_LOCAL_MARKER, JSON
   win.on('enter-full-screen', () => win?.webContents.send(DESKTOP_IPC.windowFullscreen, true))
   win.on('leave-full-screen', () => win?.webContents.send(DESKTOP_IPC.windowFullscreen, false))
   ipcMain.handle('desktop-titlebar:popup-menu', (_event, name: unknown) => {
-    assert.equal(name, 'main')
+    assert.ok(name === 'application' || name === 'edit')
     nativeMenuRequests++
   })
   ipcMain.handle('desktop-titlebar:set-theme', () => {})
@@ -193,22 +193,22 @@ async function verifyWindowsContentInset(window: BrowserWindow): Promise<void> {
         sidebarBottom: sidebar.getBoundingClientRect().bottom, viewportHeight: innerHeight,
         headerTop: header.getBoundingClientRect().top,
         framePadding: getComputedStyle(frame).paddingTop,
-        frameBefore: getComputedStyle(frame, '::before').display };
+        frameBefore: getComputedStyle(frame, '::before').content };
     })()`)
     // 0.2.2 AppFrame owns the caption inset; body must not reserve it again.
     assert.equal(geometry.bodyTop, 0, JSON.stringify({ zoom, geometry }))
-    assert.ok(Math.abs(geometry.sidebarTop) < 2,
+    assert.ok(Math.abs(geometry.sidebarTop - geometry.nativeHeight) < 2,
       `Windows sidebar must extend to the top of the window: ${JSON.stringify({ zoom, geometry })}`)
     assert.ok(Math.abs(geometry.sidebarBottom - geometry.viewportHeight) < 2,
       `Windows sidebar must keep its footer at the bottom: ${JSON.stringify({ zoom, geometry })}`)
-    assert.ok(Math.abs(geometry.headerTop) < 2,
+    assert.ok(Math.abs(geometry.headerTop - geometry.nativeHeight) < 2,
       `Windows conversation header must share the native caption row: ${JSON.stringify({ zoom, geometry })}`)
     assert.equal(parseFloat(geometry.framePadding), 0)
     assert.ok(Math.abs(geometry.nativeHeight * zoom - WINDOWS_TITLEBAR_HEIGHT) < 2)
     assert.equal(geometry.frameBefore, 'none')
   }
   window.webContents.setZoomFactor(1)
-  console.log('Windows content inset: sidebar and conversation header start at the window top without a second caption row at three zoom levels')
+  console.log('Windows content inset: sidebar and conversation header start below the dedicated caption row at three zoom levels')
 }
 
 /** Real frame geometry plus native clicks over sidebar, rightbar and fullscreen transitions. */
@@ -234,7 +234,8 @@ async function verifyWindowsTitlebarMatrix(window: BrowserWindow): Promise<void>
     const point = await window.webContents.executeJavaScript(`(() => {
       const el = document.querySelector(${JSON.stringify(selector)});
       if (!el) throw new Error('Missing native click target: ' + ${JSON.stringify(selector)});
-      const r = el.getBoundingClientRect();
+      const target = el.shadowRoot?.querySelector('button') ?? el;
+      const r = target.getBoundingClientRect();
       if (document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest(${JSON.stringify(selector)}) !== el)
         throw new Error('Covered native click target: ' + ${JSON.stringify(selector)});
       return { x:r.x+r.width/2, y:r.y+r.height/2 };
@@ -348,15 +349,9 @@ async function verifyWindowsTitlebarMatrix(window: BrowserWindow): Promise<void>
         })()`)
         const before = await read()
         assert.equal(before.fullscreen, fullscreen)
-        assert.ok(Math.abs(before.top) < 2, JSON.stringify({width,zoom,wide,fullscreen,before}))
+        assert.ok(Math.abs(before.top - before.nativeHeight) < 2, JSON.stringify({width,zoom,wide,fullscreen,before}))
         assert.ok(before.cornerBottom > before.top)
-        if (!wide) {
-          const context=JSON.stringify({width,zoom,fullscreen,before})
-          assert.equal(before.leading.region, 'no-drag', context)
-          assert.ok(before.leading.left <= before.toggle.left && before.leading.right >= before.toggle.right, context)
-          assert.ok(before.leading.top <= before.toggle.top && before.leading.bottom >= before.toggle.bottom, context)
-        }
-        if (!fullscreen && !before.rightbar) assert.ok(before.cornerRight <= before.controlsLeft - 4, JSON.stringify({width,zoom,wide,before}))
+        assert.ok(before.toggle.bottom <= before.top + 1, JSON.stringify({width,zoom,wide,fullscreen,before}))
         const menu = await window.webContents.executeJavaScript(`(() => {
           const host=document.querySelector('[data-dsh-windows-menu]');
           const button=host?.shadowRoot?.querySelector('button');
@@ -369,7 +364,7 @@ async function verifyWindowsTitlebarMatrix(window: BrowserWindow): Promise<void>
             brand:brand && { left:brand.left, right:brand.right, top:brand.top },
             toggleLeft:toggle.left, toggleCenterY:toggle.y+toggle.height/2, newSessionRight:newSession.right };
         })()`)
-        assert.equal(menu.count, 1)
+        assert.equal(menu.count, 2)
         assert.equal(menu.visible, !fullscreen)
         if (!fullscreen) {
           const context = JSON.stringify({ width, zoom, wide, menu })
@@ -419,7 +414,7 @@ async function verifyWindowsTitlebarMatrix(window: BrowserWindow): Promise<void>
         height:innerHeight, background:getComputedStyle(sidebar).backgroundColor,
         foreground:getComputedStyle(menu.shadowRoot.querySelector('button')).color };
     })()`)
-    assert.ok(Math.abs(colors.top) < 2 && Math.abs(colors.bottom - colors.height) < 2)
+    assert.ok(colors.top > 0 && Math.abs(colors.bottom - colors.height) < 2)
     assert.notEqual(colors.foreground, colors.background)
     const previousRequests = nativeMenuRequests
     await click('[data-dsh-windows-menu]')
@@ -459,9 +454,9 @@ async function verifySidebarToggle(window: BrowserWindow): Promise<void> {
     const wide = await read()
     assert.equal(wide.wide, 'true')
     assert.equal(wide.count, 1)
-    assert.equal(wide.position, 'absolute')
+    assert.equal(wide.position, 'fixed')
     assert.ok(wide.y < wide.brandTop, 'Toggle must stay in the toolbar above the brand')
-    assert.ok(wide.edge - wide.right >= 0 && wide.edge - wide.right < 24)
+    assert.ok(wide.right <= 48, 'Toggle remains at caption left edge')
     assert.equal(wide.hit, true)
     await click(wide)
     const collapsed = await read()

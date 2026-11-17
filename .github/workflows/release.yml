@@ -34,7 +34,7 @@ permissions:
 
 concurrency:
   group: desktop-release-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   macos-apple-silicon:
@@ -77,7 +77,9 @@ jobs:
           key: desktop-runtime-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/office-runtime/**', 'scripts/*ppt*', 'scripts/ppt/**', 'packages/dsh-desktop-office/**', 'packages/ppt-runtime/**', 'packages/office-runtime/**', 'patches/**', 'package-lock.json') }}
           restore-keys: |
             desktop-runtime-${{ runner.os }}-${{ runner.arch }}-
-      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm exec -- vitest run
         env:
           DSH_PPT_FONT_EVIDENCE: ${{ runner.temp }}/ppt-font-evidence
       - uses: actions/upload-artifact@v4
@@ -87,10 +89,8 @@ jobs:
           path: ${{ runner.temp }}/ppt-font-evidence
           if-no-files-found: ignore
           retention-days: 7
-      - run: npm run typecheck
       - name: Build and check the actual Harness client on native macOS
         run: |
-          npm run build
           node scripts/check-desktop-profile.cjs
           node scripts/verify/verify-image-electron.mjs
       - name: Build ad-hoc signed Apple Silicon release package
@@ -99,14 +99,14 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
           # electron-builder otherwise skips even explicit ad-hoc signing for pull-request builds.
           CSC_FOR_PULL_REQUEST: 'true'
-        run: npm run package:mac:arm64
+        run: node scripts/verify/verify-target.mjs darwin arm64 && npm exec -- electron-builder --mac --arm64 --publish never
       - name: Build ad-hoc signed Apple Silicon development package
         if: ${{ !startsWith(github.ref, 'refs/tags/v') && inputs.prerelease_tag == '' }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
           # Safe here because the configured identity is the keyless ad-hoc identity (`-`).
           CSC_FOR_PULL_REQUEST: 'true'
-        run: npm run package:dev:mac:arm64
+        run: node scripts/verify/verify-target.mjs darwin arm64 && npm exec -- electron-builder --mac --arm64 --publish never --config electron-builder.dev.cjs
       - name: Preserve Apple Silicon update metadata
         if: startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != ''
         run: mv dist/latest-mac.yml dist/latest-mac-arm64.yml
@@ -188,9 +188,9 @@ jobs:
           key: desktop-runtime-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/office-runtime/**', 'scripts/*ppt*', 'scripts/ppt/**', 'packages/dsh-desktop-office/**', 'packages/ppt-runtime/**', 'packages/office-runtime/**', 'patches/**', 'package-lock.json') }}
           restore-keys: |
             desktop-runtime-${{ runner.os }}-${{ runner.arch }}-
-      - run: npm test
       - run: npm run typecheck
       - run: npm run build
+      - run: npm exec -- vitest run
       - name: Check recovery UI on native Windows at three display scales
         run: node scripts/verify/check-recovery-ui.mjs
       - name: Check Windows titlebar layout and button clicks
@@ -205,10 +205,10 @@ jobs:
           if-no-files-found: warn
       - name: Build Windows release package
         if: startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != ''
-        run: npm run package:win
+        run: node scripts/verify/verify-target.mjs win32 x64 && node scripts/release/electron-builder-windows.mjs --win --x64 --publish never
       - name: Build isolated Windows development package
         if: ${{ !startsWith(github.ref, 'refs/tags/v') && inputs.prerelease_tag == '' }}
-        run: npm run package:dev:win
+        run: node scripts/verify/verify-target.mjs win32 x64 && node scripts/release/electron-builder-windows.mjs --win --x64 --publish never --config electron-builder.dev.cjs
       - name: Smoke test packaged Windows Harness and real client
         if: >-
           github.event_name == 'pull_request' ||
