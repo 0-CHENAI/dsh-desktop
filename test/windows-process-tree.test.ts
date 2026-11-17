@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { windowsProcessTreeKillArguments } from '../src/main/runtime/harness-runtime'
+import { windowsProcessTreeKillArguments } from '../src/main/shell/backend/windows-process-tree'
 
 describe('Windows Harness process-tree cleanup', () => {
   it('force-terminates the detached process and all descendants', () => {

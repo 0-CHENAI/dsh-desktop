@@ -1,8 +1,16 @@
 /** Run on the packaged Electron runtime, resolving every service from app.asar. */
 const { createRequire } = require('node:module')
-const { join } = require('node:path')
+const { join, resolve } = require('node:path')
 const { pathToFileURL } = require('node:url')
 const assert = require('node:assert/strict')
+
+// bwrap gives workspace-write a private /tmp. A test resources symlink under
+// host /tmp is therefore invisible to the child; use the existing physical
+// runtime, without adding mounts or write grants. Real runtimes under /tmp
+// remain subject to that isolation (realpath does not bypass it).
+async function confinedRuntime(resources) {
+  return require('node:fs/promises').realpath(join(resources, 'office-runtime'))
+}
 
 async function probe(appRoot, resources) {
   const host = createRequire(join(appRoot, 'package.json'))
@@ -22,7 +30,7 @@ async function probe(appRoot, resources) {
     for (const name of ['gov-doc-writing', 'meeting-recap', 'work-report-writer', 'research-writer', 'saas-metrics-coach', 'dataset-health-audit', 'data-viz-gen']) {
       const skill = await ctx.skills.get(name)
       assert(skill, `Missing business skill ${name}`)
-      assert(skill.resourceBase.path.startsWith(join(resources, 'office-runtime', 'business-skills')))
+      assert.equal(resolve(skill.resourceBase.path), join(resources, 'office-runtime', 'business-skills', name), `Unexpected resources for ${name}`)
     }
     const entry = pathToFileURL(host.resolve('dsh-desktop-office'))
     const { createTemplateLibrary } = await import(new URL('./lib/templates.js', entry).href)
@@ -37,11 +45,15 @@ async function probe(appRoot, resources) {
     }
     const client = await require('node:fs/promises').readFile(host.resolve('dsh-desktop-office/client'), 'utf8')
     assert(client.includes('window.__ModuleLoader__.load'))
-    assert(client.includes('conversation.hero.modeActions'))
-    for (const name of ['office-docx', 'office-pptx', 'office-xlsx']) {
+    assert(client.includes('conversation.hero.options'))
+    for (const name of ['office', 'office-docx', 'office-pptx', 'office-xlsx', 'office-render', 'office-recalculate', 'office-export-pdf']) {
       assert(skills.some(skill => skill.name === name), `Missing packaged Office skill ${name}`)
       const skill = await ctx.skills.get(name)
-      assert(skill.resourceBase.path.startsWith(join(resources, 'office-runtime', 'office-skills')))
+      // Upstream normalizes resource paths to forward slashes, including on Windows.
+      assert.equal(resolve(skill.resourceBase.path), join(resources, 'office-runtime', 'office-skills', name), `Unexpected resources for ${name}`)
+    }
+    for (const name of ['office-render', 'office-recalculate', 'office-export-pdf']) {
+      const skill = await ctx.skills.get(name)
       // Upstream supplies command paths as JSON, escaping Windows separators.
       assert(skill.content.includes(JSON.stringify(process.execPath)), 'Office CLI must use the current Electron runtime')
       assert(skill.content.includes(JSON.stringify(join(resources, 'office-cli.mjs'))), 'Office CLI must resolve from the current installation')
@@ -61,12 +73,12 @@ async function probe(appRoot, resources) {
       const { createDocxWorkflow } = await import(new URL('./lib/docx-workflow.js', entry).href)
       const item = library.entry('government-notice')
       const modes = { state: async () => ({ documentMode: 'word', selectedDocumentTemplate: { id: item.id, revision: item.revision, mode: 'word' } }), record: async () => true }
-      const workflow = createDocxWorkflow({ sandbox: ctx.sandbox, subprocess: ctx.subprocess, sandboxPolicy: { resolve: () => ({ mode: 'workspace-write', workspaceRoot: scratch }) } }, library, modes, join(resources, 'office-runtime'))
+      const workflow = createDocxWorkflow({ sandbox: ctx.sandbox, subprocess: ctx.subprocess, workingDirectory: { ensure: async () => scratch }, sandboxPolicy: { resolve: () => ({ mode: 'workspace-write', workspaceRoot: scratch }) } }, library, modes, await confinedRuntime(resources))
       const exec = { agent: { id: 'packaged-notice', session: { header: { cwd: scratch } } }, signal: new AbortController().signal }
       await writeFile(join(scratch, 'source.docx'), await library.asset(item.id, item.sampleFile))
       const prepared = await workflow.run('prepare', { path: 'source.docx' }, exec)
-      assert(prepared.paragraphs.some(p => p.id === 'p1' && p.text === '中国中车股份有限公司文件'))
-      await workflow.run('write', { output_path: 'notice.docx', replacements: [{ id: 'p1', text: '示例单位文件' }] }, exec)
+      assert(prepared.paragraphs.some(p => p.id === 'p0' && p.text === '示例市公共服务中心文件'))
+      await workflow.run('write', { output_path: 'notice.docx', replacements: [{ id: 'p0', text: '示例单位文件' }] }, exec)
       const verified = await workflow.run('validate', { path: 'notice.docx' }, exec)
       assert(verified.checks.includes('paragraph-and-run-styles'))
       console.log('Packaged native Word template editor, embedded-font retention and layout validation passed')
@@ -79,7 +91,11 @@ async function probe(appRoot, resources) {
     for (const fiber of fibers.reverse()) await fiber.dispose()
   }
 }
-probe(process.argv[2], process.argv[3]).catch(error => {
-  console.error(error)
-  process.exitCode = 1
-})
+module.exports = { confinedRuntime }
+
+if (require.main === module) {
+  probe(process.argv[2], process.argv[3]).catch(error => {
+    console.error(error)
+    process.exitCode = 1
+  })
+}

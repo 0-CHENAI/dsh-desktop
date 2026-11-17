@@ -21,6 +21,10 @@ export function archiveFeedUrl(version: string): string {
   return `https://github.com/${GITHUB_RELEASES_REPO}/releases/download/${githubReleaseTag(version)}/`
 }
 
+export function releasePageUrl(version: string): string {
+  return `https://github.com/${GITHUB_RELEASES_REPO}/releases/tag/${encodeURIComponent(githubReleaseTag(version))}`
+}
+
 /** Split "1.2.3-rc.1" into ([1,2,3], "rc.1"). Non-numeric segments read as 0. */
 function splitVersion(value: string): { nums: number[]; pre: string } {
   const [core = '', ...preParts] = value.trim().split('-')
@@ -103,9 +107,19 @@ export function parseVersionIndex(raw: unknown): AvailableRelease[] {
   return versions.filter(isRelease)
 }
 
+/** The fields the index reader uses. Node fetch and the desktop session fetch both satisfy it. */
+export type VersionIndexRequest = (
+  url: string,
+  init?: { signal?: AbortSignal; headers?: Record<string, string> }
+) => Promise<{
+  ok: boolean
+  status: number
+  json(): Promise<unknown>
+}>
+
 export async function fetchAvailableReleases(
   currentVersion: string,
-  fetchImpl: typeof fetch = globalThis.fetch
+  fetchImpl: VersionIndexRequest = globalThis.fetch
 ): Promise<AvailableRelease[]> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), INDEX_TIMEOUT_MS)
@@ -134,7 +148,7 @@ export async function fetchAvailableReleases(
 }
 
 export async function fetchLatestPublishedVersion(
-  fetchImpl: typeof fetch = globalThis.fetch
+  fetchImpl: VersionIndexRequest = globalThis.fetch
 ): Promise<string> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), INDEX_TIMEOUT_MS)

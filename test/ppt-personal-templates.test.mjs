@@ -1,5 +1,6 @@
+import { fileSymlinkFixture } from './file-symlink-fixture'
 import { randomUUID, createHash } from 'node:crypto';
-import { cp, mkdtemp, mkdir, readFile, writeFile, rm, readdir, symlink, rename, unlink } from 'node:fs/promises';
+import { cp, mkdtemp, mkdir, readFile, writeFile, rm, readdir, symlink } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { Readable } from 'node:stream';
@@ -12,30 +13,17 @@ import { unzipSync, zipSync, strFromU8, strToU8 } from 'fflate';
 import { validateJsonSchemaValue } from '@deepseek-ai/dsh-tools';
 
 let apply, packageRoot, MAX_PERSONAL_TEMPLATE_HTTP_BODY_BYTES, PERSONAL_TEMPLATE_CONVERSION_VERSION, PERSONAL_TEMPLATE_PREVIEW_VERSION;
+// Each scenario can import, render and export through several native processes.
+const NATIVE_TEMPLATE_TEST_TIMEOUT_MS = 120_000;
 const cleanups = [];
 beforeAll(async () => {
   packageRoot = await mkdtemp(path.resolve('node_modules/.ppt-personal-'));
   await cp(path.resolve('.build/ppt-runtime/packages/dsh-ppt'), packageRoot, { recursive: true });
   ({ apply } = await import(pathToFileURL(path.join(packageRoot, 'lib/index.js'))));
   ({ MAX_PERSONAL_TEMPLATE_HTTP_BODY_BYTES, PERSONAL_TEMPLATE_CONVERSION_VERSION, PERSONAL_TEMPLATE_PREVIEW_VERSION } = await import(pathToFileURL(path.join(packageRoot, 'lib/personal-templates.js'))));
-// Copying the real renderer/assets can exceed Vitest's 10s hook limit on a
-// loaded Windows filesystem; retain every test and bound this setup to 60s.
-}, 60_000);
+});
 afterAll(async () => { if (packageRoot) await rm(packageRoot, { recursive: true, force: true }); });
 afterEach(async () => { for (const root of cleanups.splice(0)) await rm(root, { recursive: true, force: true }); });
-
-// Windows directory junctions need no Developer Mode and exercise the same
-// ancestor-confinement boundary as a file symlink on POSIX.
-async function externalFileLink(file, target) {
-  if (process.platform === 'win32') {
-    const directory = path.dirname(file), original = directory + '-before-link';
-    await rename(directory, original);
-    await symlink(path.dirname(target), directory, 'junction');
-    return async () => { await unlink(directory); await rename(original, directory); };
-  }
-  await rm(file); await symlink(target, file);
-  return async () => { await unlink(file); await writeFile(file, Buffer.alloc(0)); };
-}
 
 async function fixture(existingRoot) {
   const root = existingRoot ?? await mkdtemp(path.join(os.tmpdir(), 'ppt-personal-'));
@@ -50,6 +38,8 @@ async function fixture(existingRoot) {
   };
   const host = {
     provide() {},
+    workingDirectory: { ensure: async () => workspace },
+    sandboxPolicy: { resolve: () => ({ mode: 'workspace-write', workspaceRoot: workspace }) },
     effect(run) { run(); return () => {}; },
     webServer: { register(route) { routes.set(route.path, route); return () => routes.delete(route.path); } },
     get(name) { if (name === 'connection') return connection; throw new Error(`Unexpected service: ${name}`); },
@@ -202,7 +192,7 @@ describe('personal PPT templates in the shipped runtime', () => {
     const saved = await f.httpRequest('template/save', { draftId: message.result.value.data.draftId, name: 'HTTP template' }, { channel: '/kimi-ppt' });
     expect(saved.status).toBe(200);
     expect(JSON.parse(saved.body).result.value.data).toMatchObject({ name: 'HTTP template' });
-  }, 30_000);
+  }, NATIVE_TEMPLATE_TEST_TIMEOUT_MS);
 
   it('uploads, imports and reuses a PPTX above 64 MB with its real image assets intact', async () => {
     const f = await fixture();
@@ -272,7 +262,7 @@ describe('personal PPT templates in the shipped runtime', () => {
     expect(xml).not.toContain('world');
     expect(xml).toContain('项目方案');
     expect(xml).toMatch(/<a:rPr sz="1000"[^>]*b="1"[^>]*>[\s\S]*?<\/a:rPr><a:t>ine<\/a:t>/u);
-  }, 30000);
+  }, NATIVE_TEMPLATE_TEST_TIMEOUT_MS);
 
   it('imports missing pictures as visible placeholders and persists source identity and page diagnostics', async () => {
     const f = await fixture();
@@ -305,7 +295,7 @@ describe('personal PPT templates in the shipped runtime', () => {
     expect(imported.status).toBe('warning'); expect(imported.placeholderCount).toBe(3); expect(imported.unsupportedCount).toBe(0);
     expect(imported.diagnostics.filter(item => item.level === 'placeholder')).toHaveLength(3);
     await expect(f.tool('pptd_import', { pptx_path: 'missing.pptx', output_directory: 'strict', strict: true })).rejects.toThrow('3 placeholder');
-  }, 30000);
+  }, NATIVE_TEMPLATE_TEST_TIMEOUT_MS);
 
   it('reports structural conversion issues with their pages and objects and accepts a retry', async () => {
     const f = await fixture();
@@ -340,7 +330,7 @@ describe('personal PPT templates in the shipped runtime', () => {
     const saved=await f.request('template/save',{draftId:draft.draftId,name:'Unknown shape'});
     expect((await f.request('template/preview-saved-page',{templateId:saved.id,page:1})).preview).toContain('data:image/png;base64,');
     expect(await readFile(path.join(f.storage,'personal-templates','saved',saved.id,'source.pptx'))).toEqual(bytes);
-  },30000);
+  },NATIVE_TEMPLATE_TEST_TIMEOUT_MS);
 
   it('previews before registration and persists across sessions/restarts with profile isolation', async () => {
     const f = await fixture(); const bytes = await source(2);
@@ -370,7 +360,7 @@ describe('personal PPT templates in the shipped runtime', () => {
     const duplicate = await restored.request('template/prepare', { input: { fileName: 'Renamed.pptx', base64: bytes.toString('base64') } });
     expect(duplicate.duplicate).toBe(true);
     expect(duplicate.template.id).toBe(template.id);
-  }, 30000);
+  }, NATIVE_TEMPLATE_TEST_TIMEOUT_MS);
 
   it('copies the selected source into independent projects, exports editable PPTX, and preserves saved source', async () => {
     const f = await fixture(); const { bytes, template } = await save(f);
@@ -407,9 +397,9 @@ describe('personal PPT templates in the shipped runtime', () => {
     expect(audit).toContain('copy-personal-template');
     await expect(f.tool('ppt_template_create_project', { template_id: template.id, output_directory: 'new-year' })).rejects.toThrow();
     await expect(f.tool('ppt_template_create_project', { template_id: template.id, output_directory: '../escape' })).rejects.toThrow();
-  }, 30000);
+  }, NATIVE_TEMPLATE_TEST_TIMEOUT_MS);
 
-  it('reuses template page images through saving and enforces ownership, bounds and file confinement',async()=>{
+  it('reuses template page images through saving and enforces ownership, bounds and file confinement',async(context)=>{
     const f=await fixture(),bytes=await source(2);
     const draft=await f.request('template/prepare',{input:{fileName:'Sample.pptx',base64:bytes.toString('base64')}});
     const directory=path.join(f.storage,'personal-templates/drafts',draft.draftId);
@@ -431,11 +421,9 @@ describe('personal PPT templates in the shipped runtime', () => {
     expect(await readFile(path.join(savedDirectory,'source.pptx'))).toEqual(bytes);
     expect(await readdir(savedDirectory)).not.toContain('original-preview');
     const cached=path.join(savedDirectory,'preview/pages/page-1.png');
-    const external = path.join(f.root, 'external-preview');
-    await mkdir(external); await writeFile(path.join(external, 'page-1.png'), 'private');
-    await externalFileLink(cached, path.join(external, 'page-1.png'));
-    await expect(f.request('template/preview-saved-page',{templateId:saved.id,page:1})).rejects.toThrow(process.platform === 'win32' ? '模板文件超出个人库范围' : '模板文件应为普通本地文件');
-  },30000);
+    await rm(cached);await fileSymlinkFixture(path.join(f.root,'private.png'),cached,context);
+    await expect(f.request('template/preview-saved-page',{templateId:saved.id,page:1})).rejects.toThrow('模板文件应为普通本地文件');
+  },NATIVE_TEMPLATE_TEST_TIMEOUT_MS);
 
   it('enriches a current cached conversion from its editable model while reusing every rendered page',async()=>{
     const f=await fixture(),{bytes,template}=await save(f);
@@ -453,7 +441,7 @@ describe('personal PPT templates in the shipped runtime', () => {
     expect(await readFile(path.join(directory,'preview/pages/page-1.png'))).toEqual(imageBefore);
     expect((await f.request('state')).templates.find(t=>t.id===template.id).templateProfile).toEqual(enriched.template.templateProfile);
     expect(await readFile(path.join(directory,'source.pptx'))).toEqual(bytes);
-  },30000);
+  },NATIVE_TEMPLATE_TEST_TIMEOUT_MS);
 
   it('renames globally, deletes from selection, and retains existing task copies', async () => {
     const f = await fixture(); const { template } = await save(f, 1);
@@ -467,7 +455,7 @@ describe('personal PPT templates in the shipped runtime', () => {
     expect(next.templateMigration.reason).toBe('personal-template-deleted');
     expect(next.templates.some(t => t.id === template.id)).toBe(false);
     expect(await readFile(path.join(f.workspace, 'kept/deck.pptd'), 'utf8')).toContain('version: v2');
-  }, 30000);
+  }, NATIVE_TEMPLATE_TEST_TIMEOUT_MS);
 
   it('persists edited name and description atomically while preserving selection and source', async () => {
     const f = await fixture(); const { bytes, template } = await save(f, 1);
@@ -488,7 +476,7 @@ describe('personal PPT templates in the shipped runtime', () => {
     expect((await f.request('state')).templates.find(t => t.id === template.id).description).toBe('');
     expect((await readFile(path.join(f.storage, 'personal-templates', 'saved', template.id, 'source.pptx'))).equals(bytes)).toBe(true);
     expect(await readFile(path.join(f.storage, 'audit.ndjson'), 'utf8')).toContain('update-personal-template');
-  }, 30000);
+  }, NATIVE_TEMPLATE_TEST_TIMEOUT_MS);
 
   it('validates chunk ordering, total integrity and upload session ownership',async()=>{
     const f=await fixture(),bytes=await source(1);
@@ -513,16 +501,15 @@ describe('personal PPT templates in the shipped runtime', () => {
     expect(await readFile(path.join(f.storage,'audit.ndjson'),'utf8')).toContain('upload-personal-template-chunk');
   });
 
-  it('confines uploaded files and cleans a complete source when conversion fails',async()=>{
+  it('confines uploaded files and cleans a complete source when conversion fails',async(context)=>{
     const f=await fixture();
     const upload=await f.request('template/upload-start',{input:{fileName:'Bad.pptx',size:4}});
     const file=path.join(f.storage,'personal-templates/uploads',upload.uploadId,'source.pptx');
-    const external = path.join(f.root, 'external-source'); await mkdir(external);
-    const privateFile=path.join(external,'source.pptx');await writeFile(privateFile,'kept');
-    const restore = await externalFileLink(file, privateFile);
-    await expect(f.request('template/upload-chunk',{uploadId:upload.uploadId,offset:0,base64:'UEsDBA=='})).rejects.toThrow(process.platform === 'win32' ? '上传目录应为本地独立目录' : '普通本地文件');
+    const privateFile=path.join(f.root,'private.pptx');await writeFile(privateFile,'kept');
+    await rm(file);await fileSymlinkFixture(privateFile,file,context);
+    await expect(f.request('template/upload-chunk',{uploadId:upload.uploadId,offset:0,base64:'UEsDBA=='})).rejects.toThrow('普通本地文件');
     expect(await readFile(privateFile,'utf8')).toBe('kept');
-    await restore();await writeFile(file,Buffer.alloc(0));
+    await rm(file);await writeFile(file,Buffer.alloc(0));
     await f.request('template/upload-chunk',{uploadId:upload.uploadId,offset:0,base64:'UEsDBA=='});
     await expect(f.request('template/prepare',{input:{uploadId:upload.uploadId}})).rejects.toThrow();
     expect(await readdir(path.join(f.storage,'personal-templates/uploads'))).toEqual([]);
@@ -545,9 +532,9 @@ describe('personal PPT templates in the shipped runtime', () => {
     await f.request('template/cancel', { draftId: draft.draftId });
     await expect(f.request('template/save', { draftId: draft.draftId, name: 'Cancelled' })).rejects.toThrow();
     await mkdir(path.join(f.storage, 'personal-templates/saved'), { recursive: true });
-    await symlink(f.workspace, path.join(f.storage, 'personal-templates/saved', `personal-${'a'.repeat(64)}`), 'junction');
+    await symlink(f.workspace, path.join(f.storage, 'personal-templates/saved', `personal-${'a'.repeat(64)}`), process.platform === 'win32' ? 'junction' : 'dir');
     await expect(f.request('state')).rejects.toThrow();
-  }, 30000);
+  }, NATIVE_TEMPLATE_TEST_TIMEOUT_MS);
   it.each(['legacy', 'previous'])('reconverts %s uploads after preview acceptance while preserving identity, metadata and backup', async revision => {
     const f = await fixture(); const { bytes, template } = await save(f, 1);
     await f.request('template/select', {templateId:template.id,mode:'ppt'}, 'session-b');

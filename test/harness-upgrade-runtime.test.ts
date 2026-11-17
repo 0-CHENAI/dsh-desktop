@@ -1,34 +1,16 @@
-import { spawn } from 'node:child_process'
-import { mkdtemp, rm } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
 import { expect, it } from 'vitest'
-import { HarnessRuntime } from '../src/main/runtime/harness-runtime'
+import { temporaryDesktopHost } from './helpers/desktop-host'
 
-it('boots the full desktop profile and serves authenticated PPT RPC with Harness 0.2', async () => {
-  const root = resolve(import.meta.dirname, '..')
-  const home = await mkdtemp(join(tmpdir(), 'dsh-upgrade-runtime-'))
-  const runtime = new HarnessRuntime({
-    dshEntryPath: join(root, 'node_modules/@deepseek-ai/dsh/lib/bin.js'),
-    nodeEntryPath: join(root, 'build/harness-node-entry.mjs'),
-    nodeExecutablePath: process.execPath,
-    dshPatchPath: join(root, 'build/dsh-desktop.patch.yml'),
-    dshSafePatchPath: join(root, 'build/dsh-desktop-safe.patch.yml'),
-    dshHome: home,
-    logPath: join(home, 'runtime.log'),
-    preferredPort: 0,
-    startupTimeoutMs: 30_000,
-    launchProcess: (executable, args, options) => spawn(executable, args, options),
-    onChanged() {}
-  })
+it('boots the full desktop profile and serves authenticated PPT RPC with Harness 0.2.2', async () => {
+  const runtime = await temporaryDesktopHost()
   try {
-    await runtime.start(home)
-    const state = runtime.snapshot()
-    expect(state.phase, state.logs.join('\n')).toBe('ready')
-    const url = new URL(state.url!)
-    url.searchParams.set('token', state.authToken!)
+    const ready = await runtime.host.start()
+    const url = new URL(ready.url)
+    expect(url.hostname).toBe('127.0.0.1')
     const exchange = await fetch(url, { redirect: 'manual' })
-    const cookie = exchange.headers.get('set-cookie')!.split(';')[0]!
+    expect(exchange.status).toBe(303)
+    const cookie = exchange.headers.getSetCookie().map(value => value.split(';')[0]).join('; ')
+    expect(cookie).not.toBe('')
     const endpoint = new URL('/dsh-ppt/state', url)
     expect((await fetch(endpoint, { method: 'POST' })).status).toBe(401)
     const response = await fetch(endpoint, {
@@ -37,8 +19,5 @@ it('boots the full desktop profile and serves authenticated PPT RPC with Harness
     })
     expect(response.status).toBe(200)
     expect((await response.json()).result.ok).toBe(true)
-  } finally {
-    await runtime.stop()
-    await rm(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
-  }
-}, 45_000)
+  } finally { await runtime.close() }
+}, 120_000)

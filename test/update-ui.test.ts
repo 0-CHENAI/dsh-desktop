@@ -1,3 +1,4 @@
+import { updateText } from '../src/shared/desktop-update-messages'
 import { describe, expect, it } from 'vitest'
 import type { UpdateStatus } from '../src/shared/contracts'
 import {
@@ -93,11 +94,11 @@ describe('accepting an update is what starts the download', () => {
       manual: false,
       canInstall: false
     }
-    expect(updateHeadline(available, 'zh').description).toContain('不能在应用内安装')
+    expect(updateHeadline(available, 'zh').description).toBe(updateText('zh', 'manualDownload', { version: 'v0.1.4' }))
     expect(updateHeadline(available, 'zh').description).not.toContain('同意后开始下载')
-    expect(updateMessage(available, 'zh')).toBe('发现新版本 0.1.4，请手动下载安装包。')
-    expect(updateHeadline(available, 'en').description).toContain('cannot install updates in-app')
-    expect(updateMessage(available, 'en')).toContain('Download the installer yourself')
+    expect(updateMessage(available, 'zh')).toBe(updateHeadline(available, 'zh').description)
+    expect(updateHeadline(available, 'en').description).toContain('manual update')
+    expect(updateMessage(available, 'en')).toContain('release page')
   })
 
   it('explains manual updates for ad-hoc macOS builds without promising a signing migration', () => {
@@ -109,9 +110,9 @@ describe('accepting an update is what starts the download', () => {
       canInstall: false,
       manualUpdateReason: 'unsigned-macos'
     }
-    expect(updateHeadline(available, 'zh').description).toContain('Developer ID')
-    expect(updateHeadline(available, 'zh').description).toContain('手动下载安装包')
-    expect(updateMessage(available, 'en')).toContain('install the update manually')
+    expect(updateHeadline(available, 'zh').description).toContain('手动更新')
+    expect(updateHeadline(available, 'zh').description).toContain('发布页面')
+    expect(updateMessage(available, 'en')).toContain('manual update')
     expect(updateMessage(available, 'en')).not.toContain('enable future automatic updates')
   })
 
@@ -125,7 +126,7 @@ describe('accepting an update is what starts the download', () => {
       manualUpdateReason: 'readonly-macos'
     }
     expect(updateHeadline(available, 'zh').description).toContain('应用程序')
-    expect(updateMessage(available, 'en')).toContain('Move it to Applications')
+    expect(updateMessage(available, 'en')).toContain('copy it to Applications')
   })
 })
 

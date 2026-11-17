@@ -36,14 +36,24 @@ printf 'https://example.invalid/from-npm\\n'
     await chmod(join(bin, 'npm'), 0o755)
   }
   if (npmrc !== undefined) await writeFile(join(dir, '.npmrc'), npmrc)
+  await writeFile(join(dir, 'user.npmrc'), '')
+  await writeFile(join(dir, 'global.npmrc'), '')
   return { dir, marker }
 }
 
 function queryRegistry(dir, marker, extraArgs = []) {
+  // npm test exports registry settings that override this isolated Profile.
+  const environment = Object.fromEntries(Object.entries(process.env)
+    .filter(([name]) => !/^(npm_config_|pnpm_)/i.test(name)))
   return spawnSync(process.execPath, [pnpmEntry, 'config', 'get', 'registry', ...extraArgs], {
     cwd: dir,
     encoding: 'utf8',
-    env: { ...process.env, NPM_SPAWN_MARKER: marker }
+    env: {
+      ...environment,
+      NPM_CONFIG_USERCONFIG: join(dir, 'user.npmrc'),
+      NPM_CONFIG_GLOBALCONFIG: join(dir, 'global.npmrc'),
+      NPM_SPAWN_MARKER: marker
+    }
   })
 }
 

@@ -2,9 +2,9 @@
 
 继承根目录规则。这里不是第二套业务前端，也不是文件系统/插件安装服务层。
 
-- 对页面仅通过 `contextBridge` 暴露具名、最小能力；不得暴露整个 `ipcRenderer` 或通用 `send/invoke(channel, ...args)`。
+- 对页面仅通过 `contextBridge` 暴露具名、最小能力；不得暴露整个 `ipcRenderer` 或通用 `send/invoke(channel, ...args)`。`app.ts` 是正式包 preload，暴露启动、平台页、Host 路径、快捷键桥、侧边栏浏览器和文件拖放；产品 API 仍按上述边界逐项加入。应用页标记 `data-platform`，不标记 `data-dsh-desktop-web-shortcuts`。应用页在页面脚本之前挂上现有的 desktop storage，让官方界面读到已记住的会话，并挂上现有的更新卡片。Safe Mode 时，应用页按主进程给出的安全模式页盖住整个窗口，包括侧边栏，只转发这个 iframe 发出的动作。普通应用页另外暴露手机配对的打开、状态和状态变化；Safe Mode 窗口不暴露这些方法。网页版导入页只暴露 `dshWebImport.action`。
 - privileged 工作经明确 IPC 交给 main。请求/响应类型优先复用 `src/shared/`；运行时校验不能被 TypeScript 类型替代。
-- `index.ts` 保留初始化与组装；新增弹层、状态转换、文案或布局逻辑提取为独立模块。函数使用显式输入，避免新增相互耦合的模块全局状态。
+- `app.ts` 保留正式入口的初始化与组装；新增弹层、状态转换、文案或布局逻辑提取为独立模块。函数使用显式输入，避免新增相互耦合的模块全局状态。
 - 新的桌面功能入口默认放宿主插件 slot。只有同时满足「目标位置无可用 slot」且「属于窗口铬栏、启动失败页、主题同步一类宿主级接缝」时，才允许在 preload 用稳定的 `data-dsh-*` 标记注入 DOM，并在评审中说明为何 slot 不适用。不依赖翻译文案、压缩类名或 DOM 层级猜测。
 - preload 注入的 DOM 必须幂等，可重复挂载不产生重复节点；事件监听、timer、observer 有明确所有者与清理路径。MutationObserver 缩小观察范围、合并到动画帧处理、隐藏窗口时暂停，避免流式输出时逐 token 扫描整个会话。
 - 现有通过 `[data-dsh-*]` 注入的桌面按钮（如手机连接入口）为待评估存量：修改相关逻辑时评估能否迁移到 slot，不再在 preload 堆叠新的弹层、菜单或业务入口。

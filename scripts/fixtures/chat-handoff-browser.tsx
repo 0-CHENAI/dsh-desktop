@@ -4,10 +4,10 @@ const React = modules.react
 const { useSyncExternalStore } = React
 const ReactDOM = modules['react-dom']
 const { createRoot } = modules['react-dom/client']
-globals.__ModuleLoader__ = { load(module: any) { globals.chat = module.factory((name: string) => {
+globals.__ModuleLoader__ = { load(module: any) { globals.chat = module.factory(Object.assign((name: string) => {
   if (!(name in modules)) throw new Error(`Unexpected browser dependency: ${name}`)
   return modules[name]
-}).__test } }
+}, { asset: () => '' })).__test } }
 
 globals.runHandoff = async (mode: string, processOpen = false) => {
   const r = globals.chat
@@ -45,8 +45,19 @@ globals.runHandoff = async (mode: string, processOpen = false) => {
     const source = snapshot.nodes.processSource(key)
     return useSyncExternalStore(source.subscribe, source.getSnapshot)
   }
+  const useBottom = (key: string) => {
+    const source = snapshot.nodes.bottomSource(key)
+    return useSyncExternalStore(source.subscribe, source.getSnapshot)
+  }
+  const useGroupAction = () => React.useRef(null)
+  const useContextMenu = () => ({ getTriggerProps: () => ({}) })
+  const usePresentation = (selector: any) => selector({ foldCompletedTurns: mode === 'compact', settledReasoningPreview: false })
+  const renderChatSlot = (slot: string, owner: any): any => slot === 'conversation.chat.message.images'
+    ? owner.images.map((_: any, i: number) => <img key={i} alt="测试附件" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='32' height='32' fill='blue'/%3E%3C/svg%3E" />)
+    : owner.node?.kind === 'turn-process' ? <r.TurnProcessNodeView {...owner} usePresentation={usePresentation} t={t} /> :
+    owner.node ? <r.AssistantNodeView {...owner} useTurnData={() => undefined} useGroupAction={useGroupAction} useContextMenu={useContextMenu} fileMentions={() => undefined} renderSlot={renderChatSlot} usePresentation={usePresentation} t={t} /> : null
   const App = () => <>{snapshot.order.map((key: string) => <r.ChatNodeSeat key={key}
-    nodeKey={key} useChatNode={useNode} useChatNodeProcess={useProcess}
+    nodeKey={key} useChatNode={useNode} useChatNodeProcess={useProcess} useChatNodeBottom={useBottom} useGroupAction={useGroupAction}
     usePresentation={(selector: any) => selector({ foldCompletedTurns: mode === 'compact', settledReasoningPreview: false })}
     useStore={(selector: any) => selector({ turnProcesses: processExpanded ? [{ turn: 1, answerStep: 2 }] : [] })}
     actions={{ setTurnProcessOpen(_turn: number, _step: number, open: boolean) {
@@ -54,8 +65,7 @@ globals.runHandoff = async (mode: string, processOpen = false) => {
     } }} t={t} cwd="/fixture" openFile={() => {}}
     inspectCall={() => {}} forkAt={() => {}} loadImage={() => {}} fileMentions={() => undefined}
     renderMessageImages={({ images }: any) => images.map((_: any, i: number) => <img key={i} alt="测试附件" style={{ width: 64, height: 64 }} src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='32' height='32' fill='blue'/%3E%3C/svg%3E" />)}
-    renderSlot={(_: string, owner: any) => owner.node.kind === 'turn-process' ? <r.TurnProcessNodeView {...owner} t={t} /> :
-      <r.AssistantNodeView {...owner} useTurnData={() => undefined} t={t} />}
+    renderSlot={renderChatSlot}
   />)}</>
   const stages: any[] = []
   globals.handoffFrames = []

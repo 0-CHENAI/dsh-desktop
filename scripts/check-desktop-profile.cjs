@@ -12,7 +12,8 @@ try {
     bundle: true, platform: 'node', format: 'cjs', loader: { '.svg': 'text' }, external: ['electron'] })
   buildSync({
     entryPoints: ['scripts/fixtures/desktop-profile.ts'], outfile: worker,
-    bundle: true, platform: 'node', format: 'cjs', external: ['electron']
+    bundle: true, platform: 'node', format: 'cjs', external: ['electron'],
+    define: { 'import.meta.url': JSON.stringify(require('node:url').pathToFileURL(resolve('package.json')).href) }
   })
   const env = { ...process.env, DSH_TELEMETRY_DISABLED: '1' }
   delete env.ELECTRON_RUN_AS_NODE

@@ -11,7 +11,7 @@ interface Registration {
 }
 
 describe('DSH Desktop client slot occupants', () => {
-  it('registers one occupant per brand seat and keeps the official name mark-free', async () => {
+  it('registers one occupant per brand seat and includes the mark in the combined sidebar wordmark', async () => {
     const source = await readFile(
       path.join(projectRoot, 'packages', 'dsh-desktop-client-ui', 'client.js'),
       'utf8'
@@ -22,9 +22,20 @@ describe('DSH Desktop client slot occupants', () => {
         inject: string[]
       }
     } | undefined
-
+    const appended: Array<{ textContent?: string }> = []
+    const removeStyle = vi.fn()
+    const disposeStyles: Array<() => void> = []
+    const document = {
+      getElementById: vi.fn(() => null),
+      querySelector: vi.fn(() => null),
+      createElement: vi.fn(() => ({ id: '', dataset: {}, textContent: '', remove: removeStyle })),
+      head: { appendChild: (node: { textContent?: string }) => appended.push(node) }
+    }
     vm.runInNewContext(source, {
+      document,
+      navigator: { language: 'en-US' },
       window: {
+        dshDesktop: { getRepairDraft: vi.fn(), openRepairAgent: vi.fn() },
         __ModuleLoader__: {
           load: (value: typeof definition) => {
             definition = value
@@ -75,83 +86,59 @@ describe('DSH Desktop client slot occupants', () => {
         return () => undefined
       }
     }
-    plugin.apply({
-      slots,
-      locale: {
-        register: () => undefined,
-        bind: () => (key: string) => key
-      },
-      effect: (fn: () => unknown) => {
-        fn()
-      }
-    })
+    plugin.apply({ slots, locale: { register: () => () => undefined, bind: () => (key: string) => key }, effect: (setup: () => (() => void) | undefined) => { const dispose = setup(); if (dispose) disposeStyles.push(dispose) } })
 
-    expect(plugin.inject).toEqual(['slots', 'locale', 'remote.session', 'sessions', 'uiWorkspace'])
+    expect(plugin.inject).toEqual(['locale', 'slots', 'remote.session', 'sessions', 'uiWorkspace'])
     expect(registrations.map(({ config }) => config.name)).toEqual([
+      'conversation.input.dock',
+      'sidebar.settings.action',
+      'settings.sidebar.footer',
       'sidebar.brand.mark',
       'sidebar.brand.name',
       'conversation.hero.brand.mark',
-      'settings.section',
-      'settings.general.item',
       'sidebar.right.tab.document.unpreviewable',
       'sidebar.workspaces.session.menu.item',
       'sidebar.workspaces.session.menu.item',
       'sidebar.workspaces.session.menu.item'
     ])
-    expect(
-      registrations.find(({ config }) => config.name === 'settings.section')?.config
-    ).toMatchObject({
-      id: 'version',
-      order: 50
-    })
-    expect(
-      registrations.find(({ config }) => config.name === 'settings.general.item')?.config
-    ).toMatchObject({
-      id: 'desktop-version',
-      order: 100
-    })
+    const enterprise = registrations.find(({ config }) => config.name === 'settings.sidebar.footer')
+    expect(enterprise?.config.id).toBe('desktop-enterprise-entry')
+    const entry = enterprise!.component({ t: () => '了解企业版' }) as { type: unknown; props: Record<string, unknown> }
+    expect(entry.type).toBe('a')
+    expect(entry.props.href).toBe('https://dshdesktop.com/zh/enterprise/')
+    expect(entry.props.target).toBe('_blank')
+    expect(entry.props.rel).toBe('noopener noreferrer')
+    expect(entry.props.children).toContain('了解企业版')
+    // Desktop toolbar styles have an owned lifetime; branding stays in currentColor.
+    expect(appended).toHaveLength(2)
+    expect(appended[0]?.textContent).toContain('.ghc-card')
+    expect(appended[1]?.textContent).toContain("[data-dsh-preset-search]")
+    expect(appended[1]?.textContent).toContain("[data-dsh-market-nav-icon] span[class*=\"navIcon\"]")
+    expect(appended[1]?.textContent).toContain("[data-dsh-better-sidebar-settings-nav] span[class*=\"navIcon\"]")
+    for (const dispose of disposeStyles) dispose()
+    expect(removeStyle).toHaveBeenCalledTimes(2)
 
     const sidebarName = registrations.find(
       ({ config }) => config.name === 'sidebar.brand.name'
     )!.component({}) as { type: unknown; props: Record<string, unknown> }
     expect(sidebarName.type).toBe(BrandWordmark)
-    expect(sidebarName.props.includeMark).toBe(false)
+    // Harness now consumes this combined wordmark without a separate mark.
+    expect(sidebarName.props.includeMark).toBe(true)
 
     const sidebarMark = registrations.find(
       ({ config }) => config.name === 'sidebar.brand.mark'
     )!.component({ size: 24 }) as { type: unknown; props: Record<string, unknown> }
-    expect(sidebarMark.type).toBe(FishLogo)
-    expect(sidebarMark.props.size).toBe(24)
-    expect(
-      registrations.find(({ config }) => config.name === 'conversation.hero.brand.mark')!
-        .component
-    ).toBe(FishLogo)
-  })
+    expect(sidebarMark.type).toBe('svg')
+    expect(sidebarMark.props.height).toBe(17)
+    const [markPath] = sidebarMark.props.children as Array<{ type: unknown; props: Record<string, unknown> }>
+    if (!markPath) throw new Error('Expected the sidebar brand SVG path')
+    expect(markPath.type).toBe('path')
+    expect(markPath.props.fill).toBe('currentColor')
 
-  it('exposes version notes through the desktop bridge and settings section', async () => {
-    const [client, manifest, preload, main] = await Promise.all([
-      readFile(path.join(projectRoot, 'packages', 'dsh-desktop-client-ui', 'client.js'), 'utf8'),
-      readFile(
-        path.join(projectRoot, 'packages', 'dsh-desktop-client-ui', 'package.json'),
-        'utf8'
-      ),
-      readFile(path.join(projectRoot, 'src', 'preload', 'index.ts'), 'utf8'),
-      readFile(path.join(projectRoot, 'src', 'main', 'index.ts'), 'utf8')
-    ])
-
-    expect(client).toContain("id: 'version'")
-    expect(client).toContain("id: 'desktop-version'")
-    expect(client).toContain("name: 'settings.general.item'")
-    expect(client).toContain('order: 50')
-    expect(client).toContain("nav: '版本'")
-    expect(client).toContain("changelog: '更新说明'")
-    expect(client).toContain('bridge.getVersionPage')
-    expect(manifest).toContain('@deepseek-ai/dsh-client-ui-settings')
-    expect(manifest).not.toContain('@deepseek-ai/dsh-client-ui-settings-general')
-    expect(manifest).toContain('@deepseek-ai/dsh-client-locale')
-    expect(preload).toContain('getVersionPage: (): Promise<VersionPageInfo>')
-    expect(preload).toContain("ipcRenderer.invoke('desktop:version-page')")
-    expect(main).toContain("ipcMain.handle('desktop:version-page'")
-    expect(main).toContain('fetchDesktopReleaseNotes()')
+    const heroMark = registrations.find(
+      ({ config }) => config.name === 'conversation.hero.brand.mark'
+    )!.component({ size: 48 }) as { type: unknown; props: Record<string, unknown> }
+    expect(heroMark.type).toBe(FishLogo)
+    expect(heroMark.props.size).toBe(48)
   })
 })

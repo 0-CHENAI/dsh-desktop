@@ -28,13 +28,17 @@ export function fullChatRuntime(extra = {}) {
   runInNewContext(source, {
     console, setTimeout, clearTimeout, AbortController,
     window: { __ModuleLoader__: { load(module: any) {
-      result = module.factory((name: string) => {
+      const load = Object.assign((name: string) => {
         if (name === '@deepseek-ai/dsh-client-store') return { notifySubscribers: (listeners: Set<() => void>) => {
           for (const listener of listeners) listener()
         } }
         if (name === '@deepseek-ai/dsh-client-ui-primitives') return {}
+        // Virtualization is a browser renderer service; projection replay does
+        // not mount it. Real React/Electron gates cover the actual scrollport.
+        if (name === '@tanstack/react-virtual') return {}
         return require(name)
-      }).__test
+      }, { asset: (_name: string) => '' })
+      result = module.factory(load).__test
     } } }, ...extra
   })
   return result
