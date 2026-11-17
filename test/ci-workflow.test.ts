@@ -32,4 +32,26 @@ describe('pull request CI', () => {
     expect(workflow).toContain('npm run typecheck')
     expect(workflow).toContain('npm run build')
   })
+
+  it('keeps Windows, Intel Mac, and Apple Silicon font checks on supported runners', async () => {
+    const workflow = await readFile(
+      path.join(projectRoot, '.github', 'workflows', 'ppt-font-layout.yml'),
+      'utf8'
+    )
+    const config = parse(workflow) as {
+      jobs: {
+        'native-preview': {
+          'runs-on': string
+          strategy: { matrix: { os: string[] } }
+        }
+      }
+    }
+    const job = config.jobs['native-preview']
+
+    // macOS 14 was retired on 2026-11-02; keep explicit Intel coverage.
+    expect(job.strategy.matrix.os).toEqual([
+      'windows-latest', 'macos-15-intel', 'macos-15'
+    ])
+    expect(job['runs-on']).toBe('${{ matrix.os }}')
+  })
 })

@@ -39,3 +39,36 @@ it('reserves the caption row on standalone recovery pages before mounting menus'
   if (!shell) throw new Error('standalone shell missing')
   expect(getComputedStyle(shell).height).toBe('100%')
 })
+
+it('keeps sidebar caption controls above a sticky plugin header and below overlays', () => {
+  vi.stubGlobal('MutationObserver', class extends MutationObserver {
+    constructor(callback: MutationCallback) {
+      super(callback)
+      observers.push(this)
+    }
+  })
+  vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: vi.fn() }))
+  document.body.innerHTML = '<div data-dsh-layout-frame><aside data-dsh-layout-sidebar></aside><main><div id="sticky-header" style="position:sticky;z-index:2"><header data-window-drag></header></div></main><div data-shell-overlay style="position:absolute;z-index:20"></div></div>'
+  mountWindowsTitlebarLayout({ document, ipcRenderer: { invoke: vi.fn(async () => undefined) } })
+  const sidebar = document.querySelector<HTMLElement>('[data-dsh-layout-sidebar]')
+  const header = document.querySelector<HTMLElement>('#sticky-header')
+  const overlay = document.querySelector<HTMLElement>('[data-shell-overlay]')
+  if (!sidebar || !header || !overlay) throw new Error('caption stacking fixture missing')
+  expect(Number(getComputedStyle(sidebar).zIndex)).toBeGreaterThan(Number(getComputedStyle(header).zIndex))
+  expect(Number(getComputedStyle(sidebar).zIndex)).toBeLessThan(Number(getComputedStyle(overlay).zIndex))
+})
+
+it('applies native caption clearance to nested plugin headers', () => {
+  vi.stubGlobal('MutationObserver', class extends MutationObserver {
+    constructor(callback: MutationCallback) {
+      super(callback)
+      observers.push(this)
+    }
+  })
+  vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: vi.fn() }))
+  document.body.innerHTML = '<div data-dsh-layout-frame><section data-plugin-panel><div><header data-window-drag></header></div></section></div>'
+  mountWindowsTitlebarLayout({ document, ipcRenderer: { invoke: vi.fn(async () => undefined) } })
+  const header = document.querySelector<HTMLElement>('header[data-window-drag]')
+  if (!header) throw new Error('nested plugin header missing')
+  expect(getComputedStyle(header).boxSizing).toBe('border-box')
+})

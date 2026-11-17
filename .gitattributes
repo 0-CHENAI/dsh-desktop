@@ -11,3 +11,8 @@ packages/ppt-runtime/upstream/** -whitespace
 # This reviewed license is checked by byte digest during Office preparation.
 # CRLF checkout conversion would change its identity on Windows.
 packages/dsh-desktop-office/sources/curated/government-notice/OFL.txt -text
+
+# Generated offline guides must match their canonical Markdown sources on Windows.
+docs/workbench-*.md text eol=lf
+packages/dsh-desktop-workbenches/development-guide.*.md text eol=lf
+packages/dsh-desktop-workbenches/market-acceptance.*.md text eol=lf
