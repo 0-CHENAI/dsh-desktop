@@ -161,7 +161,7 @@ describe('boot cover lifecycle', () => {
     expect(root?.style.background).toBe('rgb(248, 248, 246)')
     expect(css).toContain('aspect-ratio:640 / 360')
     expect(css).toContain('width:min(420px, 100%)')
-    expect(css).toContain('translateY(-80px)')
+    expect(css).not.toContain('translateY(-80px)')
     expect(root?.shadowRoot?.querySelector('source')?.getAttribute('srcset')).toBe('dsh-desktop://desktop/dsh-loader-dark.gif')
     expect(css).not.toContain('pixelated')
     expect(css).not.toContain('brightness')

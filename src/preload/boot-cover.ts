@@ -124,10 +124,11 @@ export function mountBootCover(href: string, options: BootCoverOptions): BootCov
       padding:32px;
       text-align:center;
     }
-    .markFrame { display:grid; place-items:center; width:100%; transform:translateY(-80px); }
+    .markFrame { display:grid; place-items:center; width:100%; }
+    .markFrame picture { display:block; width:min(${MARK_WIDTH_PX}px, 100%); }
     .mark {
       grid-area:1 / 1;
-      width:min(${MARK_WIDTH_PX}px, 100%);
+      width:100%;
       aspect-ratio:${MARK_ASPECT_RATIO};
       height:auto;
       display:block;
@@ -135,7 +136,7 @@ export function mountBootCover(href: string, options: BootCoverOptions): BootCov
     }
     .startupCopy { position:absolute; display:grid; gap:12px; width:1px; height:1px; padding:0; overflow:hidden; clip-path:inset(50%); }
     :host([data-stalled]) .startupCopy {
-      top:calc(50% + 28px); left:32px; right:32px; width:auto; height:auto;
+      top:calc(50% + 138px); left:32px; right:32px; width:auto; height:auto;
       overflow:visible; clip-path:none;
     }
     h1 { margin:0; font-size:23px; font-weight:650; letter-spacing:-0.02em; }

@@ -106,8 +106,8 @@ export async function runStartupRecovery(options: StartupRecoverySessionOptions)
       }
       if (action === 'agent') {
         notice = options.locale === 'zh'
-          ? '修复代理要等应用重新启动后，从侧边栏或安全模式页打开。这一页可以停用相关插件并重新启动。'
-          : 'Open the repair agent from the sidebar or the Safe Mode page after the app restarts. This page can disable the related plugins and restart.'
+          ? '修复代理可在应用以安全模式重新启动后从安全模式页打开。这一页可以停用相关插件并重新启动。'
+          : 'Restart the app in Safe Mode to open the repair agent from the Safe Mode page. This page can disable the related plugins and restart.'
         continue
       }
       if (action === 'rollback') {
