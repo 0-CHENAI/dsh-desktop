@@ -114,6 +114,14 @@ When upgrading Harness:
 
 The `node-pty@1.2.0-beta.15` helper-path patch retains the #615/#646 correction alongside the external-helper support: only complete `app.asar` and `node_modules.asar` path segments map to their unpacked siblings, and already-unpacked paths remain unchanged. Keep the resolution order (explicit `DSH_NODE_PTY_SPAWN_HELPER`, executable sibling, default module-relative helper). Remove this part of the patch only when the pinned upstream version preserves these behaviors and passes both `test/node-pty-helper-path.test.ts` (actual module evaluation with a recorded native call) and `test/node-pty-asar-layout.test.ts` (real macOS PTY in archived and already-unpacked layouts, with default and external helpers). The path tests do not replace the native or installed-application checks.
 
+## Windows caption layout
+
+Windows reserves a 40-DIP native caption row above the application. The sidebar toggle and Application/Edit menus occupy its left edge; the remaining blank area drags the window. Interactive controls use `no-drag`, and visible dialogs temporarily release the drag area. Caption clearance uses Electron's `env(titlebar-area-height)` so page zoom does not change the physical titlebar height. Run `node scripts/check-windows-titlebar-layout.cjs` to exercise the real client across sidebar, zoom, fullscreen and dialog states.
+
+## CI build reuse
+
+CI and release jobs run type checking, build once, then execute the complete suite with `npm exec -- vitest run`. This skips only the duplicate `pretest` preparation, not tests. Packaging invokes the native builder directly against that job's build, retaining target verification and packaged-client acceptance. Office download/template and PPT preparation caches are scoped by OS, architecture and input hashes. Only superseded PR release runs are cancelled; release/tag runs remain protected from cancellation. Local `npm test` and `package:*` commands still prepare/build their own inputs.
+
 ## Packaging
 
 Harness includes architecture-specific native dependencies. Build each installer on the operating system and architecture where it will run.

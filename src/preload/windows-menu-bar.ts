@@ -1,5 +1,4 @@
 import { desktopLocale } from '../shared/desktop-locale'
-import { updateText } from '../shared/desktop-update-messages'
 import type { IpcRenderer } from 'electron'
 
 interface MenuBarOptions {
@@ -15,7 +14,7 @@ const HOST_ATTRIBUTE = 'data-dsh-windows-menu'
 const mountedMenus = new WeakMap<Document, MenuBarMount>()
 
 /**
- * A single native menu entry shares the sidebar's toolbar above the brand. A collapsed
+ * Application and Edit menus share the native caption row. A collapsed
  * sidebar keeps it in the caption, clear of the reopen/new-session buttons.
  * This is window chrome, so business UI slots do not own the native popup.
  *
@@ -34,14 +33,13 @@ export function mountWindowsMenuBar(options: MenuBarOptions): MenuBarMount {
   const style = document.createElement('style')
   style.textContent = `
     :host { position: fixed; top: 0; left: var(--dsh-windows-menu-start, 12px); z-index: 1100;
-      height: var(--dsh-windows-titlebar-height, 36px); display: flex; align-items: center; overflow: hidden;
+      height: var(--dsh-windows-titlebar-height, 40px); display: flex; align-items: center; overflow: hidden;
       font-family: var(--dsw-font-family, "Segoe UI", sans-serif); -webkit-app-region: no-drag; }
     :host([data-standalone]) { left: 12px; }
     button { display: flex; align-items: center; justify-content: center;
-      width: 28px; height: min(28px, var(--dsh-windows-titlebar-height, 36px)); padding: 0; border: 0; border-radius: 6px;
+      min-width: 40px; height: min(28px, var(--dsh-windows-titlebar-height, 40px)); padding: 0 10px; border: 0; border-radius: 6px;
       background: transparent; color: var(--dsw-alias-label-secondary, #5f6368);
       font: inherit; cursor: default; }
-    svg { width: 16px; height: 16px; pointer-events: none; }
     button:hover, button[aria-expanded=true] {
       background: var(--dsw-alias-interactive-bg-hover, rgba(32, 33, 36, .08));
       color: var(--dsw-alias-label-primary, #202124); }
@@ -74,42 +72,52 @@ export function mountWindowsMenuBar(options: MenuBarOptions): MenuBarMount {
   }
   document.addEventListener('focusout', rememberEditor, true)
 
-  const button = document.createElement('button')
-  button.type = 'button'
-  button.dataset.menu = 'main'
-  button.setAttribute('aria-haspopup', 'menu')
-  button.setAttribute('aria-expanded', 'false')
-  // Static, trusted window-chrome artwork, independent of page/plugin content.
-  button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h14"/></svg>'
-  button.addEventListener('pointerdown', (event) => event.preventDefault())
-  button.addEventListener('mousedown', (event) => event.preventDefault())
-  const open = async (): Promise<void> => {
-    if (button.getAttribute('aria-expanded') === 'true') return
-    const rect = button.getBoundingClientRect()
-    button.setAttribute('aria-expanded', 'true')
-    if (document.activeElement === host) restoreEditor()
-    try {
-      await ipcRenderer.invoke('desktop-titlebar:popup-menu', 'main', rect.left, rect.bottom)
-    } catch (error) {
-      console.error('[desktop-titlebar] caption menu failed', error)
-    } finally {
-      button.setAttribute('aria-expanded', 'false')
+  const buttons = new Map<string, HTMLButtonElement>()
+  shadow.append(style)
+  for (const name of ['application', 'edit']) {
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.dataset.menu = name
+    button.setAttribute('aria-haspopup', 'menu')
+    button.setAttribute('aria-expanded', 'false')
+    button.addEventListener('pointerdown', (event) => event.preventDefault())
+    button.addEventListener('mousedown', (event) => event.preventDefault())
+    const open = async (): Promise<void> => {
+      if (button.getAttribute('aria-expanded') === 'true') return
+      const rect = button.getBoundingClientRect()
+      button.setAttribute('aria-expanded', 'true')
+      if (document.activeElement === host) restoreEditor()
+      try {
+        await ipcRenderer.invoke('desktop-titlebar:popup-menu', name, rect.left, rect.bottom)
+      } catch (error) {
+        console.error('[desktop-titlebar] caption menu failed', error)
+      } finally {
+        button.setAttribute('aria-expanded', 'false')
+      }
     }
+    button.addEventListener('click', () => void open())
+    button.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowDown') return
+      event.preventDefault()
+      void open()
+    })
+    shadow.append(button)
+    buttons.set(name, button)
   }
-  button.addEventListener('click', () => void open())
-  button.addEventListener('keydown', (event) => {
-    if (event.key !== 'ArrowDown') return
-    event.preventDefault()
-    void open()
-  })
-  shadow.append(style, button)
-
   const relabel = (): void => {
-    const lang = document.documentElement.lang || navigator.language
-    const locale = desktopLocale(lang) ?? 'en'
-    const label = updateText(locale, 'applicationMenu')
-    button.setAttribute('aria-label', label)
-    button.title = label
+    const locale = desktopLocale(document.documentElement.lang || navigator.language) ?? 'en'
+    const labels: Record<string, [string, string]> = {
+      zh: ['应用', '编辑'], en: ['Application', 'Edit'], ja: ['アプリ', '編集'],
+      es: ['Aplicación', 'Editar'], fr: ['Application', 'Édition'], de: ['Anwendung', 'Bearbeiten'],
+      ru: ['Приложение', 'Правка'], pt: ['Aplicativo', 'Editar']
+    }
+    const text = labels[locale] ?? ['Application', 'Edit']
+    let index = 0
+    for (const button of buttons.values()) {
+      button.textContent = text[index++] ?? ''
+      button.setAttribute('aria-label', button.textContent)
+      button.title = button.textContent
+    }
   }
   relabel()
   const languageObserver = new MutationObserver(relabel)

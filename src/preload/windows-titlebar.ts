@@ -38,8 +38,7 @@ export function markWindowsTitlebar(document: Document): void {
 
 /**
  * Windows/Linux chrome: AppFrame supplies the layout markers, while Desktop
- * shares the conversation header with native controls and gives the sidebar
- * a toolbar above its brand. Standalone recovery pages retain a separate drag
+ * reserves a dedicated caption row above the application content. Standalone recovery pages retain a separate drag
  * strip; dialogs release native drag areas without moving their React nodes.
  */
 export function mountWindowsTitlebarLayout(options: TitlebarLayoutMountOptions): void {
@@ -73,151 +72,56 @@ function installLayout(document: Document): void {
   style.id = LAYOUT_STYLE_ID
   style.textContent = `
     html, body { height: 100% !important; }
-    body.dsh-desktop-windows-titlebar-layout {
-      box-sizing: border-box !important;
-      height: 100% !important;
-      padding-top: 0 !important;
-    }
-    /* Local recovery pages do not have Harness AppFrame to reserve a caption
-       row. Keep their logo/actions below both the menu and native controls. */
-    body.dsh-desktop-windows-titlebar-layout[data-dsh-standalone-titlebar] {
-      padding-top: var(--dsh-windows-titlebar-height) !important;
-    }
-    body.dsh-desktop-windows-titlebar-layout[data-dsh-standalone-titlebar] > .shell {
-      height: 100% !important;
-      min-height: 0 !important;
-    }
-    body.dsh-desktop-windows-titlebar-layout > #root {
-      height: 100% !important;
-      min-height: 0 !important;
-    }
-    /* Share the first header row with native controls instead of reserving a
-       separate strip across the work area. Electron reports zoom-aware bounds. */
-    body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-frame] {
-      padding-top: 0;
+    body.dsh-desktop-windows-titlebar-layout:has(> #root) {
+      --dsh-caption-height: env(titlebar-area-height, ${WINDOWS_TITLEBAR_HEIGHT}px);
       --dsh-frame-top-clearance: 0px;
       --dsh-frame-chrome-top: 0px;
-      --dsh-windows-leading-inset: 0px;
-      --dsh-windows-toolbar-height: max(40px, var(--dsh-windows-titlebar-height));
-      --dsh-windows-controls-inset: max(0px, calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, calc(100vw - 140px))));
-    }
-    body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-frame]::before {
-      display: none;
-    }
-    body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-frame][data-sidebar-collapsed] {
-      --dsh-frame-leading-clearance: 120px;
-      --dsh-windows-leading-inset: 120px;
-    }
-    body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-frame]:not([data-rightbar-collapsed]) {
-      --dsh-windows-controls-inset: 0px;
-    }
-    body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-sidebar] {
-      position: relative;
-      /* The plugin manager's sticky header paints at 2. Keep caption controls
-         above it, while frame resize handles (11) and overlays (20) stay above. */
-      z-index: 3;
-    }
-    body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-sidebar]::before {
-      content: '';
-      position: absolute;
-      inset: 0 0 auto;
-      height: var(--dsh-windows-toolbar-height);
-      -webkit-app-region: drag;
-    }
-    body.dsh-desktop-windows-titlebar-layout [data-dsh-sidebar-root][data-dsh-sidebar-wide="true"] {
-      position: relative;
-      padding-top: calc(var(--dsh-windows-toolbar-height) + 8px) !important;
-    }
-    /* The menu and collapse control belong to the toolbar, above the brand. */
-    body.dsh-desktop-windows-titlebar-layout:has([data-dsh-sidebar-root][data-dsh-sidebar-wide="true"]) [data-dsh-windows-menu]:not([data-standalone]) {
-      left: 12px;
-      height: max(40px, var(--dsh-windows-titlebar-height));
-    }
-    body.dsh-desktop-windows-titlebar-layout [data-dsh-sidebar-root][data-dsh-sidebar-wide="false"] [data-dsh-sidebar-toggle],
-    body.dsh-desktop-windows-titlebar-layout [data-dsh-sidebar-root][data-dsh-sidebar-wide="false"] [data-dsh-sidebar-new-session] {
-      top: max(0px, calc((var(--dsh-windows-titlebar-height) - 28px) / 2)) !important;
-    }
-    html[data-fullscreen][data-windows-titlebar] {
-      --dsh-windows-titlebar-height: 0px !important;
-    }
-    html[data-fullscreen] body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-frame][data-sidebar-collapsed] {
-      --dsh-frame-leading-clearance: 84px;
-      --dsh-windows-leading-inset: 84px;
-    }
-    html[data-fullscreen] [data-dsh-sidebar-root][data-dsh-sidebar-wide="false"] [data-dsh-sidebar-toggle],
-    html[data-fullscreen] [data-dsh-sidebar-root][data-dsh-sidebar-wide="false"] [data-dsh-sidebar-new-session] {
-      top: 10px !important;
-    }
-    html[data-fullscreen] [data-dsh-windows-menu] { display: none !important; }
-    /* Preserve the existing React control and its state while changing its
-       native-chrome seat; collapsed controls stay reachable in the header. */
-    body.dsh-desktop-windows-titlebar-layout [data-dsh-sidebar-root][data-dsh-sidebar-wide="true"] [data-dsh-sidebar-toggle] {
-      position: absolute !important;
-      inset: calc((var(--dsh-windows-toolbar-height) - 28px) / 2) 12px auto auto !important;
-      flex-shrink: 0;
-      z-index: 1;
-    }
-    body.dsh-desktop-windows-titlebar-layout header:has([data-conversation-header-leading]) {
       --dsh-frame-leading-clearance: 0px;
-      grid-template-rows: var(--dsh-windows-toolbar-height) auto;
-      padding-top: 0;
-      padding-bottom: 0;
-      padding-left: 0;
-      padding-right: calc(28px + var(--dsh-windows-controls-inset));
+      --dsh-frame-overlay-top: calc(var(--dsh-caption-height) + 20px);
+      box-sizing: border-box !important;
+      margin: 0 !important;
+      padding-top: var(--dsh-caption-height) !important;
+    }
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-resize-handle] { top: 0 !important; }
+    /* One dedicated caption row. Its drag region never overlaps page headers. */
+    body.dsh-desktop-windows-titlebar-layout:has(> #root)::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--dsh-caption-height);
+      background: var(--dsw-specific-sidebar-fill, #f8f9fa);
       -webkit-app-region: drag;
     }
-    /* Collapsed controls live in a zero-width sidebar column. Their own
-       no-drag boxes can be clipped out of Electron's native hit map; reserve
-       a real leading box in the header that owns the overlapping drag area.
-       Keep slot contributions interactive and include the original inset. */
-    body.dsh-desktop-windows-titlebar-layout [data-conversation-header-leading] {
-      box-sizing: border-box;
-      min-width: var(--dsh-windows-leading-inset);
-      min-height: var(--dsh-windows-toolbar-height);
-      padding-left: 20px;
-      -webkit-app-region: no-drag;
+    body.dsh-desktop-windows-titlebar-layout > #root { height: 100% !important; min-height: 0 !important; }
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-frame] {
+      padding-top: 0 !important;
+      --dsh-frame-leading-clearance: 0px;
     }
-    body.dsh-desktop-windows-titlebar-layout [data-plugin-panel] header[data-window-drag] {
-      box-sizing: border-box;
-      min-height: var(--dsh-windows-toolbar-height);
-      padding-right: calc(28px + var(--dsh-windows-controls-inset));
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-frame]::before { content: none !important; display:none !important; }
+    body.dsh-desktop-windows-titlebar-layout [data-window-drag] { -webkit-app-region: no-drag; }
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-sidebar-toggle] {
+      position: fixed !important;
+      top: calc((var(--dsh-windows-titlebar-height) - 28px) / 2) !important;
+      left: 12px !important;
+      margin: 0 !important;
+      z-index: 1101;
     }
-    /* The dock surface is absolutely anchored to AppFrame, so column padding
-       cannot move it. Offset the real panel in both push and expanded modes. */
-    body.dsh-desktop-windows-titlebar-layout [data-sidebar-right-panel] {
-      top: var(--dsh-windows-titlebar-height);
-    }
-    /* A drag region wins over a dialog's buttons in the caption row, so both
-       Harness's caption strip and Desktop's own give way while one is open. */
-    html[${MODAL_OPEN_ATTRIBUTE}] :has(> [data-shell-overlay])::before,
-    html[${MODAL_OPEN_ATTRIBUTE}] [data-dsh-layout-sidebar]::before,
-    html[${MODAL_OPEN_ATTRIBUTE}] [data-window-drag] {
-      -webkit-app-region: no-drag !important;
-    }
-    html[${MODAL_OPEN_ATTRIBUTE}] #${DRAG_REGION_ID} { display: none !important; }
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-sidebar-root][data-dsh-sidebar-wide="true"] { padding-top: 14px !important; }
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-windows-menu] { --dsh-windows-menu-start: 48px; }
+    body.dsh-desktop-windows-titlebar-layout:has([data-dsh-sidebar-wide="false"]) [data-dsh-windows-menu] { --dsh-windows-menu-start: 84px; }
+    body.dsh-desktop-windows-titlebar-layout header[data-window-drag] { padding-top: 14px !important; }
     body.dsh-desktop-windows-titlebar-layout button,
     body.dsh-desktop-windows-titlebar-layout a,
     body.dsh-desktop-windows-titlebar-layout input,
-    body.dsh-desktop-windows-titlebar-layout select,
-    body.dsh-desktop-windows-titlebar-layout textarea,
-    body.dsh-desktop-windows-titlebar-layout [role="button"],
-    body.dsh-desktop-windows-titlebar-layout [role="tab"],
-    body.dsh-desktop-windows-titlebar-layout [role="menuitem"],
-    body.dsh-desktop-windows-titlebar-layout [data-dsh-no-drag] {
-      -webkit-app-region: no-drag !important;
-    }
-    #${DRAG_REGION_ID} {
-      position: fixed;
-      z-index: 10;
-      top: 0;
-      left: 0;
-      right: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, calc(100vw - 140px)));
-      height: var(--dsh-windows-titlebar-height);
-      background: transparent;
-      pointer-events: none;
-      user-select: none;
-      -webkit-app-region: drag;
-    }
+    body.dsh-desktop-windows-titlebar-layout [role="button"] { -webkit-app-region: no-drag !important; }
+    body.dsh-desktop-windows-titlebar-layout[data-dsh-standalone-titlebar] { padding-top: var(--dsh-windows-titlebar-height); }
+    body.dsh-desktop-windows-titlebar-layout[data-dsh-standalone-titlebar] > .shell { height:100%; min-height:0; }
+    html[${MODAL_OPEN_ATTRIBUTE}] body.dsh-desktop-windows-titlebar-layout::before { -webkit-app-region:no-drag !important; }
+    html[data-fullscreen] [data-dsh-windows-menu] { display:none !important; }
+    #${DRAG_REGION_ID} { position:fixed; top:0; left:0; right:140px; height:var(--dsh-windows-titlebar-height); -webkit-app-region:drag; pointer-events:none; }
+    html[${MODAL_OPEN_ATTRIBUTE}] #${DRAG_REGION_ID} { display:none; }
   `
   document.head.appendChild(style)
 }

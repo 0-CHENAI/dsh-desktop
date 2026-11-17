@@ -19,7 +19,7 @@ describe('fork release CI after the v0.14 migration', () => {
     expect(Object.keys(release.on.workflow_dispatch.inputs)).toEqual(['target', 'prerelease_tag', 'version'])
     expect(release.on.workflow_dispatch.inputs.target.default).toBe('all')
     expect(release.on.pull_request.branches).toEqual(['main'])
-    expect(release.concurrency['cancel-in-progress']).toBe(false)
+    expect(release.concurrency['cancel-in-progress']).toBe("${{ github.event_name == 'pull_request' }}")
     expect(readFileSync('.github/workflows/release.yml', 'utf8')).not.toContain('DESKTOP_CSC_LINK')
   })
 
@@ -36,7 +36,7 @@ describe('fork release CI after the v0.14 migration', () => {
     for (const name of nativeJobs) {
       const steps = release.jobs[name].steps
       const commands = steps.map(step => step.run || '').join('\n')
-      expect(commands).toContain('npm test')
+      expect(commands).toContain('npm exec -- vitest run')
       expect(commands).toContain('npm run typecheck')
       expect(commands).toContain('npm run build')
       expect(commands).toContain('node scripts/check-desktop-profile.cjs')

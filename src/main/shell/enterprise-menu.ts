@@ -105,7 +105,6 @@ export function buildDarwinDesktopMenu(options: {
       submenu: [
         { label: aboutMenuLabel(options.locale), click: options.showAbout },
         { label: updateMenuLabel(options.locale), accelerator: 'CmdOrCtrl+U', click: options.checkForUpdates },
-        { label: enterpriseMenuLabel(options.locale), click: options.openEnterprise },
         ...(options.restart === undefined
           ? []
           : [{ label: restartMenuLabel(options.locale), accelerator: 'CmdOrCtrl+Shift+R', click: options.restart }]),

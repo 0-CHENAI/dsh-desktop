@@ -28,30 +28,39 @@ describe('pull request CI', () => {
       'windows-latest', 'macos-15'
     ])
     expect(workflow).toContain('npm ci')
-    expect(workflow).toContain('npm test')
+    expect(workflow).toContain('npm exec -- vitest run')
     expect(workflow).toContain('npm run typecheck')
     expect(workflow).toContain('npm run build')
   })
+})
 
-  it('keeps Windows, Intel Mac, and Apple Silicon font checks on supported runners', async () => {
-    const workflow = await readFile(
-      path.join(projectRoot, '.github', 'workflows', 'ppt-font-layout.yml'),
-      'utf8'
-    )
-    const config = parse(workflow) as {
-      jobs: {
-        'native-preview': {
-          'runs-on': string
-          strategy: { matrix: { os: string[] } }
-        }
+
+it('builds once per native job while retaining tests, packaging and target gates', async () => {
+  for (const file of ['ci.yml', 'release.yml']) {
+    const workflow = parse(await readFile(path.join(projectRoot, '.github/workflows', file), 'utf8'))
+    const jobs = file === 'ci.yml' ? ['check', 'native-runtime'] : ['macos-apple-silicon', 'windows-x64']
+    for (const name of jobs) {
+      const steps = workflow.jobs[name].steps as { run?: string; uses?: string; with?: { path?: string } }[]
+      const runs = steps.map(step => step.run || '')
+      expect(runs.filter(run => run.includes('npm run build'))).toHaveLength(1)
+      expect(runs.some(run => /npm test|npm run package:/.test(run))).toBe(false)
+      expect(steps.some(step => step.uses === 'actions/cache@v4' && step.with?.path?.includes('.build/office-downloads'))).toBe(true)
+      if (name !== 'native-runtime') {
+        expect(runs).toContain('npm exec -- vitest run')
+        expect(runs.indexOf('npm run typecheck')).toBeGreaterThanOrEqual(0)
+        expect(runs.indexOf('npm run typecheck')).toBeLessThan(runs.indexOf('npm run build'))
+        expect(runs.indexOf('npm run build')).toBeLessThan(runs.indexOf('npm exec -- vitest run'))
+      }
+      if (name !== 'check') {
+        expect(runs.some(run => run.includes('verify-target.mjs'))).toBe(true)
+        expect(runs.some(run => run.includes('electron-builder'))).toBe(true)
       }
     }
-    const job = config.jobs['native-preview']
+  }
+})
 
-    // macOS 14 was retired on 2026-11-02; keep explicit Intel coverage.
-    expect(job.strategy.matrix.os).toEqual([
-      'windows-latest', 'macos-15-intel', 'macos-15'
-    ])
-    expect(job['runs-on']).toBe('${{ matrix.os }}')
-  })
+it('cancels obsolete PR installers without interrupting releases', async () => {
+  const workflow = parse(await readFile(path.join(projectRoot, '.github/workflows/release.yml'), 'utf8'))
+  expect(workflow.concurrency['cancel-in-progress']).toBe("${{ github.event_name == 'pull_request' }}")
+  expect(workflow.concurrency.group).toBe('desktop-release-${{ github.ref }}')
 })
