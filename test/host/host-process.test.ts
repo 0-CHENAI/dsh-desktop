@@ -33,11 +33,16 @@ describe('desktop host process', () => {
       const started = host.start()
       expect(host.start()).toBe(started)
       await expect(started).resolves.toEqual({ url: 'http://127.0.0.1:9/', injections: ['boot'] })
-      expect(JSON.parse(await readFile(report, 'utf8'))).toEqual({
+      const observed: unknown = JSON.parse(await readFile(report, 'utf8'))
+      if (!observed || typeof observed !== 'object' || !('cwd' in observed) || typeof observed.cwd !== 'string') {
+        throw new Error('Host report did not contain a cwd string')
+      }
+      // Normalize both sides: Windows can keep an 8.3 cwd, while macOS
+      // expands /var to /private/var in the child process.
+      expect({ ...observed, cwd: await realpath(observed.cwd) }).toEqual({
         home: join(directory, 'harness'),
         profile: 'desktop',
         execPath: electron,
-        // macOS resolves /var to /private/var when the child reads its cwd.
         cwd: await realpath(join(directory, 'harness', 'launch-root'))
       })
     } finally {

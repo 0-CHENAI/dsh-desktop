@@ -113,7 +113,9 @@ function installLayout(document: Document): void {
     }
     body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-sidebar] {
       position: relative;
-      z-index: 1;
+      /* The plugin manager's sticky header paints at 2. Keep caption controls
+         above it, while frame resize handles (11) and overlays (20) stay above. */
+      z-index: 3;
     }
     body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-sidebar]::before {
       content: '';

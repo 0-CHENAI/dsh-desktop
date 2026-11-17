@@ -257,6 +257,8 @@ async function verifyWindowsTitlebarMatrix(window: BrowserWindow): Promise<void>
   })()`)
   await click('[data-smoke-plugins]')
   assert.equal(await window.webContents.executeJavaScript("Boolean(document.querySelector('[data-global-panel]'))"), true)
+  await window.webContents.executeJavaScript("document.querySelector('[data-plugin-body]').scrollTop = 120")
+  await pause()
   // HeaderLeadingControls and SidebarRoot share the new-session marker. A
   // different seat, even earlier in DOM order, must not become the click target.
   await window.webContents.executeJavaScript(`(() => {
