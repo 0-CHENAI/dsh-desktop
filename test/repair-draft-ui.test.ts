@@ -34,41 +34,6 @@ async function load(bridge: unknown) {
 }
 
 describe('repair draft admission', () => {
-  it('styles desktop utility buttons without changing other settings contributions', async () => {
-    const { dom } = await load({ openRepairAgent: vi.fn(), openMobilePairing: vi.fn() })
-    try {
-      const { document } = dom.window
-      document.body.innerHTML = '<div data-dsh-sidebar-settings-actions><button id="other">Long plugin action</button><div data-dsh-desktop-utilities data-wide="false"><button id="repair">Repair</button></div></div>'
-      const button = document.querySelector('#repair')!
-      const group = document.querySelector('[data-dsh-desktop-utilities]')!
-      const style = dom.window.getComputedStyle(button)
-      expect(style.display).toBe('inline-flex')
-      expect(style.width).toBe('32px')
-      expect(style.height).toBe('32px')
-      expect(style.borderTopWidth).toBe('0px')
-      expect(style.borderRadius).toBe('8px')
-      expect(dom.window.getComputedStyle(group).gap).toBe('4px')
-      expect(dom.window.getComputedStyle(group).justifyContent).toBe('center')
-      expect(dom.window.getComputedStyle(document.querySelector('#other')!).width).not.toBe('32px')
-    } finally {
-      dom.window.document.body.replaceChildren()
-    }
-  })
-  it('places Desktop actions next to Settings and stacks them only when collapsed', async () => {
-    const { dom } = await load({ openRepairAgent: vi.fn(), openMobilePairing: vi.fn() })
-    document.body.innerHTML = '<div data-dsh-sidebar-settings><div data-dsh-sidebar-settings-content>Settings</div><div data-dsh-sidebar-settings-actions><div data-dsh-desktop-utilities data-wide="true"></div></div></div>'
-    try {
-      const row = document.querySelector('[data-dsh-sidebar-settings]')!
-      expect(dom.window.getComputedStyle(row).display).toBe('flex')
-      expect(dom.window.getComputedStyle(row).flexDirection).toBe('row')
-      expect(dom.window.getComputedStyle(row).alignItems).toBe('center')
-      document.querySelector('[data-dsh-desktop-utilities]')!.setAttribute('data-wide', 'false')
-      expect(dom.window.getComputedStyle(row).flexDirection).toBe('column')
-    } finally {
-      document.body.replaceChildren()
-    }
-  })
-
   it.each([['empty', '', [], true], ['existing text', 'my question', [], false], ['attachment', '', ['file'], false]] as const)(
     'prefills only an untouched empty composer (%s)', async (_name, text, attachments, shouldInsert) => {
       const bridge = { getRepairDraft: vi.fn(async () => ({ text: 'Please diagnose this issue.', token: 't' })), acknowledgeRepairDraft: vi.fn(async () => ({ ok: true })) }
@@ -94,26 +59,9 @@ describe('repair draft admission', () => {
     expect(actions.persistDraft).not.toHaveBeenCalled()
     expect(actions.submit).not.toHaveBeenCalled()
   })
-  it('keeps the accessible repair action without a phone action', async () => {
-    const bridge = { openRepairAgent: vi.fn(async () => ({ ok: true })), openMobilePairing: vi.fn(async () => undefined) }
-    const { registrations } = await load(bridge)
-    const view = registrations.get('desktop-utilities')!({ t: (key: string) => key, wide: true }) as {
-      children: Array<{ type: string; props: Record<string, unknown>; children: unknown[] }>
-    }
-    const [tooltip] = view.children
-    const repair = tooltip?.children[0] as typeof tooltip
-    expect(tooltip?.type).toBe('Tooltip')
-    expect(tooltip?.props).toMatchObject({ label: 'description', side: 'top', align: 'end', portal: true, maxWidth: 280, delayMs: 0, focusDelayMs: 0 })
-    expect(repair?.props['data-dsh-repair-entry']).toBe(true)
-    expect(view.children.some(child => child?.props?.['data-dsh-mobile-entry'])).toBe(false)
-    expect(repair?.props['aria-label']).toBe('open')
-    expect(repair?.props['aria-description']).toBe('description')
-    expect(repair?.props.title).toBeUndefined()
-    expect(repair?.children[0]).toMatchObject({ type: 'svg', props: { width: 18, height: 18, viewBox: '0 0 24 24' } })
-    expect(repair?.children).not.toContain('open')
-    ;(repair?.props.onClick as () => void)()
-    await vi.waitFor(() => expect(bridge.openRepairAgent).toHaveBeenCalledOnce())
-    expect(bridge.openMobilePairing).not.toHaveBeenCalled()
+  it('does not register sidebar repair or phone actions even when supported', async () => {
+    const { registrations } = await load({ openRepairAgent: vi.fn(), openMobilePairing: vi.fn() })
+    expect(registrations.has('desktop-utilities')).toBe(false)
   })
   it('does not mount an empty utility group for a mobile-only bridge', async () => {
     const { registrations } = await load({ openMobilePairing: vi.fn() })

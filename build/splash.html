@@ -22,14 +22,16 @@
         padding: 32px;
       }
       .markFrame { display: grid; place-items: center; width: 100%; transform: translateY(-80px); }
-      .mark { display: block; width: min(280px, 100%); height: auto; object-fit: contain; }
+      .mark { display: block; width: min(420px, 100%); height: auto; object-fit: contain; }
     </style>
   </head>
   <body>
     <main aria-label="DSH Desktop">
       <div class="markFrame" aria-hidden="true">
-        <!-- Original animation, including its embedded caption, is preserved byte-for-byte. -->
-        <img class="mark" src="startup-whale.gif" width="480" height="276" alt="" />
+        <picture>
+          <source srcset="dsh-loader-dark.gif" media="(prefers-color-scheme: dark)" />
+          <img class="mark" src="dsh-loader.gif" width="640" height="360" alt="" />
+        </picture>
       </div>
     </main>
   </body>

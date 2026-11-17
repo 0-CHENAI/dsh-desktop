@@ -6,13 +6,12 @@ export const BOOT_COVER_ID = 'dsh-desktop-boot-cover'
 export const BOOT_COVER_STYLE_ID = 'dsh-desktop-boot-cover-style'
 export const BOOT_COVER_STALL_MS = 20_000
 /** Same files splash.html loads, served by the desktop protocol so the Harness origin can paint them. */
-export const BOOT_COVER_MARK_URL = 'dsh-desktop://desktop/startup-whale.gif'
+export const BOOT_COVER_MARK_URL = 'dsh-desktop://desktop/dsh-loader.gif'
 
-// The supplied GIF has an opaque background and an embedded caption. Match
-// splash.html in both themes rather than recoloring or duplicating that caption.
-const BACKGROUND = '#fbfbfb'
-const MARK_WIDTH_PX = 280
-const MARK_ASPECT_RATIO = '480 / 276'
+// Transparent FishLogo animation and matte colors match splash.html.
+const BACKGROUND = '#f8f8f6'
+const MARK_WIDTH_PX = 420
+const MARK_ASPECT_RATIO = '640 / 360'
 
 export interface BootCoverOptions {
   document: Document
@@ -90,6 +89,9 @@ export function mountBootCover(href: string, options: BootCoverOptions): BootCov
   // outside body so Harness cannot replace it with the failure screen.
   pageStyle.textContent = `
     html { background: ${BACKGROUND} !important; }
+    @media (prefers-color-scheme: dark) {
+      html, #${BOOT_COVER_ID} { background: #141416 !important; color: #f8f8f6 !important; }
+    }
     body, body * { visibility: hidden !important; }
     #${BOOT_COVER_ID}, #${BOOT_COVER_ID} * { visibility: visible !important; }
   `
@@ -148,9 +150,14 @@ export function mountBootCover(href: string, options: BootCoverOptions): BootCov
   mark.className = 'mark'
   mark.alt = ''
   mark.src = BOOT_COVER_MARK_URL
-  mark.width = 480
-  mark.height = 276
-  markFrame.append(mark)
+  mark.width = 640
+  mark.height = 360
+  const picture = doc.createElement('picture')
+  const dark = doc.createElement('source')
+  dark.media = '(prefers-color-scheme: dark)'
+  dark.srcset = 'dsh-desktop://desktop/dsh-loader-dark.gif'
+  picture.append(dark, mark)
+  markFrame.append(picture)
   const copy = doc.createElement('div')
   copy.className = 'startupCopy'
   const title = doc.createElement('h1')

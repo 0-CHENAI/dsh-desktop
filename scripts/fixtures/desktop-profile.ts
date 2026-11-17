@@ -161,7 +161,7 @@ export function apply() { writeFileSync(process.env.DSH_SMOKE_LOCAL_MARKER, JSON
     repair: document.querySelectorAll('[data-dsh-repair-entry]').length
   })`)
   assert.equal(desktopUtilities.phone, 0, 'Desktop sidebar must not offer phone pairing')
-  assert.equal(desktopUtilities.repair, 1, 'Desktop sidebar must retain the repair action')
+  assert.equal(desktopUtilities.repair, 0, 'Desktop sidebar must not offer the repair action')
   await mkdir(outputDirectory, { recursive: true })
   await writeFile(join(outputDirectory, 'client.png'), (await win.webContents.capturePage()).toPNG())
   if (process.platform === 'win32') {
@@ -193,7 +193,9 @@ async function verifyWindowsContentInset(window: BrowserWindow): Promise<void> {
         sidebarBottom: sidebar.getBoundingClientRect().bottom, viewportHeight: innerHeight,
         headerTop: header.getBoundingClientRect().top,
         framePadding: getComputedStyle(frame).paddingTop,
-        frameBefore: getComputedStyle(frame, '::before').content };
+        frameBefore: getComputedStyle(frame, '::before').content,
+        captionHit: document.elementFromPoint(innerWidth / 2, nativeHeight / 2)?.id,
+        captionRegion: getComputedStyle(document.getElementById('dsh-desktop-windows-drag-region')).getPropertyValue('-webkit-app-region') };
     })()`)
     // 0.2.2 AppFrame owns the caption inset; body must not reserve it again.
     assert.equal(geometry.bodyTop, 0, JSON.stringify({ zoom, geometry }))
@@ -206,6 +208,8 @@ async function verifyWindowsContentInset(window: BrowserWindow): Promise<void> {
     assert.equal(parseFloat(geometry.framePadding), 0)
     assert.ok(Math.abs(geometry.nativeHeight * zoom - WINDOWS_TITLEBAR_HEIGHT) < 2)
     assert.equal(geometry.frameBefore, 'none')
+    assert.equal(geometry.captionHit, 'dsh-desktop-windows-drag-region')
+    assert.equal(geometry.captionRegion, 'drag')
   }
   window.webContents.setZoomFactor(1)
   console.log('Windows content inset: sidebar and conversation header start below the dedicated caption row at three zoom levels')
@@ -361,7 +365,8 @@ async function verifyWindowsTitlebarMatrix(window: BrowserWindow): Promise<void>
           const newSession=document.querySelector('[data-dsh-sidebar-root] [data-dsh-sidebar-new-session]').getBoundingClientRect();
           return { visible:getComputedStyle(host).display!=='none', count:host.shadowRoot.querySelectorAll('button').length,
             top:r.top, right:r.right, left:r.left, centerY:r.y+r.height/2,
-            brand:brand && { left:brand.left, right:brand.right, top:brand.top },
+            fontSize:getComputedStyle(button).fontSize,
+            brand:brand && { left:brand.left, right:brand.right, top:brand.top, centerY:brand.y+brand.height/2 },
             toggleLeft:toggle.left, toggleCenterY:toggle.y+toggle.height/2, newSessionRight:newSession.right };
         })()`)
         assert.equal(menu.count, 2)
@@ -370,6 +375,8 @@ async function verifyWindowsTitlebarMatrix(window: BrowserWindow): Promise<void>
           const context = JSON.stringify({ width, zoom, wide, menu })
           if (wide) {
             assert.ok(menu.brand && menu.centerY < menu.brand.top, context)
+            assert.ok(Math.abs(menu.brand.centerY - (before.leading.top + before.leading.bottom) / 2) < 3, context)
+            assert.equal(menu.fontSize, '13px', context)
             assert.ok(Math.abs(menu.centerY - menu.toggleCenterY) < 3, context)
             assert.ok(menu.top >= 0 && menu.top < before.nativeHeight, context)
           } else {
