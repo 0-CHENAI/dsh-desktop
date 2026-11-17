@@ -161,6 +161,24 @@ describe('startup recovery page', () => {
 })
 
 describe('startup recovery session', () => {
+  it.each([
+    ['zh', '安全模式页打开', '侧边栏'],
+    ['en', 'Safe Mode page', 'sidebar']
+  ] as const)('points to the available repair entry in %s', async (locale, expected, removed) => {
+    const urls: string[] = []
+    await runStartupRecovery({
+      ...sessionOptions({
+        locale,
+        show: url => { urls.push(url); return true },
+        bindRound: deliverQueued(['dsh-recovery://agent', 'dsh-recovery://quit']),
+        quit: () => undefined
+      })
+    })
+    const notice = new URL(urls[1] ?? '').searchParams.get('state')
+    expect(notice).toContain(expected)
+    expect(notice).not.toContain(removed)
+  })
+
   it('disables the named desktop plugin and relaunches, leaving the web profile alone', async () => {
     const home = join(tmpdir(), `dsh-startup-recovery-${Date.now()}`)
     temporary.push(home)
@@ -192,7 +210,9 @@ describe('startup recovery session', () => {
     expect(actions).toEqual([])
     expect(urls).toHaveLength(4)
     expect(new URL(urls[1] ?? '').searchParams.get('state')).toContain('应用版本回退还在更新卡片')
-    expect(new URL(urls[2] ?? '').searchParams.get('state')).toContain('修复代理要等应用重新启动后')
+    const agentNotice = new URL(urls[2] ?? '').searchParams.get('state')
+    expect(agentNotice).toContain('安全模式页打开')
+    expect(agentNotice).not.toContain('侧边栏')
     const desktopState = await readFile(join(home, 'profiles', 'desktop', '.dsh-market', 'state.json'), 'utf8')
     expect(desktopState).toContain('example-plugin')
     await expect(readFile(join(home, 'profiles', 'web', '.dsh-market', 'state.json'), 'utf8')).rejects.toThrow()
