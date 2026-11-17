@@ -34,12 +34,12 @@ export function mountWindowsMenuBar(options: MenuBarOptions): MenuBarMount {
   style.textContent = `
     :host { position: fixed; top: 0; left: var(--dsh-windows-menu-start, 12px); z-index: 1100;
       height: var(--dsh-windows-titlebar-height, 40px); display: flex; align-items: center; overflow: hidden;
-      font-family: var(--dsw-font-family, "Segoe UI", sans-serif); -webkit-app-region: no-drag; }
+      font-family: var(--dsw-font-family, "Segoe UI", sans-serif); -webkit-app-region: drag; }
     :host([data-standalone]) { left: 12px; }
     button { display: flex; align-items: center; justify-content: center;
       min-width: 40px; height: min(28px, var(--dsh-windows-titlebar-height, 40px)); padding: 0 10px; border: 0; border-radius: 6px;
       background: transparent; color: var(--dsw-alias-label-secondary, #5f6368);
-      font: inherit; cursor: default; }
+      font: 13px var(--dsw-font-family, "Segoe UI", sans-serif); cursor: default; -webkit-app-region: no-drag; }
     button:hover, button[aria-expanded=true] {
       background: var(--dsw-alias-interactive-bg-hover, rgba(32, 33, 36, .08));
       color: var(--dsw-alias-label-primary, #202124); }

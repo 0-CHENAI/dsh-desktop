@@ -107,7 +107,7 @@ describe('boot cover lifecycle', () => {
     expect(shadow?.querySelector('h1')?.textContent).toBe('Starting DSH Desktop')
     expect(shadow?.querySelector('img.mark')?.getAttribute('src')).toBe(BOOT_COVER_MARK_URL)
     expect(shadow?.querySelectorAll('img')).toHaveLength(1)
-    expect(BOOT_COVER_MARK_URL).toBe('dsh-desktop://desktop/startup-whale.gif')
+    expect(BOOT_COVER_MARK_URL).toBe('dsh-desktop://desktop/dsh-loader.gif')
     expect(shadow?.querySelector('.markFrame')?.getAttribute('aria-hidden')).toBe('true')
 
     const desktop = document.implementation.createHTMLDocument()
@@ -154,14 +154,15 @@ describe('boot cover lifecycle', () => {
     cover?.dispose()
   })
 
-  it('matches the supplied splash animation without pixelation or theme recoloring', () => {
+  it('uses transparent whale assets matched to the splash matte in both themes', () => {
     const { doc, cover } = mountHarnessCover()
     const root = doc.getElementById(BOOT_COVER_ID)
     const css = root?.shadowRoot?.querySelector('style')?.textContent ?? ''
-    expect(root?.style.background).toBe('rgb(251, 251, 251)')
-    expect(css).toContain('aspect-ratio:480 / 276')
-    expect(css).toContain('width:min(280px, 100%)')
+    expect(root?.style.background).toBe('rgb(248, 248, 246)')
+    expect(css).toContain('aspect-ratio:640 / 360')
+    expect(css).toContain('width:min(420px, 100%)')
     expect(css).toContain('translateY(-80px)')
+    expect(root?.shadowRoot?.querySelector('source')?.getAttribute('srcset')).toBe('dsh-desktop://desktop/dsh-loader-dark.gif')
     expect(css).not.toContain('pixelated')
     expect(css).not.toContain('brightness')
     expect(root?.hasAttribute('data-stalled')).toBe(false)

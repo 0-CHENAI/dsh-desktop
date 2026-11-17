@@ -49,7 +49,7 @@ export function mountWindowsTitlebarLayout(options: TitlebarLayoutMountOptions):
   const standalone = document.location.protocol === 'file:'
   document.body.toggleAttribute('data-dsh-standalone-titlebar', standalone)
   installLayout(document)
-  if (document.location.protocol === 'file:') installDragRegion(document)
+  installDragRegion(document)
   trackModals(document)
   mountWindowsMenuBar({ document, ipcRenderer })
 
@@ -92,7 +92,6 @@ function installLayout(document: Document): void {
       right: 0;
       height: var(--dsh-caption-height);
       background: var(--dsw-specific-sidebar-fill, #f8f9fa);
-      -webkit-app-region: drag;
     }
     body.dsh-desktop-windows-titlebar-layout > #root { height: 100% !important; min-height: 0 !important; }
     body.dsh-desktop-windows-titlebar-layout [data-dsh-layout-frame] {
@@ -108,7 +107,9 @@ function installLayout(document: Document): void {
       margin: 0 !important;
       z-index: 1101;
     }
-    body.dsh-desktop-windows-titlebar-layout [data-dsh-sidebar-root][data-dsh-sidebar-wide="true"] { padding-top: 14px !important; }
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-sidebar-toggle] svg { width: 16px; height: 16px; }
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-sidebar-wide="false"] [data-dsh-sidebar-new-session] { z-index:1101 !important; }
+    body.dsh-desktop-windows-titlebar-layout [data-dsh-sidebar-root][data-dsh-sidebar-wide="true"] { padding-top: 8px !important; }
     body.dsh-desktop-windows-titlebar-layout [data-dsh-windows-menu] { --dsh-windows-menu-start: 48px; }
     body.dsh-desktop-windows-titlebar-layout:has([data-dsh-sidebar-wide="false"]) [data-dsh-windows-menu] { --dsh-windows-menu-start: 84px; }
     body.dsh-desktop-windows-titlebar-layout header[data-window-drag] { padding-top: 14px !important; }
@@ -120,13 +121,13 @@ function installLayout(document: Document): void {
     body.dsh-desktop-windows-titlebar-layout[data-dsh-standalone-titlebar] > .shell { height:100%; min-height:0; }
     html[${MODAL_OPEN_ATTRIBUTE}] body.dsh-desktop-windows-titlebar-layout::before { -webkit-app-region:no-drag !important; }
     html[data-fullscreen] [data-dsh-windows-menu] { display:none !important; }
-    #${DRAG_REGION_ID} { position:fixed; top:0; left:0; right:140px; height:var(--dsh-windows-titlebar-height); -webkit-app-region:drag; pointer-events:none; }
+    #${DRAG_REGION_ID} { position:fixed; top:0; left:0; right:0; height:var(--dsh-windows-titlebar-height); z-index:1000; -webkit-app-region:drag; }
     html[${MODAL_OPEN_ATTRIBUTE}] #${DRAG_REGION_ID} { display:none; }
   `
   document.head.appendChild(style)
 }
 
-/** Desktop's local pages have no Harness caption strip, so they get their own. */
+/** Keep the caption above page no-drag regions; actual controls sit above this layer. */
 function installDragRegion(document: Document): void {
   if (document.getElementById(DRAG_REGION_ID)) return
   const dragRegion = document.createElement('div')

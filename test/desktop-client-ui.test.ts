@@ -91,7 +91,6 @@ describe('DSH Desktop client slot occupants', () => {
     expect(plugin.inject).toEqual(['locale', 'slots', 'remote.session', 'sessions', 'uiWorkspace'])
     expect(registrations.map(({ config }) => config.name)).toEqual([
       'conversation.input.dock',
-      'sidebar.settings.action',
       'sidebar.brand.mark',
       'sidebar.brand.name',
       'conversation.hero.brand.mark',
@@ -101,6 +100,7 @@ describe('DSH Desktop client slot occupants', () => {
       'sidebar.workspaces.session.menu.item'
     ])
     expect(registrations.some(({ config }) => config.id === 'desktop-enterprise-entry')).toBe(false)
+    expect(registrations.some(({ config }) => config.name === 'sidebar.settings.action')).toBe(false)
 
     // Desktop toolbar styles have an owned lifetime; branding stays in currentColor.
     expect(appended).toHaveLength(2)

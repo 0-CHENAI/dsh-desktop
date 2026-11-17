@@ -165,7 +165,7 @@ it('marks <html> as soon as the parser creates it when preload runs first', asyn
   expect(html.style.getPropertyValue('--dsh-windows-titlebar-height')).toBe('env(titlebar-area-height, 40px)')
 })
 
-it('keeps app chrome integrated without adding a standalone caption strip in repair sessions', async () => {
+it('keeps one explicit drag layer above the app during repair sessions', async () => {
   const { mountWindowsTitlebarLayout } = await import('../src/preload/windows-titlebar')
   vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: vi.fn() }))
   document.body.innerHTML = '<div id="root"><div data-shell-overlay></div></div>'
@@ -173,6 +173,6 @@ it('keeps app chrome integrated without adding a standalone caption strip in rep
   expect(document.body.hasAttribute('data-dsh-standalone-titlebar')).toBe(false)
   expect(getComputedStyle(document.body).paddingTop).toBe('var(--dsh-caption-height)')
   expect(host()).not.toBeNull()
-  expect(document.getElementById('dsh-desktop-windows-drag-region')).toBeNull()
+  expect(document.getElementById('dsh-desktop-windows-drag-region')).not.toBeNull()
   vi.unstubAllGlobals()
 })
