@@ -213,7 +213,23 @@ async function verifyWindowsContentInset(window: BrowserWindow): Promise<void> {
 
 /** Real frame geometry plus native clicks over sidebar, rightbar and fullscreen transitions. */
 async function verifyWindowsTitlebarMatrix(window: BrowserWindow): Promise<void> {
-  const pause = () => new Promise(resolve => setTimeout(resolve, 260))
+  const pause = async (): Promise<void> => {
+    // React's collapsed flag precedes the animated grid geometry. A fixed
+    // delay can measure an intermediate layout on slower native runners.
+    const deadline = Date.now() + 5_000
+    await new Promise(resolve => setTimeout(resolve, 260))
+    let settled = 0
+    while (settled < 2) {
+      await new Promise(resolve => setTimeout(resolve, 32))
+      const stable = await window.webContents.executeJavaScript(`(() => {
+        const frame=document.querySelector('[data-dsh-layout-frame]');
+        return Boolean(frame && !frame.hasAttribute('data-animating') &&
+          frame.getAnimations().every(animation=>animation.playState!=='running'));
+      })()`)
+      settled = stable ? settled + 1 : 0
+      assert.ok(Date.now() < deadline, 'Windows frame animation did not settle')
+    }
+  }
   async function click(selector: string): Promise<void> {
     const point = await window.webContents.executeJavaScript(`(() => {
       const el = document.querySelector(${JSON.stringify(selector)});
@@ -241,21 +257,37 @@ async function verifyWindowsTitlebarMatrix(window: BrowserWindow): Promise<void>
   })()`)
   await click('[data-smoke-plugins]')
   assert.equal(await window.webContents.executeJavaScript("Boolean(document.querySelector('[data-global-panel]'))"), true)
+  // HeaderLeadingControls and SidebarRoot share the new-session marker. A
+  // different seat, even earlier in DOM order, must not become the click target.
+  await window.webContents.executeJavaScript(`(() => {
+    const other=document.createElement('button');
+    other.setAttribute('data-dsh-sidebar-new-session','');
+    other.setAttribute('data-smoke-foreign-session','');
+    other.hidden=true; document.body.prepend(other);
+  })()`)
   await click('[data-dsh-sidebar-toggle]')
   const globalControls = await window.webContents.executeJavaScript(`(() => {
     const column=document.querySelector('[data-dsh-layout-sidebar]');
     return { overflow:getComputedStyle(column).overflow, controls:['data-dsh-sidebar-toggle','data-dsh-sidebar-new-session'].map(marker=>{
-      const el=document.querySelector('['+marker+']'), r=el.getBoundingClientRect();
-      return {marker,hit:document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('['+marker+']')===el};
+      const el=column.querySelector('['+marker+']'), r=el.getBoundingClientRect();
+      const stack=document.elementsFromPoint(r.x+r.width/2,r.y+r.height/2);
+      return {marker,rect:{x:r.x,y:r.y,width:r.width,height:r.height},hit:stack[0]?.closest('['+marker+']')===el,
+        stack:stack.slice(0,5).map(node=>({tag:node.tagName,
+          classes:typeof node.className==='string'?node.className.slice(0,150):'',
+          markers:Array.from(node.attributes).map(attribute=>attribute.name).filter(name=>name.startsWith('data-'))}))};
     })};
   })()`)
+  if (globalControls.controls.some((control: { hit: boolean }) => !control.hit)) {
+    await writeFile(join(outputDirectory, 'global-controls-covered.png'), (await window.webContents.capturePage()).toPNG())
+  }
   for (const control of globalControls.controls) assert.equal(control.hit, true, JSON.stringify(globalControls))
-  await click('[data-dsh-sidebar-new-session]')
+  await click('[data-dsh-sidebar-root] [data-dsh-sidebar-new-session]')
   const returnDeadline=Date.now()+10_000
   while (await window.webContents.executeJavaScript("Boolean(document.querySelector('[data-global-panel]'))")) {
     assert.ok(Date.now()<returnDeadline, 'New-session control did not return from Plugins to Conversation')
     await pause()
   }
+  await window.webContents.executeJavaScript("document.querySelector('[data-smoke-foreign-session]').remove()")
   await click('[data-dsh-sidebar-toggle]')
   console.log('Windows global page: collapsed reopen/new-session controls remain visible and navigate back to Conversation')
   let count = 0
@@ -309,7 +341,7 @@ async function verifyWindowsTitlebarMatrix(window: BrowserWindow): Promise<void>
           if (!host || !button) throw new Error('Native application menu is missing');
           const r=button.getBoundingClientRect(), brand=document.querySelector('[data-dsh-sidebar-brand-identity]')?.getBoundingClientRect();
           const toggle=document.querySelector('[data-dsh-sidebar-toggle]').getBoundingClientRect();
-          const newSession=document.querySelector('[data-dsh-sidebar-new-session]').getBoundingClientRect();
+          const newSession=document.querySelector('[data-dsh-sidebar-root] [data-dsh-sidebar-new-session]').getBoundingClientRect();
           return { visible:getComputedStyle(host).display!=='none', count:host.shadowRoot.querySelectorAll('button').length,
             top:r.top, right:r.right, left:r.left, centerY:r.y+r.height/2,
             brand:brand && { left:brand.left, right:brand.right, top:brand.top },

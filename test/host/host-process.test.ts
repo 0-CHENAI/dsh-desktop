@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { mkdtemp, readFile, realpath, rm } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -29,16 +29,20 @@ describe('desktop host process', () => {
       profile: 'desktop',
       environment: { FIXTURE_REPORT: report }
     })
-    const started = host.start()
-    expect(host.start()).toBe(started)
-    await expect(started).resolves.toEqual({ url: 'http://127.0.0.1:9/', injections: ['boot'] })
-    expect(JSON.parse(await readFile(report, 'utf8'))).toEqual({
-      home: join(directory, 'harness'),
-      profile: 'desktop',
-      execPath: electron,
-      cwd: join(directory, 'harness', 'launch-root')
-    })
-    await host.stop()
+    try {
+      const started = host.start()
+      expect(host.start()).toBe(started)
+      await expect(started).resolves.toEqual({ url: 'http://127.0.0.1:9/', injections: ['boot'] })
+      expect(JSON.parse(await readFile(report, 'utf8'))).toEqual({
+        home: join(directory, 'harness'),
+        profile: 'desktop',
+        execPath: electron,
+        // macOS resolves /var to /private/var when the child reads its cwd.
+        cwd: await realpath(join(directory, 'harness', 'launch-root'))
+      })
+    } finally {
+      await host.stop()
+    }
   })
 
   it('keeps the macOS Helper as its own executable', async () => {

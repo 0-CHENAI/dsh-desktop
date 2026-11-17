@@ -18,6 +18,11 @@ const root = join(import.meta.dirname, '..')
 const read = path => readFileSync(join(root, path), 'utf8')
 
 describe('bundled workbench development guide', () => {
+  it.each(['zh', 'en'])('uses canonical line endings for the %s offline copy', language => {
+    expect(renderBundledGuide('# Guide\r\n\r\nContent\r\n', language))
+      .toBe(renderBundledGuide('# Guide\n\nContent\n', language))
+  })
+
   it('keeps offline fallback notices out of website output and requires online retrieval in prompts', () => {
     for (const [render, language, notice] of [[renderGuideFromSource, 'zh', '内置离线快照'], [renderEnglishGuideFromSource, 'en', 'Bundled offline snapshot']]) {
       const online = render(read)
